@@ -13,6 +13,13 @@ if ('node_label' in params && params.node_label != '') {
 }
 echo "Running on node ${node_label}"
 
+// setting node_label
+sub_node_label = "ilit"
+if ('node_label' in params && params.sub_node_label != '') {
+    sub_node_label = params.sub_node_label
+}
+echo "Running on node ${node_label}"
+
 // chose test frameworks
 Frameworks = "tensorflow,mxnet,pytorch"
 if ('Frameworks' in params && params.Frameworks != '') {
@@ -70,17 +77,19 @@ if ('validation_branch' in params && params.validation_branch != '') {
 echo "validation_branch: $validation_branch"
 
 nigthly_test_branch = ''
-MR_branch = ''
+MR_source_branch = ''
+MR_target_branch = ''
 if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
     nigthly_test_branch = params.nigthly_test_branch
 }else{
     if ("${gitlabSourceBranch}" != '') {
-        MR_branch = "${gitlabSourceBranch}"
-        echo MR_branch
+        MR_source_branch = "${gitlabSourceBranch}"
+        MR_target_branch = "${gitlabTargetBranch}"
     }
 }
 echo "nigthly_test_branch: $nigthly_test_branch"
-echo "MR_branch: $MR_branch"
+echo "MR_source_branch: $MR_source_branch"
+echo "MR_target_branch: $MR_target_branch"
 
 email_subject="${test_title}"
 if ( MR_branch != ''){
@@ -90,12 +99,6 @@ if ( MR_branch != ''){
 }
 
 echo "email_subject: $email_subject"
-
-Flake8_require='True'
-if ('Flake8_require' in params && params.Flake8_require != '') {
-    Flake8_require = params.Flake8_require
-}
-echo "Flake8_require: $Flake8_require"
 
 def cleanup() {
 
@@ -116,36 +119,54 @@ def cleanup() {
 
 }
 
+def BuildParams(job_framework, framework_version, job_model){
+    List ParamsPerJob = []
+
+    ParamsPerJob += string(name: "sub_node_label", value: "${sub_node_label}")
+    ParamsPerJob += string(name: "framework", value: "${job_framework}")
+    ParamsPerJob += string(name: "framework_version", value: "${framework_version}")
+    ParamsPerJob += string(name: "model", value: "${job_model}")
+    ParamsPerJob += string(name: "validation_branch", value: "${validation_branch}")
+    ParamsPerJob += string(name: "nigthly_test_branch", value: "${nigthly_test_branch}")
+    ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
+    ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
+
+    return ParamsPerJob
+}
+
 def doBuild() {
 
     def jobs = [:]
 
-    //job_models=models.split(',')
-    job_frameworks=Frameworks.split(',')
+    job_frameworks = Frameworks.split(',')
 
     job_frameworks.each { job_framework ->
+        job_models = []
+        framework_version = ''
         if (job_framework == 'tensorflow'){
             //job_models=eval("${job_framework}_models")
-            job_models=tensorflow_models
+            job_models = tensorflow_models.split(',')
+            framework_version = tensorflow_version
         }else if (job_framework == 'pytorch'){
-            job_models=pytorch_models
-        }else {
-            job_models = mxnet_models
+            job_models = pytorch_models.split(',')
+            framework_version = pytorch_version
+        }else if (job_framework == 'mxnet'){
+            job_models = mxnet_models.split(',')
+            framework_version = mxnet_version
         }
         job_models.each { job_model ->
-            jobs["${job_model}_${job_node}"] = {
+            jobs["${job_framework}_${job_model}"] = {
                 catchError {
-                    stage("Run Models ${job_model} on ${job_node}") {
+                    stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
-                        echo "${job_model}, ${job_node}"
-                        def downstreamJob = build job: "run-benchmark-intel-model-zoo-general", propagate: false, parameters: BuildParams(job_model,job_node)
-
+                        echo "${job_model}, ${job_framework}"
+                        def downstreamJob = build job: "run-ilit-tuner", propagate: false, parameters: BuildParams(job_framework, framework_version, job_model)
 
                         if (downstreamJob.getResult() == 'SUCCESS') {
                             catchError {
 
                                 copyArtifacts(
-                                        projectName: "run-benchmark-intel-model-zoo-general",
+                                        projectName: "run-ilit-tuner",
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
@@ -165,7 +186,38 @@ def doBuild() {
 
 }
 
-node( NODE_LABEL ) {
+def collectLog() {
+
+    echo "---------------------------------------------------------"
+    echo "------------  running collectLog  -------------"
+    echo "---------------------------------------------------------"
+
+    job_frameworks = Frameworks.split(',')
+    job_frameworks.each { job_framework ->
+        job_models = []
+        if (job_framework == 'tensorflow'){
+            job_models = tensorflow_models.split(',')
+        }else if (job_framework == 'pytorch'){
+            job_models = pytorch_models.split(',')
+        }else if (job_framework == 'mxnet'){
+            job_models = mxnet_models.split(',')
+        }
+        job_models.each { job_model ->
+            withEnv(["current_model=$job_model","current_framework=$job_framework"]) {
+
+                sh '''#!/bin/bash -x
+                    chmod 775 $WORKSPACE/ilit-validation/scripts/collect_logs_ilit.sh
+                    $WORKSPACE/ilit-validation/scripts/collect_logs_ilit.sh --model=${job_model} --framework=${job_framework}                
+                '''
+            }
+        }
+    }
+    echo "done running collectLog ......."
+    stash allowEmpty: true, includes: "*.log", name: "logfile"
+
+}
+
+node( node_label ) {
 
     try {
         cleanup()
@@ -197,19 +249,49 @@ node( NODE_LABEL ) {
         }
 
         stage("Collect Logs") {
+            collectLog()
+        }
 
-            withEnv(["tensorflow_dir=${GIT_NAME}"]) {
-                sh '''#!/bin/bash -x
-                    # get git commit info 
-                    python ${WORKSPACE}/cje-tf/scripts/get_tf_sourceinfo.py --tensorflow_dir=${tensorflow_dir} --workspace_dir=${WORKSPACE}
+        stage("report"){
+            dir(WORKSPACE) {
+                withEnv([]) {
+                    sh'''#!/bin/bash
+                    set -x
+                    cd ${WORKSPACE}/ilit-validation
+                    ilit_commit=$(git rev-parse HEAD)
+                    cd ${WORKSPACE}
+                    summaryLog="${WORKSPACE}/summary.log"
+                    
+                    chmod 775 ${WORKSPACE}/ilit-validation/scripts/generate_report.sh
+                    ${WORKSPACE}/ilit-validation/scripts/generate_report.sh 
                 '''
+                }
             }
+        }
 
-            // Prepare logs
-            def prepareLog = load("${CJE_TF_COMMON_DIR}/prepareLog.groovy")
-            prepareLog(INTEL_MODELS_BRANCH, "", "", SUMMARYLOG, SUMMARY_TITLE)
+        stage("send email") {
+            dir("$WORKSPACE") {
+                if (MR_branch != '') {
+                    recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
+                    if ('recipient_list' in params && params.recipient_list != '') {
+                        recipient_list = params.recipient_list + ',' + gitlabUserEmail
+                    }
+                } else {
+                    recipient_list = 'suyue.chen@intel.com'
+                    if ('recipient_list' in params && params.recipient_list != '') {
+                        recipient_list = params.recipient_list
+                    }
+                }
 
-            collectBenchmarkLog(MODELS, MODES, SINGLE_SOCKET, DATA_TYPE)
+                echo "Running ${models}"
+                emailext subject: "${email_subject}",
+                        to: "${recipient_list}",
+                        replyTo: "${recipient_list}",
+                        body: '''${FILE,path="report.html"}''',
+                        attachmentsPattern: "",
+                        mimeType: 'text/html'
+
+            }
         }
 
     } catch (e) {
@@ -219,24 +301,11 @@ node( NODE_LABEL ) {
 
     } finally {
 
-        // Success or failure, always send notifications
-        withEnv(["SUMMARYLOG=$SUMMARYLOG"]) {
-            echo "$SUMMARYLOG"
-            def msg = readFile SUMMARYLOG
-
-            def notifyBuild = load("${CJE_TF_COMMON_DIR}/slackNotification.groovy")
-            notifyBuild(SLACK_CHANNEL, currentBuild.result, msg)
-        }
-
-        stage('Archive Artifacts ') {
-            dir("$WORKSPACE") {
-                archiveArtifacts artifacts: '*.log, */*.log', excludes: null
+        // archive artifacts
+        stage("Artifacts") {
+                archiveArtifacts artifacts: '*.log,*.html,*/*.log', excludes: null
                 fingerprint: true
-
             }
         }
-
-    }  //try
-
-    echo "===== ${env.BUILD_URL}, ${env.JOB_NAME},${env.BUILD_NUMBER} ====="
+    }
 }
