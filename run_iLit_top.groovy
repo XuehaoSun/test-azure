@@ -1,4 +1,4 @@
-
+teamforge_credential = "5da0b320-00b8-4312-b653-36d4cf980fcb"
 // setting test_title
 test_title = "iLit Tests"
 if ('test_title' in params && params.test_title != '') {
@@ -76,6 +76,12 @@ if ('validation_branch' in params && params.validation_branch != '') {
 }
 echo "validation_branch: $validation_branch"
 
+ilit_url=""
+if ('ilit_url' in params && params.ilit_url != ''){
+    ilit_url = params.ilit_url
+}
+echo "ilit_url is ${ilit_url}"
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -92,7 +98,7 @@ echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
 email_subject="${test_title}"
-if ( MR_branch != ''){
+if ( MR_source_branch != ''){
     email_subject="MR${gitlabMergeRequestIid}: ${test_title}"
 }else {
     email_subject="Nightly: ${test_title}"
@@ -127,6 +133,7 @@ def BuildParams(job_framework, framework_version, job_model){
     ParamsPerJob += string(name: "framework_version", value: "${framework_version}")
     ParamsPerJob += string(name: "model", value: "${job_model}")
     ParamsPerJob += string(name: "validation_branch", value: "${validation_branch}")
+    ParamsPerJob += string(name: "ilit_url", value: "${ilit_url}")
     ParamsPerJob += string(name: "nigthly_test_branch", value: "${nigthly_test_branch}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
     ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
@@ -222,24 +229,22 @@ node( node_label ) {
     try {
         cleanup()
 
-        // pull the cje-tf
-        dir('ilit-validation') {
-            checkout([
-                    $class                           : 'GitSCM',
-                    branches                         : [[name: validation_branch]],
-                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit_validation"],
-                            [$class: 'CloneOption', timeout: 60]
-                    ],
-                    submoduleCfg                     : [],
-                    userRemoteConfigs                : [
-                            [credentialsId: "${teamforge_credential}",
-                             url          : "https://gitlab.devtools.intel.com/suyueche/ilit-validation.git"]
-                    ]
-            ])
-        }
+        // pull the ilit
+        checkout([
+                $class                           : 'GitSCM',
+                branches                         : [[name: validation_branch]],
+                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                doGenerateSubmoduleConfigurations: false,
+                extensions                       : [
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit_validation"],
+                        [$class: 'CloneOption', timeout: 60]
+                ],
+                submoduleCfg                     : [],
+                userRemoteConfigs                : [
+                        [credentialsId: "${teamforge_credential}",
+                         url          : "https://gitlab.devtools.intel.com/suyueche/ilit-validation.git"]
+                ]
+        ])
 
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Model;BS;Value;Url\n"
@@ -305,7 +310,6 @@ node( node_label ) {
         stage("Artifacts") {
                 archiveArtifacts artifacts: '*.log,*.html,*/*.log', excludes: null
                 fingerprint: true
-            }
         }
     }
 }
