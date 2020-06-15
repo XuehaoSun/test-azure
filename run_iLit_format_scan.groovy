@@ -116,6 +116,7 @@ node(node_label){
             echo "+---------------- Pylint ----------------+"
 
             sh '''#!/bin/bash
+                export PATH=${HOME}/miniconda3/bin/:$PATH
                 source activate ${HOSTNAME}
                 python -V
                 
