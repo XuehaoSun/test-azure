@@ -1,4 +1,4 @@
-teamforge_credential = "5da0b320-00b8-4312-b653-36d4cf980fcb"
+credential = "lab_tfbot"
 
 node_label = "clx8280"
 if ('node_label' in params && params.node_label != '') {
@@ -17,6 +17,7 @@ MR_source_branch = ''
 MR_target_branch = ''
 if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
     nigthly_test_branch = params.nigthly_test_branch
+
 }else{
     if ("${gitlabSourceBranch}" != '') {
         MR_source_branch = "${gitlabSourceBranch}"
@@ -65,7 +66,7 @@ def download() {
                     ],
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
-                            [credentialsId: "${teamforge_credential}",
+                            [credentialsId: "${credential}",
                              url          : "${ilit_url}"]
                     ]
             ]
@@ -82,7 +83,7 @@ def download() {
                     ],
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
-                            [credentialsId: "${teamforge_credential}",
+                            [credentialsId: "${credential}",
                              url          : "${ilit_url}"]
                     ]
             ]
