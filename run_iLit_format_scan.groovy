@@ -6,7 +6,7 @@ if ('node_label' in params && params.node_label != '') {
 }
 echo "Running on node ${node_label}"
 
-ilit_url=""
+ilit_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
 if ('ilit_url' in params && params.ilit_url != ''){
     ilit_url = params.ilit_url
 }
@@ -49,6 +49,8 @@ def cleanup() {
 
 def download() {
     dir(WORKSPACE) {
+
+        checkout scm
 
         if(MR_source_branch != ''){
             checkout changelog: true, poll: true, scm: [

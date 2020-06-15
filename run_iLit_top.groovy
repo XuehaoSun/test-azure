@@ -76,7 +76,7 @@ if ('validation_branch' in params && params.validation_branch != '') {
 }
 echo "validation_branch: $validation_branch"
 
-ilit_url=""
+ilit_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
 if ('ilit_url' in params && params.ilit_url != ''){
     ilit_url = params.ilit_url
 }
