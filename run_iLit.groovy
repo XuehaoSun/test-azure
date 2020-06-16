@@ -3,7 +3,54 @@
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
 // parameters
+// setting node_label
+sub_node_label = "ilit"
+if ('node_label' in params && params.sub_node_label != '') {
+    sub_node_label = params.sub_node_label
+}
+echo "Running on node ${node_label}"
 
+// test framework
+framework = "tensorflow"
+if ('frameworks' in params && params.frameworks != '') {
+    framework = params.framework
+}
+echo "Running ${framework}"
+
+// setting framework_version
+framework_version  = '1.15.2'
+if ('framework_version' in params && params.framework_version != '') {
+    framework_version = params.framework_version
+}
+echo "Running ${framework_version}"
+
+// model
+model  = 'resnet50'
+if ('model' in params && params.model != '') {
+    model = params.model
+}
+echo "Running ${model}"
+
+ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
+if ('ilit_url' in params && params.ilit_url != ''){
+    ilit_url = params.ilit_url
+}
+echo "ilit_url is ${ilit_url}"
+
+nigthly_test_branch = ''
+MR_source_branch = ''
+MR_target_branch = ''
+if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
+    nigthly_test_branch = params.nigthly_test_branch
+}else{
+    if ("${MR_source_branch}" != '') {
+        MR_source_branch = params.MR_source_branch
+        MR_target_branch = params.MR_target_branch
+    }
+}
+echo "nigthly_test_branch: $nigthly_test_branch"
+echo "MR_source_branch: $MR_source_branch"
+echo "MR_target_branch: $MR_target_branch"
 
 
 // currentBuild.displayName = node_label
