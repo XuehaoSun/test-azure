@@ -5,14 +5,14 @@ credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 // parameters
 // setting node_label
 sub_node_label = "ilit"
-if ('node_label' in params && params.sub_node_label != '') {
+if ('sub_node_label' in params && params.sub_node_label != '') {
     sub_node_label = params.sub_node_label
 }
 echo "Running on node ${node_label}"
 
 // test framework
 framework = "tensorflow"
-if ('frameworks' in params && params.frameworks != '') {
+if ('framework' in params && params.framework != '') {
     framework = params.framework
 }
 echo "Running ${framework}"
