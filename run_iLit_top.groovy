@@ -1,5 +1,5 @@
 
-teamforge_credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
+credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
 // setting test_title
 test_title = "iLit Tests"
@@ -78,7 +78,7 @@ if ('validation_branch' in params && params.validation_branch != '') {
 }
 echo "validation_branch: $validation_branch"
 
-ilit_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
+ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
 if ('ilit_url' in params && params.ilit_url != ''){
     ilit_url = params.ilit_url
 }
@@ -134,7 +134,6 @@ def BuildParams(job_framework, framework_version, job_model){
     ParamsPerJob += string(name: "framework", value: "${job_framework}")
     ParamsPerJob += string(name: "framework_version", value: "${framework_version}")
     ParamsPerJob += string(name: "model", value: "${job_model}")
-    ParamsPerJob += string(name: "validation_branch", value: "${validation_branch}")
     ParamsPerJob += string(name: "ilit_url", value: "${ilit_url}")
     ParamsPerJob += string(name: "nigthly_test_branch", value: "${nigthly_test_branch}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
@@ -175,7 +174,7 @@ def doBuild() {
                             catchError {
 
                                 copyArtifacts(
-                                        projectName: "run-ilit-tuner",
+                                        projectName: "run-iLit-validation",
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
