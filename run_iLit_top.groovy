@@ -1,4 +1,6 @@
-teamforge_credential = "5da0b320-00b8-4312-b653-36d4cf980fcb"
+
+teamforge_credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
+
 // setting test_title
 test_title = "iLit Tests"
 if ('test_title' in params && params.test_title != '') {
@@ -177,10 +179,10 @@ def doBuild() {
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
-                                        target: "${job_model}/")
+                                        target: "${job_framework}/${job_model}")
 
                                 // Archive in Jenkins
-                                archiveArtifacts artifacts: "${job_model}/*"
+                                archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
                             }
                         }
                     }
@@ -213,8 +215,9 @@ def collectLog() {
             withEnv(["current_model=$job_model","current_framework=$job_framework"]) {
 
                 sh '''#!/bin/bash -x
-                    chmod 775 $WORKSPACE/ilit-validation/scripts/collect_logs_ilit.sh
-                    $WORKSPACE/ilit-validation/scripts/collect_logs_ilit.sh --model=${job_model} --framework=${job_framework}                
+                    cd $WORKSPACE
+                    chmod 775 ./scripts/collect_logs_ilit.sh
+                    ./scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework}                
                 '''
             }
         }
@@ -228,23 +231,7 @@ node( node_label ) {
 
     try {
         cleanup()
-
-        // pull the ilit
-        checkout([
-                $class                           : 'GitSCM',
-                branches                         : [[name: validation_branch]],
-                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                doGenerateSubmoduleConfigurations: false,
-                extensions                       : [
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit_validation"],
-                        [$class: 'CloneOption', timeout: 60]
-                ],
-                submoduleCfg                     : [],
-                userRemoteConfigs                : [
-                        [credentialsId: "${teamforge_credential}",
-                         url          : "https://gitlab.devtools.intel.com/suyueche/ilit-validation.git"]
-                ]
-        ])
+        checkout scm
 
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Model;BS;Value;Url\n"
@@ -259,45 +246,39 @@ node( node_label ) {
 
         stage("report"){
             dir(WORKSPACE) {
-                withEnv([]) {
-                    sh'''#!/bin/bash
-                    set -x
-                    cd ${WORKSPACE}/ilit-validation
-                    ilit_commit=$(git rev-parse HEAD)
-                    cd ${WORKSPACE}
+                sh'''#!/bin/bash
                     summaryLog="${WORKSPACE}/summary.log"
                     
-                    chmod 775 ${WORKSPACE}/ilit-validation/scripts/generate_report.sh
-                    ${WORKSPACE}/ilit-validation/scripts/generate_report.sh 
+                    chmod 775 ./scripts/generate_ilit_report.sh
+                    ./scripts/generate_ilit_report.sh 
                 '''
-                }
             }
         }
 
-        stage("send email") {
-            dir("$WORKSPACE") {
-                if (MR_branch != '') {
-                    recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
-                    if ('recipient_list' in params && params.recipient_list != '') {
-                        recipient_list = params.recipient_list + ',' + gitlabUserEmail
-                    }
-                } else {
-                    recipient_list = 'suyue.chen@intel.com'
-                    if ('recipient_list' in params && params.recipient_list != '') {
-                        recipient_list = params.recipient_list
-                    }
-                }
-
-                echo "Running ${models}"
-                emailext subject: "${email_subject}",
-                        to: "${recipient_list}",
-                        replyTo: "${recipient_list}",
-                        body: '''${FILE,path="report.html"}''',
-                        attachmentsPattern: "",
-                        mimeType: 'text/html'
-
-            }
-        }
+        // stage("send email") {
+        //     dir("$WORKSPACE") {
+        //         if (MR_branch != '') {
+        //             recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
+        //             if ('recipient_list' in params && params.recipient_list != '') {
+        //                 recipient_list = params.recipient_list + ',' + gitlabUserEmail
+        //             }
+        //         } else {
+        //             recipient_list = 'suyue.chen@intel.com'
+        //             if ('recipient_list' in params && params.recipient_list != '') {
+        //                 recipient_list = params.recipient_list
+        //             }
+        //         }
+        // 
+        //         echo "Running ${models}"
+        //         emailext subject: "${email_subject}",
+        //                 to: "${recipient_list}",
+        //                 replyTo: "${recipient_list}",
+        //                 body: '''${FILE,path="report.html"}''',
+        //                 attachmentsPattern: "",
+        //                 mimeType: 'text/html'
+        // 
+        //     }
+        // }
 
     } catch (e) {
         // If there was an exception thrown, the build failed
@@ -308,8 +289,8 @@ node( node_label ) {
 
         // archive artifacts
         stage("Artifacts") {
-                archiveArtifacts artifacts: '*.log,*.html,*/*.log', excludes: null
-                fingerprint: true
+            archiveArtifacts artifacts: '*.log,*.html,**/*.log', excludes: null
+            fingerprint: true
         }
     }
 }
