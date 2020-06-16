@@ -2,13 +2,15 @@
 
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
+currentBuild.description = framework + '-' + model
+
 // parameters
 // setting node_label
 sub_node_label = "ilit"
 if ('sub_node_label' in params && params.sub_node_label != '') {
     sub_node_label = params.sub_node_label
 }
-echo "Running on node ${node_label}"
+echo "Running on node ${sub_node_label}"
 
 // test framework
 framework = "tensorflow"
@@ -51,10 +53,6 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
 echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
-
-
-// currentBuild.displayName = node_label
-currentBuild.description = framework + '-' + model
 
 // mxnet point to specific node for dataset
 if (framework == "mxnet"){
