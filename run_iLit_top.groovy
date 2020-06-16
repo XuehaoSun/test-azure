@@ -168,7 +168,7 @@ def doBuild() {
                     stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
                         echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "run-ilit-tuner", propagate: false, parameters: BuildParams(job_framework, framework_version, job_model)
+                        def downstreamJob = build job: "run-iLit-validation", propagate: false, parameters: BuildParams(job_framework, framework_version, job_model)
 
                         if (downstreamJob.getResult() == 'SUCCESS') {
                             catchError {
