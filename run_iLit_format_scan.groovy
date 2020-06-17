@@ -1,3 +1,6 @@
+updateGitlabCommitStatus state: 'pending'
+gitLabConnection('gitlab.devtools.intel.com')
+
 credential = "lab_tfbot"
 
 node_label = "clx8280"
@@ -126,6 +129,8 @@ node(node_label){
                 python -m pylint --persistent=n --generate-rcfile >pylint.conf
                 python -m pylint --rcfile=pylint.conf ${WORKSPACE}/iLit > ${WORKSPACE}/pylint-iLit-$(date +%s).log 2>&1 || true
             '''
+
+            updateGitlabCommitStatus state:'success'
         }
 
     }catch (e) {

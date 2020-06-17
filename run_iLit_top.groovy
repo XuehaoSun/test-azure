@@ -230,7 +230,9 @@ node( node_label ) {
 
     try {
         cleanup()
-        checkout scm
+        dir('ilit-validation') {
+            checkout scm
+        }
 
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Model;BS;Value;Url\n"

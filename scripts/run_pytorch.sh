@@ -18,12 +18,12 @@ function main {
 
 # init params
 function init_params {
-    framework='mxnet'
-    model='resnet50v1_5'
+    framework='pytorch'
+    model='resnet50'
     batch_size=128
 
     for var in "$@"
-    do 
+    do
         case $var in
             --framework=*)
                 framework=$(echo $var |cut -f2 -d=)
@@ -46,18 +46,11 @@ function init_params {
 function init_run_cmd {
 
     if [ "${model}" = "resnet50" ];then
-        in_graph=/home/tensorflow/jenkins/mxnet/resnet50v1_5/model
-        dataset=/data/dataset/val.rec
-        cmd=" python offical_rn50.py \
-              --symbol-file=${in_graph}/resnet50_v1b-symbol.json \
-              --param-file=${in_graph}/resnet50_v1b-0000.params\
-              --rgb-mean=123.68,116.779,103.939 \
-              --rgb-std=58.393,57.12,57.375 \
-              --batch-size=64 \
-              --num-skipped-batches=50 \
-              --num-inference-batches=200 \
-              --ctx=cpu \
-              --dataset=${dataset} "
+        in_graph=
+        dataset=
+        cmd=" python main.py -e \
+            --pretrained /lustre/dataset/imagenet/img_raw/
+            -a resnet50"
     fi
 
 }
@@ -68,7 +61,7 @@ function set_environment {
     export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
     gcc -v
     # conda3 python3
-    export PATH="${HOME}/tools/anaconda3/bin:$PATH"
+    export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
     python -V
 }
@@ -83,6 +76,7 @@ function generate_core {
 
     sleep 1
     source ${excute_cmd_file}
+
 }
 
 main "$@"
