@@ -62,7 +62,9 @@ if (framework == "mxnet"){
 node( sub_node_label ) {
 
     deleteDir()
-    checkout scm
+    dir('ilit-validation') {
+        checkout scm
+    }
 
     try {
 
@@ -107,7 +109,7 @@ node( sub_node_label ) {
         stage("Performance") {
             sh '''#!/bin/bash
                 echo "Running ---- ${framework}, ${model} ----"
-                bash -x ${WORKSPACE}/scripts/run_${framework}.sh \
+                bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
                     > ${WORKSPACE}/${framework}-${model}.log 2>&1 
