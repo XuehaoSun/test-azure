@@ -258,8 +258,8 @@ node( node_label ) {
                 sh'''#!/bin/bash
                     summaryLog="${WORKSPACE}/summary.log"
                     
-                    chmod 775 ./scripts/generate_ilit_report.sh
-                    summaryLog=${summaryLog} ./scripts/generate_ilit_report.sh 
+                    chmod 775 ilit-validation/scripts/generate_ilit_report.sh
+                    summaryLog=${summaryLog} ilit-validation/scripts/generate_ilit_report.sh 
                 '''
             }
         }
