@@ -47,7 +47,7 @@ function init_run_cmd {
     dataset=/tf_dataset/pytorch/ImageNet/raw
     if [ "${model}" = "resnet50" ];then
         cmd=" python main.py \
-            -a resnet18 -e \
+            -a resnet18 -t \
             --pretrained \
             ${dataset}"
     fi
