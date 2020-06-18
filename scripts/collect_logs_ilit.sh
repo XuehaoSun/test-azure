@@ -46,11 +46,11 @@ fi
 accuracy=$(grep 'FP32 baseline is:' ${log_file} | awk -F'[' '{print $2}'|awk -F',' '{print $1}')
 duration=$(grep 'FP32 baseline is:' ${log_file} | awk -F',' '{print $2}'|awk -F']' '{print $1}')
 
-echo "$framework; CLX8280; FP32; $model; Inference; Latency; $bs; ${duration}; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-echo "$framework; CLX8280; FP32; $model; Inference; Accuracy; $bs; ${accuracy}; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+echo "$framework;CLX8280;FP32;$model;Inference;Latency;$bs;${duration};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+echo "$framework;CLX8280;FP32;$model;Inference;Accuracy;$bs;${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
 
 accuracy=$(grep 'Best tune result is:' ${log_file}|tail -1 |awk -F':' '{print $3}' |awk -F'[' '{print $2}'|awk -F',' '{print $1}')
 duration=$(grep 'Best tune result is:' ${log_file}|tail -1 |awk -F':' '{print $3}' |awk -F',' '{print $2}'|awk -F']' '{print $1}')
 
-echo "$framework; CLX8280; INT8; $model; Inference; Latency; $bs; ${duration}; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-echo "$framework; CLX8280; INT8; $model; Inference; Accuracy; $bs; ${accuracy}; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+echo "$framework;CLX8280;INT8;$model;Inference;Latency;$bs;${duration};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;$bs;${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
