@@ -115,10 +115,10 @@ node( sub_node_label ) {
                 rm -rf ${WORKSPACE}/ilit-models/examples
                 cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
                 
-                if [ ${framework} == 'pytorch' ]; then
+                #if [ ${framework} == 'pytorch' ]; then
                     echo "test" > ${log}/${framework}-${model}.log 2>&1
                     exit 0
-                fi
+                #fi
                 timeout 1800 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
