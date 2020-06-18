@@ -184,12 +184,12 @@ def doBuild() {
                                 copyArtifacts(
                                         projectName: "intel-iLit-validation",
                                         selector: specific("${downstreamJobNumber}"),
-                                        filter: '**/*.log',
+                                        filter: '*.log',
                                         fingerprintArtifacts: true,
                                         target: "${job_framework}/${job_model}")
 
                                 // Archive in Jenkins
-                                archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
+                                archiveArtifacts artifacts: "${job_framework}/${job_model}/*"
                             }
                         }
                     }
