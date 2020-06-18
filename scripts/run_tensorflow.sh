@@ -20,7 +20,6 @@ function main {
 function init_params {
     framework='tensorflow'
     model='resnet50'
-    batch_size=128
 
     for var in "$@"
     do

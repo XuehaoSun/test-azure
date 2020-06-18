@@ -68,43 +68,43 @@ node( sub_node_label ) {
 
     try {
 
-        stage("Download") {
-            if(MR_source_branch != ''){
-                checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : [[name: "${MR_source_branch}"]],
-                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
-                                [$class: 'CloneOption', timeout: 60],
-                                [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
-                        ],
-                        submoduleCfg                     : [],
-                        userRemoteConfigs                : [
-                                [credentialsId: "${credential}",
-                                 url          : "${ilit_url}"]
-                        ]
-                ]
-            }
-            else {
-                checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : [[name: "${nigthly_test_branch}"]],
-                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
-                                [$class: 'CloneOption', timeout: 60]
-                        ],
-                        submoduleCfg                     : [],
-                        userRemoteConfigs                : [
-                                [credentialsId: "${credential}",
-                                 url          : "${ilit_url}"]
-                        ]
-                ]
-            }
-        }
+//        stage("Download") {
+//            if(MR_source_branch != ''){
+//                checkout changelog: true, poll: true, scm: [
+//                        $class                           : 'GitSCM',
+//                        branches                         : [[name: "${MR_source_branch}"]],
+//                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+//                        doGenerateSubmoduleConfigurations: false,
+//                        extensions                       : [
+//                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
+//                                [$class: 'CloneOption', timeout: 60],
+//                                [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+//                        ],
+//                        submoduleCfg                     : [],
+//                        userRemoteConfigs                : [
+//                                [credentialsId: "${credential}",
+//                                 url          : "${ilit_url}"]
+//                        ]
+//                ]
+//            }
+//            else {
+//                checkout changelog: true, poll: true, scm: [
+//                        $class                           : 'GitSCM',
+//                        branches                         : [[name: "${nigthly_test_branch}"]],
+//                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+//                        doGenerateSubmoduleConfigurations: false,
+//                        extensions                       : [
+//                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+//                                [$class: 'CloneOption', timeout: 60]
+//                        ],
+//                        submoduleCfg                     : [],
+//                        userRemoteConfigs                : [
+//                                [credentialsId: "${credential}",
+//                                 url          : "${ilit_url}"]
+//                        ]
+//                ]
+//            }
+//        }
 
         stage("Performance") {
             sh '''#!/bin/bash
@@ -112,10 +112,11 @@ node( sub_node_label ) {
                 # copy examples
                 rm -rf ${WORKSPACE}/ilit-models/examples
                 cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
-                timeout 1800 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
-                    --model=${model} \
-                    --conda_env_name=${framework}-${framework_version} \
-                    > ${WORKSPACE}/${framework}-${model}.log 2>&1 
+                #timeout 1800 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
+                #    --model=${model} \
+                #    --conda_env_name=${framework}-${framework_version} \
+                #    > ${WORKSPACE}/${framework}-${model}.log 2>&1 
+                echo "test" > ${WORKSPACE}/${framework}-${model}.log 2>&1
             '''
         }
         
