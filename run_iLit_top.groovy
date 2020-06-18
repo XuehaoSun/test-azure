@@ -257,9 +257,10 @@ node( node_label ) {
             dir(WORKSPACE) {
                 sh'''#!/bin/bash
                     summaryLog="${WORKSPACE}/summary.log"
-                    
+                    summaryLogLast="${WORKSPACE}/summary_last.log"
+                    touch ${summaryLogLast}
                     chmod 775 ilit-validation/scripts/generate_ilit_report.sh
-                    summaryLog=${summaryLog} ilit-validation/scripts/generate_ilit_report.sh 
+                    summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} ilit-validation/scripts/generate_ilit_report.sh 
                 '''
             }
         }
