@@ -223,8 +223,8 @@ def collectLog() {
 
                 sh '''#!/bin/bash -x
                     cd $WORKSPACE
-                    chmod 775 ./scripts/collect_logs_ilit.sh
-                    ./scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework}                
+                    chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
+                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework}                
                 '''
             }
         }
