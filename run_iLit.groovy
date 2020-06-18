@@ -17,14 +17,14 @@ framework = "tensorflow"
 if ('framework' in params && params.framework != '') {
     framework = params.framework
 }
-echo "Running ${framework}"
+echo "framework: ${framework}"
 
 // setting framework_version
 framework_version  = '1.15.2'
 if ('framework_version' in params && params.framework_version != '') {
     framework_version = params.framework_version
 }
-echo "Running ${framework_version}"
+echo "framework_version: ${framework_version}"
 
 // model
 model  = 'resnet50'
@@ -109,7 +109,10 @@ node( sub_node_label ) {
         stage("Performance") {
             sh '''#!/bin/bash
                 echo "Running ---- ${framework}, ${model} ----"
-                bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
+                # copy examples
+                rm -rf ${WORKSPACE}/ilit-models/examples
+                cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
+                timeout 1800 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
                     > ${WORKSPACE}/${framework}-${model}.log 2>&1 

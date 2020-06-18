@@ -1,3 +1,5 @@
+updateGitlabCommitStatus state: 'pending'
+gitLabConnection('gitlab.devtools.intel.com')
 
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
@@ -27,49 +29,49 @@ Frameworks = "tensorflow,mxnet,pytorch"
 if ('Frameworks' in params && params.Frameworks != '') {
     Frameworks = params.Frameworks
 }
-echo "Running ${Frameworks}"
+echo "Frameworks: ${Frameworks}"
 
 // setting tensorflow_version
 tensorflow_version = '1.15.2'
 if ('tensorflow_version' in params && params.tensorflow_version != '') {
     tensorflow_version = params.tensorflow_version
 }
-echo "Running ${tensorflow_version}"
+echo "tensorflow_version: ${tensorflow_version}"
 
 // setting tensorflow models
 tensorflow_models = "ResNet-50v1.0"
 if ('tensorflow_models' in params && params.tensorflow_models != '') {
     tensorflow_models = params.tensorflow_models
 }
-echo "Running ${tensorflow_models}"
+echo "tensorflow_models: ${tensorflow_models}"
 
 // setting mxnet_version
-mxnet_version = '1.15.2'
+mxnet_version = '1.6.0'
 if ('mxnet_version' in params && params.mxnet_version != '') {
     mxnet_version = params.mxnet_version
 }
-echo "Running ${mxnet_version}"
+echo "mxnet_version: ${mxnet_version}"
 
 // setting mxnet models
 mxnet_models = "ResNet-50v1.0"
 if ('mxnet_models' in params && params.mxnet_models != '') {
     mxnet_models = params.mxnet_models
 }
-echo "Running ${mxnet_models}"
+echo "mxnet_models: ${mxnet_models}"
 
 // setting pytorch_version
-pytorch_version = '1.15.2'
+pytorch_version = '1.5.0'
 if ('pytorch_version' in params && params.pytorch_version != '') {
     pytorch_version = params.pytorch_version
 }
-echo "Running ${pytorch_version}"
+echo "pytorch_version: ${pytorch_version}"
 
 // setting mxnet models
 pytorch_models = "ResNet-50v1.0"
 if ('pytorch_models' in params && params.pytorch_models != '') {
     pytorch_models = params.pytorch_models
 }
-echo "Running ${pytorch_models}"
+echo "pytorch_models: ${pytorch_models}"
 
 // ilit-validation branch to get test groovy
 validation_branch = 'master'
@@ -127,7 +129,18 @@ def cleanup() {
 
 }
 
-def BuildParams(job_framework, framework_version, job_model){
+def BuildParams(job_framework, job_model){
+
+    framework_version = ''
+    if (job_framework == 'tensorflow'){
+        framework_version = "${tensorflow_version}"
+    }else if (job_framework == 'pytorch'){
+        framework_version = "${pytorch_version}"
+    }else if (job_framework == 'mxnet'){
+        framework_version = "${mxnet_version}"
+    }
+    echo "llsu-----> ${job_framework} : ${framework_version}"
+
     List ParamsPerJob = []
 
     ParamsPerJob += string(name: "sub_node_label", value: "${sub_node_label}")
@@ -150,25 +163,22 @@ def doBuild() {
 
     job_frameworks.each { job_framework ->
         job_models = []
-        framework_version = ''
         if (job_framework == 'tensorflow'){
             //job_models=eval("${job_framework}_models")
             job_models = tensorflow_models.split(',')
-            framework_version = tensorflow_version
         }else if (job_framework == 'pytorch'){
             job_models = pytorch_models.split(',')
-            framework_version = pytorch_version
         }else if (job_framework == 'mxnet'){
             job_models = mxnet_models.split(',')
-            framework_version = mxnet_version
         }
+        echo "llsu-----> ${job_framework}"
         job_models.each { job_model ->
             jobs["${job_framework}_${job_model}"] = {
                 catchError {
                     stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
                         echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, framework_version, job_model)
+                        def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
 
                         if (downstreamJob.getResult() == 'SUCCESS') {
                             catchError {
@@ -235,7 +245,7 @@ node( node_label ) {
         }
 
         SUMMARYTXT = "${WORKSPACE}/summary.log"
-        writeFile file: SUMMARYTXT, text: "Framework;Platform;Model;BS;Value;Url\n"
+        writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
 
         stage("tune-parallel") {
             doBuild()
@@ -280,7 +290,7 @@ node( node_label ) {
         // 
         //     }
         // }
-
+        updateGitlabCommitStatus state:'success'
     } catch (e) {
         // If there was an exception thrown, the build failed
         currentBuild.result = "FAILED"

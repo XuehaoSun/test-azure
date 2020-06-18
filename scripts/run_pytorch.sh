@@ -44,13 +44,12 @@ function init_params {
 
 # init_run_cmd
 function init_run_cmd {
-
+    dataset=/tf_dataset/pytorch/ImageNet/raw
     if [ "${model}" = "resnet50" ];then
-        in_graph=
-        dataset=
-        cmd=" python main.py -e \
-            --pretrained /lustre/dataset/imagenet/img_raw/
-            -a resnet50"
+        cmd=" python main.py \
+            -a resnet18 -e \
+            --pretrained \
+            ${dataset}"
     fi
 
 }
@@ -63,6 +62,7 @@ function set_environment {
     # conda3 python3
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
+    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
     python -V
 }
 

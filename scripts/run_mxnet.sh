@@ -46,18 +46,17 @@ function init_params {
 function init_run_cmd {
 
     if [ "${model}" = "resnet50" ];then
-        in_graph=/home/tensorflow/jenkins/mxnet/resnet50v1_5/model
-        dataset=/data/dataset/val.rec
-        cmd=" python offical_rn50.py \
-              --symbol-file=${in_graph}/resnet50_v1b-symbol.json \
-              --param-file=${in_graph}/resnet50_v1b-0000.params\
+        dataset_dir=/tf_dataset/mxnet/resnet50v1/model
+        cmd=" python imagenet_inference.py \
+              --symbol-file=${dataset_dir}/resnet50_v1-symbol.json \
+              --param-file=${dataset_dir}/resnet50_v1-0000.params\
               --rgb-mean=123.68,116.779,103.939 \
               --rgb-std=58.393,57.12,57.375 \
               --batch-size=64 \
               --num-skipped-batches=50 \
               --num-inference-batches=200 \
               --ctx=cpu \
-              --dataset=${dataset} "
+              --dataset=${dataset_dir}/val_256_q90.rec "
     fi
 
 }
@@ -70,6 +69,7 @@ function set_environment {
     # conda3 python3
     export PATH="${HOME}/tools/anaconda3/bin:$PATH"
     source activate ${conda_env_name}
+    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
     python -V
 }
 
