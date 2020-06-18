@@ -107,7 +107,7 @@ node( sub_node_label ) {
 //        }
 
         stage("Performance") {
-            sh '''#!/bin/bash
+            sh '''#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model} ----"
                 # copy examples
                 rm -rf ${WORKSPACE}/ilit-models/examples
@@ -126,7 +126,7 @@ node( sub_node_label ) {
 
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "*.log", excludes: null
+            archiveArtifacts artifacts: "**/*.log", excludes: null
             fingerprint: true
         }
     }
