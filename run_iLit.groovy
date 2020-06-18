@@ -115,7 +115,7 @@ node( sub_node_label ) {
                 rm -rf ${WORKSPACE}/ilit-models/examples
                 cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
                 
-                if [ ${model} == 'pytorch' ]; then
+                if [ ${framework} == 'pytorch' ]; then
                     exit 0
                 fi
                 timeout 1800 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
