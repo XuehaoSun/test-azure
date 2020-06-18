@@ -116,7 +116,7 @@ node( sub_node_label ) {
                 #    --model=${model} \
                 #    --conda_env_name=${framework}-${framework_version} \
                 #    > ${WORKSPACE}/${framework}-${model}.log 2>&1 
-                echo "test" > ${WORKSPACE}/${framework}-${model}.log 2>&1
+                echo "test" > ${WORKSPACE}/${framework}/${model}/${framework}-${model}.log 2>&1
             '''
         }
         

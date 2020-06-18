@@ -259,35 +259,35 @@ node( node_label ) {
                     summaryLog="${WORKSPACE}/summary.log"
                     
                     chmod 775 ./scripts/generate_ilit_report.sh
-                    ./scripts/generate_ilit_report.sh 
+                    summaryLog=${summaryLog} ./scripts/generate_ilit_report.sh 
                 '''
             }
         }
 
-        // stage("send email") {
-        //     dir("$WORKSPACE") {
-        //         if (MR_branch != '') {
-        //             recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
-        //             if ('recipient_list' in params && params.recipient_list != '') {
-        //                 recipient_list = params.recipient_list + ',' + gitlabUserEmail
-        //             }
-        //         } else {
-        //             recipient_list = 'suyue.chen@intel.com'
-        //             if ('recipient_list' in params && params.recipient_list != '') {
-        //                 recipient_list = params.recipient_list
-        //             }
-        //         }
-        // 
-        //         echo "Running ${models}"
-        //         emailext subject: "${email_subject}",
-        //                 to: "${recipient_list}",
-        //                 replyTo: "${recipient_list}",
-        //                 body: '''${FILE,path="report.html"}''',
-        //                 attachmentsPattern: "",
-        //                 mimeType: 'text/html'
-        // 
-        //     }
-        // }
+         stage("send email") {
+             dir("$WORKSPACE") {
+                 if (MR_source_branch != '') {
+                     recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
+                     if ('recipient_list' in params && params.recipient_list != '') {
+                         recipient_list = params.recipient_list + ',' + gitlabUserEmail
+                     }
+                 } else {
+                     recipient_list = 'suyue.chen@intel.com'
+                     if ('recipient_list' in params && params.recipient_list != '') {
+                         recipient_list = params.recipient_list
+                     }
+                 }
+
+                 echo "Running ${models}"
+                 emailext subject: "${email_subject}",
+                         to: "${recipient_list}",
+                         replyTo: "${recipient_list}",
+                         body: '''${FILE,path="report.html"}''',
+                         attachmentsPattern: "",
+                         mimeType: 'text/html'
+
+             }
+         }
         updateGitlabCommitStatus state:'success'
     } catch (e) {
         // If there was an exception thrown, the build failed
