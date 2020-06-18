@@ -1,7 +1,12 @@
 #!/bin/bash
 
+# WORKSPACE=.
+# summaryLog=summary.log
+# summaryLogLast=last-summary.log
+
 function main {
     echo "summaryLog: ${summaryLog}"
+    echo "last summaryLog: ${summaryLogLast}"
     generate_html_head
     generate_html_body
     generate_results
@@ -11,7 +16,7 @@ function main {
 
 function generate_inference {
 
-    awk -v model="${model}" -F ';' '
+    awk -v framework="${framework}" -v model="${model}" -F ';' '
         BEGINE {
             fp32_ms_bs = nan;
             fp32_ms_value = nan;
@@ -33,7 +38,7 @@ function generate_inference {
             int8_acc_value = nan;
             int8_acc_url = nan;
         }{
-            if($4 == model) {
+            if($1 == framework && $4 == model) {
                 // FP32
                 if($3 == "FP32") {
                     // Latency
@@ -99,8 +104,8 @@ function generate_inference {
 }
 
 function generate_html_core {
-    echo "<tr><td rowspan=1>${framework}</td><td rowspan=1>${model}</td>" >> ${WORKSPACE}/report.html
-    echo |awk -v current_values=${current_values} -v model=${model} -F ';' '
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td>" >> ${WORKSPACE}/report.html
+    echo |awk -v current_values=${current_values} -v last_values=${last_values} -F ';' '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -129,36 +134,65 @@ function generate_html_core {
                 if(c == "acc") {
                     target = a - b;
                     if(target >= -0.01) {
-                       printf("<td rowspan=1 style='background-color:#90EE90'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < -0.05) {
-                       printf("<td rowspan=1 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
                     }else{
-                       printf("<td rowspan=1>%.4f</td>", target);
+                       printf("<td rowspan=3>%.4f</td>", target);
                     }
                 }else if(c == "ms") {
                     target = a / b;
                     if(target >= 1.5) {
-                       printf("<td rowspan=1 style='background-color:#90EE90'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < 1) {
-                       printf("<td  rowspan=1 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       printf("<td  rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
                     }else{
-                       printf("<td rowspan=1>%.4f</td>", target);
+                       printf("<td rowspan=3>%.4f</td>", target);
                     }
                 }
                 else {
                     target = a / b;
                     if(target >= 2) {
-                       printf("<td rowspan=1 style='background-color:#90EE90'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < 1) {
-                       printf("<td rowspan=1 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
                     }else{
-                       printf("<td rowspan=1>%.4f</td>", target);
+                       printf("<td rowspan=3>%.4f</td>", target);
                     }
                 }
+            }else {
+                printf("<td rowspan=3></td>");
+            }
+        }
+        
+        function compare_result(a,b,c) {
+                
+            if(a ~/[1-9]/ && b ~/[1-9]/) {
+                if(c == "acc") {
+                    target = a - b;
+                    if(target >= -0.0001 && target <= 0.0001) {
+                        status_png = "background-color:#90EE90";
+                    }else {
+                        status_png = "background-color:#FFD2D2";
+                    }
                 }else {
-                    printf("<td rowspan=1></td>");
+                    target = a / b;
+                    if(target >= 0.95) {
+                        status_png = "background-color:#90EE90";
+                    }else {
+                        status_png = "background-color:#FFD2D2";
+                    }
+                }
+                printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
+            }else {
+                if(a == "nan" || b == "nan") {
+                    printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
+                }else {
+                    printf("<td style=\"col-cell col-cell3\" colspan=2></td>");
+                    job_red++;
                 }
             }
+        }
 
         BEGIN {
 
@@ -171,29 +205,60 @@ function generate_html_core {
             split(current_values,current_value,";");
 
             // current
+            printf("<td>New</td>");
+            show_new_last(current_value[1],current_value[13],current_value[2],"ms");
             show_new_last(current_value[3],current_value[14],current_value[4],"fps");
             show_new_last(current_value[5],current_value[15],current_value[6],"acc");
+            show_new_last(current_value[7],current_value[16],current_value[8],"ms");
             show_new_last(current_value[9],current_value[17],current_value[10],"fps");
             show_new_last(current_value[11],current_value[18],current_value[12],"acc");
-
+            
             // Compare Current
             compare_current(current_value[4],current_value[10],"fps");
             compare_current(current_value[8],current_value[2],"ms");
-            compare_current(current_value[6],current_value[12],"acc");
+            compare_current(current_value[6],current_value[12],"acc"); 
+            
+            // Last values
+            split(last_values,last_value,";");
+
+            // Last
+            printf("</tr>\n<tr><td>Last</td>");
+            show_new_last(last_value[1],last_value[13],last_value[2],"ms");
+            show_new_last(last_value[3],last_value[14],last_value[4],"fps");
+            show_new_last(last_value[5],last_value[15],last_value[6],"acc");
+            show_new_last(last_value[7],last_value[16],last_value[8],"ms");
+            show_new_last(last_value[9],last_value[17],last_value[10],"fps");
+            show_new_last(last_value[11],last_value[18],last_value[12],"acc");
+            printf("</tr>")
+            
+            // current vs last
+            printf("</tr>\n<tr><td>New/Last</td>");
+            compare_result(last_value[2],current_value[2],"ms");
+            compare_result(current_value[4],last_value[4],"fps");
+            compare_result(current_value[6],last_value[6],"acc");
+            compare_result(last_value[8],current_value[8],"ms");
+            compare_result(current_value[10],last_value[10],"fps");
+            compare_result(current_value[12],last_value[12],"acc");
+            printf("</tr>\n");
+          
         }
     ' >> ${WORKSPACE}/report.html
 }
 
 function generate_results {
 
-    framework=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
-    models=$(sed '1d' ${summaryLog} |cut -d';' -f4 | awk '!a[$0]++')
+    frameworks=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
     
-    for model in ${models[@]}
+    for framework in ${frameworks[@]}
     do
-        current_values=$(generate_inference ${summaryLog})
+        models=$(sed '1d' ${summaryLog} |grep "^${framework}" |cut -d';' -f4 | awk '!a[$0]++')
+        for model in ${models[@]}
+        do
+            current_values=$(generate_inference ${summaryLog})
+            last_values=$(generate_inference ${summaryLogLast})
 
-        generate_html_core
+            generate_html_core
+        done
     done
 }
 
@@ -241,15 +306,20 @@ cat >> ${WORKSPACE}/report.html << eof
             <tr>
                 <th rowspan="2">Framework</th>
                 <th rowspan="2">Model</th>
-			          <th colspan="4">Best</th>
-			          <th colspan="4">Base</th>
+                <th rowspan="2">VS</th>
+			          <th colspan="6">INT8</th>
+			          <th colspan="6">FP32</th>
 			          <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
 		        </tr>
 		        <tr>
                 <th>bs</th>
+                <th>ms</th>
+                <th>bs</th>
                 <th>imgs/s</th>
                 <th>bs</th>
                 <th>top1</th>
+                <th>bs</th>
+                <th>ms</th>
                 <th>bs</th>
                 <th>imgs/s</th>
                 <th>bs</th>
@@ -265,8 +335,8 @@ function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
 		    <tr>
-			    <td colspan="10"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
-			    <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
+			    <td colspan="15"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+			    <td colspan="4" class="col-cell col-cell1 col-cellf"></td>
 		    </tr>
 	    </table>
 	</div>
