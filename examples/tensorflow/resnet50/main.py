@@ -136,7 +136,7 @@ def inference(graph):
     return total_accuracy1 / num_processed_images
 
 if __name__ == '__main__':
-    fp32_graph = load_graph('/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_resnet_v1_50.pb')
+    fp32_graph = load_graph('/tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb')
     at = iLit.Tuner("tf.yaml")
     rn50_input_output = {"inputs": ['input'], "outputs": ['predict']}
     dataloader = prepare_dataloader(data_location="/tf_dataset/dataset/imagenet", input_height=224, input_width=224, batch_size=32)
