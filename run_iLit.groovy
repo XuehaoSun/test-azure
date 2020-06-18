@@ -110,8 +110,8 @@ node( sub_node_label ) {
             sh '''#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model} ----"
                 # copy examples
-                log=${WORKSPACE}/${framework}/${model}
-                mkdir -p ${log}
+                # log=${WORKSPACE}/${framework}/${model}
+                # mkdir -p ${log}
                 rm -rf ${WORKSPACE}/ilit-models/examples
                 cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
                 
