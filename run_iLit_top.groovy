@@ -263,7 +263,7 @@ node( node_label ) {
                     summaryLogLast="${WORKSPACE}/summary_last.log"
                     touch ${summaryLogLast}
                     chmod 775 ilit-validation/scripts/generate_ilit_report.sh
-                    qtools_commit=${nigthly_test_branch} qtools_commit=${qtools_commit} summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} ilit-validation/scripts/generate_ilit_report.sh 
+                    qtools_branch=${nigthly_test_branch} qtools_commit=${qtools_commit} summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} ilit-validation/scripts/generate_ilit_report.sh 
                 '''
             }
         }
