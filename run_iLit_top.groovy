@@ -279,7 +279,6 @@ node( node_label ) {
                      }
                  }
 
-                 echo "Running ${models}"
                  emailext subject: "${email_subject}",
                          to: "${recipient_list}",
                          replyTo: "${recipient_list}",
