@@ -22,12 +22,7 @@ log_file="${framework}/${model}/${framework}-${model}.log"
 
 
 
-
-
-
-
-
-echo "$framework; CLX8280; Base; $model; Inference; Throughput; $bs; $value; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-echo "$framework; CLX8280; Base; $model; Inference; Accuracy; $bs; $value; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-echo "$framework; CLX8280; Best; $model; Inference; Throughput; $bs; $value; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-echo "$framework; CLX8280; Best; $model; Inference; Accuracy; $bs; $value; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+echo "$framework; CLX8280; FP32; $model; Inference; Throughput; $bs; $value; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+echo "$framework; CLX8280; FP32; $model; Inference; Accuracy; $bs; $value; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+echo "$framework; CLX8280; INT8; $model; Inference; Throughput; $bs; $value; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+echo "$framework; CLX8280; INT8; $model; Inference; Accuracy; $bs; $value; ${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log

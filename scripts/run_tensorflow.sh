@@ -46,9 +46,7 @@ function init_params {
 function init_run_cmd {
 
     if [ "${model}" = "resnet50" ];then
-        in_graph=
-        dataset=
-        cmd=" "
+        cmd="python main.py "
     fi
 
 }
@@ -61,6 +59,7 @@ function set_environment {
     # conda3 python3
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
+    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
     python -V
 }
 
