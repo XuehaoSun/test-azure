@@ -183,7 +183,7 @@ def doBuild() {
 
                                 copyArtifacts(
                                         projectName: "intel-iLit-validation",
-                                        selector: specific("${downstreamJob.getNumber()}"),
+                                        selector: specific("${downstreamJobNumber}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
                                         target: "${job_framework}/${job_model}")
