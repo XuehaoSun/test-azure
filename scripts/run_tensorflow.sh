@@ -58,8 +58,8 @@ function init_run_cmd {
 # environment
 function set_environment {
     # export KMP_BLOCKTIME=1
-    export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
-    gcc -v
+    # export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
+    # gcc -v
     # conda3 python3
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
