@@ -47,8 +47,8 @@ function init_run_cmd {
     if [ "${model}" = "resnet50" ];then
         cmd="python main.py \
             --input_graph /tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb \
-            --inputs input:0 \
-            --outputs predict:0 \
+            --inputs input \
+            --outputs predict \
             --data_location /tf_dataset/dataset/imagenet"
 
     fi

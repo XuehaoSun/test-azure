@@ -217,7 +217,7 @@ def doBuild() {
                         echo "${job_model}, ${job_framework}"
                         def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
 
-                        if (downstreamJob.getResult() == 'SUCCESS') {
+                        //if (downstreamJob.getResult() == 'SUCCESS') {
                             catchError {
 
                                 copyArtifacts(
@@ -230,7 +230,7 @@ def doBuild() {
                                 // Archive in Jenkins
                                 archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
                             }
-                        }
+                        //}
                     }
                 }
             }
