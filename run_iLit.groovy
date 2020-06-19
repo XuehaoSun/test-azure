@@ -130,7 +130,7 @@ node( sub_node_label ) {
 
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "*.log", excludes: null
+            archiveArtifacts artifacts: "${framework}-${model}.log", excludes: null
             fingerprint: true
         }
     }
