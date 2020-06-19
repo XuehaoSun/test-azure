@@ -145,8 +145,8 @@ if __name__ == '__main__':
     parser.add_argument('--data_location', type=str, required='', help='param file path')
     parser.add_argument('--input_height', type=int, default=224, help='input height')
     parser.add_argument('--intput_width', type=int, default=224, help='output height')
-    parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--num_batches', type=int, default=100)
+    parser.add_argument('--batch_size', type=int, default=100)
+    parser.add_argument('--num_batches', type=int, default=10)
     parser.add_argument('--num_inter_threads', type=int, default=2)
     parser.add_argument('--num_intra_threads', type=int, default=28)
 

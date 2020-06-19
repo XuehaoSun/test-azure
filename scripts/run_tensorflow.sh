@@ -49,7 +49,7 @@ function init_run_cmd {
             --input_graph /tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb \
             --inputs input \
             --outputs predict \
-            --data_location /tf_dataset/dataset/imagenet \
+            --data_location /tf_dataset/dataset/TF_mini_imagenet \
             --config tf.yaml"
 
     fi
