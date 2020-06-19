@@ -50,7 +50,9 @@ function init_run_cmd {
             --inputs input \
             --outputs predict \
             --data_location /tf_dataset/dataset/TF_mini_imagenet \
-            --config tf.yaml"
+            --config tf.yaml \
+            --batch_size 100 \
+            --num_batches 10"
 
     fi
 
