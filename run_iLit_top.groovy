@@ -342,7 +342,7 @@ node( node_label ) {
 
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log,*.html,**/*.log', excludes: null
+            archiveArtifacts artifacts: '*.log,*.html', excludes: null
             fingerprint: true
         }
     }
