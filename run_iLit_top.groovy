@@ -1,5 +1,6 @@
 updateGitlabCommitStatus state: 'pending'
 gitLabConnection('gitlab.devtools.intel.com')
+credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
 // setting test_title
 test_title = "iLit Tests"
@@ -127,6 +128,44 @@ def cleanup() {
 
 }
 
+def download() {
+    if(MR_source_branch != ''){
+        checkout changelog: true, poll: true, scm: [
+                $class                           : 'GitSCM',
+                branches                         : [[name: "${MR_source_branch}"]],
+                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                doGenerateSubmoduleConfigurations: false,
+                extensions                       : [
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                        [$class: 'CloneOption', timeout: 60],
+                        [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+                ],
+                submoduleCfg                     : [],
+                userRemoteConfigs                : [
+                        [credentialsId: "${credential}",
+                         url          : "${ilit_url}"]
+                ]
+        ]
+    }
+    else {
+        checkout changelog: true, poll: true, scm: [
+                $class                           : 'GitSCM',
+                branches                         : [[name: "${nigthly_test_branch}"]],
+                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                doGenerateSubmoduleConfigurations: false,
+                extensions                       : [
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                        [$class: 'CloneOption', timeout: 60]
+                ],
+                submoduleCfg                     : [],
+                userRemoteConfigs                : [
+                        [credentialsId: "${credential}",
+                         url          : "${ilit_url}"]
+                ]
+        ]
+    }
+}
+
 def BuildParams(job_framework, job_model){
 
     framework_version = ''
@@ -242,6 +281,8 @@ node( node_label ) {
             checkout scm
         }
 
+        //download()
+
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
 
@@ -256,7 +297,7 @@ node( node_label ) {
         stage("report"){
             dir(WORKSPACE) {
                 sh'''#!/bin/bash
-                    cd ${WORKSPACE}/ilit-validation
+                    cd ${WORKSPACE}/ilit-models
                     qtools_commit=$(git rev-parse HEAD)
                     cd ${WORKSPACE}
                     summaryLog="${WORKSPACE}/summary.log"
