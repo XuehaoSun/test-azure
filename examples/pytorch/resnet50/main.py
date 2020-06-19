@@ -26,8 +26,8 @@ from torchvision.models.resnet import BasicBlock, Bottleneck
 import subprocess
 
 model_names = sorted(name for name in models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__")
+                     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data', metavar='DIR',
@@ -35,8 +35,8 @@ parser.add_argument('data', metavar='DIR',
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
+                         ' | '.join(model_names) +
+                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
@@ -265,10 +265,10 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.tune:
         model.eval()
-        #fuse_resnext_modules(model.module)
+        fuse_resnext_modules(model.module)
         import ilit
         tuner = ilit.Tuner("./conf.yaml")
-        tuner.tune(model, train_loader, eval_dataloader=val_loader)
+        q_model = tuner.tune(model, train_loader, eval_dataloader=val_loader)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -287,7 +287,7 @@ def main_worker(gpu, ngpus_per_node, args):
         best_acc1 = max(acc1, best_acc1)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                and args.rank % ngpus_per_node == 0):
+                                                    and args.rank % ngpus_per_node == 0):
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
