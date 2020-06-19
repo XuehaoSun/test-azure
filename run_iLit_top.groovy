@@ -100,13 +100,19 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
+// setting refer_build
+refer_build = "x0"
+if ('refer_build' in params && params.refer_build != '') {
+    refer_build = params.refer_build
+}
+echo "Running ${refer_build}"
+
 email_subject="${test_title}"
 if ( MR_source_branch != ''){
     email_subject="MR${gitlabMergeRequestIid}: ${test_title}"
 }else {
     email_subject="Nightly: ${test_title}"
 }
-
 echo "email_subject: $email_subject"
 
 def cleanup() {
@@ -295,16 +301,26 @@ node( node_label ) {
         }
 
         stage("report"){
+
+            if(refer_build != 'x0') {
+                copyArtifacts(
+                        projectName: currentBuild.projectName,
+                        selector: specific("${refer_build}"),
+                        filter: 'summary.log',
+                        fingerprintArtifacts: true,
+                        target: "reference")
+            }
+
             dir(WORKSPACE) {
                 sh'''#!/bin/bash
                     cd ${WORKSPACE}/ilit-models
                     qtools_commit=$(git rev-parse HEAD)
                     cd ${WORKSPACE}
                     summaryLog="${WORKSPACE}/summary.log"
-                    summaryLogLast="${WORKSPACE}/summary_last.log"
-                    touch ${summaryLogLast}
+                    summaryLogLast="${WORKSPACE}/reference/summary.log"
                     chmod 775 ilit-validation/scripts/generate_ilit_report.sh
-                    qtools_branch=${nigthly_test_branch} qtools_commit=${qtools_commit} summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} ilit-validation/scripts/generate_ilit_report.sh 
+                    qtools_branch=${nigthly_test_branch} qtools_commit=${qtools_commit} summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} \
+                    ilit-validation/scripts/generate_ilit_report.sh 
                 '''
             }
         }
