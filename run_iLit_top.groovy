@@ -281,7 +281,7 @@ node( node_label ) {
             checkout scm
         }
 
-        //download()
+        download()
 
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
