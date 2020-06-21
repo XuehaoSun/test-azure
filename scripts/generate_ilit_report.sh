@@ -281,7 +281,7 @@ cat >> ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-	    <h1 align="center">TensorFlow Quantization Tests ${MR_TITLE}
+	    <h1 align="center">ILit Tuning Tests ${MR_TITLE}
         [ <a href="${BUILD_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
 	    <table class="features-table">
 	        <tr>
