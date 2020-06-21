@@ -62,4 +62,10 @@ if [ ${framework} == 'tensorflow' ] && [ ${model} == 'resnet50' ]; then
   throughput=$(grep 'q_model throughput:' ${log_file} | awk -F ' ' '{print $3}')
   echo "$framework;CLX8280;INT8;$model;Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
 
+  bs=$(grep 'accuracy batch_size:' ${log_file} | awk -F ' ' '{print $3}')
+  accuracy=$(grep 'input_model accuracy:' ${log_file} | awk -F ' ' '{print $3}')
+  echo "$framework;CLX8280;FP32;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+  accuracy=$(grep 'q_model accuracy:' ${log_file} | awk -F ' ' '{print $3}')
+  echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+
 fi

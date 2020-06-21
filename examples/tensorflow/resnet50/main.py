@@ -82,8 +82,8 @@ def prepare_dataloader(data_location, input_height, input_width, batch_size):
 
 
 def inference(graph, args, batch_size=1):
-    input_layer = "input"
-    output_layer = "predict"
+    input_layer = args.inputs
+    output_layer = args.outputs
     num_inter_threads = 2
     num_intra_threads = 28
     num_batches = 10
@@ -103,7 +103,6 @@ def inference(graph, args, batch_size=1):
     if num_batches > 0:
         num_remaining_images = batch_size * num_batches
 
-    total_accuracy1, total_accuracy5 = (0.0, 0.0)
     dataset = datasets.ImagenetData(args.data_location)
     preprocessor = preprocessing.ImagePreprocessor(
         224, 224, batch_size,
@@ -134,6 +133,65 @@ def inference(graph, args, batch_size=1):
 
     return average_time
 
+
+def accuracy(graph, args):
+    input_layer = args.inputs
+    output_layer = args.outputs
+    num_inter_threads = 2
+    num_intra_threads = 28
+    num_batches = 10
+
+    input_tensor = graph.get_tensor_by_name(input_layer + ":0")
+    output_tensor = graph.get_tensor_by_name(output_layer + ":0")
+
+    config = tf.ConfigProto()
+    config.inter_op_parallelism_threads = num_inter_threads
+    config.intra_op_parallelism_threads = num_intra_threads
+
+    num_processed_images = 0
+    batch_size = 100
+
+    if num_batches > 0:
+        num_remaining_images = batch_size * num_batches
+
+    total_accuracy1, total_accuracy5 = (0.0, 0.0)
+    dataset = datasets.ImagenetData(args.data_location)
+    preprocessor = preprocessing.ImagePreprocessor(
+        224, 224, batch_size,
+        1,  # device count
+        tf.float32,  # data_type for input fed to the graph
+        train=False,  # doing inference
+        resize_method='crop')
+    images, labels = preprocessor.minibatch(dataset, subset='validation')
+
+    with tf.Session() as sess:
+        sess_graph = tf.Session(graph=graph, config=config)
+        while num_remaining_images >= batch_size:
+            # Reads and preprocess data
+            np_images, np_labels = sess.run([images[0], labels[0]])
+            num_processed_images += batch_size
+            num_remaining_images -= batch_size
+            # Compute inference on the preprocessed data
+            predictions = sess_graph.run(output_tensor,
+                                         {input_tensor: np_images})
+            # print("Evaluate Processed %d images."% (num_processed_images))
+            accuracy1 = tf.reduce_sum(
+                tf.cast(tf.nn.in_top_k(tf.constant(predictions),
+                                       tf.constant(np_labels), 1), tf.float32))
+
+            accuracy5 = tf.reduce_sum(
+                tf.cast(tf.nn.in_top_k(tf.constant(predictions),tf.constant(np_labels), 5), tf.float32))
+
+            np_accuracy1, np_accuracy5=sess.run([accuracy1, accuracy5])
+            total_accuracy1 += np_accuracy1
+            total_accuracy5 += np_accuracy5
+            print("Processed %d images. (Top1 accuracy, Top5 accuracy) = (%0.4f, %0.4f)"
+                  % (num_processed_images, total_accuracy1 / num_processed_images,
+                     total_accuracy5 / num_processed_images))
+
+    return total_accuracy1 / num_processed_images
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tensorflow Resnet50-v1.0 demo for iLit')
     parser.add_argument('--input_graph', type=str, default='')
@@ -161,6 +219,13 @@ if __name__ == '__main__':
             eval_func=None, eval_dataloader=dataloader, model_specific_cfg=rn50_input_output)
 
     if args.benchmark:
+        # for accuracy
+        bs = 100
+        print("accuracy batch_size: %d" % bs)
+        top1 = accuracy(fp32_graph, args)
+        print("input_model accuracy: %.3f " % top1)
+        top1 = accuracy(q_model, args)
+        print("q_model accuracy: %.3f " % top1)
         # for latency
         time_per_batch = inference(fp32_graph, args, batch_size=1)
         print("input_model latency: %.3f ms" % (time_per_batch * 1000))
