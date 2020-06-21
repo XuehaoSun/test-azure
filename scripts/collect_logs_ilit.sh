@@ -41,8 +41,6 @@ Tune result is: [0.6954, 156.9869] Best tune result is: [0.6914, 150.7698]
   " > ${log_file}
 fi
 
-
-
 accuracy=$(grep 'FP32 baseline is:' ${log_file} | awk -F'[' '{print $2}'|awk -F',' '{print $1}')
 duration=$(grep 'FP32 baseline is:' ${log_file} | awk -F',' '{print $2}'|awk -F']' '{print $1}')
 
@@ -50,7 +48,18 @@ echo "$framework;CLX8280;FP32;$model;Inference;Latency;$bs;${duration};${BUILD_U
 echo "$framework;CLX8280;FP32;$model;Inference;Accuracy;$bs;${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
 
 accuracy=$(grep 'Best tune result is:' ${log_file}|tail -1 |awk -F':' '{print $3}' |awk -F'[' '{print $2}'|awk -F',' '{print $1}')
-duration=$(grep 'Best tune result is:' ${log_file}|tail -1 |awk -F':' '{print $3}' |awk -F',' '{print $2}'|awk -F']' '{print $1}')
-
-echo "$framework;CLX8280;INT8;$model;Inference;Latency;$bs;${duration};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
 echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;$bs;${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+
+if [ ${framework} == 'tensorflow' ] && [ ${model} == 'resnet50' ]; then
+  latency=$(grep 'input_model latency:' ${log_file} | awk -F ' ' '{print $3}')
+  echo "$framework;CLX8280;FP32;$model;Inference;Latency;1;${latency};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+  latency=$(grep 'q_model latency:' ${log_file} | awk -F ' ' '{print $3}')
+  echo "$framework;CLX8280;INT8;$model;Inference;Latency;1;${latency};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+
+  bs=$(grep 'throughput batch_size:' ${log_file} | awk -F ' ' '{print $3}')
+  throughput=$(grep 'input_model throughput:' ${log_file} | awk -F ' ' '{print $3}')
+  echo "$framework;CLX8280;FP32;$model;Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+  throughput=$(grep 'q_model throughput:' ${log_file} | awk -F ' ' '{print $3}')
+  echo "$framework;CLX8280;INT8;$model;Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+
+fi
