@@ -76,7 +76,7 @@ node( sub_node_label ) {
                         browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                         doGenerateSubmoduleConfigurations: false,
                         extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
                                 [$class: 'CloneOption', timeout: 60],
                                 [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                         ],
@@ -107,25 +107,30 @@ node( sub_node_label ) {
         }
 
         stage("Performance") {
-            sh '''#!/bin/bash
+            sh '''#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model} ----"
                 # copy examples
                 rm -rf ${WORKSPACE}/ilit-models/examples
                 cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
+                
+                if [ ${framework} == 'pytorch' ]; then
+                    echo "test" > ${framework}-${model}.log 2>&1
+                    exit 0
+                fi
                 timeout 1800 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
-                    > ${WORKSPACE}/${framework}-${model}.log 2>&1 
+                    > ${framework}-${model}.log 2>&1 
             '''
         }
-        
+
     } catch(e) {
         throw e
     } finally {
 
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "*.log", excludes: null
+            archiveArtifacts artifacts: "${framework}-${model}.log", excludes: null
             fingerprint: true
         }
     }

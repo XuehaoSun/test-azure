@@ -20,7 +20,6 @@ function main {
 function init_params {
     framework='tensorflow'
     model='resnet50'
-    batch_size=128
 
     for var in "$@"
     do
@@ -46,7 +45,16 @@ function init_params {
 function init_run_cmd {
 
     if [ "${model}" = "resnet50" ];then
-        cmd="python main.py "
+        cmd="python main.py \
+            --input_graph /tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb \
+            --inputs input \
+            --outputs predict \
+            --data_location /tf_dataset/dataset/TF_mini_imagenet \
+            --config tf.yaml \
+            --batch_size 10 \
+            --num_batches 10 \
+            --benchmark"
+
     fi
 
 }
@@ -54,8 +62,8 @@ function init_run_cmd {
 # environment
 function set_environment {
     # export KMP_BLOCKTIME=1
-    export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
-    gcc -v
+    # export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
+    # gcc -v
     # conda3 python3
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
