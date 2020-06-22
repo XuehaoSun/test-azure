@@ -5,7 +5,7 @@ function main {
     init_params "$@"
     init_run_cmd
     set_environment
-    model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model}/
+    model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/resnet50
     if [ "${model_src_dir}" != "" ];then
         cd ${model_src_dir}
     fi
@@ -19,8 +19,7 @@ function main {
 # init params
 function init_params {
     framework='mxnet'
-    model='resnet50v1_5'
-    batch_size=128
+    model='resnet50v1'
 
     for var in "$@"
     do 
