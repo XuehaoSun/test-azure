@@ -78,15 +78,15 @@ function generate_core {
 
     # run tunning
     run_cmd="${cmd} --tune"
-    timeout 1800 bash "${run_cmd}"
+    timeout 1800 eval "${run_cmd}"
 
     # run benchmark
     run_cmd="${cmd} --benchmark"
-    bash "${run_cmd}"
+    eval "${run_cmd}"
 
     # run fp32 benchmark
     run_cmd="${cmd} --fp32_benchmark"
-    bash "${run_cmd}"
+    source "${run_cmd}"
 }
 
 main "$@"
