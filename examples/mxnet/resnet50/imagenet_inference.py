@@ -291,19 +291,6 @@ if __name__ == '__main__':
         cnn_tuner = Tuner("./rn50.yaml")
         cnn_tuner.tune(fp32_model, q_dataloader=calib_data, eval_dataloader=data)
 
-        if args.low_precision:
-            sym, arg_params, aux_params = low_precison_convert(symbol_file,
-                                                               args.low_precision,
-                                                               sym, arg_params,
-                                                               aux_params)
-        # make sure that fp32 inference works on the same images as calibrated quantized model
-        logger.info('Skipping the first %d batches' % args.num_skipped_batches)
-        data = advance_data_iter(data, args.num_skipped_batches)
-
-        num_inference_images = args.num_inference_batches * batch_size
-        logger.info('Running model %s for inference' % symbol_file)
-        score(sym, arg_params, aux_params, data, [ctx], label_name,
-            max_num_examples=num_inference_images, logger=logger)
     else:
         logger.info('Running model %s for inference' % symbol_file)
         speed = benchmark_score(symbol_file, ctx, batch_size,

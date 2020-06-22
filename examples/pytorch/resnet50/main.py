@@ -21,12 +21,13 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
+from torchvision.models.resnet import BasicBlock, Bottleneck
 
 import subprocess
 
 model_names = sorted(name for name in models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__")
+                     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data', metavar='DIR',
@@ -34,8 +35,8 @@ parser.add_argument('data', metavar='DIR',
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
+                         ' | '.join(model_names) +
+                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
@@ -60,6 +61,8 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
+parser.add_argument('-t', '--tune', dest='tune', action='store_true',
+                    help='tune best int8 model on calibration dataset')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
 parser.add_argument('--world-size', default=-1, type=int,
@@ -124,6 +127,20 @@ def main():
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
 
+def fuse_resnext_modules(model):
+    torch.quantization.fuse_modules(model, [['conv1', 'bn1', 'relu']], inplace=True)
+    for mod in model.modules():
+        if type(mod) == Bottleneck:
+            torch.quantization.fuse_modules(mod, [['conv1', 'bn1', 'relu1']], inplace=True)
+            torch.quantization.fuse_modules(mod, [['conv2', 'bn2', 'relu2']], inplace=True)
+            torch.quantization.fuse_modules(mod, [['conv3', 'bn3']], inplace=True)
+            if mod.downsample:
+                torch.quantization.fuse_modules(mod.downsample, [['0', '1']], inplace=True)
+        if type(mod) == BasicBlock:
+            torch.quantization.fuse_modules(mod, [['conv1', 'bn1', 'relu1']], inplace=True)
+            torch.quantization.fuse_modules(mod, [['conv2', 'bn2']], inplace=True)
+            if mod.downsample:
+                torch.quantization.fuse_modules(mod.downsample, [['0', '1']], inplace=True)
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
@@ -245,10 +262,14 @@ def main_worker(gpu, ngpus_per_node, args):
         num_workers=args.workers, pin_memory=True)
 
     if args.evaluate:
-        #validate(val_loader, model, criterion, args)
+        validate(val_loader, model, criterion, args)
+
+    if args.tune:
+        model.eval()
+        fuse_resnext_modules(model.module)
         import ilit
         tuner = ilit.Tuner("./conf.yaml")
-        tuner.tune(model, train_loader, eval_dataloader=val_loader)
+        q_model = tuner.tune(model, train_loader, eval_dataloader=val_loader)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -267,13 +288,13 @@ def main_worker(gpu, ngpus_per_node, args):
         best_acc1 = max(acc1, best_acc1)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                and args.rank % ngpus_per_node == 0):
+                                                    and args.rank % ngpus_per_node == 0):
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
-                'optimizer' : optimizer.state_dict(),
+                'optimizer': optimizer.state_dict(),
             }, is_best)
 
 

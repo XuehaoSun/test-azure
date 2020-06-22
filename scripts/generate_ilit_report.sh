@@ -274,14 +274,14 @@ then
   Test_Info_Title="<th colspan="2">Source Branch</th> <th colspan="4">Target Branch</th> <th colspan="4">Commit</th> "
   Test_Info="<td colspan="2">${gitlabSourceBranch}</td> <td colspan="4">${gitlabTargetBranch}</td> <td colspan="4">${commit_id}"
 else
-  Test_Info_Title="<th colspan="4">Model Branch</th> <th colspan="4">Commit ID</th> "
+  Test_Info_Title="<th colspan="4">Test Branch</th> <th colspan="4">Commit ID</th> "
   Test_Info="<th colspan="4">${qtools_branch}</th> <th colspan="4">${qtools_commit}</th> "
 fi
 cat >> ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-	    <h1 align="center">TensorFlow Quantization Tests ${MR_TITLE}
+	    <h1 align="center">ILit Tuning Tests ${MR_TITLE}
         [ <a href="${BUILD_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
 	    <table class="features-table">
 	        <tr>
@@ -289,14 +289,14 @@ cat >> ${WORKSPACE}/report.html << eof
               <th>TensorFlow Version</th>
               <th>PyTorch Version</th>
               <th>MXNet Version</th>
-              <th>Model</th>
+              <th>Repo</th>
               ${Test_Info_Title}
 		      </tr>
 		      <tr>
 			        <td>CLX8280</td>
                     <td>${tensorflow_version}</td>
-                    <td>${tensorflow_version}</td>
-                    <td>${tensorflow_version}</td>
+                    <td>${pytorch_version}</td>
+                    <td>${mxnet_version}</td>
 			        <td><a href="https://gitlab.devtools.intel.com/intelai/tools">ILIT</a></td>
               ${Test_Info}
 			    </tr>

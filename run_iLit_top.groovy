@@ -1,6 +1,5 @@
 updateGitlabCommitStatus state: 'pending'
 gitLabConnection('gitlab.devtools.intel.com')
-
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
 // setting test_title
@@ -101,13 +100,19 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
+// setting refer_build
+refer_build = "x0"
+if ('refer_build' in params && params.refer_build != '') {
+    refer_build = params.refer_build
+}
+echo "Running ${refer_build}"
+
 email_subject="${test_title}"
 if ( MR_source_branch != ''){
     email_subject="MR${gitlabMergeRequestIid}: ${test_title}"
 }else {
     email_subject="Nightly: ${test_title}"
 }
-
 echo "email_subject: $email_subject"
 
 def cleanup() {
@@ -127,6 +132,44 @@ def cleanup() {
         echo "Error while doing cleanup"
     }  // catch
 
+}
+
+def download() {
+    if(MR_source_branch != ''){
+        checkout changelog: true, poll: true, scm: [
+                $class                           : 'GitSCM',
+                branches                         : [[name: "${MR_source_branch}"]],
+                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                doGenerateSubmoduleConfigurations: false,
+                extensions                       : [
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                        [$class: 'CloneOption', timeout: 60],
+                        [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+                ],
+                submoduleCfg                     : [],
+                userRemoteConfigs                : [
+                        [credentialsId: "${credential}",
+                         url          : "${ilit_url}"]
+                ]
+        ]
+    }
+    else {
+        checkout changelog: true, poll: true, scm: [
+                $class                           : 'GitSCM',
+                branches                         : [[name: "${nigthly_test_branch}"]],
+                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                doGenerateSubmoduleConfigurations: false,
+                extensions                       : [
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                        [$class: 'CloneOption', timeout: 60]
+                ],
+                submoduleCfg                     : [],
+                userRemoteConfigs                : [
+                        [credentialsId: "${credential}",
+                         url          : "${ilit_url}"]
+                ]
+        ]
+    }
 }
 
 def BuildParams(job_framework, job_model){
@@ -180,7 +223,7 @@ def doBuild() {
                         echo "${job_model}, ${job_framework}"
                         def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
 
-                        if (downstreamJob.getResult() == 'SUCCESS') {
+                        //if (downstreamJob.getResult() == 'SUCCESS') {
                             catchError {
 
                                 copyArtifacts(
@@ -193,7 +236,7 @@ def doBuild() {
                                 // Archive in Jenkins
                                 archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
                             }
-                        }
+                        //}
                     }
                 }
             }
@@ -225,8 +268,8 @@ def collectLog() {
 
                 sh '''#!/bin/bash -x
                     cd $WORKSPACE
-                    chmod 775 ./scripts/collect_logs_ilit.sh
-                    ./scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework}                
+                    chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
+                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework}                
                 '''
             }
         }
@@ -244,6 +287,8 @@ node( node_label ) {
             checkout scm
         }
 
+        download()
+
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
 
@@ -256,40 +301,53 @@ node( node_label ) {
         }
 
         stage("report"){
+
+            if(refer_build != 'x0') {
+                copyArtifacts(
+                        projectName: currentBuild.projectName,
+                        selector: specific("${refer_build}"),
+                        filter: 'summary.log',
+                        fingerprintArtifacts: true,
+                        target: "reference")
+            }
+
             dir(WORKSPACE) {
                 sh'''#!/bin/bash
+                    cd ${WORKSPACE}/ilit-models
+                    qtools_commit=$(git rev-parse HEAD)
+                    cd ${WORKSPACE}
                     summaryLog="${WORKSPACE}/summary.log"
-                    
-                    chmod 775 ./scripts/generate_ilit_report.sh
-                    ./scripts/generate_ilit_report.sh 
+                    summaryLogLast="${WORKSPACE}/reference/summary.log"
+                    chmod 775 ilit-validation/scripts/generate_ilit_report.sh
+                    qtools_branch=${nigthly_test_branch} qtools_commit=${qtools_commit} summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} \
+                    ilit-validation/scripts/generate_ilit_report.sh 
                 '''
             }
         }
 
-        // stage("send email") {
-        //     dir("$WORKSPACE") {
-        //         if (MR_branch != '') {
-        //             recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
-        //             if ('recipient_list' in params && params.recipient_list != '') {
-        //                 recipient_list = params.recipient_list + ',' + gitlabUserEmail
-        //             }
-        //         } else {
-        //             recipient_list = 'suyue.chen@intel.com'
-        //             if ('recipient_list' in params && params.recipient_list != '') {
-        //                 recipient_list = params.recipient_list
-        //             }
-        //         }
-        // 
-        //         echo "Running ${models}"
-        //         emailext subject: "${email_subject}",
-        //                 to: "${recipient_list}",
-        //                 replyTo: "${recipient_list}",
-        //                 body: '''${FILE,path="report.html"}''',
-        //                 attachmentsPattern: "",
-        //                 mimeType: 'text/html'
-        // 
-        //     }
-        // }
+         stage("send email") {
+             dir("$WORKSPACE") {
+                 if (MR_source_branch != '') {
+                     recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
+                     if ('recipient_list' in params && params.recipient_list != '') {
+                         recipient_list = params.recipient_list + ',' + gitlabUserEmail
+                     }
+                 } else {
+                     recipient_list = 'suyue.chen@intel.com'
+                     if ('recipient_list' in params && params.recipient_list != '') {
+                         recipient_list = params.recipient_list
+                     }
+                 }
+
+                 emailext subject: "${email_subject}",
+                         to: "${recipient_list}",
+                         replyTo: "${recipient_list}",
+                         body: '''${FILE,path="report.html"}''',
+                         attachmentsPattern: "",
+                         mimeType: 'text/html'
+
+             }
+         }
         updateGitlabCommitStatus state:'success'
     } catch (e) {
         // If there was an exception thrown, the build failed
@@ -300,7 +358,7 @@ node( node_label ) {
 
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log,*.html,**/*.log', excludes: null
+            archiveArtifacts artifacts: '*.log,*.html', excludes: null
             fingerprint: true
         }
     }
