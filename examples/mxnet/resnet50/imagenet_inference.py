@@ -92,8 +92,9 @@ def score(sym, arg_params, aux_params, data, devs, label_name, max_num_examples,
             break
 
     speed = num / (time.time() - tic)
+    top1 = eval(m.get()[0][1])
 
-    return m.get()[0][1], speed
+    return top1, speed
 
 
 

@@ -89,7 +89,7 @@ function generate_core {
 
     # run fp32 benchmark
     run_cmd="${cmd} --fp32_benchmark"
-    source "${run_cmd}"
+    eval "${run_cmd}"
 }
 
 main "$@"
