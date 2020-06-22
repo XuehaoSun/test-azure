@@ -1,3 +1,5 @@
+credential = "lab_tfbot"
+
 // setting node_label
 node_label = "ilit"
 if ('node_label' in params && params.node_label != '') {
@@ -26,7 +28,40 @@ if ('requirement_list' in params && params.requirement_list != ''){
 }
 echo "pip install list: ${requirement_list}"
 
+ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool.git"
+if ('ilit_url' in params && params.ilit_url != ''){
+    ilit_url = params.ilit_url
+}
+echo "ilit_url is ${ilit_url}"
+
+ilit_branch="v1.0a_rc"
+if ('ilit_branch' in params && params.ilit_branch != ''){
+    ilit_branch = params.ilit_branch
+}
+echo "ilit_branch is ${ilit_branch}"
+
+
 node(node_label){
+
+    stage("download"){
+        if (framework == 'pytorch'){
+            checkout changelog: true, poll: true, scm: [
+                    $class                           : 'GitSCM',
+                    branches                         : [[name: "${ilit_branch}"]],
+                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions                       : [
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
+                            [$class: 'CloneOption', timeout: 60]
+                    ],
+                    submoduleCfg                     : [],
+                    userRemoteConfigs                : [
+                            [credentialsId: "${credential}",
+                             url          : "${ilit_url}"]
+                    ]
+            ]
+        }
+    }
 
     stage("build"){
             sh'''#!/bin/bash
@@ -43,7 +78,11 @@ node(node_label){
                 if [ ${framework} == 'tensorflow' ]; then
                     pip install intel-${framework}==${framework_version}
                 elif [ ${framework} == 'pytorch' ]; then
-                    pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+                    pip install torch==1.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+                    cd ${WORKSPACE}/iLit/examples/pytorch/vision
+                    export PATH=${HOME}/gcc6.3/bin/:$PATH
+                    export LD_LIBRARY_PATH=${HOME}/gcc6.3/lib64:$LD_LIBRARY_PATH
+                    python setup.py install
                 else 
                     pip install ${framework}==${framework_version}
                 fi

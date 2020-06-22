@@ -46,7 +46,7 @@ function init_params {
 function init_run_cmd {
 
     if [ "${model}" = "resnet50" ];then
-        dataset_dir=/tf_dataset/mxnet/resnet50v1/model
+        dataset_dir=/tf_dataset/mxnet/resnet50v1
         cmd=" python imagenet_inference.py \
               --symbol-file=${dataset_dir}/resnet50_v1-symbol.json \
               --param-file=${dataset_dir}/resnet50_v1-0000.params\
@@ -67,7 +67,7 @@ function set_environment {
     # export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
     # gcc -v
     # conda3 python3
-    export PATH="${HOME}/tools/anaconda3/bin:$PATH"
+    export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
     export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
     python -V

@@ -54,11 +54,6 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
-// mxnet point to specific node for dataset
-if (framework == "mxnet"){
-    sub_node_label="inteltf-clx8280-102.sh.intel.com"
-}
-
 node( sub_node_label ) {
 
     deleteDir()
@@ -112,11 +107,7 @@ node( sub_node_label ) {
                 # copy examples
                 rm -rf ${WORKSPACE}/ilit-models/examples
                 cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
-                
-                if [ ${framework} == 'pytorch' ]; then
-                    echo "test" > ${framework}-${model}.log 2>&1
-                    exit 0
-                fi
+
                 timeout 1800 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
