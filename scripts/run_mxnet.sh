@@ -77,8 +77,11 @@ function set_environment {
 function generate_core {
 
     # run tunning
+    excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
+    rm -f ${excute_cmd_file}
     run_cmd="${cmd} --tune"
-    timeout 1800 eval "${run_cmd}"
+    printf "${run_cmd}" |tee -a ${excute_cmd_file}
+    timeout 1800 bash ${excute_cmd_file}
 
     # run benchmark
     run_cmd="${cmd} --benchmark"
