@@ -54,11 +54,6 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
-// mxnet point to specific node for dataset
-if (framework == "mxnet"){
-    sub_node_label="inteltf-clx8280-102.sh.intel.com"
-}
-
 node( sub_node_label ) {
 
     deleteDir()
