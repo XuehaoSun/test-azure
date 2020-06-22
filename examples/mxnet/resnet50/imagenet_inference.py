@@ -238,6 +238,8 @@ if __name__ == '__main__':
                         help='use ilit to tune.')
     parser.add_argument('--benchmark', action='store_true', default=False,
                         help='benchmark ilit tune result.')
+    parser.add_argument('--fp32_benchmark', action='store_true', default=False,
+                        help='benchmark fp32.')
 
     args = parser.parse_args()
 
@@ -361,6 +363,19 @@ if __name__ == '__main__':
             top1, speed = score(sym, arg_params, aux_params, data_1, [ctx], label_name,
                           max_num_examples=args.num_inference_batches, logger=logger)
             print("q_model latency: %.3f ms" % (1000 / speed))
+
+        if args.fp32_benchmark:
+            (sym, arg_params, aux_params) = load_model(symbol_file, param_file, logger)
+            top1, speed = score(sym, arg_params, aux_params, data, [ctx], label_name,
+                                max_num_examples=num_inference_images, logger=logger)
+            print("accuracy batch_size: %d" % batch_size)
+            print("input_model accuracy: %.3f " % top1)
+            print("throughput batch_size: %d" % batch_size)
+            print("input_model throughput: %.3f images/sec" % speed)
+
+            top1, speed = score(sym, arg_params, aux_params, data_1, [ctx], label_name,
+                                max_num_examples=args.num_inference_batches, logger=logger)
+            print("input_model latency: %.3f ms" % (1000 / speed))
 
     else:
         logger.info('Running model %s for inference' % symbol_file)

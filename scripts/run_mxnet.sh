@@ -54,6 +54,11 @@ function init_run_cmd {
         --num-inference-batches=200 \
         --ctx=cpu \
         --dataset=${dataset_dir}/val_256_q90.rec "
+
+    if [ ${model} == 'inceptionv3' ]; then
+        cmd="${cmd} --image-shape 3,299,299"
+    fi
+
 }
 
 # environment
@@ -77,6 +82,10 @@ function generate_core {
 
     # run benchmark
     run_cmd="${cmd} --benchmark"
+    bash "${run_cmd}"
+
+    # run fp32 benchmark
+    run_cmd="${cmd} --fp32_benchmark"
     bash "${run_cmd}"
 }
 
