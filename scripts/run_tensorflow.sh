@@ -76,11 +76,8 @@ function generate_core {
 
     excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
     rm -f ${excute_cmd_file}
-
     printf "${cmd}" |tee -a ${excute_cmd_file}
-
-    sleep 1
-    source ${excute_cmd_file}
+    timeout 1800 bash ${excute_cmd_file}
 
 }
 

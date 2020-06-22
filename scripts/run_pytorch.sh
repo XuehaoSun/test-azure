@@ -47,9 +47,9 @@ function init_run_cmd {
     dataset=/tf_dataset/pytorch/ImageNet/raw
     if [ "${model}" = "resnet50" ];then
         cmd=" python main.py \
-            -a resnet18 -t \
+            -a resnet18 \
             --pretrained \
-            ${dataset}"
+            --data ${dataset}"
     fi
 
 }
@@ -68,14 +68,16 @@ function set_environment {
 
 # run
 function generate_core {
-
+      # run tunning
     excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
     rm -f ${excute_cmd_file}
+    run_cmd="${cmd} -t"
+    printf "${run_cmd}" |tee -a ${excute_cmd_file}
+    timeout 1800 bash ${excute_cmd_file}
 
-    printf "${cmd}" |tee -a ${excute_cmd_file}
-
-    sleep 1
-    source ${excute_cmd_file}
+    # run fp32 benchmark
+    run_cmd="${cmd} -e"
+    eval "${run_cmd}"
 
 }
 

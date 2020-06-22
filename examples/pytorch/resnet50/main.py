@@ -30,7 +30,7 @@ model_names = sorted(name for name in models.__dict__
                      and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('data', metavar='DIR',
+parser.add_argument('--data', metavar='DIR',
                     help='path to dataset')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
@@ -262,7 +262,15 @@ def main_worker(gpu, ngpus_per_node, args):
         num_workers=args.workers, pin_memory=True)
 
     if args.evaluate:
-        validate(val_loader, model, criterion, args)
+        top1, batch_time = validate(val_loader, model, criterion, args)
+        if args.batch_size == 1:
+            print("input_model latency: %.3f ms" % (batch_time*1000))
+        else:
+            print("accuracy batch_size: %d" % args.batch_size)
+            print("input_model accuracy: %.3f " % top1)
+            print("throughput batch_size: %d" % args.batch_size)
+            print("input_model throughput: %.3f images/sec" % (args.batch_size/batch_time))
+        return
 
     if args.tune:
         model.eval()
@@ -270,6 +278,12 @@ def main_worker(gpu, ngpus_per_node, args):
         import ilit
         tuner = ilit.Tuner("./conf.yaml")
         q_model = tuner.tune(model, train_loader, eval_dataloader=val_loader)
+
+        top1, batch_time = validate(val_loader, q_model, criterion, args)
+        print("accuracy batch_size: %d" % args.batch_size)
+        print("q_model accuracy: %.3f " % top1)
+        print("throughput batch_size: %d" % args.batch_size)
+        print("q_model throughput: %.3f images/sec" % (args.batch_size/batch_time))
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -381,7 +395,7 @@ def validate(val_loader, model, criterion, args):
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
 
-    return top1.avg
+    return top1.avg, batch_time.avg
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
