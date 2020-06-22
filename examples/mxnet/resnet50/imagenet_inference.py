@@ -24,6 +24,7 @@ import mxnet as mx
 from mxnet import nd
 from mxnet.contrib.quantization import *
 from mxnet.contrib import amp
+import sys
 
 
 def download_dataset(dataset_url, dataset_dir, logger=None):
@@ -92,12 +93,8 @@ def score(sym, arg_params, aux_params, data, devs, label_name, max_num_examples,
 
     speed = num / (time.time() - tic)
 
-    if logger is not None:
-        logger.info('Finished inference with %d images' % num)
-        logger.info('Finished with %f images per second', speed)
-        logger.warn('Note: GPU performance is expected to be slower than CPU. Please refer quantization/README.md for details')
-        for m in metrics:
-            logger.info(m.get())
+    return m.get()[0][1], speed
+
 
 
 def low_precison_convert(model_name, low_precision, sym, arg_params, aux_params, excluded_sym_names=[]):
@@ -136,14 +133,11 @@ def benchmark_score(symbol_file, ctx, batch_size, num_batches, data_layer_type, 
     sym = mx.sym.load(symbol_file_path)
     mod = mx.mod.Module(symbol=sym, context=ctx)
     if data_layer_type == "int8":
-        dshape = mx.io.DataDesc(name='data', shape=(
-            batch_size,) + data_shape, dtype=np.int8)
+        dshape = mx.io.DataDesc(name='data', shape=(batch_size,) + data_shape, dtype=np.int8)
     elif data_layer_type == 'uint8':
-        dshape = mx.io.DataDesc(name='data', shape=(
-            batch_size,) + data_shape, dtype=np.uint8)
+        dshape = mx.io.DataDesc(name='data', shape=(batch_size,) + data_shape, dtype=np.uint8)
     else:  # float32
-        dshape = mx.io.DataDesc(name='data', shape=(
-            batch_size,) + data_shape, dtype=np.float32)
+        dshape = mx.io.DataDesc(name='data', shape=(batch_size,) + data_shape, dtype=np.float32)
     mod.bind(for_training=False,
              inputs_need_grad=False,
              data_shapes=[dshape])
@@ -183,10 +177,36 @@ def benchmark_score(symbol_file, ctx, batch_size, num_batches, data_layer_type, 
     # return num images per second
     return num_batches*batch_size/(time.time() - tic)
 
+def ilit_save(model, prefix):
+    '''The function is used by tune strategy class for saving model.
+
+        Args:
+            model (object): The model to do calibration.
+    '''
+    output_dir = './quantized_model/'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    model_name = prefix.split('/', -1)[-1]
+    ckpt_name = model_name[:-12]
+    params_saved = os.path.join(output_dir, ckpt_name)
+    if isinstance(model, mx.gluon.HybridBlock):
+        logger.info("Save MXNet HybridBlock quantization model!")
+        model.export(params_saved, epoch=0)
+        logging.info('Saving quantized model at %s', output_dir)
+    else:
+        logger.info('Saving symbol into file at %s' % ckpt_name)
+        symbol, arg_params, aux_params = model
+        symbol.save(params_saved+'-symbol.json')
+        save_dict = {('arg:%s' % k): v.as_in_context(mx.cpu()) for k, v in arg_params.items()}
+        save_dict.update({('aux:%s' % k): v.as_in_context(mx.cpu()) for k, v in aux_params.items()})
+        mx.nd.save(params_saved+'-0000.params', save_dict)
+    return params_saved
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Score a model on a dataset')
     parser.add_argument('--ctx', type=str, default='gpu')
-    parser.add_argument('--benchmark', type=bool, default=False, help='dummy data benchmark')
+    parser.add_argument('--_benchmark', type=bool, default=False, help='dummy data benchmark')
     parser.add_argument('--symbol-file', type=str, required=True, help='symbol file path')
     parser.add_argument('--param-file', type=str, required=False, help='param file path')
     parser.add_argument('--batch-size', type=int, default=32)
@@ -214,6 +234,10 @@ if __name__ == '__main__':
     parser.add_argument('--low-precision', type=str, default='',
                         choices=['', 'float16', 'bfloat16'],
                         help='enable low precision')
+    parser.add_argument('--tune', action='store_true', default=False,
+                        help='use ilit to tune.')
+    parser.add_argument('--benchmark', action='store_true', default=False,
+                        help='benchmark ilit tune result.')
 
     args = parser.parse_args()
 
@@ -262,9 +286,9 @@ if __name__ == '__main__':
         elif args.ctx == 'cpu':
             assert args.low_precision == 'bfloat16', "Not supported low-precision options for CPU."
 
-    if args.benchmark == False:
+    if args._benchmark == False:
         dataset = args.dataset
-        download_dataset('http://data.mxnet.io/data/val_256_q90.rec', dataset)
+        # download_dataset('http://data.mxnet.io/data/val_256_q90.rec', dataset)
         logger.info('Dataset for inference: %s' % dataset)
 
         # creating data iterator
@@ -284,12 +308,59 @@ if __name__ == '__main__':
             ctx=args.ctx,
             **combine_mean_std)
 
-        # loading model
-        fp32_model = load_model(symbol_file, param_file, logger)
-        from ilit import Tuner
-        calib_data = mx.io.ImageRecordIter(path_imgrec=dataset,label_width=1,preprocess_threads=data_nthreads,batch_size=batch_size,data_shape=data_shape,label_name=label_name,rand_crop=False,rand_mirror=False,shuffle=args.shuffle_dataset,shuffle_chunk_seed=args.shuffle_chunk_seed,seed=args.shuffle_seed,dtype=data_layer_type,ctx=args.ctx,**combine_mean_std)    
-        cnn_tuner = Tuner("./rn50.yaml")
-        cnn_tuner.tune(fp32_model, q_dataloader=calib_data, eval_dataloader=data)
+        data_1 = mx.io.ImageRecordIter(
+            path_imgrec=dataset,
+            label_width=1,
+            preprocess_threads=data_nthreads,
+            batch_size=1,
+            data_shape=data_shape,
+            label_name=label_name,
+            rand_crop=False,
+            rand_mirror=False,
+            shuffle=args.shuffle_dataset,
+            shuffle_chunk_seed=args.shuffle_chunk_seed,
+            seed=args.shuffle_seed,
+            dtype=data_layer_type,
+            ctx=args.ctx,
+            **combine_mean_std)
+
+        if args.tune:
+            # loading model
+            fp32_model = load_model(symbol_file, param_file, logger)
+            from ilit import Tuner
+            calib_data = mx.io.ImageRecordIter(path_imgrec=dataset,label_width=1,preprocess_threads=data_nthreads,batch_size=batch_size,data_shape=data_shape,label_name=label_name,rand_crop=False,rand_mirror=False,shuffle=args.shuffle_dataset,shuffle_chunk_seed=args.shuffle_chunk_seed,seed=args.shuffle_seed,dtype=data_layer_type,ctx=args.ctx,**combine_mean_std)
+            cnn_tuner = Tuner("./rn50.yaml")
+            qmodel = cnn_tuner.tune(fp32_model, q_dataloader=calib_data, eval_dataloader=data)
+            qmodel_file = ilit_save(model=qmodel, prefix=symbol_file)
+            sys.exit()
+
+        if args.low_precision:
+            sym, arg_params, aux_params = low_precison_convert(symbol_file,
+                                                               args.low_precision,
+                                                               sym, arg_params,
+                                                               aux_params)
+        # make sure that fp32 inference works on the same images as calibrated quantized model
+        logger.info('Skipping the first %d batches' % args.num_skipped_batches)
+        data = advance_data_iter(data, args.num_skipped_batches)
+
+        num_inference_images = args.num_inference_batches * batch_size
+
+        if args.benchmark:
+            model_name = symbol_file.split('/', -1)[-1]
+            qmodel_file = './quantized_model/' + model_name[:-12]
+            logger.info('Running model %s for inference' % qmodel_file)
+            (sym, arg_params, aux_params) = mx.model.load_checkpoint(qmodel_file, epoch=0)
+
+            top1, speed = score(sym, arg_params, aux_params, data, [ctx], label_name,
+                  max_num_examples=num_inference_images, logger=logger)
+            print("accuracy batch_size: %d" % batch_size)
+            print("q_model accuracy: %.3f " % top1)
+            print("throughput batch_size: %d" % batch_size)
+            print("q_model throughput: %.3f images/sec" % speed)
+
+            top1, speed = score(sym, arg_params, aux_params, data_1, [ctx], label_name,
+                          max_num_examples=args.num_inference_batches, logger=logger)
+            print("q_model latency: %.3f ms" % (1000 / speed))
 
     else:
         logger.info('Running model %s for inference' % symbol_file)

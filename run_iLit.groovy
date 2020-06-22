@@ -108,7 +108,7 @@ node( sub_node_label ) {
                 rm -rf ${WORKSPACE}/ilit-models/examples
                 cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
 
-                timeout 1800 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
+                timeout 3600 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
                     > ${framework}-${model}.log 2>&1 

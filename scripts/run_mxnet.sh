@@ -44,21 +44,17 @@ function init_params {
 
 # init_run_cmd
 function init_run_cmd {
-
-    if [ "${model}" = "resnet50" ];then
-        dataset_dir=/tf_dataset/mxnet/resnet50v1
-        cmd=" python imagenet_inference.py \
-              --symbol-file=${dataset_dir}/resnet50_v1-symbol.json \
-              --param-file=${dataset_dir}/resnet50_v1-0000.params\
-              --rgb-mean=123.68,116.779,103.939 \
-              --rgb-std=58.393,57.12,57.375 \
-              --batch-size=64 \
-              --num-skipped-batches=50 \
-              --num-inference-batches=200 \
-              --ctx=cpu \
-              --dataset=${dataset_dir}/val_256_q90.rec "
-    fi
-
+    dataset_dir=/tf_dataset/mxnet
+    cmd="python imagenet_inference.py \
+        --symbol-file=${dataset_dir}/${model}/${model}-symbol.json\
+        --param-file=${dataset_dir}/${model}/${model}-0000.params\
+        --rgb-mean=123.68,116.779,103.939 \
+        --rgb-std=58.393,57.12,57.375 \
+        --batch-size=64 \
+        --num-skipped-batches=50 \
+        --num-inference-batches=200 \
+        --ctx=cpu \
+        --dataset=${dataset_dir}/val_256_q90.rec "
 }
 
 # environment
@@ -76,13 +72,13 @@ function set_environment {
 # run
 function generate_core {
 
-    excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
-    rm -f ${excute_cmd_file}
+    # run tunning
+    run_cmd="${cmd} --tune"
+    timeout 1800 bash "${run_cmd}"
 
-    printf "${cmd}" |tee -a ${excute_cmd_file}
-
-    sleep 1
-    source ${excute_cmd_file}
+    # run benchmark
+    run_cmd="${cmd} --benchmark"
+    bash "${run_cmd}"
 }
 
 main "$@"

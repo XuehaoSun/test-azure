@@ -20,16 +20,8 @@ echo "---- $framework, $model ----"
 
 log_file="${framework}/${model}/${framework}-${model}.log"
 
-accuracy=$(grep 'FP32 baseline is:' ${log_file} | awk -F'[' '{print $2}'|awk -F',' '{print $1}')
-duration=$(grep 'FP32 baseline is:' ${log_file} | awk -F',' '{print $2}'|awk -F']' '{print $1}')
+if [ ${framework} == 'tensorflow' ] || [ ${framework} == 'mxnet' ]; then
 
-echo "$framework;CLX8280;FP32;$model;Inference;Latency;$bs;${duration};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-echo "$framework;CLX8280;FP32;$model;Inference;Accuracy;$bs;${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-
-accuracy=$(grep 'Best tune result is:' ${log_file}|tail -1 |awk -F':' '{print $3}' |awk -F'[' '{print $2}'|awk -F',' '{print $1}')
-echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;$bs;${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-
-if [ ${framework} == 'tensorflow' ] && [ ${model} == 'resnet50' ]; then
   latency=$(grep 'input_model latency:' ${log_file} | awk -F ' ' '{print $3}')
   echo "$framework;CLX8280;FP32;$model;Inference;Latency;1;${latency};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
   latency=$(grep 'q_model latency:' ${log_file} | awk -F ' ' '{print $3}')
@@ -46,5 +38,16 @@ if [ ${framework} == 'tensorflow' ] && [ ${model} == 'resnet50' ]; then
   echo "$framework;CLX8280;FP32;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
   accuracy=$(grep 'q_model accuracy:' ${log_file} | awk -F ' ' '{print $3}')
   echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+
+else
+
+  accuracy=$(grep 'FP32 baseline is:' ${log_file} | awk -F'[' '{print $2}'|awk -F',' '{print $1}')
+  duration=$(grep 'FP32 baseline is:' ${log_file} | awk -F',' '{print $2}'|awk -F']' '{print $1}')
+
+  echo "$framework;CLX8280;FP32;$model;Inference;Latency;$bs;${duration};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+  echo "$framework;CLX8280;FP32;$model;Inference;Accuracy;$bs;${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
+
+  accuracy=$(grep 'Best tune result is:' ${log_file}|tail -1 |awk -F':' '{print $3}' |awk -F'[' '{print $2}'|awk -F',' '{print $1}')
+  echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;$bs;${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
 
 fi
