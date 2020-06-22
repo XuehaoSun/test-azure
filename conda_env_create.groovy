@@ -44,21 +44,23 @@ echo "ilit_branch is ${ilit_branch}"
 node(node_label){
 
     stage("download"){
-        checkout changelog: true, poll: true, scm: [
-                $class                           : 'GitSCM',
-                branches                         : [[name: "${ilit_branch}"]],
-                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                doGenerateSubmoduleConfigurations: false,
-                extensions                       : [
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
-                        [$class: 'CloneOption', timeout: 60]
-                ],
-                submoduleCfg                     : [],
-                userRemoteConfigs                : [
-                        [credentialsId: "${credential}",
-                         url          : "${ilit_url}"]
-                ]
-        ]
+        if (framework == 'pytorch'){
+            checkout changelog: true, poll: true, scm: [
+                    $class                           : 'GitSCM',
+                    branches                         : [[name: "${ilit_branch}"]],
+                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions                       : [
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
+                            [$class: 'CloneOption', timeout: 60]
+                    ],
+                    submoduleCfg                     : [],
+                    userRemoteConfigs                : [
+                            [credentialsId: "${credential}",
+                             url          : "${ilit_url}"]
+                    ]
+            ]
+        }
     }
 
     stage("build"){
