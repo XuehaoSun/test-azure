@@ -78,6 +78,6 @@ class ImagenetData(Dataset):
         if subset == 'train':
             return 1281167
         elif subset == 'validation':
-            return 50000
+            return 1000
         else:
             raise ValueError('Invalid data subset "%s"' % subset)
