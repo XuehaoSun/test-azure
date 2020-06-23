@@ -1,5 +1,4 @@
-updateGitlabCommitStatus state: 'pending'
-gitLabConnection('gitlab.devtools.intel.com')
+
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
 // setting test_title
@@ -94,6 +93,8 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
     if ("${gitlabSourceBranch}" != '') {
         MR_source_branch = "${gitlabSourceBranch}"
         MR_target_branch = "${gitlabTargetBranch}"
+        updateGitlabCommitStatus state: 'pending'
+        gitLabConnection('gitlab.devtools.intel.com')
     }
 }
 echo "nigthly_test_branch: $nigthly_test_branch"
@@ -348,9 +349,16 @@ node( node_label ) {
 
              }
          }
-        updateGitlabCommitStatus state:'success'
+
+        if ("${gitlabSourceBranch}" != '') {
+            updateGitlabCommitStatus state:'success'
+        }
+
     } catch (e) {
         // If there was an exception thrown, the build failed
+        if ("${gitlabSourceBranch}" != '') {
+            updateGitlabCommitStatus state:'failure'
+        }
         currentBuild.result = "FAILED"
         throw e
 
