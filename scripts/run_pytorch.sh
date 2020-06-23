@@ -20,7 +20,6 @@ function main {
 function init_params {
     framework='pytorch'
     model='resnet50'
-    batch_size=128
 
     for var in "$@"
     do
@@ -45,9 +44,9 @@ function init_params {
 # init_run_cmd
 function init_run_cmd {
     dataset=/tf_dataset/pytorch/ImageNet/raw
-    if [ "${model}" = "resnet18" ];then
+    if [ "${model}" = "resnet18" ] || [ "${model}" = "resnet50" ] || [ "${model}" = "resnet101" ];then
         cmd=" python main.py \
-            -a resnet18 \
+            -a ${model} \
             --pretrained \
             --data ${dataset}"
     fi
@@ -73,7 +72,7 @@ function generate_core {
     rm -f ${excute_cmd_file}
     run_cmd="${cmd} -t"
     printf "${run_cmd}" |tee -a ${excute_cmd_file}
-    timeout 1800 bash ${excute_cmd_file}
+    timeout 3600 bash ${excute_cmd_file}
 
     # run fp32 benchmark
     run_cmd="${cmd} --fp32_benchmark"
