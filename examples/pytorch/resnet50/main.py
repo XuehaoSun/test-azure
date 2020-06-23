@@ -61,7 +61,7 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
-parser.add_argument('-b', '--fp32_benchmark', dest='fp32_benchmark', action='store_true',
+parser.add_argument('--fp32_benchmark', dest='fp32_benchmark', action='store_true',
                     help='benchmark model on validation set')
 parser.add_argument('-t', '--tune', dest='tune', action='store_true',
                     help='tune best int8 model on calibration dataset')

@@ -357,7 +357,7 @@ if __name__ == '__main__':
             top1, speed = score(sym, arg_params, aux_params, data, [ctx], label_name,
                   max_num_examples=num_inference_images, logger=logger)
             print("q_model accuracy batch_size: %d" % batch_size)
-            print("q_model accuracy: %s " % top1)
+            print("q_model accuracy: %.3f" % top1)
             print("q_model throughput batch_size: %d" % batch_size)
             print("q_model throughput: %.3f images/sec" % speed)
 
@@ -370,7 +370,7 @@ if __name__ == '__main__':
             top1, speed = score(sym, arg_params, aux_params, data, [ctx], label_name,
                                 max_num_examples=num_inference_images, logger=logger)
             print("input_model accuracy batch_size: %d" % batch_size)
-            print("input_model accuracy: %s " % top1)
+            print("input_model accuracy: %.3f" % top1)
             print("input_model throughput batch_size: %d" % batch_size)
             print("input_model throughput: %.3f images/sec" % speed)
 

@@ -76,7 +76,7 @@ function generate_core {
     timeout 1800 bash ${excute_cmd_file}
 
     # run fp32 benchmark
-    run_cmd="${cmd} -b"
+    run_cmd="${cmd} fp32_benchmark"
     eval "${run_cmd}"
 
 }
