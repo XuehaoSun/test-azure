@@ -115,7 +115,18 @@ node( sub_node_label ) {
             '''
         }
 
+        stage("check status"){
+            dir("${WORKSPACE}"){
+                sh '''#!/bin/bash -x
+                    if [ $(grep 'Found a quantized model which meet accuracy goal.' ${framework}-${model}.log | wc -l) == 0 ];then
+                        exit 1
+                    fi
+                '''
+            }
+        }
+
     } catch(e) {
+        currentBuild.result = "FAILED"
         throw e
     } finally {
 
