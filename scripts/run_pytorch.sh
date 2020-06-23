@@ -72,7 +72,7 @@ function generate_core {
     rm -f ${excute_cmd_file}
     run_cmd="${cmd} -t"
     printf "${run_cmd}" |tee -a ${excute_cmd_file}
-    timeout 1800 bash ${excute_cmd_file}
+    timeout 3600 bash ${excute_cmd_file}
 
     # run fp32 benchmark
     run_cmd="${cmd} --fp32_benchmark"
