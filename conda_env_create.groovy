@@ -83,8 +83,8 @@ node(node_label){
                     export PATH=${HOME}/gcc6.3/bin/:$PATH
                     export LD_LIBRARY_PATH=${HOME}/gcc6.3/lib64:$LD_LIBRARY_PATH
                     python setup.py install
-                else 
-                    pip install ${framework}==${framework_version}
+                elif [ ${framework} == 'mxnet' ]; then 
+                    pip install ${framework}-mkl==${framework_version}
                 fi
                 
                 wait

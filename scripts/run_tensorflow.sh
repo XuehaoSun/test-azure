@@ -51,9 +51,7 @@ function init_run_cmd {
             --outputs predict \
             --data_location /tf_dataset/dataset/TF_mini_imagenet \
             --config tf.yaml \
-            --batch_size 10 \
-            --num_batches 10 \
-            --benchmark"
+            --batch_size 10"
 
     fi
 
@@ -74,13 +72,16 @@ function set_environment {
 # run
 function generate_core {
 
+    # run tunning
     excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
     rm -f ${excute_cmd_file}
+    run_cmd="${cmd} --tune"
+    printf "${run_cmd}" |tee -a ${excute_cmd_file}
+    timeout 1800 bash ${excute_cmd_file}
 
-    printf "${cmd}" |tee -a ${excute_cmd_file}
-
-    sleep 1
-    source ${excute_cmd_file}
+    # run fp32 benchmark
+    run_cmd="${cmd} --fp32_benchmark"
+    eval "${run_cmd}"
 
 }
 

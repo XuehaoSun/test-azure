@@ -30,7 +30,7 @@ model_names = sorted(name for name in models.__dict__
                      and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('data', metavar='DIR',
+parser.add_argument('--data', metavar='DIR',
                     help='path to dataset')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
@@ -61,6 +61,8 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
+parser.add_argument('--fp32_benchmark', dest='fp32_benchmark', action='store_true',
+                    help='benchmark model on validation set')
 parser.add_argument('-t', '--tune', dest='tune', action='store_true',
                     help='tune best int8 model on calibration dataset')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
@@ -229,7 +231,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # Data loading code
     traindir = os.path.join(args.data, 'train')
-    valdir = os.path.join(args.data, 'val')
+    valdir = os.path.join(args.data, 'val_1')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -260,9 +262,26 @@ def main_worker(gpu, ngpus_per_node, args):
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
+    val_loader_1 = torch.utils.data.DataLoader(
+            datasets.ImageFolder(valdir, transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                normalize,
+            ])),
+            batch_size=1, shuffle=False,
+            num_workers=args.workers, pin_memory=True)
 
-    if args.evaluate:
-        validate(val_loader, model, criterion, args)
+    if args.fp32_benchmark:
+        top1, batch_time = validate(val_loader, model, criterion, args)
+        print("input_model accuracy batch_size: %d" % args.batch_size)
+        print("input_model accuracy: %.3f " % top1)
+        print("input_model throughput batch_size: %d" % args.batch_size)
+        print("input_model throughput: %.3f images/sec" % (args.batch_size/batch_time))
+
+        top1, batch_time = validate(val_loader_1, model, criterion, args)
+        print("input_model latency: %.3f ms" % (batch_time*1000))
+        return
 
     if args.tune:
         model.eval()
@@ -270,6 +289,15 @@ def main_worker(gpu, ngpus_per_node, args):
         import ilit
         tuner = ilit.Tuner("./conf.yaml")
         q_model = tuner.tune(model, train_loader, eval_dataloader=val_loader)
+
+        top1, batch_time = validate(val_loader, q_model, criterion, args)
+        print("q_model accuracy batch_size: %d" % args.batch_size)
+        print("q_model accuracy: %.3f " % top1)
+        print("q_model throughput batch_size: %d" % args.batch_size)
+        print("q_model throughput: %.3f images/sec" % (args.batch_size/batch_time))
+
+        top1, batch_time = validate(val_loader_1, model, criterion, args)
+        print("q_model latency: %.3f ms" % (batch_time*1000))
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -381,7 +409,7 @@ def validate(val_loader, model, criterion, args):
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
 
-    return top1.avg
+    return top1.avg / 100.0, batch_time.avg
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):

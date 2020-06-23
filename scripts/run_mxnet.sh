@@ -5,7 +5,7 @@ function main {
     init_params "$@"
     init_run_cmd
     set_environment
-    model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model}/
+    model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/resnet50
     if [ "${model_src_dir}" != "" ];then
         cd ${model_src_dir}
     fi
@@ -19,8 +19,7 @@ function main {
 # init params
 function init_params {
     framework='mxnet'
-    model='resnet50v1_5'
-    batch_size=128
+    model='resnet50v1'
 
     for var in "$@"
     do 
@@ -44,19 +43,20 @@ function init_params {
 
 # init_run_cmd
 function init_run_cmd {
+    dataset_dir=/tf_dataset/mxnet
+    cmd="python imagenet_inference.py \
+        --symbol-file=${dataset_dir}/${model}/${model}-symbol.json\
+        --param-file=${dataset_dir}/${model}/${model}-0000.params\
+        --rgb-mean=123.68,116.779,103.939 \
+        --rgb-std=58.393,57.12,57.375 \
+        --batch-size=64 \
+        --num-skipped-batches=50 \
+        --num-inference-batches=200 \
+        --ctx=cpu \
+        --dataset=${dataset_dir}/val_256_q90.rec "
 
-    if [ "${model}" = "resnet50" ];then
-        dataset_dir=/tf_dataset/mxnet/resnet50v1
-        cmd=" python imagenet_inference.py \
-              --symbol-file=${dataset_dir}/resnet50_v1-symbol.json \
-              --param-file=${dataset_dir}/resnet50_v1-0000.params\
-              --rgb-mean=123.68,116.779,103.939 \
-              --rgb-std=58.393,57.12,57.375 \
-              --batch-size=64 \
-              --num-skipped-batches=50 \
-              --num-inference-batches=200 \
-              --ctx=cpu \
-              --dataset=${dataset_dir}/val_256_q90.rec "
+    if [ ${model} == 'inceptionv3' ]; then
+        cmd="${cmd} --image-shape 3,299,299"
     fi
 
 }
@@ -76,13 +76,20 @@ function set_environment {
 # run
 function generate_core {
 
+    # run tunning
     excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
     rm -f ${excute_cmd_file}
+    run_cmd="${cmd} --tune"
+    printf "${run_cmd}" |tee -a ${excute_cmd_file}
+    timeout 1800 bash ${excute_cmd_file}
 
-    printf "${cmd}" |tee -a ${excute_cmd_file}
+    # run benchmark
+    run_cmd="${cmd} --benchmark"
+    eval "${run_cmd}"
 
-    sleep 1
-    source ${excute_cmd_file}
+    # run fp32 benchmark
+    run_cmd="${cmd} --fp32_benchmark"
+    eval "${run_cmd}"
 }
 
 main "$@"

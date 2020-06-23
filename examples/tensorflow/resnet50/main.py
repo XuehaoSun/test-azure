@@ -103,6 +103,7 @@ def inference(graph, args, batch_size=1):
     if num_batches > 0:
         num_remaining_images = batch_size * num_batches
 
+    total_accuracy1, total_accuracy5 = (0.0, 0.0)
     dataset = datasets.ImagenetData(args.data_location)
     preprocessor = preprocessing.ImagePreprocessor(
         224, 224, batch_size,
@@ -122,16 +123,28 @@ def inference(graph, args, batch_size=1):
             num_remaining_images -= batch_size
             # Compute inference on the preprocessed data
             start_time = time.time()
-            sess_graph.run(output_tensor, {input_tensor: np_images})
+            # Compute inference on the preprocessed data
+            predictions = sess_graph.run(output_tensor,
+                                         {input_tensor: np_images})
             time_consume = time.time() - start_time
-            print('Iteration %d: %.6f sec' % (iteration, time_consume))
+            # print("Evaluate Processed %d images."% (num_processed_images))
+            accuracy1 = tf.reduce_sum(
+                tf.cast(tf.nn.in_top_k(tf.constant(predictions),
+                                       tf.constant(np_labels), 1), tf.float32))
+
+            accuracy5 = tf.reduce_sum(
+                tf.cast(tf.nn.in_top_k(tf.constant(predictions),tf.constant(np_labels), 5), tf.float32))
+
+            np_accuracy1, np_accuracy5=sess.run([accuracy1, accuracy5])
+            total_accuracy1 += np_accuracy1
+            total_accuracy5 += np_accuracy5
 
             if iteration > warm_up_steps:
                 total_time += time_consume
-
+        top1 = total_accuracy1 / num_processed_images
         average_time = total_time / (num_batches - warm_up_steps)
 
-    return average_time
+    return top1, average_time
 
 
 def accuracy(graph, args):
@@ -201,40 +214,45 @@ if __name__ == '__main__':
     parser.add_argument('--data_location', type=str, required='', help='param file path')
     parser.add_argument('--input_height', type=int, default=224, help='input height')
     parser.add_argument('--intput_width', type=int, default=224, help='output height')
-    parser.add_argument('--batch_size', type=int, default=100)
+    parser.add_argument('--batch_size', type=int, default=10)
     parser.add_argument('--num_batches', type=int, default=10)
     parser.add_argument('--num_inter_threads', type=int, default=2)
     parser.add_argument('--num_intra_threads', type=int, default=28)
-    parser.add_argument('--benchmark', dest='benchmark', action='store_true', help='run benchmark for q_models')
+    parser.add_argument('--fp32_benchmark', dest='fp32_benchmark', action='store_true', help='run benchmark')
+    parser.add_argument('--tune', dest='tune', action='store_true', help='use ilit to tune.')
 
     args = parser.parse_args()
 
     fp32_graph = load_graph(args.input_graph)
-    at = iLit.Tuner(args.config)
-    dataloader = prepare_dataloader(data_location=args.data_location, input_height=args.input_height, input_width=args.intput_width, batch_size=args.batch_size)
-    rn50_input_output = {"inputs": args.inputs.split(' '), "outputs": args.outputs.split(' '), "num_batches": args.num_batches}
+    if args.tune:
+        at = iLit.Tuner(args.config)
+        dataloader = prepare_dataloader(data_location=args.data_location, input_height=args.input_height, input_width=args.intput_width, batch_size=args.batch_size)
+        rn50_input_output = {"inputs": args.inputs.split(' '), "outputs": args.outputs.split(' '), "num_batches": args.num_batches}
 
-    q_model = at.tune(fp32_graph, q_dataloader=dataloader,
-            # eval_func=inference, model_specific_cfg=rn50_input_output)
-            eval_func=None, eval_dataloader=dataloader, model_specific_cfg=rn50_input_output)
+        q_model = at.tune(fp32_graph, q_dataloader=dataloader,
+                # eval_func=inference, model_specific_cfg=rn50_input_output)
+                eval_func=None, eval_dataloader=dataloader, model_specific_cfg=rn50_input_output)
 
-    if args.benchmark:
+        bs = 100
+        top1, batch_time = inference(q_model, args, batch_size=bs)
+        print("q_model accuracy batch_size: %d" % bs)
+        print("q_model accuracy: %.3f " % top1)
+        print("q_model throughput batch_size: %d" % bs)
+        print("q_model throughput: %.3f images/sec" % (bs / batch_time))
+
+        bs = 1
+        top1, batch_time = inference(q_model, args, batch_size=bs)
+        print("q_model latency: %.3f ms" % (batch_time * 1000))
+
+    if args.fp32_benchmark:
         # for accuracy
         bs = 100
-        print("accuracy batch_size: %d" % bs)
-        top1 = accuracy(fp32_graph, args)
+        top1, batch_time = inference(fp32_graph, args, batch_size=bs)
+        print("input_model accuracy batch_size: %d" % bs)
         print("input_model accuracy: %.3f " % top1)
-        top1 = accuracy(q_model, args)
-        print("q_model accuracy: %.3f " % top1)
-        # for latency
-        time_per_batch = inference(fp32_graph, args, batch_size=1)
-        print("input_model latency: %.3f ms" % (time_per_batch * 1000))
-        time_per_batch = inference(q_model, args, batch_size=1)
-        print("q_model latency: %.3f ms" % (time_per_batch * 1000))
-        # for throughput
-        bs = 100
-        print("throughput batch_size: %d" % bs)
-        time_per_batch = inference(fp32_graph, args, batch_size=bs)
-        print("input_model throughput: %.3f images/sec" % (bs / time_per_batch))
-        time_per_batch = inference(q_model, args, batch_size=bs)
-        print("q_model throughput: %.3f images/sec" % (bs / time_per_batch))
+        print("input_model throughput batch_size: %d" % bs)
+        print("input_model throughput: %.3f images/sec" % (bs / batch_time))
+
+        bs = 1
+        top1, batch_time = inference(fp32_graph, args, batch_size=bs)
+        print("input_model latency: %.3f ms" % (batch_time * 1000))
