@@ -92,9 +92,9 @@ def score(sym, arg_params, aux_params, data, devs, label_name, max_num_examples,
             break
 
     speed = num / (time.time() - tic)
-    #top1 = eval(m.get()[0][1])
+    top1 = metrics[0].get()[1]
 
-    return m.get()[0][1], speed
+    return top1, speed
 
 
 
@@ -356,9 +356,9 @@ if __name__ == '__main__':
 
             top1, speed = score(sym, arg_params, aux_params, data, [ctx], label_name,
                   max_num_examples=num_inference_images, logger=logger)
-            print("accuracy batch_size: %d" % batch_size)
+            print("q_model accuracy batch_size: %d" % batch_size)
             print("q_model accuracy: %s " % top1)
-            print("throughput batch_size: %d" % batch_size)
+            print("q_model throughput batch_size: %d" % batch_size)
             print("q_model throughput: %.3f images/sec" % speed)
 
             top1, speed = score(sym, arg_params, aux_params, data_1, [ctx], label_name,
@@ -369,9 +369,9 @@ if __name__ == '__main__':
             (sym, arg_params, aux_params) = load_model(symbol_file, param_file, logger)
             top1, speed = score(sym, arg_params, aux_params, data, [ctx], label_name,
                                 max_num_examples=num_inference_images, logger=logger)
-            print("accuracy batch_size: %d" % batch_size)
+            print("input_model accuracy batch_size: %d" % batch_size)
             print("input_model accuracy: %s " % top1)
-            print("throughput batch_size: %d" % batch_size)
+            print("input_model throughput batch_size: %d" % batch_size)
             print("input_model throughput: %.3f images/sec" % speed)
 
             top1, speed = score(sym, arg_params, aux_params, data_1, [ctx], label_name,
