@@ -1,4 +1,3 @@
-
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
 // setting test_title
@@ -222,13 +221,13 @@ def doBuild() {
                     stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
                         echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "test_suyue_intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
 
                         //if (downstreamJob.getResult() == 'SUCCESS') {
                             catchError {
 
                                 copyArtifacts(
-                                        projectName: "test_suyue_intel-iLit-validation",
+                                        projectName: "intel-iLit-validation",
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
