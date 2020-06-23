@@ -20,7 +20,6 @@ function main {
 function init_params {
     framework='pytorch'
     model='resnet50'
-    batch_size=128
 
     for var in "$@"
     do
@@ -45,9 +44,9 @@ function init_params {
 # init_run_cmd
 function init_run_cmd {
     dataset=/tf_dataset/pytorch/ImageNet/raw
-    if [ "${model}" = "resnet18" ];then
+    if [ "${model}" = "resnet18" ] || [ "${model}" = "resnet50" ] || [ "${model}" = "resnet101" ];then
         cmd=" python main.py \
-            -a resnet18 \
+            -a ${model} \
             --pretrained \
             --data ${dataset}"
     fi
