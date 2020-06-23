@@ -5,7 +5,7 @@ function main {
     init_params "$@"
     init_run_cmd
     set_environment
-    model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model}/
+    model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/resnet50
     if [ "${model_src_dir}" != "" ];then
         cd ${model_src_dir}
     fi
