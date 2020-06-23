@@ -297,7 +297,7 @@ def main_worker(gpu, ngpus_per_node, args):
         print("q_model throughput: %.3f images/sec" % (args.batch_size/batch_time))
 
         top1, batch_time = validate(val_loader_1, model, criterion, args)
-        print("input_model latency: %.3f ms" % (batch_time*1000))
+        print("q_model latency: %.3f ms" % (batch_time*1000))
         return
 
     for epoch in range(args.start_epoch, args.epochs):
