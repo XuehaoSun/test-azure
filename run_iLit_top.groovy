@@ -349,13 +349,13 @@ node( node_label ) {
              }
          }
 
-        if ("${gitlabSourceBranch}" != '') {
+        if ("${MR_source_branch}" != '') {
             updateGitlabCommitStatus state:'success'
         }
 
     } catch (e) {
         // If there was an exception thrown, the build failed
-        if ("${gitlabSourceBranch}" != '') {
+        if ("${MR_source_branch}" != '') {
             updateGitlabCommitStatus state:'failure'
         }
         currentBuild.result = "FAILED"
