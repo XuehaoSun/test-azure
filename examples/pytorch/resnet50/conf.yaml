@@ -1,13 +1,11 @@
-framework: pytorch                               #possible values are tensorflow, mxnet and pytorch
-
-device: cpu
+framework:
+  - name: pytorch                                # possible values are tensorflow, mxnet and pytorch
 
 tuning:
-    strategy: basic
+  - strategy: bayesian
     metric:
-      - topk: 1                                  # tuning metrics: accuracy 
+      - topk: 1                                  # tuning metrics: accuracy
     accuracy_criterion:
-      - absolute: 0.01                          # the tuning target of accuracy loss percentage: 1%
-    timeout: 0                                # tuning timeout (seconds)
+      - relative: 0.01                           # the tuning target of accuracy loss percentage: 1%
+    timeout: 0                                   # tuning timeout (seconds)
     random_seed: 9527                            # random seed
-

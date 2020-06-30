@@ -36,7 +36,7 @@ if ('tensorflow_version' in params && params.tensorflow_version != '') {
 echo "tensorflow_version: ${tensorflow_version}"
 
 // setting tensorflow models
-tensorflow_models = "ResNet-50v1.0"
+tensorflow_models = ""
 if ('tensorflow_models' in params && params.tensorflow_models != '') {
     tensorflow_models = params.tensorflow_models
 }
@@ -50,7 +50,7 @@ if ('mxnet_version' in params && params.mxnet_version != '') {
 echo "mxnet_version: ${mxnet_version}"
 
 // setting mxnet models
-mxnet_models = "ResNet-50v1.0"
+mxnet_models = ""
 if ('mxnet_models' in params && params.mxnet_models != '') {
     mxnet_models = params.mxnet_models
 }
@@ -64,7 +64,7 @@ if ('pytorch_version' in params && params.pytorch_version != '') {
 echo "pytorch_version: ${pytorch_version}"
 
 // setting mxnet models
-pytorch_models = "ResNet-50v1.0"
+pytorch_models = ""
 if ('pytorch_models' in params && params.pytorch_models != '') {
     pytorch_models = params.pytorch_models
 }
@@ -223,7 +223,6 @@ def doBuild() {
                         echo "${job_model}, ${job_framework}"
                         def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
 
-                        //if (downstreamJob.getResult() == 'SUCCESS') {
                             catchError {
 
                                 copyArtifacts(
@@ -236,7 +235,14 @@ def doBuild() {
                                 // Archive in Jenkins
                                 archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
                             }
-                        //}
+
+                            if (downstreamJob.getResult() != 'SUCCESS')
+                            {
+                                if ("${MR_source_branch}" != '') {
+                                    updateGitlabCommitStatus state:'failure'
+                                }
+                                currentBuild.result = "FAILED"
+                            }
                     }
                 }
             }
@@ -291,6 +297,8 @@ node( node_label ) {
 
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
+        TUNETXT = "${WORKSPACE}/summary_tune.log"
+        writeFile file: TUNETXT, text: "Framework;Model;Strategy;Tune_time\n"
 
         stage("tune-parallel") {
             doBuild()
@@ -306,7 +314,7 @@ node( node_label ) {
                 copyArtifacts(
                         projectName: currentBuild.projectName,
                         selector: specific("${refer_build}"),
-                        filter: 'summary.log',
+                        filter: 'summary*.log',
                         fingerprintArtifacts: true,
                         target: "reference")
             }

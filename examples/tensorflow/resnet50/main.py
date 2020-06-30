@@ -43,6 +43,9 @@ import argparse
 import sys
 import os
 import time
+from tensorflow.python.tools.optimize_for_inference_lib import optimize_for_inference
+from tensorflow.python.framework import dtypes
+import tracemalloc
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.getcwd()))))
 
 from ilit import tuner as iLit
@@ -100,9 +103,9 @@ class Dataloader(object):
 def inference(graph, args, batch_size=1):
     input_layer = args.inputs
     output_layer = args.outputs
-    num_inter_threads = 2
-    num_intra_threads = 28
-    num_batches = 10
+    num_inter_threads = args.num_inter_threads
+    num_intra_threads = args.num_intra_threads
+    num_batches = 1000/batch_size
     num_processed_images = 0
     batch_size = batch_size
     warm_up_steps = 5
@@ -122,7 +125,7 @@ def inference(graph, args, batch_size=1):
     total_accuracy1, total_accuracy5 = (0.0, 0.0)
     dataset = datasets.ImagenetData(args.data_location)
     preprocessor = preprocessing.ImagePreprocessor(
-        224, 224, batch_size,
+        args.input_height, args.input_width, batch_size,
         1,  # device count
         tf.float32,  # data_type for input fed to the graph
         train=False,  # doing inference
@@ -157,17 +160,19 @@ def inference(graph, args, batch_size=1):
 
             if iteration > warm_up_steps:
                 total_time += time_consume
+
         top1 = total_accuracy1 / num_processed_images
-        average_time = total_time / (num_batches - warm_up_steps)
+        average_time = total_time / (iteration - warm_up_steps)
 
     return top1, average_time
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Tensorflow Resnet50-v1.0 demo for iLit')
     parser.add_argument('--input_graph', type=str, default='')
     parser.add_argument('--config', type=str, default='')
-    parser.add_argument('--inputs', type=str, default='', help='input tensor')
+    parser.add_argument('--inputs', type=str, default='input', help='input tensor')
     parser.add_argument('--outputs',
                         type=str,
                         required='',
@@ -206,6 +211,7 @@ if __name__ == '__main__':
             "inputs": args.inputs.split(' '),
             "outputs": args.outputs.split(' ')}
 
+        start_tune = time.time()
         q_model = at.tune(
             fp32_graph,
             q_dataloader=dataloader,
@@ -213,27 +219,44 @@ if __name__ == '__main__':
             eval_func=None,
             eval_dataloader=dataloader,
             model_specific_cfg=rn50_input_output)
+        end_tune = time.time()
+        print("Tuning time spend: %.1f s" % (end_tune-start_tune))
 
         bs = 100
+        tracemalloc.start()
         top1, batch_time = inference(q_model, args, batch_size=bs)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+
         print("q_model accuracy batch_size: %d" % bs)
         print("q_model accuracy: %.3f " % top1)
         print("q_model throughput batch_size: %d" % bs)
         print("q_model throughput: %.3f images/sec" % (bs / batch_time))
 
-        bs = 1
-        top1, batch_time = inference(q_model, args, batch_size=bs)
-        print("q_model latency: %.3f ms" % (batch_time * 1000))
+        # bs = 1
+        # top1, batch_time = inference(q_model, args, batch_size=bs)
+        # print("q_model latency: %.3f ms" % (batch_time * 1000))
 
     if args.fp32_benchmark:
         # for accuracy
+        infer_graph = tf.Graph()
+        with infer_graph.as_default():
+            graph_def = tf.compat.v1.GraphDef()
+            with tf.compat.v1.gfile.FastGFile(args.input_graph, 'rb') as input_file:
+                input_graph_content = input_file.read()
+                graph_def.ParseFromString(input_graph_content)
+
+            output_graph = optimize_for_inference(graph_def, [args.inputs],
+                                              [args.outputs], dtypes.float32.as_datatype_enum, False)
+            tf.import_graph_def(output_graph, name='')
+
         bs = 100
-        top1, batch_time = inference(fp32_graph, args, batch_size=bs)
+        top1, batch_time = inference(infer_graph, args, batch_size=bs)
         print("input_model accuracy batch_size: %d" % bs)
         print("input_model accuracy: %.3f " % top1)
         print("input_model throughput batch_size: %d" % bs)
         print("input_model throughput: %.3f images/sec" % (bs / batch_time))
 
-        bs = 1
-        top1, batch_time = inference(fp32_graph, args, batch_size=bs)
-        print("input_model latency: %.3f ms" % (batch_time * 1000))
+        # bs = 1
+        # top1, batch_time = inference(infer_graph, args, batch_size=bs)
+        # print("input_model latency: %.3f ms" % (batch_time * 1000))

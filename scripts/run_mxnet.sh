@@ -3,9 +3,19 @@ set -x
 
 function main {
     init_params "$@"
-    init_run_cmd
     set_environment
-    model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/resnet50
+
+    if [ "${model}" = "resnet50v1" ] || [ "${model}" = "inceptionv3" ] || [ "${model}" = "mobilenet1.0" ] || [ "${model}" = "mobilenetv2_1.0" ] || [ "${model}" = "resnet18_v1" ] || [ "${model}" = "squeezenet1.0" ]; then
+      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/cnn
+      init_cnn_cmd
+    elif [ "${model}" = "SSD-Mobilenet1.0" ] || [ "${model}" = "SSD-ResNet50_v1" ]; then
+      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/object_detection
+      init_obj_cmd
+    elif [ "${model}" = "bert-MRPC" ] || [ "${model}" = "bert-QA" ]; then
+      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/bert
+      init_bert_cmd
+    fi
+
     if [ "${model_src_dir}" != "" ];then
         cd ${model_src_dir}
     fi
@@ -42,7 +52,7 @@ function init_params {
 }
 
 # init_run_cmd
-function init_run_cmd {
+function init_cnn_cmd {
     dataset_dir=/tf_dataset/mxnet
     cmd="python imagenet_inference.py \
         --symbol-file=${dataset_dir}/${model}/${model}-symbol.json\
@@ -58,15 +68,53 @@ function init_run_cmd {
     if [ ${model} == 'inceptionv3' ]; then
         cmd="${cmd} --image-shape 3,299,299"
     fi
+}
+
+function init_obj_cmd {
+
+    if [ "${model}" = "SSD-Mobilenet1.0" ]; then
+        network="mobilenet1.0"
+
+    elif [ "${model}" = "SSD-ResNet50_v1" ]; then
+        network="resnet50_v1"
+    fi
+    dataset_dir=/tf_dataset/dataset/coco_dataset/raw-data
+    cmd="python eval_ssd.py \
+      --network=${network} \
+      --data-shape=512 \
+      --batch-size=18 \
+      --dataset coco \
+      --data_location ${dataset_dir}"
 
 }
 
+function init_bert_cmd() {
+    param_path=/tf_dataset/mxnet/bert
+    if [ "${model}" = "bert-MRPC" ]; then
+      cmd="python finetune_classifier.py \
+        --task_name MRPC \
+        --only_inference \
+        --model_parameters ${param_path}/output_dir/model_bert_MRPC_4.params"
+    fi
+
+    if [ "${model}" = "bert-QA" ]; then
+      cmd="python finetune_squad.py \
+        --model_parameters ${param_path}/output_dir/net.params \
+        --round_to 128 \
+        --test_batch_size 128 \
+        --only_predict"
+    fi
+
+
+}
+
+
 # environment
 function set_environment {
-    # export KMP_BLOCKTIME=1
-    # export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
-    # gcc -v
-    # conda3 python3
+    export KMP_BLOCKTIME=1
+    export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
+    export OMP_NUM_THREADS=28
+
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
     export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
@@ -79,16 +127,18 @@ function generate_core {
     # run tunning
     excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
     rm -f ${excute_cmd_file}
-    run_cmd="${cmd} --tune"
+    run_cmd="numactl -l -C 0-27,56-83 ${cmd} --tune"
     printf "${run_cmd}" |tee -a ${excute_cmd_file}
-    timeout 1800 bash ${excute_cmd_file}
+    bash ${excute_cmd_file}
 
-    # run benchmark
-    run_cmd="${cmd} --benchmark"
-    eval "${run_cmd}"
+    if [ "${model}" = "resnet50v1" ] || [ "${model}" = "inceptionv3" ] || [ "${model}" = "mobilenet1.0" ] || [ "${model}" = "mobilenetv2_1.0" ] || [ "${model}" = "resnet18_v1" ] || [ "${model}" = "squeezenet1.0" ]; then
+      # run benchmark
+      run_cmd="numactl -l -C 0-27,56-83 ${cmd} --benchmark"
+      eval "${run_cmd}"
+    fi
 
     # run fp32 benchmark
-    run_cmd="${cmd} --fp32_benchmark"
+    run_cmd="numactl -l -C 0-27,56-83 ${cmd} --fp32_benchmark"
     eval "${run_cmd}"
 }
 
