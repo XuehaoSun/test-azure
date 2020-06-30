@@ -231,7 +231,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # Data loading code
     traindir = os.path.join(args.data, 'train')
-    valdir = os.path.join(args.data, 'val_1')
+    valdir = os.path.join(args.data, 'val')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -279,8 +279,8 @@ def main_worker(gpu, ngpus_per_node, args):
         print("input_model throughput batch_size: %d" % args.batch_size)
         print("input_model throughput: %.3f images/sec" % (args.batch_size/batch_time))
 
-        top1, batch_time = validate(val_loader_1, model, criterion, args)
-        print("input_model latency: %.3f ms" % (batch_time*1000))
+        # top1, batch_time = validate(val_loader_1, model, criterion, args)
+        # print("input_model latency: %.3f ms" % (batch_time*1000))
         return
 
     if args.tune:
@@ -288,7 +288,10 @@ def main_worker(gpu, ngpus_per_node, args):
         fuse_resnext_modules(model.module)
         import ilit
         tuner = ilit.Tuner("./conf.yaml")
+        start_tune = time.time()
         q_model = tuner.tune(model, train_loader, eval_dataloader=val_loader)
+        end_tune = time.time()
+        print("Tuning time spend: %.1f s" % (end_tune-start_tune))
 
         top1, batch_time = validate(val_loader, q_model, criterion, args)
         print("q_model accuracy batch_size: %d" % args.batch_size)
@@ -296,8 +299,8 @@ def main_worker(gpu, ngpus_per_node, args):
         print("q_model throughput batch_size: %d" % args.batch_size)
         print("q_model throughput: %.3f images/sec" % (args.batch_size/batch_time))
 
-        top1, batch_time = validate(val_loader_1, model, criterion, args)
-        print("q_model latency: %.3f ms" % (batch_time*1000))
+        # top1, batch_time = validate(val_loader_1, model, criterion, args)
+        # print("q_model latency: %.3f ms" % (batch_time*1000))
         return
 
     for epoch in range(args.start_epoch, args.epochs):

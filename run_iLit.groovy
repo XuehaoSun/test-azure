@@ -54,9 +54,39 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
+
+if(framework == 'pytorch'){
+    label=model.split('_')
+    if(label[0] == 'bert'){
+        sub_node_label='py-bert'
+    }
+    if(model == 'dlrm'){
+        sub_node_label='dlrm'
+    }
+}
+
+def cleanup() {
+
+    try {
+        sh '''#!/bin/bash -x
+        cd $WORKSPACE
+        sudo rm -rf *           
+        '''
+    } catch(e) {
+        echo "==============================================="
+        echo "ERROR: Exception caught in cleanup()           "
+        echo "ERROR: ${e}"
+        echo "==============================================="
+
+        echo ' '
+        echo "Error while doing cleanup"
+    }  // catch
+
+}
+
 node( sub_node_label ) {
 
-    deleteDir()
+    cleanup()
     dir('ilit-validation') {
         checkout scm
     }
@@ -111,7 +141,7 @@ node( sub_node_label ) {
                 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
-                    > ${framework}-${model}.log 2>&1 
+                    2>&1 | tee ${framework}-${model}.log
             '''
         }
 

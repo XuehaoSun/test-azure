@@ -40,6 +40,20 @@ if ('ilit_branch' in params && params.ilit_branch != ''){
 }
 echo "ilit_branch is ${ilit_branch}"
 
+refresh_env=false
+if ('refresh_env' in params && params.refresh_env){
+    echo "refresh_env is true"
+    refresh_env=params.refresh_env
+}
+echo "refresh_env = ${refresh_env}"
+
+requirement_only=false
+if ('requirement_only' in params && params.requirement_only){
+    echo "requirement_only is true"
+    requirement_only=params.requirement_only
+}
+echo "requirement_only = ${requirement_only}"
+
 
 node(node_label){
 
@@ -69,22 +83,29 @@ node(node_label){
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
                 conda_env_name=${framework}-${framework_version}
-                if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
-                    conda remove --name ${conda_env_name} --all -y
+                if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
+                    conda create python=3.6.9 -y -n ${conda_env_name}
+                else    
+                    if [ ${refresh_env} = true ]; then
+                        conda remove --name ${conda_env_name} --all -y
+                        conda create python=3.6.9 -y -n ${conda_env_name}
+                    fi
                 fi
-                conda create python=3.6.9 -y -n ${conda_env_name}
+                
                 source activate ${conda_env_name}
                 
-                if [ ${framework} == 'tensorflow' ]; then
-                    pip install intel-${framework}==${framework_version}
-                elif [ ${framework} == 'pytorch' ]; then
-                    pip install torch==1.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-                    cd ${WORKSPACE}/iLit/examples/pytorch/vision
-                    export PATH=${HOME}/gcc6.3/bin/:$PATH
-                    export LD_LIBRARY_PATH=${HOME}/gcc6.3/lib64:$LD_LIBRARY_PATH
-                    python setup.py install
-                elif [ ${framework} == 'mxnet' ]; then 
-                    pip install ${framework}-mkl==${framework_version}
+                if [ ${requirement_only} = false ]; then
+                    if [ ${framework} == 'tensorflow' ]; then
+                        pip install intel-${framework}==${framework_version}
+                    elif [ ${framework} == 'pytorch' ]; then
+                        pip install torch==1.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+                        cd ${WORKSPACE}/iLit/examples/pytorch/vision
+                        export PATH=${HOME}/gcc6.3/bin/:$PATH
+                        export LD_LIBRARY_PATH=${HOME}/gcc6.3/lib64:$LD_LIBRARY_PATH
+                        python setup.py install
+                    elif [ ${framework} == 'mxnet' ]; then 
+                        pip install ${framework}-mkl==${framework_version}
+                    fi
                 fi
                 
                 wait
@@ -98,7 +119,6 @@ node(node_label){
                 sleep 2
                 echo "------------------------------------------"
             '''
-
         }
 
 }
