@@ -7,7 +7,7 @@ calibration:
   - iterations: 5, 10
 
 tuning:
-  - strategy: random
+  - strategy: basic
     metric:  
       - topk: 1
     accuracy_criterion:

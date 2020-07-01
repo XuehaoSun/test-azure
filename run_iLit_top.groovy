@@ -1,7 +1,8 @@
+
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
 // setting test_title
-test_title = "iLit Tests"
+test_title = "iLiT Tests"
 if ('test_title' in params && params.test_title != '') {
     test_title = params.test_title
 }
@@ -15,7 +16,7 @@ if ('node_label' in params && params.node_label != '') {
 echo "Running on node ${node_label}"
 
 // setting node_label
-sub_node_label = "ilit"
+sub_node_label = "ILIT"
 if ('node_label' in params && params.sub_node_label != '') {
     sub_node_label = params.sub_node_label
 }
@@ -297,7 +298,7 @@ node( node_label ) {
 
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
-        TUNETXT = "${WORKSPACE}/summary_tune.log"
+        TUNETXT = "${WORKSPACE}/tuning_info.log"
         writeFile file: TUNETXT, text: "Framework;Model;Strategy;Tune_time\n"
 
         stage("tune-parallel") {
@@ -314,7 +315,7 @@ node( node_label ) {
                 copyArtifacts(
                         projectName: currentBuild.projectName,
                         selector: specific("${refer_build}"),
-                        filter: 'summary*.log',
+                        filter: 'summary.log,tuning_info.log',
                         fingerprintArtifacts: true,
                         target: "reference")
             }
@@ -326,8 +327,10 @@ node( node_label ) {
                     cd ${WORKSPACE}
                     summaryLog="${WORKSPACE}/summary.log"
                     summaryLogLast="${WORKSPACE}/reference/summary.log"
+                    tuneLog="${WORKSPACE}/tuning_info.log"
+                    tuneLogLast="${WORKSPACE}/reference/tuning_info.log"
                     chmod 775 ilit-validation/scripts/generate_ilit_report.sh
-                    qtools_branch=${nigthly_test_branch} qtools_commit=${qtools_commit} summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} \
+                    qtools_branch=${nigthly_test_branch} qtools_commit=${qtools_commit} summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} tuneLog=${tuneLog} tuneLogLast=${tuneLogLast} \
                     ilit-validation/scripts/generate_ilit_report.sh 
                 '''
             }

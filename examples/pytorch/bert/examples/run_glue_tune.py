@@ -620,7 +620,13 @@ def main():
 
             def inference(model):
                 result, speed = evaluate(args, model, tokenizer, prefix=prefix)
-                return result["acc_and_f1"], speed
+                bert_task_acc_keys = ['acc_and_f1', 'f1', 'mcc', 'spearmanr', 'acc']
+                for key in bert_task_acc_keys:
+                    if key in result.keys():
+                        logger.info("Finally Eval {}:{}".format(key, result[key]))
+                        acc = result[key]
+                        break
+                return acc, speed
 
             if args.tune:
                 def eval_func_for_ilit(model):

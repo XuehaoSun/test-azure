@@ -39,6 +39,6 @@ bs=$(grep 'q_model accuracy batch_size:' ${log_file} | awk -F ' ' '{print $4}')
 accuracy=$(grep 'q_model accuracy:' ${log_file} | awk -F ' ' '{print $3}')
 echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
 
-strategy=""
+strategy=$(grep 'Tuning strategy:' ${log_file} |tail -1| awk -F ': ' '{print $2}')
 tune_time=$(grep 'Tuning time spend:' ${log_file} | awk -F ' ' '{print $4}')
-echo "${framework};${model};${strategy};${tune_time}" |tee -a ${WORKSPACE}/summary_tune.log
+echo "${framework};${model};${strategy};${tune_time}" |tee -a ${WORKSPACE}/tuning_info.log

@@ -418,17 +418,7 @@ if __name__ == "__main__":
 
     if args.fp32_benchmark:
         # for accuracy
-        fp32_graph = tf.Graph()
-        with fp32_graph.as_default():
-            graph_def = tf.compat.v1.GraphDef()
-            with tf.compat.v1.gfile.FastGFile(args.input_graph, 'rb') as input_file:
-                input_graph_content = input_file.read()
-                graph_def.ParseFromString(input_graph_content)
-
-            output_graph = optimize_for_inference(graph_def, ["image_tensor"],
-                                                  ["num_detections","detection_boxes","detection_scores","detection_classes"], dtypes.float32.as_datatype_enum, False)
-            tf.import_graph_def(output_graph, name='')
-        acc, speed = infer.inference(fp32_graph)
+        acc, speed = infer.inference(infer.get_graph())
         bs = args.batch_size
         print("input_model accuracy batch_size: %d" % bs)
         print("input_model accuracy: %f " % acc)

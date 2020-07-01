@@ -55,7 +55,7 @@ function init_obj_cmd {
 
   input_graph=/tf_dataset/pre-train-model-oob/object_detection/${model}/frozen_inference_graph.pb
   if [ ${model} = 'ssd_resnet50_v1' ]; then
-    config=ssd_resnet50_v1.yaml
+    yaml=ssd_resnet50_v1.yaml
   fi
 
   cmd="python infer_detections.py \
@@ -63,7 +63,7 @@ function init_obj_cmd {
       --input-graph ${input_graph} \
       --data-location /tf_dataset/tensorflow/coco_val.record \
       --accuracy-only \
-      --config ${config}"
+      --config ${yaml}"
 
 }
 
@@ -153,9 +153,21 @@ function set_environment {
 # run
 function generate_core {
 
-    # run tunning
+    # get strategy
+    count=$(grep -c 'strategy: ' ${yaml})
+    if [ ${count} = 0 ]; then
+      strategy='basic'
+    else
+      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
+    fi
+    echo "Tuning strategy: ${strategy}"
+
+    # run tuning
+    export ILIT_DEBUG="/tmp/${model}_quantize.pb"
     run_cmd="numactl -l -C 0-27,56-83 ${cmd} --tune"
     eval "${run_cmd}"
+    echo "QUANTIZE PB SAVED IN ${ILIT_DEBUG}"
+    echo "HOSTNAME IS ${HOSTNAME}"
 
     # run fp32 benchmark
     run_cmd="numactl -l -C 0-27,56-83 ${cmd} --fp32_benchmark"

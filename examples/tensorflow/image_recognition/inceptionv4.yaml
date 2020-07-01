@@ -10,7 +10,7 @@ calibration:
         weight: minmax
 
 tuning:
-  - strategy: random
+  - strategy: basic
     metric:  
       - topk: 1
     accuracy_criterion:

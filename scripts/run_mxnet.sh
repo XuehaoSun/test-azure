@@ -53,6 +53,7 @@ function init_params {
 
 # init_run_cmd
 function init_cnn_cmd {
+    yaml=${model_src_dir}/rn50.yaml
     dataset_dir=/tf_dataset/mxnet
     cmd="python imagenet_inference.py \
         --symbol-file=${dataset_dir}/${model}/${model}-symbol.json\
@@ -71,7 +72,7 @@ function init_cnn_cmd {
 }
 
 function init_obj_cmd {
-
+    yaml=${model_src_dir}/ssd.yaml
     if [ "${model}" = "SSD-Mobilenet1.0" ]; then
         network="mobilenet1.0"
 
@@ -89,6 +90,7 @@ function init_obj_cmd {
 }
 
 function init_bert_cmd() {
+    yaml=${model_src_dir}/bert.yaml
     param_path=/tf_dataset/mxnet/bert
     if [ "${model}" = "bert-MRPC" ]; then
       cmd="python finetune_classifier.py \
@@ -104,8 +106,6 @@ function init_bert_cmd() {
         --test_batch_size 128 \
         --only_predict"
     fi
-
-
 }
 
 
@@ -124,12 +124,18 @@ function set_environment {
 # run
 function generate_core {
 
-    # run tunning
-    excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
-    rm -f ${excute_cmd_file}
+    # get strategy
+    count=$(grep -c 'strategy: ' ${yaml})
+    if [ ${count} = 0 ]; then
+      strategy='basic'
+    else
+      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
+    fi
+    echo "Tuning strategy: ${strategy}"
+
+    # run tuning
     run_cmd="numactl -l -C 0-27,56-83 ${cmd} --tune"
-    printf "${run_cmd}" |tee -a ${excute_cmd_file}
-    bash ${excute_cmd_file}
+    eval "${run_cmd}"
 
     if [ "${model}" = "resnet50v1" ] || [ "${model}" = "inceptionv3" ] || [ "${model}" = "mobilenet1.0" ] || [ "${model}" = "mobilenetv2_1.0" ] || [ "${model}" = "resnet18_v1" ] || [ "${model}" = "squeezenet1.0" ]; then
       # run benchmark

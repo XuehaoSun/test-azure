@@ -51,7 +51,7 @@ function init_params {
 }
 
 function init_dlrm_cmd {
-
+    yaml=${model_src_dir}/conf.yaml
     data_path=/mnt/local_disk3/dataset/dlrm/dlrm/input
     fp32_load_path=/mnt/local_disk3/dataset/dlrm/dlrm_weight/terabyte_mlperf.pt
     cmd="python -u dlrm_s_pytorch_tune.py \
@@ -83,6 +83,7 @@ function init_dlrm_cmd {
 
 # init_cnn_cmd
 function init_cnn_cmd {
+    yaml=${model_src_dir}/conf.yaml
     dataset=/tf_dataset/pytorch/ImageNet/raw
     if [ "${model}" = "resnet18" ] || [ "${model}" = "resnet50" ] || [ "${model}" = "resnet101" ];then
         cmd=" python main.py \
@@ -94,7 +95,7 @@ function init_cnn_cmd {
 
 
 function init_bert_cmd {
-
+  yaml=${model_src_dir}/conf.yaml
   GLUE_DIR=/tf_dataset/pytorch/glue_data
   model_size=$(echo ${model} | awk -F '_' '{print $2}')
   TASK_NAME=$(echo ${model} | awk -F '_' '{print $3}')
@@ -147,7 +148,17 @@ function set_environment {
 
 # run
 function generate_core {
-      # run tunning
+
+    # get strategy
+    count=$(grep -c 'strategy: ' ${yaml})
+    if [ ${count} = 0 ]; then
+      strategy='basic'
+    else
+      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
+    fi
+    echo "Tuning strategy: ${strategy}"
+
+    # run tuning
     excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
     rm -f ${excute_cmd_file}
     run_cmd="numactl -l -C 0-27,56-83 ${cmd} --tune"

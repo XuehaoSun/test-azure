@@ -704,9 +704,9 @@ def main():
                 q_model = tuner.tune(model, test_dataloader, eval_func=eval_func_for_ilit)
 
                 top1, speed = inference(q_model)
-                print("q_model accuracy batch_size: %d" % args.batch_size)
+                print("q_model accuracy batch_size: %d" % args.eval_batch_size)
                 print("q_model accuracy: %.3f " % top1)
-                print("q_model throughput batch_size: %d" % args.batch_size)
+                print("q_model throughput batch_size: %d" % args.eval_batch_size)
                 print("q_model throughput: %.3f images/sec" % speed)
 
                 exit(0)
@@ -715,9 +715,9 @@ def main():
                 model = model_class.from_pretrained(checkpoint, force_download=True)
                 model.to(args.device)
                 top1, speed = inference(model)
-                print("input_model accuracy batch_size: %d" % args.batch_size)
+                print("input_model accuracy batch_size: %d" % args.eval_batch_size)
                 print("input_model accuracy: %.3f " % top1)
-                print("input_model throughput batch_size: %d" % args.batch_size)
+                print("input_model throughput batch_size: %d" % args.eval_batch_size)
                 print("input_model throughput: %.3f images/sec" % speed)
 
                 exit(0)

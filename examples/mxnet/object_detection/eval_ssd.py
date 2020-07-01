@@ -252,18 +252,18 @@ if __name__ == '__main__':
         end_tune = time.time()
         print("Tuning time spend: %.1f s" % (end_tune-start_tune))
         bs = 256
-        top1, speed = inference(q_model, bs)
+        acc, speed = inference(q_model, bs)
         print("q_model accuracy batch_size: %d" % bs)
-        print("q_model accuracy: %.3f" % top1)
+        print("q_model accuracy: %.3f" % (acc/100.0))
         print("q_model throughput batch_size: %d" % bs)
         print("q_model throughput: %.3f images/sec" % speed)
         sys.exit()
 
     if args.fp32_benchmark:
         bs = 256
-        top1, speed = inference(net, bs)
+        acc, speed = inference(net, bs)
         print("input_model accuracy batch_size: %d" % bs)
-        print("input_model accuracy: %.3f" % top1)
+        print("input_model accuracy: %.3f" % (acc/100.0))
         print("input_model throughput batch_size: %d" % bs)
         print("input_model throughput: %.3f images/sec" % speed)
         sys.exit()
