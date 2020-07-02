@@ -699,9 +699,9 @@ def main():
                 import ilit
                 start_tune = time.time()
                 tuner = ilit.Tuner("./conf.yaml")
+                q_model = tuner.tune(model, test_dataloader, eval_func=eval_func_for_ilit)
                 end_tune = time.time()
                 print("Tuning time spend: %.1f s" % (end_tune-start_tune))
-                q_model = tuner.tune(model, test_dataloader, eval_func=eval_func_for_ilit)
 
                 top1, speed = inference(q_model)
                 print("q_model accuracy batch_size: %d" % args.eval_batch_size)
