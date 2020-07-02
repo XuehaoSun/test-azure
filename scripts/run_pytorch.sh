@@ -144,6 +144,14 @@ function set_environment {
     export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
     python -V
     pip list
+    c_ilit=$(pip list | grep -c 'ilit')
+    if [ ${c_ilit} = 0 ]; then
+      conda install /tf_dataset/ilit/1.0a_release/ilit-1.0a0-0.tar.bz2
+    else
+      pip uninstall ilit -y
+      conda install /tf_dataset/ilit/1.0a_release/ilit-1.0a0-0.tar.bz2
+    fi
+    pip list
 }
 
 # run
