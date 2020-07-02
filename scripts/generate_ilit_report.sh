@@ -307,7 +307,7 @@ cat >> ${WORKSPACE}/report.html << eof
                     <td>${tensorflow_version}</td>
                     <td>${pytorch_version}</td>
                     <td>${mxnet_version}</td>
-			        <td><a href="https://gitlab.devtools.intel.com/intelai/tools">iLiT</a></td>
+			        <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">iLiT</a></td>
               ${Test_Info}
 			    </tr>
 	    </table>
