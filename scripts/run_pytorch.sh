@@ -167,11 +167,9 @@ function generate_core {
     echo "Tuning strategy: ${strategy}"
 
     # run tuning
-    excute_cmd_file="/tmp/${framework}-${model}-run-$(date +'%s').sh"
-    rm -f ${excute_cmd_file}
     run_cmd="numactl -l -C 0-27,56-83 ${cmd} --tune"
-    printf "${run_cmd}" |tee -a ${excute_cmd_file}
-    bash ${excute_cmd_file}
+    eval "${run_cmd}"
+    echo "HOSTNAME IS ${HOSTNAME}"
 
     # run fp32 benchmark
     run_cmd="numactl -l -C 0-27,56-83 ${cmd} --fp32_benchmark"

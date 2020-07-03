@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -x
 
 function main {
     init_params "$@"

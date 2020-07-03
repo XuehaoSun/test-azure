@@ -145,6 +145,7 @@ function generate_core {
     # run tuning
     run_cmd="numactl -l -C 0-27,56-83 ${cmd} --tune"
     eval "${run_cmd}"
+    echo "HOSTNAME IS ${HOSTNAME}"
 
     if [ "${model}" = "resnet50v1" ] || [ "${model}" = "inceptionv3" ] || [ "${model}" = "mobilenet1.0" ] || [ "${model}" = "mobilenetv2_1.0" ] || [ "${model}" = "resnet18_v1" ] || [ "${model}" = "squeezenet1.0" ]; then
       # run benchmark
