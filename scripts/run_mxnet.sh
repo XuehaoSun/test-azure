@@ -117,15 +117,12 @@ function set_environment {
 
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
-    #export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
+    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
     python -V
     pip list
     c_ilit=$(pip list | grep -c 'ilit')
-    if [ ${c_ilit} = 0 ]; then
-      pip install /tf_dataset/ilit/1.0a_release/ilit-1.0a0-py3-none-any.whl
-    else
+    if [ ${c_ilit} != 0 ]; then
       pip uninstall ilit -y
-      pip install /tf_dataset/ilit/1.0a_release/ilit-1.0a0-py3-none-any.whl
     fi
     pip list
 }
