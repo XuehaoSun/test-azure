@@ -137,7 +137,9 @@ node( sub_node_label ) {
                 # copy examples
                 rm -rf ${WORKSPACE}/ilit-models/examples
                 cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
-
+                echo "-------w-------"
+                w
+                echo "-------w-------"
                 bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
