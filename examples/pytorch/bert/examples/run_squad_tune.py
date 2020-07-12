@@ -705,7 +705,7 @@ def main():
 
                 top1, speed = inference(q_model)
                 print("q_model accuracy batch_size: %d" % args.eval_batch_size)
-                print("q_model accuracy: %f " % top1/100.0)
+                print("q_model accuracy: %f " % (top1/100.0))
                 print("q_model throughput batch_size: %d" % args.eval_batch_size)
                 print("q_model throughput: %.3f images/sec" % speed)
 
@@ -716,7 +716,7 @@ def main():
                 model.to(args.device)
                 top1, speed = inference(model)
                 print("input_model accuracy batch_size: %d" % args.eval_batch_size)
-                print("input_model accuracy: %f " % top1/100.0)
+                print("input_model accuracy: %f " % (top1/100.0))
                 print("input_model throughput batch_size: %d" % args.eval_batch_size)
                 print("input_model throughput: %.3f images/sec" % speed)
 

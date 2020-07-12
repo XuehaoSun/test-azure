@@ -254,7 +254,7 @@ if __name__ == '__main__':
         bs = 256
         acc, speed = inference(q_model, bs)
         print("q_model accuracy batch_size: %d" % bs)
-        print("q_model accuracy: %.3f" % (acc/100.0))
+        print("q_model accuracy: %f" % (acc/100.0))
         print("q_model throughput batch_size: %d" % bs)
         print("q_model throughput: %.3f images/sec" % speed)
         sys.exit()
@@ -263,7 +263,7 @@ if __name__ == '__main__':
         bs = 256
         acc, speed = inference(net, bs)
         print("input_model accuracy batch_size: %d" % bs)
-        print("input_model accuracy: %.3f" % (acc/100.0))
+        print("input_model accuracy: %f" % (acc/100.0))
         print("input_model throughput batch_size: %d" % bs)
         print("input_model throughput: %.3f images/sec" % speed)
         sys.exit()
