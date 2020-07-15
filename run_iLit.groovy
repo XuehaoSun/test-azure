@@ -45,10 +45,8 @@ MR_target_branch = ''
 if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
     nigthly_test_branch = params.nigthly_test_branch
 }else{
-    if ("${MR_source_branch}" != '') {
-        MR_source_branch = params.MR_source_branch
-        MR_target_branch = params.MR_target_branch
-    }
+    MR_source_branch = params.MR_source_branch
+    MR_target_branch = params.MR_target_branch
 }
 echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
