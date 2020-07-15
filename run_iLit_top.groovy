@@ -242,7 +242,7 @@ def doBuild() {
                                 if ("${MR_source_branch}" != '') {
                                     updateGitlabCommitStatus state:'failure'
                                 }
-                                currentBuild.result = "FAILED"
+                                currentBuild.result = "FAILURE"
                             }
                     }
                 }
@@ -369,7 +369,7 @@ node( node_label ) {
         if ("${MR_source_branch}" != '') {
             updateGitlabCommitStatus state:'failure'
         }
-        currentBuild.result = "FAILED"
+        currentBuild.result = "FAILURE"
         throw e
 
     } finally {
