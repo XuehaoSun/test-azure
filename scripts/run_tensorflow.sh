@@ -49,7 +49,9 @@ function run_tune {
     fi
     echo "Tuning strategy: ${strategy}"
 
-    q_model=${WORKSPACE}/${framework}/${model}-tune.pb
+    q_model_dir=${WORKSPACE}/${framework}
+    mkdir -p ${q_model_dir}
+    q_model=${q_model_dir}/${model}-tune.pb
 
     # run_tuning.sh
     bash run_tuning.sh --topology=${model} --data_location=${data_location} --input_model=${input_model} --output_model=${q_model}
@@ -209,7 +211,7 @@ function run_benchmark {
     fi
 
     logDir=${WORKSPACE}/${framework}
-
+    mkdir -p ${logDir}
     # run benchmark
     logFile=$logDir/${model}_${precision}_${mode}_benchmark.log
     run_cmd="${pre_cmd} ${cmd} --input_graph ${input_model} ${mode_cmd} --benchmark"
