@@ -5,22 +5,27 @@ function main {
     init_params "$@"
     set_environment
     cnn_model_list=("resnet50v1.0" "resnet50v1.5")
-    if [[ " ${cnn_model_list[@]} " =~ " ${model} " ]]; then
+    if [[ " ${cnn_model_list[*]} " =~ ${model} ]]; then
       model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/image_recognition
       benchmark_dir=${WORKSPACE}/ilit-validation/examples/${framework}/image_recognition
       init_cnn_cmd
     fi
 
+    # run tuning and save quantized model
     run_tune
 
     # run benchmark
     precision_list=(fp32 int8)
     mode_list=(throughput)
-    cd ${benchmark_dir}
+    if [ "${benchmark_dir}" != "" ];then
+        cd ${benchmark_dir} || exit
+    else
+        echo "ERROR benchmark_dir"
+    fi
     export PYTHONPATH=${PYTHONPATH}:${model_src_dir}
-    for precision in ${precision_list}
+    for precision in "${precision_list[@]}"
     do
-      for mode in ${mode_list}
+      for mode in "${mode_list[@]}"
       do
         run_benchmark ${precision} ${mode}
       done
@@ -28,40 +33,8 @@ function main {
 
 }
 
-# run auto tune
-function run_tune {
-
-    if [ "${model_src_dir}" != "" ];then
-        cd ${model_src_dir}
-    else
-        echo "ERROR model_src_dir"
-    fi
-    git remote -v
-    git branch
-    git show |head -5
-
-    # get strategy
-    count=$(grep -c 'strategy: ' ${yaml})
-    if [ ${count} = 0 ]; then
-      strategy='basic'
-    else
-      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
-    fi
-    echo "Tuning strategy: ${strategy}"
-
-    q_model_dir=${WORKSPACE}/${framework}
-    mkdir -p ${q_model_dir}
-    q_model=${q_model_dir}/${model}-tune.pb
-
-    # run_tuning.sh
-    bash run_tuning.sh --topology=${model} --data_location=${data_location} --input_model=${input_model} --output_model=${q_model}
-
-}
-
 # init params
 function init_params {
-    framework='tensorflow'
-    model='resnet50'
 
     for var in "$@"
     do
@@ -179,7 +152,7 @@ function set_environment {
 
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
-    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
+    # export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
     python -V
     pip list
     c_ilit=$(pip list | grep -c 'ilit')
@@ -187,8 +160,41 @@ function set_environment {
       pip uninstall ilit -y
     fi
     pip list
+    cd ${WORKSPACE}/ilit-models/ || exit
+    python setup.py install
+    pip list
 
     echo "HOSTNAME IS ${HOSTNAME}"
+}
+
+# run auto tune
+function run_tune {
+
+    if [ "${model_src_dir}" != "" ];then
+        cd ${model_src_dir}
+    else
+        echo "ERROR model_src_dir"
+    fi
+    git remote -v
+    git branch
+    git show |head -5
+
+    # get strategy
+    count=$(grep -c 'strategy: ' ${yaml})
+    if [ ${count} = 0 ]; then
+      strategy='basic'
+    else
+      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
+    fi
+    echo "Tuning strategy: ${strategy}"
+
+    q_model_dir=${WORKSPACE}/${framework}
+    mkdir -p ${q_model_dir}
+    q_model=${q_model_dir}/${model}-tune.pb
+
+    # run_tuning.sh
+    bash run_tuning.sh --topology=${model} --data_location=${data_location} --input_model=${input_model} --output_model=${q_model}
+
 }
 
 # run benchmark
