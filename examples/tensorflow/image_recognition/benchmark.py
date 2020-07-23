@@ -163,7 +163,7 @@ class eval_classifier_optimized_graph:
             '--env', dest='env', help='specific Tensorflow env',
             default='mkl'
         )
-        arg_parser.add_argument('--benchmark', dest='fp32_benchmark', action='store_true', help='run benchmark')
+        arg_parser.add_argument('--benchmark', dest='benchmark', action='store_true', help='run benchmark')
         arg_parser.add_argument('--tune', dest='tune', action='store_true', help='use ilit to tune.')
 
         self.args = arg_parser.parse_args()
