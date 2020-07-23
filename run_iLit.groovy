@@ -134,9 +134,7 @@ node( sub_node_label ) {
         stage("Performance") {
             sh '''#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model} ----"
-                # copy examples
-                rm -rf ${WORKSPACE}/ilit-models/examples
-                cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
+                
                 echo "-------w-------"
                 w
                 echo "-------w-------"

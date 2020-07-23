@@ -163,7 +163,7 @@ class eval_classifier_optimized_graph:
             '--env', dest='env', help='specific Tensorflow env',
             default='mkl'
         )
-        arg_parser.add_argument('--fp32_benchmark', dest='fp32_benchmark', action='store_true', help='run benchmark')
+        arg_parser.add_argument('--benchmark', dest='fp32_benchmark', action='store_true', help='run benchmark')
         arg_parser.add_argument('--tune', dest='tune', action='store_true', help='use ilit to tune.')
 
         self.args = arg_parser.parse_args()
@@ -205,7 +205,7 @@ class eval_classifier_optimized_graph:
             print("q_model throughput batch_size: %d" % bs)
             print("q_model throughput: %.3f images/sec" % (bs / batch_time))
 
-        if self.args.fp32_benchmark:
+        if self.args.benchmark:
             # for accuracy
             infer_graph = tf.Graph()
             with infer_graph.as_default():
@@ -218,7 +218,7 @@ class eval_classifier_optimized_graph:
                                                       [self.args.output], dtypes.float32.as_datatype_enum, False)
                 tf.import_graph_def(output_graph, name='')
 
-            bs = 100
+            bs = self.args.batch_size
             top1, batch_time = self.inference(infer_graph)
             print("input_model accuracy batch_size: %d" % bs)
             print("input_model accuracy: %f " % top1)
@@ -228,7 +228,7 @@ class eval_classifier_optimized_graph:
     def inference(self, infer_graph):
         """run benchmark with optimized graph"""
         print("Run inference")
-        bs = 100
+        bs = self.args.batch_size
         data_config = tf.compat.v1.ConfigProto()
         data_config.intra_op_parallelism_threads = self.args.data_num_intra_threads
         data_config.inter_op_parallelism_threads = self.args.data_num_inter_threads
