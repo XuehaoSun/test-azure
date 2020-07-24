@@ -191,8 +191,12 @@ function run_tune {
     q_model=${WORKSPACE}/${framework}-${model}-tune.pb
 
     # run_tuning.sh
+    starttime=`date +'%Y-%m-%d %H:%M:%S'`
     bash run_tuning.sh --topology=${model} --dataset_location=${data_location} --input_model=${input_model} --output_model=${q_model}
-
+    endtime=`date +'%Y-%m-%d %H:%M:%S'`
+    start_seconds=$(date --date="$starttime" +%s);
+    end_seconds=$(date --date="$endtime" +%s);
+    echo "Tuning time spend: "$((end_seconds-start_seconds))"s "
 }
 
 # run benchmark
