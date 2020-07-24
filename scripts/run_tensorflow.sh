@@ -158,8 +158,8 @@ function set_environment {
     c_ilit=$(pip list | grep -c 'ilit')
     if [ ${c_ilit} != 0 ]; then
       pip uninstall ilit -y
+      pip list
     fi
-    pip list
     cd ${WORKSPACE}/ilit-models/ || exit
     python setup.py install
     pip list
@@ -188,9 +188,7 @@ function run_tune {
     fi
     echo "Tuning strategy: ${strategy}"
 
-    q_model_dir=${WORKSPACE}/${framework}
-    mkdir -p ${q_model_dir}
-    q_model=${q_model_dir}/${model}-tune.pb
+    q_model=${WORKSPACE}/${framework}-${model}-tune.pb
 
     # run_tuning.sh
     bash run_tuning.sh --topology=${model} --data_location=${data_location} --input_model=${input_model} --output_model=${q_model}
@@ -216,10 +214,8 @@ function run_benchmark {
       mode_cmd="--batch-size ${batch_size} -e 1 -a 28"
     fi
 
-    logDir=${WORKSPACE}/${framework}
-    mkdir -p ${logDir}
     # run benchmark
-    logFile=$logDir/${model}_${precision}_${mode}_benchmark.log
+    logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}_benchmark.log
     run_cmd="${pre_cmd} ${cmd} --input_graph ${input_model} ${mode_cmd} --benchmark"
     echo "RUNCMD: ${run_cmd} " > ${logFile}
     eval "${run_cmd}" >> ${logFile}
