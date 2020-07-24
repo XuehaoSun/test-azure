@@ -239,9 +239,6 @@ def doBuild() {
 
                             if (downstreamJob.getResult() != 'SUCCESS')
                             {
-                                if ("${MR_source_branch}" != '') {
-                                    updateGitlabCommitStatus state:'failure'
-                                }
                                 currentBuild.result = "FAILURE"
                             }
                     }
@@ -286,6 +283,38 @@ def collectLog() {
 
 }
 
+def unitTest() {
+
+    catchError {
+        List unitTestParams = [
+                string(name: "node_label", value: "${sub_node_label}"),
+                string(name: "ilit_url", value: "${ilit_url}"),
+                string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        ]
+        def downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
+
+        text_commnet = readFile file: "${overviewLog}"
+        writeFile file: "${overviewLog}", text: text_commnet + "iLit-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
+
+        copyArtifacts(
+                projectName: "iLit-unit-test",
+                selector: specific("${downstreamJob.getNumber()}"),
+                filter: '*.log',
+                fingerprintArtifacts: true,
+                target: "unittest")
+
+        // Archive in Jenkins
+        archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+        }
+    }
+
+}
+
 node( node_label ) {
 
     try {
@@ -296,16 +325,34 @@ node( node_label ) {
 
         download()
 
-        SUMMARYTXT = "${WORKSPACE}/summary.log"
-        writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
-        TUNETXT = "${WORKSPACE}/tuning_info.log"
-        writeFile file: TUNETXT, text: "Framework;Model;Strategy;Tune_time\n"
+        summaryLog = "${WORKSPACE}/summary.log"
+        writeFile file: summaryLog, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
+        summaryLogLast = "${WORKSPACE}/reference/summary.log"
 
-        stage("tune-parallel") {
-            doBuild()
-        }
+        tuneLog = "${WORKSPACE}/tuning_info.log"
+        writeFile file: tuneLog, text: "Framework;Model;Strategy;Tune_time\n"
+        tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
 
-        stage("Collect Logs") {
+        // over view log
+        overviewLog = "${WORKSPACE}/summary_overview.log"
+        writeFile file: overviewLog,
+            text: "Jenkins Job, Build Status, Build ID\n"
+
+        parallel(
+                ut:{
+                    stage("unit test"){
+                        unitTest()
+                    }
+                },
+
+                perf: {
+                    stage("tune-parallel") {
+                        doBuild()
+                    }
+                }
+        )
+
+        stage("Collect perf Logs") {
             collectLog()
         }
 
@@ -321,22 +368,30 @@ node( node_label ) {
             }
 
             dir(WORKSPACE) {
-                sh'''#!/bin/bash
-                    cd ${WORKSPACE}/ilit-models
-                    qtools_commit=$(git rev-parse HEAD)
-                    cd ${WORKSPACE}
-                    summaryLog="${WORKSPACE}/summary.log"
-                    summaryLogLast="${WORKSPACE}/reference/summary.log"
-                    tuneLog="${WORKSPACE}/tuning_info.log"
-                    tuneLogLast="${WORKSPACE}/reference/tuning_info.log"
-                    chmod 775 ilit-validation/scripts/generate_ilit_report.sh
-                    qtools_branch=${nigthly_test_branch} qtools_commit=${qtools_commit} summaryLog=${summaryLog} summaryLogLast=${summaryLogLast} tuneLog=${tuneLog} tuneLogLast=${tuneLogLast} \
-                    ilit-validation/scripts/generate_ilit_report.sh 
-                '''
+
+                qtools_commit = sh (
+                    script: 'cd ilit-models && git rev-parse HEAD',
+                    returnStdout: true
+                ).trim()
+
+                withEnv([
+                    "qtools_branch=${nigthly_test_branch}",
+                    "qtools_commit=${qtools_commit}",
+                    "summaryLog=${summaryLog}",
+                    "summaryLogLast=${summaryLogLast}",
+                    "tuneLog=${tuneLog}",
+                    "tuneLogLast=${tuneLogLast}",
+                    "overview_log=${overviewLog}"
+                ]) {
+                    sh '''
+                        chmod 775 ./ilit-validation/scripts/generate_ilit_report.sh
+                        ./ilit-validation/scripts/generate_ilit_report.sh 
+                    '''
+				}
             }
         }
 
-         stage("send email") {
+        stage("send email") {
              dir("$WORKSPACE") {
                  if (MR_source_branch != '') {
                      recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
@@ -360,15 +415,9 @@ node( node_label ) {
              }
          }
 
-        if ("${MR_source_branch}" != '') {
-            updateGitlabCommitStatus state:'success'
-        }
 
     } catch (e) {
         // If there was an exception thrown, the build failed
-        if ("${MR_source_branch}" != '') {
-            updateGitlabCommitStatus state:'failure'
-        }
         currentBuild.result = "FAILURE"
         throw e
 
@@ -378,6 +427,19 @@ node( node_label ) {
         stage("Artifacts") {
             archiveArtifacts artifacts: '*.log,*.html', excludes: null
             fingerprint: true
+        }
+
+        if (currentBuild.result == 'FAILURE') {
+            echo "pipeline failed"
+            if (MR_target_branch != "") {
+                updateGitlabCommitStatus state: 'failed'
+            }
+            
+        } else {
+            echo "pipeline success"
+            if (MR_target_branch != "") {
+                updateGitlabCommitStatus state: 'success'
+            }
         }
     }
 }
