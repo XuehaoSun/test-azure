@@ -82,6 +82,27 @@ def cleanup() {
 
 }
 
+def performance() {
+    sh '''#!/bin/bash -x
+        echo "Running ---- ${framework}, ${model} ----"
+        # copy examples
+        rm -rf ${WORKSPACE}/ilit-models/examples
+        cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
+        echo "-------w-------"
+        w
+        echo "-------w-------"
+        echo "=======cache clean======="
+        
+        sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+
+        echo "=======cache clean======="
+        bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
+            --model=${model} \
+            --conda_env_name=${framework}-${framework_version} \
+            2>&1 | tee ${framework}-${model}.log
+    '''
+}
+
 node( sub_node_label ) {
 
     cleanup()
@@ -130,24 +151,9 @@ node( sub_node_label ) {
         }
 
         stage("Performance") {
-            sh '''#!/bin/bash -x
-                echo "Running ---- ${framework}, ${model} ----"
-                # copy examples
-                rm -rf ${WORKSPACE}/ilit-models/examples
-                cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
-                echo "-------w-------"
-                w
-                echo "-------w-------"
-                echo "=======cache clean======="
-                
-                sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
-
-                echo "=======cache clean======="
-                bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
-                    --model=${model} \
-                    --conda_env_name=${framework}-${framework_version} \
-                    2>&1 | tee ${framework}-${model}.log
-            '''
+            retry(3){
+                performance()
+            }
         }
 
         stage("check status"){
