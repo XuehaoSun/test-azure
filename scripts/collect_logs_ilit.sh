@@ -52,7 +52,7 @@ if [ ${framework} = "tensorflow" ]; then
   else
 
     throughput=$(grep 'input_model throughput:' ${benchmark_log_file} | awk -F ' ' '{print $3}')
-    latency=1000/${throughput}
+    latency=$(echo | awk -v t=$throughput '{ r = 1000 / t; printf("%.2f", r)}')
     echo "$framework;CLX8280;${PRECISION};$model;Inference;Latency;1;${latency};${BUILD_URL}artifact/$benchmark_log_file" |tee -a ${WORKSPACE}/summary.log
 
   fi

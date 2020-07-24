@@ -273,8 +273,8 @@ def collectLog() {
             job_models = mxnet_models.split(',')
         }
         job_models.each { job_model ->
-            precision_list { precision ->
-                mode_list { mode ->
+            precision_list.each { precision ->
+                mode_list.each { mode ->
                     withEnv(["current_model=$job_model","current_framework=$job_framework","precision=$precision","mode=$mode"]) {
 
                         sh '''#!/bin/bash -x
