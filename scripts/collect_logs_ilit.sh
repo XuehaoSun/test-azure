@@ -26,9 +26,13 @@ echo "---- $framework, $model ----"
 
 log_file="${framework}/${model}/${framework}-${model}.log"
 
-strategy=$(grep 'Tuning strategy:' ${log_file} |tail -1| awk -F ': ' '{print $2}')
-tune_time=$(grep 'Tuning time spend:' ${log_file} | awk -F ' ' '{print $4}')
-echo "${framework};${model};${strategy};${tune_time}" |tee -a ${WORKSPACE}/tuning_info.log
+if [ ${precision} = "fp32" ]; then
+  if [ ${mode} = "throughput" ]; then
+    strategy=$(grep 'Tuning strategy:' ${log_file} |tail -1| awk -F ': ' '{print $2}')
+    tune_time=$(grep 'Tuning time spend:' ${log_file} | awk -F ' ' '{print $4}')
+    echo "${framework};${model};${strategy};${tune_time}" |tee -a ${WORKSPACE}/tuning_info.log
+  fi
+fi
 
 benchmark_log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}_benchmark.log"
 
