@@ -16,7 +16,7 @@ function main {
 
     # run benchmark
     precision_list=(fp32 int8)
-    mode_list=(throughput)
+    mode_list=(throughput latency)
     if [ "${benchmark_dir}" != "" ];then
         cd ${benchmark_dir} || exit
     else
@@ -191,7 +191,7 @@ function run_tune {
     q_model=${WORKSPACE}/${framework}-${model}-tune.pb
 
     # run_tuning.sh
-    bash run_tuning.sh --topology=${model} --data_location=${data_location} --input_model=${input_model} --output_model=${q_model}
+    bash run_tuning.sh --topology=${model} --dataset_location=${data_location} --input_model=${input_model} --output_model=${q_model}
 
 }
 

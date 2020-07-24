@@ -222,12 +222,12 @@ def doBuild() {
                     stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
                         echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        def downstreamJob = build job: "test_suyue_intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
 
                             catchError {
 
                                 copyArtifacts(
-                                        projectName: "intel-iLit-validation",
+                                        projectName: "test_suyue_intel-iLit-validation",
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
@@ -259,6 +259,8 @@ def collectLog() {
     echo "---------------------------------------------------------"
     echo "------------  running collectLog  -------------"
     echo "---------------------------------------------------------"
+    precision_list = ["fp32", "int8"]
+    mode_list = ["throughput", "latency"]
 
     job_frameworks = Frameworks.split(',')
     job_frameworks.each { job_framework ->
@@ -271,13 +273,17 @@ def collectLog() {
             job_models = mxnet_models.split(',')
         }
         job_models.each { job_model ->
-            withEnv(["current_model=$job_model","current_framework=$job_framework"]) {
+            precision_list { precision ->
+                mode_list { mode ->
+                    withEnv(["current_model=$job_model","current_framework=$job_framework","precision=$precision","mode=$mode"]) {
 
-                sh '''#!/bin/bash -x
-                    cd $WORKSPACE
-                    chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
-                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework}                
-                '''
+                        sh '''#!/bin/bash -x
+                            cd $WORKSPACE
+                            chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
+                            ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
+                        '''
+                    }
+                }
             }
         }
     }
