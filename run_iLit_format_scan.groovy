@@ -15,18 +15,6 @@ if ('ilit_url' in params && params.ilit_url != ''){
 }
 echo "ilit_url is ${ilit_url}"
 
-nigthly_test_branch = ''
-MR_source_branch = ''
-MR_target_branch = ''
-if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
-    nigthly_test_branch = params.nigthly_test_branch
-
-}else{
-    if ("${gitlabSourceBranch}" != '') {
-        MR_source_branch = "${gitlabSourceBranch}"
-        MR_target_branch = "${gitlabTargetBranch}"
-    }
-}
 echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
@@ -94,53 +82,30 @@ def download() {
     }
 }
 
-node(node_label){
-    try{
+node(node_label) {
+    try {
         cleanup()
         download()
-        stage('Flake8') {
-            echo "+---------------- Flake8 ----------------+"
-
-            sh '''#!/bin/bash
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                conda remove --all -y -n ${HOSTNAME}
-                conda create python=3.6.9 -y -n ${HOSTNAME}
-                source activate ${HOSTNAME}
-                python -V
-                
-                set -x
-                pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-                pip install flake8
-                flake8 --max-line-length 120 ${WORKSPACE}/iLit > ${WORKSPACE}/flake8-iLit-$(date +%s).log 2>&1 || true
-            '''
+        stage("Pylint Scan") {
+            echo "---------------------------------------------------------"
+            echo "-----------------  Running Pylint Scan  -----------------"
+            echo "---------------------------------------------------------"
+            pylint_status = sh(
+            script: "${WORKSPACE}/scripts/run_format_scan.sh --repo_dir=${WORKSPACE}/iLit --target_branch=${MR_target_branch}",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
+            returnStatus:true)
+            if (pylint_status != 0) {
+                throw new Exception("Found pylint errors.")
+            }
         }
 
-        stage('pylint'){
-            echo "+---------------- Pylint ----------------+"
-
-            sh '''#!/bin/bash
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                source activate ${HOSTNAME}
-                python -V
-                
-                set -x
-                pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-                pip install pylint
-                python -m pylint --persistent=n --generate-rcfile >pylint.conf
-                python -m pylint --rcfile=pylint.conf ${WORKSPACE}/iLit > ${WORKSPACE}/pylint-iLit-$(date +%s).log 2>&1 || true
-            '''
-
-            updateGitlabCommitStatus state:'success'
-        }
-
-    }catch (e) {
+    } catch(e) {
         // If there was an exception thrown, the build failed
-        currentBuild.result = "FAILED"
+        currentBuild.result = "FAILURE"
         throw e
-    }finally {
+    } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log,*.html,*/*.log', excludes: null
+            archiveArtifacts artifacts: '*.json', excludes: null, allowEmptyArchive: true
             fingerprint: true
         }
     }
