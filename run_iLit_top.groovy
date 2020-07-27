@@ -84,6 +84,8 @@ if ('ilit_url' in params && params.ilit_url != ''){
 }
 echo "ilit_url is ${ilit_url}"
 
+try { echo "RUN_PYLINT=${RUN_PYLINT}"; } catch (Exception e) { RUN_PYLINT="false" ; echo "RUN_PYLINT=${RUN_PYLINT}" }
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -121,7 +123,7 @@ def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
-        sudo rm -rf *           
+        sudo rm -rf *
         '''
     } catch(e) {
         echo "==============================================="
@@ -248,7 +250,32 @@ def doBuild() {
     }
 
     parallel jobs
+}
 
+def pylintScan() {
+    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+        List pylintScanParams = [
+            string(name: "ilit_url", value: "${ilit_url}"),
+            string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        ]
+        def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: pylintScanParams
+        copyArtifacts(
+            projectName: "intel-iLit-format-scan",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.json',
+            fingerprintArtifacts: true,
+            target: "format_scan",
+            optional: true)
+
+        // Archive in Jenkins
+        archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
+
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+        }
+    }
 }
 
 def collectLog() {
@@ -337,6 +364,12 @@ node( node_label ) {
         overviewLog = "${WORKSPACE}/summary_overview.log"
         writeFile file: overviewLog,
             text: "Jenkins Job, Build Status, Build ID\n"
+
+        if (RUN_PYLINT == "true") {
+            stage("Pylint Scan") {
+                pylintScan()
+            }
+        }
 
         parallel(
                 ut:{
@@ -429,7 +462,7 @@ node( node_label ) {
             fingerprint: true
         }
 
-        if (currentBuild.result == 'FAILURE') {
+        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
             echo "pipeline failed"
             if (MR_target_branch != "") {
                 updateGitlabCommitStatus state: 'failed'
