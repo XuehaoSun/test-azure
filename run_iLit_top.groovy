@@ -382,8 +382,8 @@ def unitTest() {
 
 def collectModelList(framework) {
     add_models_list=[]
-    dir("$WORKSPACE"){
-        def modelconf =  jsonParse(readFile("./ilit-validation/config/model_list.json"))
+    dir("$WORKSPACE/ilit-models"){
+        def modelconf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_list.json"))
         sh (
             script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) | grep \'examples\' > diff.log',
             returnStdout: true
