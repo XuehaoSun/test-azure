@@ -384,14 +384,18 @@ def collectModelList(framework) {
     add_models_list=[]
     dir("$WORKSPACE/ilit-models"){
         def modelconf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_list.json"))
-        sh (
-            script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) | grep \'examples\' > diff.log',
-            returnStdout: true
-        ).trim()
-        add_models_dir = sh (
-                script: 'echo $(cat diff.log | grep "${framework}" | cut -d/ -f3 | sort -u)',
-                returnStdout: true
-        ).trim()
+
+        withEnv(["MR_target_branch=${MR_target_branch}", "framework=${framework}"]) {
+            sh (
+                    script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) | grep \'examples\' > diff.log',
+                    returnStdout: true
+            ).trim()
+            add_models_dir = sh (
+                    script: 'echo $(cat diff.log | grep "${framework}" | cut -d/ -f3 | sort -u)',
+                    returnStdout: true
+            ).trim()
+        }
+
         if ( add_models_dir != '' ){
             add_models_dir_list = add_models_dir.split(' ')
             add_models_dir_list.each{ per_model_dir ->
