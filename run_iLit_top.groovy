@@ -223,7 +223,7 @@ def doBuild() {
         if (MR_source_branch != ''){
             add_models_list = collectModelList(job_framework)
             job_models = job_models.plus(add_models_list)
-            job_models.unique()
+            //job_models.unique()
         }
         echo "${job_models}"
         echo "llsu-----> ${job_framework}"
@@ -314,7 +314,7 @@ def collectLog() {
         if (MR_source_branch != ''){
             add_models_list = collectModelList(job_framework)
             job_models = job_models.plus(add_models_list)
-            job_models.unique()
+            //job_models.unique()
         }
 
         job_models.each { job_model ->
