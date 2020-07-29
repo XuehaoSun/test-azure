@@ -353,7 +353,6 @@ def unitTest() {
 
     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
         List unitTestParams = [
-                string(name: "node_label", value: "${sub_node_label}"),
                 string(name: "ilit_url", value: "${ilit_url}"),
                 string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
                 string(name: "MR_source_branch", value: "${gitlabSourceBranch}"),
