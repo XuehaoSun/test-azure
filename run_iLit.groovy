@@ -63,6 +63,15 @@ if(framework == 'pytorch'){
     }
 }
 
+// Get tuning strategy
+def strategy_configs = [
+    "tensorflow": "basic",
+    "pytorch": "bayesian",
+    "mxnet": "mse",
+]
+def strategy = strategy_configs[framework]
+echo "strategy: ${strategy}"
+
 def cleanup() {
 
     try {
@@ -128,7 +137,22 @@ node( sub_node_label ) {
                 ]
             }
         }
+        stage("Tuning") {
 
+            sh """#!/bin/bash -x
+                echo "Running ---- ${framework}, ${model}, ${strategy} ----"
+                
+                echo "-------w-------"
+                w
+                echo "-------w-------"
+                bash ${WORKSPACE}/ilit-validation/scripts/run_tuning.sh \
+                    --framework=${framework} \
+                    --model=${model} \
+                    --tuning_strategy=${strategy} \
+                    --conda_env_name=${framework}-${framework_version} \
+                    2>&1 | tee ${framework}-${model}-tune.log
+            """
+        }
         stage("Performance") {
             sh '''#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model} ----"
@@ -148,10 +172,10 @@ node( sub_node_label ) {
             '''
         }
 
-        stage("check status"){
+        stage("Check status"){
             dir("${WORKSPACE}"){
                 sh '''#!/bin/bash -x
-                    if [ $(grep 'Found a quantized model which meet accuracy goal.' ${framework}-${model}.log | wc -l) == 0 ];then
+                    if [ $(grep 'Found a quantized model which meet accuracy goal.' ${framework}-${model}-tune.log | wc -l) == 0 ];then
                         exit 1
                     fi
                 '''
