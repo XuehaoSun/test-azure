@@ -84,6 +84,8 @@ if ('ilit_url' in params && params.ilit_url != ''){
 }
 echo "ilit_url is ${ilit_url}"
 
+try{ echo "SCENARIO=${SCENARIO}"; } catch (Exception e) { SCENARIO="MR" ; echo "SCENARIO=${SCENARIO}" }
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -222,12 +224,12 @@ def doBuild() {
                     stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
                         echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "test_suyue_intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        def downstreamJob = build job: "test_bartosz_intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
 
                             catchError {
 
                                 copyArtifacts(
-                                        projectName: "test_suyue_intel-iLit-validation",
+                                        projectName: "test_bartosz_intel-iLit-validation",
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
@@ -260,7 +262,11 @@ def collectLog() {
     echo "------------  running collectLog  -------------"
     echo "---------------------------------------------------------"
     precision_list = ["fp32", "int8"]
-    mode_list = ["throughput", "latency"]
+    if ( SCENARIO == "MR" ) {
+        mode_list = ["throughput"]
+    } else {
+        mode_list = ["throughput", "latency"]
+    }
 
     job_frameworks = Frameworks.split(',')
     job_frameworks.each { job_framework ->
@@ -273,8 +279,20 @@ def collectLog() {
             job_models = mxnet_models.split(',')
         }
         job_models.each { job_model ->
+            // Generate tuning info log
+            withEnv(["current_model=$job_model","current_framework=$job_framework"]) {
+                sh '''#!/bin/bash -x
+                    cd $WORKSPACE
+                    chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
+                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --mode=tuning              
+                '''
+            }
             precision_list.each { precision ->
                 mode_list.each { mode ->
+                    // For pytorch we collect throughput and accuracy for int8 model from tuning log.
+                    if (job_framework == "pytorch" && precision == "int8") {
+                        return
+                    }
                     withEnv(["current_model=$job_model","current_framework=$job_framework","precision=$precision","mode=$mode"]) {
 
                         sh '''#!/bin/bash -x

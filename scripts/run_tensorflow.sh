@@ -3,7 +3,12 @@ set -x
 
 function main {
     init_params "$@"
+
+    # Import common functions
+    source ${WORKSPACE}/ilit-validation/scripts/common_functions.sh --framework=${framework} --model=${model} --tuning_strategy="" --conda_env_name=${conda_env_name}
+
     set_environment
+
     cnn_model_list=("resnet50v1.0" "resnet50v1.5")
     if [[ " ${cnn_model_list[*]} " =~ ${model} ]]; then
       model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/image_recognition
@@ -11,10 +16,6 @@ function main {
       init_cnn_cmd
     fi
 
-    # run tuning and save quantized model
-    run_tune
-
-    # run benchmark
     precision_list=(fp32 int8)
     mode_list=(throughput latency)
     if [ "${benchmark_dir}" != "" ];then
@@ -144,68 +145,13 @@ function init_cnn_cmd {
               ${extra_cmd}"
 }
 
-# environment
-function set_environment {
-    export KMP_BLOCKTIME=1
-    export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
-    export TF_MKL_OPTIMIZE_PRIMITIVE_MEMUSE=false
-
-    export PATH=${HOME}/miniconda3/bin/:$PATH
-    source activate ${conda_env_name}
-    # export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
-    python -V
-    pip list
-    c_ilit=$(pip list | grep -c 'ilit')
-    if [ ${c_ilit} != 0 ]; then
-      pip uninstall ilit -y
-      pip list
-    fi
-    cd ${WORKSPACE}/ilit-models/ || exit
-    python setup.py install
-    pip list
-
-    echo "HOSTNAME IS ${HOSTNAME}"
-}
-
-# run auto tune
-function run_tune {
-
-    if [ "${model_src_dir}" != "" ];then
-        cd ${model_src_dir}
-    else
-        echo "ERROR model_src_dir"
-    fi
-    git remote -v
-    git branch
-    git show |head -5
-
-    # get strategy
-    count=$(grep -c 'strategy: ' ${yaml})
-    if [ ${count} = 0 ]; then
-      strategy='basic'
-    else
-      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
-    fi
-    echo "Tuning strategy: ${strategy}"
-
-    q_model=${WORKSPACE}/${framework}-${model}-tune.pb
-
-    # run_tuning.sh
-    starttime=`date +'%Y-%m-%d %H:%M:%S'`
-    bash run_tuning.sh --topology=${model} --dataset_location=${data_location} --input_model=${input_model} --output_model=${q_model}
-    endtime=`date +'%Y-%m-%d %H:%M:%S'`
-    start_seconds=$(date --date="$starttime" +%s);
-    end_seconds=$(date --date="$endtime" +%s);
-    echo "Tuning time spend: "$((end_seconds-start_seconds))"s "
-}
-
 # run benchmark
 function run_benchmark {
 
     precision=$1
     mode=$2
     if [ $precision == 'int8' ]; then
-      input_model=${q_model}
+      input_model="${WORKSPACE}/${framework}-${model}-tune.pb"
     fi
 
     if [ $mode == 'latency' ]; then

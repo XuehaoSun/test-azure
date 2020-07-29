@@ -24,57 +24,35 @@ done
 
 echo "---- $framework, $model ----"
 
-log_file="${framework}/${model}/${framework}-${model}.log"
+benchmark_log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}_benchmark.log"
+tuning_file="${framework}/${model}/${framework}-${model}-tune.log"
+
+if [ "${mode}" == "tuning" ]; then
+  strategy=$(grep 'Tuning strategy:' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}')
+  tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}')
+  echo "${framework};${model};${strategy};${tune_time}" | tee -a ${WORKSPACE}/tuning_info.log
+
+  if [ "${framework}" == "pytorch" ]; then
+    # Read result from tuning log
+    bs=128  # Using default batch: https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool/-/commit/7451f6ac093c0aa41ea8d5ec06c2b08a7bc5cc28#facbdc2dae8b0bc0856dc717c6c1e01071ebd15c_0_43
+    accuracy=$(grep -F 'Tune result is: [' ${tuning_file} | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
+    # Currently we don't collect int8 model performance for pytorch
+    throughput="n/a"
+    echo "${framework};CLX8280;INT8;${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
+    echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
+  fi
+  exit 0
+fi
 
 if [ ${precision} = "fp32" ]; then
-  if [ ${mode} = "throughput" ]; then
-    strategy=$(grep 'Tuning strategy:' ${log_file} |tail -1| awk -F ': ' '{print $2}')
-    tune_time=$(grep 'Tuning time spend:' ${log_file} | awk -F ' ' '{print $4}')
-    echo "${framework};${model};${strategy};${tune_time}" |tee -a ${WORKSPACE}/tuning_info.log
-  fi
-fi
-
-benchmark_log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}_benchmark.log"
-
-if [ ${framework} = "tensorflow" ]; then
-
-  if [ ${precision} = "fp32" ]; then
-    PRECISION='FP32'
-  else
-    PRECISION='INT8'
-  fi
-
-  if [ ${mode} = "throughput" ]; then
-
-    bs=$(grep 'input_model accuracy batch_size:' ${benchmark_log_file} | awk -F ' ' '{print $4}')
-    accuracy=$(grep 'input_model accuracy:' ${benchmark_log_file} | awk -F ' ' '{print $3}')
-    echo "$framework;CLX8280;${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$benchmark_log_file" |tee -a ${WORKSPACE}/summary.log
-    bs=$(grep 'input_model throughput batch_size:' ${benchmark_log_file} | awk -F ' ' '{print $4}')
-    throughput=$(grep 'input_model throughput:' ${benchmark_log_file} | awk -F ' ' '{print $3}')
-    echo "$framework;CLX8280;${PRECISION};$model;Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$benchmark_log_file" |tee -a ${WORKSPACE}/summary.log
-
-  else
-
-    throughput=$(grep 'input_model throughput:' ${benchmark_log_file} | awk -F ' ' '{print $3}')
-    latency=$(echo | awk -v t=$throughput '{ r = 1000 / t; printf("%.2f", r)}')
-    echo "$framework;CLX8280;${PRECISION};$model;Inference;Latency;1;${latency};${BUILD_URL}artifact/$benchmark_log_file" |tee -a ${WORKSPACE}/summary.log
-
-  fi
-
+  PRECISION='FP32'
 else
-
-  bs=$(grep 'input_model throughput batch_size:' ${log_file} | awk -F ' ' '{print $4}')
-  throughput=$(grep 'input_model throughput:' ${log_file} | awk -F ' ' '{print $3}')
-  echo "$framework;CLX8280;FP32;$model;Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-  bs=$(grep 'q_model throughput batch_size:' ${log_file} | awk -F ' ' '{print $4}')
-  throughput=$(grep 'q_model throughput:' ${log_file} | awk -F ' ' '{print $3}')
-  echo "$framework;CLX8280;INT8;$model;Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-
-  bs=$(grep 'input_model accuracy batch_size:' ${log_file} | awk -F ' ' '{print $4}')
-  accuracy=$(grep 'input_model accuracy:' ${log_file} | awk -F ' ' '{print $3}')
-  echo "$framework;CLX8280;FP32;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-  bs=$(grep 'q_model accuracy batch_size:' ${log_file} | awk -F ' ' '{print $4}')
-  accuracy=$(grep 'q_model accuracy:' ${log_file} | awk -F ' ' '{print $3}')
-  echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$log_file" |tee -a ${WORKSPACE}/summary.log
-
+  PRECISION='INT8'
 fi
+
+bs=$(grep 'input_model accuracy batch_size:' ${benchmark_log_file} | awk -F ' ' '{print $4}')
+accuracy=$(grep 'input_model accuracy:' ${benchmark_log_file} | awk -F ' ' '{print $3}')
+echo "$framework;CLX8280;${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$benchmark_log_file" | tee -a ${WORKSPACE}/summary.log
+bs=$(grep 'input_model throughput batch_size:' ${benchmark_log_file} | awk -F ' ' '{print $4}')
+throughput=$(grep 'input_model throughput:' ${benchmark_log_file} | awk -F ' ' '{print $3}')
+echo "${framework};CLX8280;${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$benchmark_log_file" | tee -a ${WORKSPACE}/summary.log
