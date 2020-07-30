@@ -1,21 +1,58 @@
 #!/bin/bash
 
- # WORKSPACE=.
- # summaryLog=summary.log
- # summaryLogLast=summary.log
- # tuneLog=tuning_info.txt
- # tuneLogLast=tuning_info.txt
+# WORKSPACE=.
+# summaryLog=summary.log
+# summaryLogLast=summary.log
+# tuneLog=tuning_info.log
+# tuneLogLast=tuning_info.log
+# overview_log=summary_overview.log
 
 function main {
     echo "summaryLog: ${summaryLog}"
     echo "last summaryLog: ${summaryLogLast}"
     echo "tunelog: ${tuneLog}"
     echo "last tunelog: ${tuneLogLast}"
+    echo "overview_log: ${overview_log}"
     generate_html_head
     generate_html_body
     generate_results
     generate_html_footer
 
+}
+
+function createOverview {
+
+    jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
+    png_path="http://mlpc.intel.com/static/doc/tensorflow/images/24x24"
+
+    # unit test
+    unit_test=($(grep 'unit-test' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${unit_test[1]}" == *"FAIL"* ]];then
+        unit_test_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${unit_test[1]}" == *"SUCC"* ]];then
+        unit_test_status="<img src=${png_path}/blue.png></img>"
+    else
+        unit_test_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
+    cat >> ${WORKSPACE}/report.html <<  eof
+
+    <h2>Overview</h2>
+    <table class="features-table" style="width: 60%;margin: 0 auto 0 0;">
+        <tr>
+            <th>Task</th>
+            <th>Job</th>
+            <th>Status</th>
+        </tr>
+        $(
+             if [ "${unit_test[2]}" != "" ];then
+                 echo "<tr><td rowspan=3>Unit Test</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}\">${unit_test[0]}#${unit_test[2]}</a></td>"
+                 echo "<td>${unit_test_status}</td></tr>"
+             fi
+        )
+    </table>
+eof
 }
 
 function generate_inference {
@@ -31,7 +68,7 @@ function generate_inference {
             fp32_acc_bs = nan;
             fp32_acc_value = nan;
             fp32_acc_url = nan;
-            
+
             int8_ms_bs = nan;
             int8_ms_value = nan;
             int8_ms_url = nan;
@@ -70,7 +107,7 @@ function generate_inference {
                         fp32_acc_url = $9;
                     }
                 }
-                
+
                 // INT8
                 if($3 == "INT8") {
                     // Latency
@@ -112,7 +149,7 @@ function generate_html_core {
     tuning_strategy=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $4}')
     echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td>${tuning_strategy}</td><td>${tuning_time}</td>" >> ${WORKSPACE}/report.html
-    
+
     tuning_strategy=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $4}')
 
@@ -175,9 +212,9 @@ function generate_html_core {
                 printf("<td rowspan=3></td>");
             }
         }
-        
+
         function compare_result(a,b,c) {
-                
+
             if(a ~/[1-9]/ && b ~/[1-9]/) {
                 if(c == "acc") {
                     target = a - b;
@@ -219,10 +256,10 @@ function generate_html_core {
 
             show_new_last(current_value[3],current_value[14],current_value[4],"fps");
             show_new_last(current_value[5],current_value[15],current_value[6],"acc");
-            
+
             show_new_last(current_value[9],current_value[17],current_value[10],"fps");
             show_new_last(current_value[11],current_value[18],current_value[12],"acc");
-            
+
             // Compare Current
             
             compare_current(current_value[10],current_value[4],"fps");
@@ -233,24 +270,24 @@ function generate_html_core {
 
             // Last
             printf("</tr>\n<tr><td>Last</td><td>%s</td><td>%s</td>", ts, tt);
-            
+
             show_new_last(last_value[3],last_value[14],last_value[4],"fps");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
-            
+
             show_new_last(last_value[9],last_value[17],last_value[10],"fps");
             show_new_last(last_value[11],last_value[18],last_value[12],"acc");
             printf("</tr>")
-            
+
             // current vs last
             printf("</tr>\n<tr><td>New/Last</td><td colspan=2 class=\"col-cell3\"></td>");
-            
+
             compare_result(current_value[4],last_value[4],"fps");
             compare_result(current_value[6],last_value[6],"acc");
-            
+
             compare_result(current_value[10],last_value[10],"fps");
             compare_result(current_value[12],last_value[12],"acc");
             printf("</tr>\n");
-          
+
         }
     ' >> ${WORKSPACE}/report.html
 }
@@ -258,7 +295,7 @@ function generate_html_core {
 function generate_results {
 
     frameworks=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
-    
+
     for framework in ${frameworks[@]}
     do
         models=$(sed '1d' ${summaryLog} |grep "^${framework}" |cut -d';' -f4 | awk '!a[$0]++')
@@ -276,7 +313,7 @@ function generate_html_body {
 MR_TITLE=''
 Test_Info_Title=''
 Test_Info=''
-if [ "$qtools_branch" == "" ];
+if [ "${qtools_branch}" == "" ];
 then
   commit_id=$(echo ${gitlabMergeRequestLastCommit} |awk '{print substr($1,1,7)}')
 
@@ -293,6 +330,8 @@ cat >> ${WORKSPACE}/report.html << eof
     <div id="main">
 	    <h1 align="center">ILit Tuning Tests ${MR_TITLE}
         [ <a href="${BUILD_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
+
+        <h2>Summary</h2>
 	    <table class="features-table">
 	        <tr>
               <th>Platform</th>
@@ -311,7 +350,12 @@ cat >> ${WORKSPACE}/report.html << eof
               ${Test_Info}
 			    </tr>
 	    </table>
-	    <br>
+eof
+
+createOverview
+
+cat >> ${WORKSPACE}/report.html << eof
+        <h2>Benchmark</h2>
 		  <table class="features-table">
             <tr>
                 <th rowspan="2">Framework</th>
@@ -362,9 +406,9 @@ cat > ${WORKSPACE}/report.html << eof
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">  
-    <title>Daily Tests - TensorFlow - Jenkins</title> 
-    <style type="text/css">    
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>Daily Tests - TensorFlow - Jenkins</title>
+    <style type="text/css">
         body
         {
 	        margin: 0;
@@ -391,9 +435,9 @@ cat > ${WORKSPACE}/report.html << eof
           border-spacing: 0;
           text-shadow: 0 1px 0 #fff;
           color: #2a2a2a;
-          background: #fafafa;  
+          background: #fafafa;
           background-image: -moz-linear-gradient(top, #fff, #eaeaea, #fff); /* Firefox 3.6 */
-          background-image: -webkit-gradient(linear,center bottom,center top,from(#fff),color-stop(0.5, #eaeaea),to(#fff)); 
+          background-image: -webkit-gradient(linear,center bottom,center top,from(#fff),color-stop(0.5, #eaeaea),to(#fff));
           font-family: Verdana,Arial,Helvetica
         }
         .features-table th,td
@@ -412,13 +456,13 @@ cat > ${WORKSPACE}/report.html << eof
         {
           box-shadow: none;
           -moz-box-shadow: none;
-          -webkit-box-shadow: none;     
+          -webkit-box-shadow: none;
         }
         .col-cell
         {
           text-align: center;
           width: 150px;
-          font: normal 1em Verdana, Arial, Helvetica;  
+          font: normal 1em Verdana, Arial, Helvetica;
         }
         .col-cell3
         {
@@ -427,23 +471,23 @@ cat > ${WORKSPACE}/report.html << eof
         }
         .col-cell1, .col-cell2
         {
-          background: #B0C4DE;  
+          background: #B0C4DE;
           background: rgba(176,196,222,0.3);
         }
         .col-cellh
         {
-          font: bold 1.3em 'trebuchet MS', 'Lucida Sans', Arial;  
+          font: bold 1.3em 'trebuchet MS', 'Lucida Sans', Arial;
           -moz-border-radius-topright: 10px;
-          -moz-border-radius-topleft: 10px; 
+          -moz-border-radius-topleft: 10px;
           border-top-right-radius: 10px;
           border-top-left-radius: 10px;
-          border-top: 1px solid #eaeaea !important; 
+          border-top: 1px solid #eaeaea !important;
         }
         .col-cellf
         {
-          font: bold 1.4em Georgia;   
+          font: bold 1.4em Georgia;
           -moz-border-radius-bottomright: 10px;
-          -moz-border-radius-bottomleft: 10px; 
+          -moz-border-radius-bottomleft: 10px;
           border-bottom-right-radius: 10px;
           border-bottom-left-radius: 10px;
           border-bottom: 1px solid #dadada !important;
