@@ -250,7 +250,7 @@ function get_model_src_path {
 
     echo "Model src dir: ${model_src_dir}"
     echo "Benchmark dir: ${benchmark_dir}"
-}
+} # LG to keep
 
 # ----- Input Model -----
 function get_input_model {

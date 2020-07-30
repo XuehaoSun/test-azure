@@ -320,26 +320,28 @@ def collectLog() {
         job_models.each { job_model ->
             echo "-------- ${job_framework} - ${job_model} --------"
             // Generate tuning info log
-            withEnv(["current_model=$job_model","current_framework=$job_framework"]) {
+            withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
                 sh '''#!/bin/bash -x
                     cd $WORKSPACE
                     chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
-                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --mode=tuning              
+                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
                 '''
             }
-            precision_list.each { precision ->
-                mode_list.each { mode ->
-                    // For pytorch we collect throughput and accuracy for int8 model from tuning log.
-                    if (job_framework == "pytorch" && precision == "int8") {
-                        return
-                    }
-                    withEnv(["current_model=$job_model","current_framework=$job_framework","precision=$precision","mode=$mode"]) {
+            if (nigthly_test_branch != '') {
+                precision_list.each { precision ->
+                    mode_list.each { mode ->
+                        // For pytorch we collect throughput and accuracy for int8 model from tuning log.
+                        if (job_framework == "pytorch" && precision == "int8") {
+                            return
+                        }
+                        withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
 
-                        sh '''#!/bin/bash -x
+                            sh '''#!/bin/bash -x
                             cd $WORKSPACE
                             chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
                             ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
                         '''
+                        }
                     }
                 }
             }
@@ -480,8 +482,13 @@ node( node_label ) {
                     "overview_log=${overview_log}"
                 ]) {
                     sh '''
-                        chmod 775 ./ilit-validation/scripts/generate_ilit_report_mr.sh
-                        ./ilit-validation/scripts/generate_ilit_report_mr.sh
+                        if [[ ${qtools_branch} == '' ]]; then
+                            chmod 775 ./ilit-validation/scripts/generate_ilit_report_mr.sh
+                            ./ilit-validation/scripts/generate_ilit_report_mr.sh
+                        else
+                            chmod 775 ./ilit-validation/scripts/generate_ilit_report.sh
+                            ./ilit-validation/scripts/generate_ilit_report.sh
+                        fi     
                     '''
                 }
             }

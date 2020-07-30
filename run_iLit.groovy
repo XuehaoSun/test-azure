@@ -153,8 +153,9 @@ node( sub_node_label ) {
                     2>&1 | tee ${framework}-${model}-tune.log
             """
         }
-        stage("Performance") {
-            sh '''#!/bin/bash -x
+        if (MR_source_branch != ''){
+            stage("Performance") {
+                sh '''#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model} ----"
                 
                 echo "-------w-------"
@@ -170,6 +171,7 @@ node( sub_node_label ) {
                     --conda_env_name=${framework}-${framework_version} \
                     2>&1 | tee ${framework}-${model}.log
             '''
+            }
         }
 
         stage("Check status"){

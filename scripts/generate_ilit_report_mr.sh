@@ -225,7 +225,7 @@ function generate_html_core {
             
             // Compare Current
             
-            compare_current(current_value[4],current_value[10],"fps");
+            compare_current(current_value[10],current_value[4],"fps");
             compare_current(current_value[6],current_value[12],"acc"); 
             
             // Last values
@@ -276,7 +276,7 @@ function generate_html_body {
 MR_TITLE=''
 Test_Info_Title=''
 Test_Info=''
-if [ "$MR_branch" != "" ];
+if [ "$qtools_branch" == "" ];
 then
   commit_id=$(echo ${gitlabMergeRequestLastCommit} |awk '{print substr($1,1,7)}')
 
@@ -326,16 +326,16 @@ cat >> ${WORKSPACE}/report.html << eof
 		        <tr>
 
                 <th>bs</th>
-                <th>imgs/s</th>
+                <th>rough_perf(s)</th>
                 <th>bs</th>
                 <th>top1</th>
 
                 <th>bs</th>
-                <th>imgs/s</th>
+                <th>rough_perf(s)</th>
                 <th>bs</th>
                 <th>top1</th>
 
-                <th class="col-cell col-cell1">Throughput<br><font size="2px">INT8/FP32>=2</font></th>
+                <th class="col-cell col-cell1">Performance<br><font size="2px">FP32/INT8>=2</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
 		        </tr>
 eof

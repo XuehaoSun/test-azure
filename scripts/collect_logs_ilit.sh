@@ -15,6 +15,9 @@ do
         --mode=*)
             mode=$(echo $var |cut -f2 -d=)
         ;;
+        --mr=*)
+            mr=$(echo $var |cut -f2 -d=)
+        ;;
         *)
             echo "Error: No such parameter: ${var}"
             exit 1
@@ -32,14 +35,16 @@ if [ "${mode}" == "tuning" ]; then
   tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}')
   echo "${framework};${model};${strategy};${tune_time}" | tee -a ${WORKSPACE}/tuning_info.log
 
-  if [ "${framework}" == "pytorch" ]; then
+  if [ "${mr}" != "" ]; then
     # Read result from tuning log
-    bs=128  # Using default batch: https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool/-/commit/7451f6ac093c0aa41ea8d5ec06c2b08a7bc5cc28#facbdc2dae8b0bc0856dc717c6c1e01071ebd15c_0_43
     accuracy=$(grep -F 'Tune result is: [' ${tuning_file} | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
-    # Currently we don't collect int8 model performance for pytorch
-    throughput="n/a"
-    echo "${framework};CLX8280;INT8;${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
-    echo "$framework;CLX8280;INT8;$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
+    throughput=$(grep -F 'Tune result is: [' ${tuning_file} | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $2}')
+    echo "${framework};CLX8280;INT8;${model};Inference;Throughput;;${throughput};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
+    echo "${framework};CLX8280;INT8;${model};Inference;Accuracy;;${accuracy};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
+    accuracy_fp32=$(grep -F 'FP32 baseline is: [' ${tuning_file} | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
+    throughput_fp32=$(grep -F 'FP32 baseline is: [' ${tuning_file} | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $2}')
+    echo "${framework};CLX8280;FP32;${model};Inference;Throughput;;${throughput_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
+    echo "${framework};CLX8280;FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
   fi
   exit 0
 fi
