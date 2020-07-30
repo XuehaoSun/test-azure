@@ -87,7 +87,12 @@ if ('ilit_url' in params && params.ilit_url != ''){
 }
 echo "ilit_url is ${ilit_url}"
 
-try { echo "RUN_PYLINT=${RUN_PYLINT}"; } catch (Exception e) { RUN_PYLINT="false" ; echo "RUN_PYLINT=${RUN_PYLINT}" }
+RUN_PYLINT=false
+if ('RUN_PYLINT' in params && params.RUN_PYLINT){
+    echo "RUN_PYLINT is true"
+    RUN_PYLINT=params.RUN_PYLINT
+}
+echo "RUN_PYLINT = ${RUN_PYLINT}"
 
 nigthly_test_branch = ''
 MR_source_branch = ''
@@ -437,15 +442,15 @@ node( node_label ) {
         writeFile file: overview_log,
             text: "Jenkins Job, Build Status, Build ID\n"
 
-//        stage("unit test"){
-//            unitTest()
-//        }
-//
-//        if (RUN_PYLINT == "true") {
-//            stage("Pylint Scan") {
-//                pylintScan()
-//            }
-//        }
+        stage("unit test"){
+            unitTest()
+        }
+
+        if (RUN_PYLINT) {
+            stage("Pylint Scan") {
+                pylintScan()
+            }
+        }
 
         stage("tune-parallel") {
             doBuild()
