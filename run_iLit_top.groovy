@@ -211,32 +211,19 @@ def doBuild() {
     job_frameworks = Frameworks.split(',')
 
     job_frameworks.each { job_framework ->
-        println("job_framework: " + job_framework)
         def job_models = []
         if (job_framework == 'tensorflow'){
             //job_models=eval("${job_framework}_models")
-            println("Getting TF models.")
             job_models = readModelList(tensorflow_models) 
         }else if (job_framework == 'pytorch'){
-            println("Getting Pytorch models.")
             job_models = readModelList(pytorch_models)
         }else if (job_framework == 'mxnet'){
-            println("Getting MXNet models.")
             job_models = readModelList(mxnet_models)
         }
         if (MR_source_branch != ''){
             add_models_list = collectModelList(job_framework)
-            println("add_models_list\ntype: " + add_models_list.getClass())
-            println(add_models_list)
-
-            println("job_models\ntype: " + job_models.getClass())
-            println(job_models)
             job_models = job_models.plus(add_models_list)
-            println("job_models after addition\ntype: " + job_models.getClass())
-            println(job_models)
             job_models.unique()
-            println("unique job_models after addition\ntype: " + job_models.getClass())
-            println(job_models)
         }
         echo "${job_models}"
         echo "llsu-----> ${job_framework}"
@@ -326,19 +313,8 @@ def collectLog() {
 
         if (MR_source_branch != ''){
             add_models_list = collectModelList(job_framework)
-            println("add_models_list\ntype: " + add_models_list.getClass())
-            println(add_models_list)
-
-            println("job_models\ntype: " + job_models.getClass())
-            println(job_models)
-
             job_models = job_models.plus(add_models_list)
-            println("job_models after addition\ntype: " + job_models.getClass())
-            println(job_models)
-
             job_models.unique()
-            println("unique job_models after addition\ntype: " + job_models.getClass())
-            println(job_models)
         }
 
         job_models.each { job_model ->
