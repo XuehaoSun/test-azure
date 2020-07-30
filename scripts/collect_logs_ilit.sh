@@ -32,7 +32,7 @@ tuning_file="${framework}/${model}/${framework}-${model}-tune.log"
 
 if [ "${mode}" == "tuning" ]; then
   strategy=$(grep 'Tuning strategy:' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}')
-  tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}')
+  tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}'| sed 's/.$//g')
   echo "${framework};${model};${strategy};${tune_time}" | tee -a ${WORKSPACE}/tuning_info.log
 
   if [ "${mr}" != "" ]; then
