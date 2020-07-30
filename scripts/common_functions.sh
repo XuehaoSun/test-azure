@@ -49,6 +49,7 @@ cnn_models=(
     "mobilenet1.0"
     "mobilenetv2"
     "mobilenetv2_1.0"
+    "resnet18_v1"
     "squeezenet1.0"
 )
 
