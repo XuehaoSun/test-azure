@@ -108,8 +108,8 @@ main() {
 }
 
 function update_yaml_config {
-    if [ ! -f ${yaml_config} ]; then
-        echo "Not found yaml config at \"${yaml_config}\" location."
+    if [ ! -f ${yaml} ]; then
+        echo "Not found yaml config at \"${yaml}\" location."
         exit 1
     fi
 
@@ -121,19 +121,19 @@ function update_yaml_config {
 
     dataset_params="--calib-data=${dataset_location} --eval-data=${dataset_location}"
 
-    if [ "${framework}" == "pytorch" ] && [ "${model_type}" == "cnn" ]; then
+    if [ "${framework}" == "pytorch" ] && [[ "${model_src_dir}" = *"resnet" ]]; then
         dataset_params="--calib-data=${dataset_location}/train --eval-data=${dataset_location}/val"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then
-        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml_config} ${update_yaml_params} ${dataset_params}
+        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params} ${dataset_params}
     fi
 
-    count=$(grep -c 'strategy: ' "${yaml_config}") || true  # Prevent from exiting when 'strategy' not found
+    count=$(grep -c 'strategy: ' "${yaml}") || true  # Prevent from exiting when 'strategy' not found
     if [ ${count} == 0 ]; then
       strategy='basic'
     else
-      strategy=$(grep 'strategy: ' ${yaml_config} | awk -F 'strategy: ' '{print$2}')
+      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
     fi
 
     echo "Tuning strategy: ${strategy}"

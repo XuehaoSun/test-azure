@@ -445,15 +445,15 @@ node( node_label ) {
         writeFile file: overview_log,
             text: "Jenkins Job, Build Status, Build ID\n"
 
-        stage("unit test"){
-            unitTest()
-        }
-
-        if (RUN_PYLINT) {
-            stage("Pylint Scan") {
-                pylintScan()
-            }
-        }
+//        stage("unit test"){
+//            unitTest()
+//        }
+//
+//        if (RUN_PYLINT) {
+//            stage("Pylint Scan") {
+//                pylintScan()
+//            }
+//        }
 
         stage("tune-parallel") {
             doBuild()
