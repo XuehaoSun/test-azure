@@ -108,10 +108,9 @@ node(node_label){
                 cd ${WORKSPACE}/ilit-models/test
                 export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
                 find . -name "test*.py" | sed 's/.\\//python /g' > run.sh
-                test_cases=$(cat run.sh | wc -l)
                 ut_log_name=${WORKSPACE}/unit_test.log
                 bash run.sh 2>&1 | tee ${ut_log_name}
-                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) != ${test_cases} ];then
+                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                     exit 1
                 fi                 
             '''
