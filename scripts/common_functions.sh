@@ -93,7 +93,6 @@ function set_MXNet_env {
 
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
-    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
 }
 
 function set_PT_env {
@@ -109,8 +108,6 @@ function set_PT_env {
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate ${conda_env_name}
     fi
-
-    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
 }
 
 function set_environment {
@@ -131,20 +128,18 @@ function set_environment {
     c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
     if [ ${c_ilit} != 0 ]; then
         pip uninstall ilit -y
+        pip list
     fi
+
+    if [ ! -d ${WORKSPACE}/ilit-models ]; then
+        echo "\"ilit-model\" not found. Exiting..."
+        exit 1
+    fi
+    cd ${WORKSPACE}/ilit-models
+    python setup.py install
     pip list
 
-    if [ "${framework}" == "tensorflow" ]; then
-        if [ ! -d ${WORKSPACE}/ilit-models ]; then
-            echo "\"ilit-model\" not found. Exiting..."
-            exit 1
-        fi
-        cd ${WORKSPACE}/ilit-models
-        python setup.py install
-        pip list
-
-        echo "HOSTNAME IS ${HOSTNAME}"
-    fi
+    echo "HOSTNAME IS ${HOSTNAME}"
 }
 
 
