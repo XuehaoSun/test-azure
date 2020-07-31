@@ -1,6 +1,113 @@
-# ----- Get strategy -----
+#!/bin/bash
 
-function get_strategy {
+set -eo pipefail
+
+PATTERN='[-a-zA-Z0-9_]*='
+if [ $# != "8" ] ; then 
+    echo 'ERROR:'
+    echo "Expected 8 parameters got $#"
+    printf 'Please use following parameters:
+    --framework=<framework name>
+    --model=<model name>
+    --model_src_dir=<path to model tuning script>
+    --dataset_location=<path to dataset>
+    --input_model=<path to input model>
+    --yaml=<path to ilit yaml configuration>
+    --strategy=<tuning strategy>
+    --conda_env_name=<conda environment name>
+    '
+    exit 1
+fi
+
+for i in "$@"
+do
+    case $i in
+        --framework=*)
+            framework=`echo $i | sed "s/${PATTERN}//"`;;
+        --model=*)
+            model=`echo $i | sed "s/${PATTERN}//"`;;
+        --model_src_dir=*)
+            model_src_dir=`echo $i | sed "s/${PATTERN}//"`;;
+        --dataset_location=*)
+            dataset_location=`echo $i | sed "s/${PATTERN}//"`;;
+        --input_model=*)
+            input_model=`echo $i | sed "s/${PATTERN}//"`;;
+        --yaml=*)
+            yaml=`echo $i | sed "s/${PATTERN}//"`;;
+        --strategy=*)
+            strategy=`echo $i | sed "s/${PATTERN}//"`;;
+        --conda_env_name=*)
+            conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
+        *)
+            echo "Parameter $i not recognized."; exit 1;;
+    esac
+done
+
+# Run auto tune
+main() {
+    # Import common functions
+    source ${WORKSPACE}/ilit-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
+
+    echo -e "\nSetting environment..."
+    set_environment
+    
+    if [ -d ${model_src_dir} ]; then
+        cd ${model_src_dir}
+        echo -e "\nWorking in $(pwd)..."
+    else
+        echo "[ERROR] model_src_dir \"${model_src_dir}\" not exists."
+        exit 1
+    fi
+
+    echo -e "\nInstalling model requirements..."
+    if [ -f "requirements.txt" ]; then
+        sed -i '/ilit/d' requirements.txt
+        python -m pip install -r requirements.txt
+        pip list
+    else
+        echo "Not found requirements.txt file."
+    fi
+
+
+    echo -e "\nGetting git information..."
+    echo "$(git remote -v)"
+    echo "$(git branch)"
+    echo "$(git show | head -5)"
+
+    q_model=${WORKSPACE}/${framework}-${model}-tune
+    if [ ${framework} == "tensorflow" ]; then
+        q_model="${q_model}.pb"
+    fi
+
+    # run_tuning.sh
+    starttime=`date +'%Y-%m-%d %H:%M:%S'`
+    
+    # ------ WORKAROUND FOR MXNET RESNET50V1 -----
+    topology=${model}
+    if [ "${model}" == "resnet50v1" ]; then
+        topology="resnet50_v1"
+    fi
+
+    parameters="--topology=${topology} --dataset_location=${dataset_location}"
+
+    if [ ${framework} == "mxnet" ]; then
+        parameters="${parameters} --model_location=${model_base_path} --output_model=${q_model}"
+    fi
+
+    if [ "${framework}" == "tensorflow" ]; then
+        parameters="${parameters} --input_model=${input_model} --output_model=${q_model}"
+    fi
+
+    update_yaml_config
+
+    bash run_tuning.sh ${parameters}
+    endtime=`date +'%Y-%m-%d %H:%M:%S'`
+    start_seconds=$(date --date="$starttime" +%s);
+    end_seconds=$(date --date="$endtime" +%s);
+    echo "Tuning time spend: "$((end_seconds-start_seconds))"s "
+}
+
+function update_yaml_config {
     if [ ! -f ${yaml_config} ]; then
         echo "Not found yaml config at \"${yaml_config}\" location."
         exit 1
@@ -8,16 +115,18 @@ function get_strategy {
 
     update_yaml_params=""
     # Replace tuning strategy in yaml file
-    if [ "${tuning_strategy}" != "" ]; then
-        update_yaml_params="${update_yaml_params} --strategy=${tuning_strategy}"
+    if [ "${strategy}" != "" ]; then
+        update_yaml_params="${update_yaml_params} --strategy=${strategy}"
     fi
 
+    dataset_params="--calib-data=${dataset_location} --eval-data=${dataset_location}"
+
     if [ "${framework}" == "pytorch" ] && [ "${model_type}" == "cnn" ]; then
-        update_yaml_params="${update_yaml_params} --calib-data=${dataset_location}/train --eval-data=${dataset_location}/val"
+        dataset_params="--calib-data=${dataset_location}/train --eval-data=${dataset_location}/val"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then
-        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml_config} ${update_yaml_params}
+        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml_config} ${update_yaml_params} ${dataset_params}
     fi
 
     count=$(grep -c 'strategy: ' "${yaml_config}") || true  # Prevent from exiting when 'strategy' not found
@@ -30,4 +139,4 @@ function get_strategy {
     echo "Tuning strategy: ${strategy}"
 }
 
-
+main

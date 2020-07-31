@@ -30,20 +30,26 @@ if args.strategy:
         print(f"Changed {strategy} to {args.strategy}")
 
 if args.calib_data:
-    dataset = yaml_config.get("calibration", {}).get("dataloader", {}).get("dataset", {})
-    for item in dataset:
-        if "root" in item.keys():
-            calib_data = item.get("root")
-            item.update({"root": args.calib_data})
-            print(f"Replaced calibration dataset path from {calib_data} to {args.calib_data}.")
+    try:
+        dataset = yaml_config.get("calibration", {}).get("dataloader", {}).get("dataset", {})
+        for item in dataset:
+            if "root" in item.keys():
+                calib_data = item.get("root")
+                item.update({"root": args.calib_data})
+                print(f"Replaced calibration dataset path from {calib_data} to {args.calib_data}.")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
 
 if args.eval_data:
-    dataset = yaml_config.get("evaluation", {}).get("dataloader", {}).get("dataset", {})
-    for item in dataset:
-        if "root" in item.keys():
-            eval_data = item.get("root")
-            item.update({"root": args.eval_data})
-            print(f"Replaced evaluation dataset path from {eval_data} to {args.eval_data}.")
+    try:
+        dataset = yaml_config.get("evaluation", {}).get("dataloader", {}).get("dataset", {})
+        for item in dataset:
+            if "root" in item.keys():
+                eval_data = item.get("root")
+                item.update({"root": args.eval_data})
+                print(f"Replaced evaluation dataset path from {eval_data} to {args.eval_data}.")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
 
 print(f"Saving yaml config back to {args.yaml}")
 

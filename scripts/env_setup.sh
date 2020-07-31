@@ -3,9 +3,9 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "4" ] ; then 
+if [ $# != "3" ] ; then 
     echo 'ERROR:'
-    echo "Expected 4 parameters got $#"
+    echo "Expected 3 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
@@ -21,8 +21,6 @@ do
             framework=`echo $i | sed "s/${PATTERN}//"`;;
         --model=*)
             model=`echo $i | sed "s/${PATTERN}//"`;;
-        --tuning_strategy=*)
-            tuning_strategy=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         *)
