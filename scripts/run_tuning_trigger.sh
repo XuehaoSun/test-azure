@@ -91,7 +91,7 @@ main() {
     parameters="--topology=${topology} --dataset_location=${dataset_location}"
 
     if [ ${framework} == "mxnet" ]; then
-        parameters="${parameters} --model_location=${model_base_path} --output_model=${q_model}"
+        parameters="${parameters} --model_location=${input_model} --output_model=${q_model}"
     fi
 
     if [ "${framework}" == "tensorflow" ]; then
