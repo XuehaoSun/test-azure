@@ -153,7 +153,7 @@ node( sub_node_label ) {
                     2>&1 | tee ${framework}-${model}-tune.log
             """
         }
-        if (MR_source_branch != ''){
+        if (nigthly_test_branch != ''){
             stage("Performance") {
                 sh '''#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model} ----"
