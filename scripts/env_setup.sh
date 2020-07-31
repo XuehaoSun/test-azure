@@ -21,8 +21,6 @@ do
             framework=`echo $i | sed "s/${PATTERN}//"`;;
         --model=*)
             model=`echo $i | sed "s/${PATTERN}//"`;;
-        --tuning_strategy=*)
-            tuning_strategy=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         *)
@@ -57,7 +55,7 @@ function set_PT_env {
     if [[ ${model} = 'bert'* ]]; then
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate pytorch-bert-1.6
-    elif [ ${model} = 'dlrm' ]; then
+    elif [[ ${model} = 'dlrm' ]]; then
       export PATH=${HOME}/anaconda3/bin/:$PATH
       source activate pytorch3
     else
