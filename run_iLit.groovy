@@ -1,4 +1,7 @@
-// Groovy 
+@NonCPS
+def jsonParse(def json) {
+    new groovy.json.JsonSlurperClassic().parseText(json)
+}
 
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
@@ -63,15 +66,6 @@ if(framework == 'pytorch'){
     }
 }
 
-// Get tuning strategy
-def strategy_configs = [
-    "tensorflow": "basic",
-    "pytorch": "bayesian",
-    "mxnet": "mse",
-]
-def strategy = strategy_configs[framework]
-echo "strategy: ${strategy}"
-
 def cleanup() {
 
     try {
@@ -90,6 +84,24 @@ def cleanup() {
     }  // catch
 
 }
+
+//def get_model_params() {
+//    List modelParams = []
+//    def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_new.json"))
+//    model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
+//    dataset_location = modelConf."${framework}"."${model}"."dataset_location"
+//    input_model = modelConf."${framework}"."${model}"."input_model"
+//    yaml = modelConf."${framework}"."${model}"."yaml"
+//    strategy = modelConf."${framework}"."${model}"."strategy"
+//
+//    modelParams += string(name: "model_src_dir", value: "${model_src_dir}")
+//    modelParams += string(name: "dataset_location", value: "${dataset_location}")
+//    modelParams += string(name: "input_model", value: "${input_model}")
+//    modelParams += string(name: "yaml", value: "${yaml}")
+//    modelParams += string(name: "strategy", value: "${strategy}")
+//
+//    return modelParams
+//}
 
 node( sub_node_label ) {
 
@@ -137,24 +149,68 @@ node( sub_node_label ) {
                 ]
             }
         }
+
+        // get params for tuning and benchmark
+        def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_new.json"))
+        model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
+        dataset_location = modelConf."${framework}"."${model}"."dataset_location"
+        input_model = modelConf."${framework}"."${model}"."input_model"
+        yaml = modelConf."${framework}"."${model}"."yaml"
+        strategy = modelConf."${framework}"."${model}"."strategy"
+
         stage("Tuning") {
 
             sh """#!/bin/bash -x
-                echo "Running ---- ${framework}, ${model}, ${strategy} ----"
+                echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
                 
                 echo "-------w-------"
                 w
                 echo "-------w-------"
-                bash ${WORKSPACE}/ilit-validation/scripts/run_tuning.sh \
+                bash ${WORKSPACE}/ilit-validation/scripts/run_tuning_trigger.sh \
                     --framework=${framework} \
                     --model=${model} \
-                    --tuning_strategy=${strategy} \
+                    --model_src_dir=${model_src_dir}\
+                    --dataset_location=${dataset_location} \
+                    --input_model=${input_model} \
+                    --yaml=${yaml} \
+                    --strategy=${strategy} \
                     --conda_env_name=${framework}-${framework_version} \
                     2>&1 | tee ${framework}-${model}-tune.log
             """
         }
-        if (nigthly_test_branch != ''){
+        if (nigthly_test_branch != '' && framework != "pytorch"){
             stage("Performance") {
+
+                precision_list.each { precision ->
+                    echo "precision is ${precision}"
+                    performance_list.each { mode ->
+                        echo "mode is ${mode}"
+                        sh '''#!/bin/bash -x
+                            echo "Running ---- ${framework}, ${model} ---- Benchmarking"
+                            
+                            echo "-------w-------"
+                            w
+                            echo "-------w-------"
+                            echo "=======cache clean======="
+                            
+                            sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+            
+                            echo "=======cache clean======="
+                            bash ${WORKSPACE}/ilit-validation/scripts/run_benchmark_trigger.sh \
+                                --framework=${framework} \
+                                --model=${model} \
+                                --model_src_dir=${model_src_dir}\
+                                --dataset_location=${dataset_location} \
+                                --input_model=${input_model} \
+                                --precision=${precision} \
+                                --mode=${mode} \
+                                --conda_env_name=${framework}-${framework_version} \
+                                2>&1 | tee ${framework}-${model}.log
+                        '''
+                    }
+                }
+
+
                 sh '''#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model} ----"
                 
@@ -166,7 +222,8 @@ node( sub_node_label ) {
                 sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
 
                 echo "=======cache clean======="
-                bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
+                bash ${WORKSPACE}/ilit-validation/scripts/run_benchmark_trigger.sh \
+                    --framework=${framework} \
                     --model=${model} \
                     --conda_env_name=${framework}-${framework_version} \
                     2>&1 | tee ${framework}-${model}.log
