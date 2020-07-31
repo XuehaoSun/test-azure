@@ -3,9 +3,9 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "4" ] ; then 
+if [ $# != "3" ] ; then 
     echo 'ERROR:'
-    echo "Expected 4 parameters got $#"
+    echo "Expected 3 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
