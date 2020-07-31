@@ -27,8 +27,6 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
 }else{
     MR_source_branch = params.MR_source_branch
     MR_target_branch = params.MR_target_branch
-    updateGitlabCommitStatus state: 'pending'
-    gitLabConnection('gitlab.devtools.intel.com')
 }
 echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
@@ -110,9 +108,25 @@ node(node_label){
                 cd ${WORKSPACE}/ilit-models/test
                 export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
                 find . -name "test*.py" | sed 's/.\\//python /g' > run.sh
+                test_cases=$(cat run.sh | wc -l)
                 ut_log_name=${WORKSPACE}/unit_test.log
                 bash run.sh 2>&1 | tee ${ut_log_name}
-                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" unit_test.log) == 0 ];then
+                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) != ${test_cases} ];then
                     exit 1
                 fi                 
             '''
+
+        }
+
+    }catch (e) {
+        // If there was an exception thrown, the build failed
+        currentBuild.result = "FAILED"
+        throw e
+    }finally {
+        // archive artifacts
+        stage("Artifacts") {
+            archiveArtifacts artifacts: '*.log,*/*.log', excludes: null
+            fingerprint: true
+        }
+    }
+}
