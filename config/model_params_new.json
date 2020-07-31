@@ -1,0 +1,26 @@
+{
+  "tensorflow": {
+    "resnet50v1.0": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb",
+      "yaml": "resnet50_v1.yaml"
+    },
+    "resnet50v1.5": {
+
+    }
+  },
+  "mxnet": {
+
+
+    "model_src_dir": "image_recognition",
+    "dataset_location": "/tf_dataset/dataset/imagenet",
+    "input_model": "/tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb",
+    "yaml": "resnet50_v1.yaml"
+
+  },
+  "pytorch": {
+
+  }
+}
+
