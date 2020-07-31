@@ -180,7 +180,6 @@ node( sub_node_label ) {
         }
         if (nigthly_test_branch != '' && framework != "pytorch"){
             stage("Performance") {
-
                 precision_list.each { precision ->
                     echo "precision is ${precision}"
                     performance_list.each { mode ->
@@ -204,30 +203,10 @@ node( sub_node_label ) {
                                 --input_model=${input_model} \
                                 --precision=${precision} \
                                 --mode=${mode} \
-                                --conda_env_name=${framework}-${framework_version} \
-                                2>&1 | tee ${framework}-${model}.log
+                                --conda_env_name=${framework}-${framework_version}
                         '''
                     }
                 }
-
-
-                sh '''#!/bin/bash -x
-                echo "Running ---- ${framework}, ${model} ----"
-                
-                echo "-------w-------"
-                w
-                echo "-------w-------"
-                echo "=======cache clean======="
-                
-                sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
-
-                echo "=======cache clean======="
-                bash ${WORKSPACE}/ilit-validation/scripts/run_benchmark_trigger.sh \
-                    --framework=${framework} \
-                    --model=${model} \
-                    --conda_env_name=${framework}-${framework_version} \
-                    2>&1 | tee ${framework}-${model}.log
-            '''
             }
         }
 

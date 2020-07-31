@@ -416,6 +416,9 @@ def collectModelList(framework) {
 }
 
 def readModelList(models) {
+    if (models == ''){
+        return []
+    }
     return models[0..models.length()-1].tokenize(',')
 }
 
