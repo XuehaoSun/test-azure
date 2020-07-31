@@ -238,12 +238,12 @@ def doBuild() {
                     stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
                         echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "test_suyue_intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        def downstreamJob = build job: "intel-iLit-validation-MR", propagate: false, parameters: BuildParams(job_framework, job_model)
 
                             catchError {
 
                                 copyArtifacts(
-                                        projectName: "test_suyue_intel-iLit-validation",
+                                        projectName: "intel-iLit-validation-MR",
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
@@ -445,15 +445,15 @@ node( node_label ) {
         writeFile file: overview_log,
             text: "Jenkins Job, Build Status, Build ID\n"
 
-//        stage("unit test"){
-//            unitTest()
-//        }
-//
-//        if (RUN_PYLINT) {
-//            stage("Pylint Scan") {
-//                pylintScan()
-//            }
-//        }
+        stage("unit test"){
+            unitTest()
+        }
+
+        if (RUN_PYLINT) {
+            stage("Pylint Scan") {
+                pylintScan()
+            }
+        }
 
         stage("tune-parallel") {
             doBuild()
