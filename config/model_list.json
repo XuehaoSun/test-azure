@@ -28,11 +28,18 @@
     ]
   },
   "pytorch": {
-    "image_recognition": [
-      "resnet18",
-      "resnet50",
-      "resnet101"
-    ],
+    "image_recognition": {
+      "resnet": [
+        "resnet18",
+        "resnet50",
+        "resnet101"
+      ],
+      "resnet_qat": [
+        "resnet18_qat",
+        "resnet50_qat",
+        "resnet101_qat"
+      ]
+    },
     "language_translation": [
       "bert_base_MRPC",
       "bert_base_CoLA",

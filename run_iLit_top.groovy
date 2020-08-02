@@ -398,17 +398,34 @@ def collectModelList(framework) {
                     script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) | grep \'examples\' > diff.log',
                     returnStdout: true
             ).trim()
-            add_models_dir = sh (
-                    script: 'echo $(cat diff.log | grep "${framework}" | cut -d/ -f3 | sort -u)',
+            classes = sh (
+                    script: 'echo $(cat diff.log | sed "/README.md/d" | grep "${framework}" | cut -d/ -f3 | sort -u)',
                     returnStdout: true
             ).trim()
         }
-
-        if ( add_models_dir != '' ){
-            add_models_dir_list = add_models_dir.split(' ')
-            add_models_dir_list.each{ per_model_dir ->
-                sub_add_models_list = modelconf."${framework}"."${per_model_dir}"
-                add_models_list=add_models_list.plus(sub_add_models_list)
+        if ( classes != '' ){
+            classes_list = classes.split(' ')
+            println("classes_list = " + classes_list )
+            classes_list.each{ per_class ->
+                sub_add_models_list = modelconf."${framework}"."${per_class}"
+                println("sub_add_models_list = " + sub_add_models_list)
+                String dataClass = sub_add_models_list.getClass()
+                if (dataClass != "class java.util.ArrayList"){
+                    withEnv(["framework=${framework}","class=${per_class}"]) {
+                        series=sh (
+                                script: 'echo $(cat diff.log | sed "/README.md/d" | grep "${framework}/${class}" | cut -d/ -f4 | sort -u)',
+                                returnStdout: true
+                        ).trim()
+                    }
+                    series_list=series.split(' ')
+                    series_list.each{per_series ->
+                        println("per_series -> " + per_series)
+                        sub_add_models_list = modelconf."${framework}"."${per_class}"."${per_series}"
+                        add_models_list=add_models_list.plus(sub_add_models_list)
+                    }
+                }else{
+                    add_models_list=add_models_list.plus(sub_add_models_list)
+                }
             }
         }
     }
