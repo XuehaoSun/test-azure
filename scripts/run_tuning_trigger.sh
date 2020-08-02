@@ -98,6 +98,10 @@ main() {
         parameters="${parameters} --input_model=${input_model} --output_model=${q_model}"
     fi
 
+    if [ "${framework}" == "pytorch" ]; then
+        parameters="${parameters} --input_model=${input_model}"
+    fi
+
     update_yaml_config
 
     bash run_tuning.sh ${parameters}
