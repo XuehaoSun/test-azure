@@ -36,6 +36,18 @@ if ('model' in params && params.model != '') {
 }
 echo "Running ${model}"
 
+precision  = 'int8,fp32'
+if ('precision' in params && params.precision != '') {
+    precision = params.precision
+}
+echo "Running ${precision}"
+
+mode  = 'accuracy,throughput,latency'
+if ('mode' in params && params.mode != '') {
+    mode = params.mode
+}
+echo "Running ${mode}"
+
 ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
 if ('ilit_url' in params && params.ilit_url != ''){
     ilit_url = params.ilit_url
@@ -179,13 +191,14 @@ node( sub_node_label ) {
             """
         }
         if (nigthly_test_branch != '' && framework != "pytorch"){
+            batch_size = modelConf."${framework}"."${model}"."batch_size"
             stage("Performance") {
                 precision_list.each { precision ->
                     echo "precision is ${precision}"
                     performance_list.each { mode ->
                         echo "mode is ${mode}"
                         sh '''#!/bin/bash -x
-                            echo "Running ---- ${framework}, ${model} ---- Benchmarking"
+                            echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
                             
                             echo "-------w-------"
                             w
@@ -203,6 +216,7 @@ node( sub_node_label ) {
                                 --input_model=${input_model} \
                                 --precision=${precision} \
                                 --mode=${mode} \
+                                --batch_size=${batch_size} \
                                 --conda_env_name=${framework}-${framework_version}
                         '''
                     }
