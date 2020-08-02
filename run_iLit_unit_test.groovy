@@ -102,11 +102,37 @@ node(node_label){
         stage('unit test') {
 
             echo "+---------------- unit test ----------------+"
-            sh '''#!/bin/bash -x
+            sh '''#!/bin/bash
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 source activate ${conda_env}
-                cd ${WORKSPACE}/ilit-models/test
-                export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
+                
+                echo "Checking ilit..."
+                python -V
+                pip list
+                c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
+                if [ ${c_ilit} != 0 ]; then
+                    pip uninstall ilit -y
+                    pip list
+                fi
+            
+                if [ ! -d ${WORKSPACE}/ilit-models ]; then
+                    echo "\\"ilit-model\\" not found. Exiting..."
+                    exit 1
+                fi
+                cd ${WORKSPACE}/ilit-models
+                python setup.py install
+                pip list
+                
+                echo -e "\\nInstalling ut requirements..."
+                cd test
+                if [ -f "requirements.txt" ]; then
+                    sed -i '/ilit/d' requirements.txt
+                    python -m pip install -r requirements.txt
+                    pip list
+                else
+                    echo "Not found requirements.txt file."
+                fi
+               
                 find . -name "test*.py" | sed 's/.\\//python /g' > run.sh
                 ut_log_name=${WORKSPACE}/unit_test.log
                 bash run.sh 2>&1 | tee ${ut_log_name}
