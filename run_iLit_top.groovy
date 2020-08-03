@@ -272,8 +272,8 @@ def pylintScan() {
         List pylintScanParams = [
             string(name: "ilit_url", value: "${ilit_url}"),
             string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
-            string(name: "MR_source_branch", value: "${gitlabSourceBranch}"),
-            string(name: "MR_target_branch", value: "${gitlabTargetBranch}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
         ]
         def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: pylintScanParams
         copyArtifacts(
@@ -363,8 +363,8 @@ def unitTest() {
         List unitTestParams = [
                 string(name: "ilit_url", value: "${ilit_url}"),
                 string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
-                string(name: "MR_source_branch", value: "${gitlabSourceBranch}"),
-                string(name: "MR_target_branch", value: "${gitlabTargetBranch}"),
+                string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                string(name: "MR_target_branch", value: "${MR_target_branch}"),
         ]
         def downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
 
