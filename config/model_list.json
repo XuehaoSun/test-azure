@@ -38,6 +38,9 @@
         "resnet18_qat",
         "resnet50_qat",
         "resnet101_qat"
+      ],
+      "peleenet": [
+        "peleenet"
       ]
     },
     "language_translation": [
