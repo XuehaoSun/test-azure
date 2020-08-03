@@ -268,7 +268,7 @@ def doBuild() {
 }
 
 def pylintScan() {
-    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+    catchError {
         List pylintScanParams = [
             string(name: "ilit_url", value: "${ilit_url}"),
             string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
@@ -359,7 +359,7 @@ def collectLog() {
 
 def unitTest() {
 
-    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+    catchError {
         List unitTestParams = [
                 string(name: "ilit_url", value: "${ilit_url}"),
                 string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
