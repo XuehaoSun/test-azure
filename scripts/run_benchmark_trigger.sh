@@ -91,20 +91,11 @@ main() {
         topology="resnet50_v1"
     fi
 
-    # set parameters for benchmark
-    parameters="--topology=${topology} --dataset_location=${dataset_location}"
-
     if [ ${precision} == 'int8' ]; then
       input_model=q_model
     fi
-
-    if [ ${framework} == "mxnet" ]; then
-        parameters="${parameters} --model_location=${input_model} "
-    fi
-
-    if [ "${framework}" == "tensorflow" ]; then
-        parameters="${parameters} --input_model=${input_model} "
-    fi
+    # set parameters for benchmark
+    parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
 
     case ${mode} in
       accuracy)

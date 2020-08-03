@@ -88,18 +88,10 @@ main() {
         topology="resnet50_v1"
     fi
 
-    parameters="--topology=${topology} --dataset_location=${dataset_location}"
+    parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
 
-    if [ ${framework} == "mxnet" ]; then
-        parameters="${parameters} --model_location=${input_model} --output_model=${q_model}"
-    fi
-
-    if [ "${framework}" == "tensorflow" ]; then
-        parameters="${parameters} --input_model=${input_model} --output_model=${q_model}"
-    fi
-
-    if [ "${framework}" == "pytorch" ]; then
-        parameters="${parameters} --input_model=${input_model}"
+    if [ "${framework}" == "tensorflow" ] || [ ${framework} == "mxnet" ]; then
+        parameters="${parameters} --output_model=${q_model}"
     fi
 
     update_yaml_config
