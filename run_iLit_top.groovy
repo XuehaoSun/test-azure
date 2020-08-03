@@ -395,11 +395,11 @@ def collectModelList(framework) {
 
         withEnv(["MR_target_branch=${MR_target_branch}", "framework=${framework}"]) {
             sh (
-                    script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) | grep \'examples\' > diff.log',
+                    script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) > diff.log',
                     returnStdout: true
             ).trim()
             classes = sh (
-                    script: 'echo $(cat diff.log | sed "/README.md/d" | grep "${framework}" | cut -d/ -f3 | sort -u)',
+                    script: 'echo $(cat diff.log | grep \'examples\' | sed "/README.md/d" | grep "${framework}" | cut -d/ -f3 | sort -u)',
                     returnStdout: true
             ).trim()
         }
@@ -412,7 +412,7 @@ def collectModelList(framework) {
                 if (dataClass != "class java.util.ArrayList"){
                     withEnv(["framework=${framework}","class=${per_class}"]) {
                         series=sh (
-                                script: 'echo $(cat diff.log | sed "/README.md/d" | grep "${framework}/${class}" | cut -d/ -f4 | sort -u)',
+                                script: 'echo $(cat diff.log | grep \'examples\' | sed "/README.md/d" | grep "${framework}/${class}" | cut -d/ -f4 | sort -u)',
                                 returnStdout: true
                         ).trim()
                     }
