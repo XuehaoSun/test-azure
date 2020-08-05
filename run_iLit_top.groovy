@@ -407,25 +407,30 @@ def collectModelList(framework) {
             classes_list = classes.split(' ')
             println("classes_list = " + classes_list )
             classes_list.each{ per_class ->
+                println("per_class -> " + per_class)
                 sub_add_models_list = modelconf."${framework}"."${per_class}"
-                String dataClass = sub_add_models_list.getClass()
-                if (dataClass != "class java.util.ArrayList"){
-                    withEnv(["framework=${framework}","class=${per_class}"]) {
-                        series=sh (
-                                script: 'echo $(cat diff.log | grep \'examples\' | sed "/README.md/d" | grep "${framework}/${class}" | cut -d/ -f4 | sort -u)',
-                                returnStdout: true
-                        ).trim()
-                    }
-                    series_list=series.split(' ')
-                    series_list.each{per_series ->
-                        println("per_series -> " + per_series)
-                        sub_add_models_list = modelconf."${framework}"."${per_class}"."${per_series}"
-                        add_models_list=add_models_list.plus(sub_add_models_list)
+                if (sub_add_models_list != null) {
+                    String dataClass = sub_add_models_list.getClass()
+                    if (dataClass != "class java.util.ArrayList") {
+                        withEnv(["framework=${framework}", "class=${per_class}"]) {
+                            series = sh(
+                                    script: 'echo $(cat diff.log | grep \'examples\' | sed "/README.md/d" | grep "${framework}/${class}" | cut -d/ -f4 | sort -u)',
+                                    returnStdout: true
+                            ).trim()
+                        }
+                        series_list = series.split(' ')
+                        series_list.each { per_series ->
+                            println("per_series -> " + per_series)
+                            sub_add_models_list = modelconf."${framework}"."${per_class}"."${per_series}"
+                            if (sub_add_models_list != null){
+                                add_models_list = add_models_list.plus(sub_add_models_list)
+                                println("sub_add_models_list = " + sub_add_models_list)
+                            }
+                        }
+                    } else {
+                        add_models_list = add_models_list.plus(sub_add_models_list)
                         println("sub_add_models_list = " + sub_add_models_list)
                     }
-                }else{
-                    add_models_list=add_models_list.plus(sub_add_models_list)
-                    println("sub_add_models_list = " + sub_add_models_list)
                 }
             }
         }
