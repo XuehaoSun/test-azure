@@ -170,6 +170,11 @@ node( sub_node_label ) {
         yaml = modelConf."${framework}"."${model}"."yaml"
         strategy = modelConf."${framework}"."${model}"."strategy"
 
+        timeout="timeout 50000"
+        if (nigthly_test_branch == ''){
+            timeout="timeout 5400"
+        }
+        echo "Tuning timeout ${timeout}"
         stage("Tuning") {
 
             sh """#!/bin/bash -x
@@ -178,7 +183,7 @@ node( sub_node_label ) {
                 echo "-------w-------"
                 w
                 echo "-------w-------"
-                bash ${WORKSPACE}/ilit-validation/scripts/run_tuning_trigger.sh \
+                ${timeout} bash ${WORKSPACE}/ilit-validation/scripts/run_tuning_trigger.sh \
                     --framework=${framework} \
                     --model=${model} \
                     --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \
@@ -190,6 +195,7 @@ node( sub_node_label ) {
                     2>&1 | tee ${framework}-${model}-tune.log
             """
         }
+
         if (nigthly_test_branch != '' && framework != "pytorch"){
             batch_size = modelConf."${framework}"."${model}"."batch_size"
             stage("Performance") {
