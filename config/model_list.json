@@ -1,14 +1,7 @@
 {
   "tensorflow": {
     "image_recognition": [
-      "resnet50v1.0",
-      "resnet50v1.5",
-      "resnet101",
-      "inception_v1",
-      "inception_v2",
-      "inception_v3",
-      "inception_v4",
-      "inception_resnet_v2"
+      "resnet50v1.0"
     ],
     "object_detection": [
       "ssd_resnet50_v1"
@@ -16,12 +9,7 @@
   },
   "mxnet": {
     "image_recognition": [
-      "resnet50v1",
-      "inceptionv3",
-      "mobilenet1.0",
-      "mobilenetv2_1.0",
-      "resnet18_v1",
-      "squeezenet1.0"
+      "resnet50v1"
     ],
     "object_detection": [
       "SSD-ResNet50_v1"
@@ -30,30 +18,17 @@
   "pytorch": {
     "image_recognition": {
       "resnet": [
-        "resnet18",
-        "resnet50",
-        "resnet101"
+        "resnet18"
       ],
       "resnet_qat": [
-        "resnet18_qat",
-        "resnet50_qat",
-        "resnet101_qat"
+        "resnet18_qat"
       ],
       "peleenet": [
         "peleenet"
       ]
     },
     "language_translation": [
-      "bert_base_MRPC",
-      "bert_base_CoLA",
-      "bert_base_STS-B",
-      "bert_base_SST-2",
-      "bert_base_RTE",
-      "bert_large_MRPC",
-      "bert_large_SQuAD",
-      "bert_large_QNLI",
-      "bert_large_RTE",
-      "bert_large_CoLA"
+      "bert_base_MRPC"
     ],
     "recommendation": [
       "dlrm"

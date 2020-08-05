@@ -124,7 +124,7 @@
     },
     "SSD-ResNet50_v1": {
       "model_src_dir": "object_detection",
-      "dataset_location": "/tf_dataset/dataset/coco_dataset/raw-data",
+      "dataset_location": "/tf_dataset/dataset/VOCdevkit",
       "input_model": "/tf_dataset/mxnet/SSD-ResNet50_v1",
       "yaml": "ssd.yaml",
       "strategy": "mse",
