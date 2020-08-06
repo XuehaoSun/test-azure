@@ -219,11 +219,11 @@ def doBuild() {
         def job_models = []
         if (job_framework == 'tensorflow'){
             //job_models=eval("${job_framework}_models")
-            job_models = readModelList(tensorflow_models) 
+            job_models = parseStrToList(tensorflow_models) 
         }else if (job_framework == 'pytorch'){
-            job_models = readModelList(pytorch_models)
+            job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
-            job_models = readModelList(mxnet_models)
+            job_models = parseStrToList(mxnet_models)
         }
         if (MR_source_branch != ''){
             add_models_list = collectModelList(job_framework)
@@ -238,12 +238,12 @@ def doBuild() {
                     stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
                         echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "intel-iLit-validation-MR", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
 
                             catchError {
 
                                 copyArtifacts(
-                                        projectName: "intel-iLit-validation-MR",
+                                        projectName: "intel-iLit-validation",
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: '*.log',
                                         fingerprintArtifacts: true,
@@ -302,18 +302,18 @@ def collectLog() {
     if ( MR_source_branch != '' ) {
         mode_list = ["throughput"]
     } else {
-        mode_list = ["throughput", "latency"]
+        mode_list = ["throughput", "latency", "accuracy"]
     }
 
     job_frameworks = Frameworks.split(',')
     job_frameworks.each { job_framework ->
         job_models = []
         if (job_framework == 'tensorflow'){
-            job_models = readModelList(tensorflow_models) 
+            job_models = parseStrToList(tensorflow_models) 
         }else if (job_framework == 'pytorch'){
-            job_models = readModelList(pytorch_models)
+            job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
-            job_models = readModelList(mxnet_models)
+            job_models = parseStrToList(mxnet_models)
         }
 
         if (MR_source_branch != ''){
@@ -439,11 +439,11 @@ def collectModelList(framework) {
     return add_models_list
 }
 
-def readModelList(models) {
-    if (models == ''){
+def parseStrToList(srtingElements, delimiter=',') {
+    if (srtingElements == ''){
         return []
     }
-    return models[0..models.length()-1].tokenize(',')
+    return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
 
 node( node_label ) {

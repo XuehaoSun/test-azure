@@ -92,7 +92,7 @@ main() {
     fi
 
     if [ ${precision} == 'int8' ]; then
-      input_model=q_model
+      input_model=${q_model}
     fi
     # set parameters for benchmark
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
@@ -113,7 +113,7 @@ function run_accuracy {
   parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
 
   if [ -f "run_benchmark.sh" ]; then
-        run_cmd="bash run_benchmark ${parameters}"
+        run_cmd="bash run_benchmark.sh ${parameters}"
   else
         echo "Not found run_benchmark file."
         exit 1

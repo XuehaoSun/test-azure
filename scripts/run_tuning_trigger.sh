@@ -74,19 +74,22 @@ main() {
     echo "$(git branch)"
     echo "$(git show | head -5)"
 
-    q_model=${WORKSPACE}/${framework}-${model}-tune
-    if [ ${framework} == "tensorflow" ]; then
-        q_model="${q_model}.pb"
-    fi
-
-    # run_tuning.sh
-    starttime=`date +'%Y-%m-%d %H:%M:%S'`
-    
     # ------ WORKAROUND FOR MXNET RESNET50V1 -----
     topology=${model}
     if [ "${model}" == "resnet50v1" ]; then
         topology="resnet50_v1"
     fi
+
+    q_model=${WORKSPACE}/${framework}-${model}-tune
+    if [ ${framework} == "tensorflow" ]; then
+        q_model="${q_model}.pb"
+    elif [ ${framework} == "mxnet" ]; then
+        mkdir -p ${q_model}
+        q_model="${q_model}/${topology}"
+    fi
+
+    # run_tuning.sh
+    starttime=`date +'%Y-%m-%d %H:%M:%S'`
 
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
 
