@@ -40,12 +40,14 @@ precision  = 'int8,fp32'
 if ('precision' in params && params.precision != '') {
     precision = params.precision
 }
+def precision_list = parseStrToList(precision)
 echo "Running ${precision}"
 
 mode  = 'accuracy,throughput,latency'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
+def mode_list = parseStrToList(mode)
 echo "Running ${mode}"
 
 ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
@@ -95,6 +97,13 @@ def cleanup() {
         echo "Error while doing cleanup"
     }  // catch
 
+}
+
+def parseStrToList(srtingElements, delimiter=',') {
+    if (srtingElements == ''){
+        return []
+    }
+    return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
 
 //def get_model_params() {
@@ -201,9 +210,9 @@ node( sub_node_label ) {
             stage("Performance") {
                 precision_list.each { precision ->
                     echo "precision is ${precision}"
-                    performance_list.each { mode ->
+                    mode_list.each { mode ->
                         echo "mode is ${mode}"
-                        sh '''#!/bin/bash -x
+                        sh """#!/bin/bash -x
                             echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
                             
                             echo "-------w-------"
@@ -224,7 +233,7 @@ node( sub_node_label ) {
                                 --mode=${mode} \
                                 --batch_size=${batch_size} \
                                 --conda_env_name=${framework}-${framework_version}
-                        '''
+                        """
                     }
                 }
             }

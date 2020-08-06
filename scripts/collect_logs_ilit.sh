@@ -55,9 +55,23 @@ else
   PRECISION='INT8'
 fi
 
-bs=$(grep 'input_model accuracy batch_size:' ${benchmark_log_file} | awk -F ' ' '{print $4}')
-accuracy=$(grep 'input_model accuracy:' ${benchmark_log_file} | awk -F ' ' '{print $3}')
-echo "$framework;CLX8280;${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$benchmark_log_file" | tee -a ${WORKSPACE}/summary.log
-bs=$(grep 'input_model throughput batch_size:' ${benchmark_log_file} | awk -F ' ' '{print $4}')
-throughput=$(grep 'input_model throughput:' ${benchmark_log_file} | awk -F ' ' '{print $3}')
-echo "${framework};CLX8280;${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$benchmark_log_file" | tee -a ${WORKSPACE}/summary.log
+log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}"
+
+if [ "${mode}" == "throughput" ]; then
+  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+  throughput=$(grep "Throughput: " ${log_file}*  | sed -e s";.*: ;;" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
+  echo "${framework};CLX8280;${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+fi
+
+if [ "${mode}" == "latency" ]; then
+    bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+    latency=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
+    echo "${framework};CLX8280;${PRECISION};${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+fi
+
+if [ "${mode}" == "accuracy" ]; then
+  log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}.log"
+  bs=$(for param in $(grep 'batch_size=' tensorflow/resnet50v1.0/tensorflow_resnet50v1.0_fp32_accuracy.log); do if [[ ${param} =~ "batch_size" ]]; then echo ${param} | cut -f 2 -d =; fi ; done)
+  accuracy=$(grep 'Accuracy: ' ${log_file} | awk -F ' ' '{print $2}')
+  echo "$framework;CLX8280;${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/${log_file}" | tee -a ${WORKSPACE}/summary.log
+fi
