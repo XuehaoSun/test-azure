@@ -25,9 +25,6 @@
       "resnet": [
         "resnet18"
       ],
-      "resnet_qat": [
-        "resnet18_qat"
-      ],
       "peleenet": [
         "peleenet"
       ]
