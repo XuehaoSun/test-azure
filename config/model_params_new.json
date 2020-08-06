@@ -161,6 +161,13 @@
       "yaml": "conf.yaml",
       "strategy": "bayesian"
     },
+    "inception_v3": {
+      "model_src_dir": "image_recognition/resnet",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
+      "input_model": "",
+      "yaml": "conf.yaml",
+      "strategy": "bayesian"
+    },
     "resnet18_qat": {
       "model_src_dir": "image_recognition/resnet_qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
