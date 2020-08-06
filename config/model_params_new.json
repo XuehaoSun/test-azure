@@ -73,7 +73,7 @@
       "batch_size": 1
     },
     "wide_deep_large_ds": {
-      "model_src_dir": "recommendation",
+      "model_src_dir": "recommendation/wide_deep_large_ds",
       "dataset_location": "/tf_dataset/tensorflow/wide_deep_large_ds/dataset",
       "input_model": "/tf_dataset/tensorflow/wide_deep_large_ds/fp32_optimized_graph.pb",
       "yaml": "wide_deep_large_ds.yaml",
