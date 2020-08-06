@@ -5,7 +5,12 @@
     ],
     "object_detection": [
       "ssd_resnet50_v1"
-    ]
+    ],
+    "recommendation": {
+      "wide_deep_large_ds": [
+        "wide_deep_large_ds"
+      ]
+    }
   },
   "mxnet": {
     "image_recognition": [

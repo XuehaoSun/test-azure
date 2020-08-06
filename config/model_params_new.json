@@ -71,6 +71,14 @@
       "yaml": "ssd_resnet50_v1.yaml",
       "strategy": "basic",
       "batch_size": 1
+    },
+    "wide_deep_large_ds": {
+      "model_src_dir": "recommendation",
+      "dataset_location": "/tf_dataset/tensorflow/wide_deep_large_ds/dataset",
+      "input_model": "/tf_dataset/tensorflow/wide_deep_large_ds/fp32_optimized_graph.pb",
+      "yaml": "wide_deep_large_ds.yaml",
+      "strategy": "basic",
+      "batch_size": 256
     }
   },
   "mxnet": {
@@ -130,7 +138,6 @@
       "strategy": "mse",
       "batch_size": 256
     }
-
   },
   "pytorch": {
     "resnet18": {
