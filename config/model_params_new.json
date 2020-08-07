@@ -192,7 +192,7 @@
     "peleenet": {
       "model_src_dir": "image_recognition/peleenet",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
-      "input_model": "",
+      "input_model": "/tf_dataset/pytorch/peleenet/peleenet_acc7208.pth.tar",
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
