@@ -196,26 +196,23 @@ node( sub_node_label ) {
         echo "Tuning timeout ${timeout}"
         stage("Tuning") {
 
-            retry(3){
-                sh """#!/bin/bash -x
-                    echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
-                    
-                    echo "-------w-------"
-                    w
-                    echo "-------w-------"
-                    ${timeout} bash ${WORKSPACE}/ilit-validation/scripts/run_tuning_trigger.sh \
-                        --framework=${framework} \
-                        --model=${model} \
-                        --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \
-                        --dataset_location=${dataset_location} \
-                        --input_model=${input_model} \
-                        --yaml=${yaml} \
-                        --strategy=${strategy} \
-                        --conda_env_name=${framework}-${framework_version} \
-                        2>&1 | tee ${framework}-${model}-tune.log
-                """
-            }
-
+            sh """#!/bin/bash -x
+                echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
+                
+                echo "-------w-------"
+                w
+                echo "-------w-------"
+                ${timeout} bash ${WORKSPACE}/ilit-validation/scripts/run_tuning_trigger.sh \
+                    --framework=${framework} \
+                    --model=${model} \
+                    --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \
+                    --dataset_location=${dataset_location} \
+                    --input_model=${input_model} \
+                    --yaml=${yaml} \
+                    --strategy=${strategy} \
+                    --conda_env_name=${framework}-${framework_version} \
+                    2>&1 | tee ${framework}-${model}-tune.log
+            """
         }
 
         if (nigthly_test_branch != '' && framework != "pytorch"){
