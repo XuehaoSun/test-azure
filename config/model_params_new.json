@@ -194,84 +194,84 @@
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_base_MRPC": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/MRPC_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_base_CoLA": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/CoLA/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/CoLA_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_base_STS-B": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/STS-B/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/STS-B_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_base_SST-2": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/SST-2/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/SST-2_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_base_RTE": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/RTE/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/RTE_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_large_MRPC": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/MRPC_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_large_SQuAD": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/SQuAD/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/SQuAD_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_large_QNLI": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/QNLI/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/QNLI_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_large_RTE": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/RTE/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/RTE_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "bert_large_CoLA": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/CoLA/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/CoLA_output",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "dlrm": {
       "model_src_dir": "recommendation",
       "dataset_location": "/mnt/local_disk3/dataset/dlrm/dlrm/input",
       "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/terabyte_mlperf.pt",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     }
   }
 }
