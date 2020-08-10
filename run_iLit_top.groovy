@@ -263,6 +263,7 @@ def doBuild() {
         }
     }
     if (MR_source_branch != '') {
+        echo "enable failFast"
         jobs.failFast = true
     }
     parallel jobs
