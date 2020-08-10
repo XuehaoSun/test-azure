@@ -262,7 +262,9 @@ def doBuild() {
             }
         }
     }
-
+    if (MR_source_branch != '') {
+        jobs.failFast = true
+    }
     parallel jobs
 
 }
