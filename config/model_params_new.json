@@ -203,6 +203,13 @@
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
+    "yolo_v3": {
+      "model_src_dir": "object_detection/yolo_v3",
+      "dataset_location": "/tf_dataset/pytorch/coco_data_yolo",
+      "input_model": "/tf_dataset/pytorch/coco_data_yolo/yolov3.weights",
+      "yaml": "conf.yaml",
+      "strategy": "basic"
+    },
     "bert_base_MRPC": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/",

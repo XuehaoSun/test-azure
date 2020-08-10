@@ -29,6 +29,11 @@
         "resnest50"
       ]
     },
+    "object_detection": {
+      "yolo_v3": [
+        "yolo_v3"
+      ]
+    },
     "language_translation": [
       "bert_base_MRPC"
     ],
