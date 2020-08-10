@@ -281,10 +281,10 @@ function generate_html_core {
             // current vs last
             printf("</tr>\n<tr><td>New/Last</td><td colspan=2 class=\"col-cell3\"></td>");
 
-            compare_result(current_value[4],last_value[4],"fps");
+            compare_result(last_value[4],current_value[4],"fps");
             compare_result(current_value[6],last_value[6],"acc");
 
-            compare_result(current_value[10],last_value[10],"fps");
+            compare_result(last_value[10],current_value[10],"fps");
             compare_result(current_value[12],last_value[12],"acc");
             printf("</tr>\n");
 
