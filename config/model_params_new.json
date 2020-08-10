@@ -196,6 +196,13 @@
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
+    "resnest50": {
+      "model_src_dir": "image_recognition/resnest",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
+      "input_model": "",
+      "yaml": "conf.yaml",
+      "strategy": "basic"
+    },
     "bert_base_MRPC": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/",

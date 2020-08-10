@@ -27,6 +27,9 @@
       ],
       "peleenet": [
         "peleenet"
+      ],
+      "resnest": [
+        "resnest50"
       ]
     },
     "language_translation": [
