@@ -1,21 +1,58 @@
 #!/bin/bash
 
- # WORKSPACE=.
- # summaryLog=summary.log
- # summaryLogLast=summary.log
- # tuneLog=tuning_info.txt
- # tuneLogLast=tuning_info.txt
+# WORKSPACE=.
+# summaryLog=summary.log
+# summaryLogLast=summary.log
+# tuneLog=tuning_info.log
+# tuneLogLast=tuning_info.log
+# overview_log=summary_overview.log
 
 function main {
     echo "summaryLog: ${summaryLog}"
     echo "last summaryLog: ${summaryLogLast}"
     echo "tunelog: ${tuneLog}"
     echo "last tunelog: ${tuneLogLast}"
+    echo "overview log: ${overview_log}"
     generate_html_head
     generate_html_body
     generate_results
     generate_html_footer
 
+}
+
+function createOverview {
+
+    jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
+    png_path="http://mlpc.intel.com/static/doc/tensorflow/images/24x24"
+
+    # unit test
+    unit_test=($(grep 'unit-test' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${unit_test[1]}" == *"FAIL"* ]];then
+        unit_test_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${unit_test[1]}" == *"SUCC"* ]];then
+        unit_test_status="<img src=${png_path}/blue.png></img>"
+    else
+        unit_test_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
+    cat >> ${WORKSPACE}/report.html <<  eof
+
+    <h2>Overview</h2>
+    <table class="features-table" style="width: 60%;margin: 0 auto 0 0;">
+        <tr>
+            <th>Task</th>
+            <th>Job</th>
+            <th>Status</th>
+        </tr>
+        $(
+             if [ "${unit_test[2]}" != "" ];then
+                 echo "<tr><td rowspan=3>Unit Test</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}\">${unit_test[0]}#${unit_test[2]}</a></td>"
+                 echo "<td>${unit_test_status}</td></tr>"
+             fi
+        )
+    </table>
+eof
 }
 
 function generate_inference {
@@ -293,6 +330,8 @@ cat >> ${WORKSPACE}/report.html << eof
     <div id="main">
 	    <h1 align="center">iLiT Tuning Tests ${MR_TITLE}
         [ <a href="${BUILD_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
+
+        <h2>Summary</h2>
 	    <table class="features-table">
 	        <tr>
               <th>Platform</th>
@@ -311,7 +350,12 @@ cat >> ${WORKSPACE}/report.html << eof
               ${Test_Info}
 			    </tr>
 	    </table>
-	    <br>
+eof
+
+createOverview
+
+cat >> ${WORKSPACE}/report.html << eof
+	    <h2>Benchmark</h2>
 		  <table class="features-table">
             <tr>
                 <th rowspan="2">Framework</th>
