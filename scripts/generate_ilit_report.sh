@@ -136,13 +136,12 @@ function generate_html_core {
     
     tuning_strategy=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $4}')
-    tuning_count=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $5}')
-    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td>${tuning_strategy}</td><td>${tuning_time}</td><td>${tuning_count}</td>" >> ${WORKSPACE}/report.html
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td>${tuning_strategy}</td><td>${tuning_time}</td>" >> ${WORKSPACE}/report.html
     
     tuning_strategy=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $4}')
 
-    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tc=${tuning_count} -F ';' '
+    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -F ';' '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -258,7 +257,7 @@ function generate_html_core {
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td>Last</td><td>%s</td><td>%s</td><td>%s</td>", ts, tt, tc);
+            printf("</tr>\n<tr><td>Last</td><td>%s</td><td>%s</td>", ts, tt);
             show_new_last(last_value[1],last_value[13],last_value[2],"ms");
             show_new_last(last_value[3],last_value[14],last_value[4],"fps");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
@@ -268,7 +267,7 @@ function generate_html_core {
             printf("</tr>")
             
             // current vs last
-            printf("</tr>\n<tr><td>New/Last</td><td colspan=3 class=\"col-cell3\"></td>");
+            printf("</tr>\n<tr><td>New/Last</td><td colspan=2 class=\"col-cell3\"></td>");
             compare_result(last_value[2],current_value[2],"ms");
             compare_result(current_value[4],last_value[4],"fps");
             compare_result(current_value[6],last_value[6],"acc");
@@ -352,7 +351,6 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">VS</th>
                 <th rowspan="2">Tuning Strategy</th>
                 <th rowspan="2">Tuning time(s)</th>
-                <th rowspan="2">Tuning count</th>
 			          <th colspan="6">INT8</th>
 			          <th colspan="6">FP32</th>
 			          <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>

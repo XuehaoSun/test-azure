@@ -32,9 +32,8 @@ tuning_file="${framework}/${model}/${framework}-${model}-tune.log"
 
 if [ "${mode}" == "tuning" ]; then
   strategy=$(grep 'Tuning strategy:' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}')
-  tune_count=$(grep -F 'Tune result is: [' ${tuning_file} | wc -l)
   tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}'| sed 's/.$//g')
-  echo "${framework};${model};${strategy};${tune_time};${tune_count}" | tee -a ${WORKSPACE}/tuning_info.log
+  echo "${framework};${model};${strategy};${tune_time}" | tee -a ${WORKSPACE}/tuning_info.log
 
   if [ "${framework}" == "pytorch" ]; then
     accuracy=$(grep -F 'Tune result is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
