@@ -99,6 +99,9 @@ main() {
 
     update_yaml_config
 
+    echo -e "\nRun_tuning parameters... "
+    echo ${parameters}
+
     bash run_tuning.sh ${parameters}
     endtime=`date +'%Y-%m-%d %H:%M:%S'`
     start_seconds=$(date --date="$starttime" +%s);
