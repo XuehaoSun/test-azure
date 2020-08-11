@@ -262,7 +262,6 @@ def doBuild() {
                     
                     if (failed_build_result != 'SUCCESS'){
                         currentBuild.result = "FAILURE"
-                        echo "---- ${fail_build_number}, ${fail_build_url} ----"
                         error("-------- Failed details in ${failed_build_url}! --------")
                     }
                 }
