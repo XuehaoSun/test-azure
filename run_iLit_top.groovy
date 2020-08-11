@@ -97,10 +97,12 @@ echo "RUN_PYLINT = ${RUN_PYLINT}"
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
+propagate_status=false
 if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
     nigthly_test_branch = params.nigthly_test_branch
 }else{
     if ("${gitlabSourceBranch}" != '') {
+        propagate_status=true
         MR_source_branch = "${gitlabSourceBranch}"
         MR_target_branch = "${gitlabTargetBranch}"
         updateGitlabCommitStatus state: 'pending'
@@ -110,6 +112,7 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
 echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
+echo "propagate_status: $propagate_status"
 
 // setting refer_build
 refer_build = "x0"
@@ -237,8 +240,8 @@ def doBuild() {
                 catchError {
                     stage("Run Model ${job_model} on ${job_framework}") {
                         // execute build
-                        echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        echo "${job_model}, ${job_framework},  ${propagate_status}"
+                        def downstreamJob = build job: "intel-iLit-validation", propagate: true, parameters: BuildParams(job_framework, job_model)
 
                             catchError {
 
