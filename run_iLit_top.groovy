@@ -97,12 +97,10 @@ echo "RUN_PYLINT = ${RUN_PYLINT}"
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
-propagate_status=false
 if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
     nigthly_test_branch = params.nigthly_test_branch
 }else{
     if ("${gitlabSourceBranch}" != '') {
-        propagate_status=true
         MR_source_branch = "${gitlabSourceBranch}"
         MR_target_branch = "${gitlabTargetBranch}"
         updateGitlabCommitStatus state: 'pending'
@@ -112,7 +110,6 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
 echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
-echo "propagate_status: $propagate_status"
 
 // setting refer_build
 refer_build = "x0"
@@ -240,7 +237,7 @@ def doBuild() {
                 
                 stage("Run Model ${job_model} on ${job_framework}") {
                     // execute build
-                    echo "${job_model}, ${job_framework},  ${propagate_status}"
+                    echo "${job_model}, ${job_framework}"
                     
                     def downstreamJob
                     catchError {
@@ -260,7 +257,7 @@ def doBuild() {
                     failed_build_result = downstreamJob.result
                     failed_build_url = downstreamJob.absoluteUrl
                     
-                    if (failed_build_result != 'SUCCESS'){
+                    if (failed_build_result != 'SUCCESS' && MR_source_branch != ''){
                         currentBuild.result = "FAILURE"
                         
                         sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
