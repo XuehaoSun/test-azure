@@ -241,8 +241,10 @@ def doBuild() {
                 stage("Run Model ${job_model} on ${job_framework}") {
                     // execute build
                     echo "${job_model}, ${job_framework},  ${propagate_status}"
+                    
+                    def downstreamJob
                     catchError {
-                        def downstreamJob = build job: "intel-iLit-validation", propagate: true, parameters: BuildParams(job_framework, job_model)
+                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
                         
                         copyArtifacts(
                                 projectName: "intel-iLit-validation",
@@ -255,9 +257,13 @@ def doBuild() {
                         archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
                     }
                     
-                    if (downstreamJob.getResult() != 'SUCCESS'){
+                    failed_build_result = downstreamJob.result
+                    failed_build_url = downstreamJob.absoluteUrl
+                    
+                    if (failed_build_result != 'SUCCESS'){
                         currentBuild.result = "FAILURE"
-                        error("the downstreamJob got Failed!")
+                        echo "---- ${fail_build_number}, ${fail_build_url} ----"
+                        error("-------- Failed details in ${failed_build_url}! --------")
                     }
                 }
             }
