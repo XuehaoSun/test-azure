@@ -244,7 +244,7 @@ def doBuild() {
                     
                     def downstreamJob
                     catchError {
-                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        downstreamJob = build job: "intel-iLit-validation", propagate: true, parameters: BuildParams(job_framework, job_model)
                         
                         copyArtifacts(
                                 projectName: "intel-iLit-validation",
@@ -262,7 +262,11 @@ def doBuild() {
                     
                     if (failed_build_result != 'SUCCESS'){
                         currentBuild.result = "FAILURE"
-                        error("-------- Failed details in ${failed_build_url}! --------")
+                        
+                        sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                        failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
+                        
+                        error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                     }
                 }
             }
