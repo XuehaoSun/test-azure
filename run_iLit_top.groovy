@@ -347,7 +347,7 @@ def collectLog() {
                 precision_list.each { precision ->
                     mode_list.each { mode ->
                         // For pytorch we collect throughput and accuracy for int8 model from tuning log.
-                        if (job_framework == "pytorch" && precision == "int8") {
+                        if (job_framework == "pytorch") {
                             return
                         }
                         withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
