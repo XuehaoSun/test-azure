@@ -84,26 +84,20 @@ function generate_inference {
                 if($3 == "FP32") {
                     // Latency
                     if($6 == "Latency") {
-                        if( $8 ~/[0-9]/) {
-                            fp32_ms_bs = $7;
-                            fp32_ms_value = $8;
-                        }
+                        fp32_ms_bs = $7;
+                        fp32_ms_value = $8;
                         fp32_ms_url = $9;
                     }
                     // Throughput
                     if($6 == "Throughput") {
-                        if($8 ~/[0-9]/) {
-                            fp32_fps_bs = $7;
-                            fp32_fps_value = $8;
-                        }
+                        fp32_fps_bs = $7;
+                        fp32_fps_value = $8;
                         fp32_fps_url = $9;
                     }
                     // Accuracy
                     if($6 == "Accuracy") {
-                        if($8 ~/[0-9]/) {
-                            fp32_acc_bs = $7;
-                            fp32_acc_value = $8;
-                        }
+                        fp32_acc_bs = $7;
+                        fp32_acc_value = $8;
                         fp32_acc_url = $9;
                     }
                 }
@@ -112,33 +106,27 @@ function generate_inference {
                 if($3 == "INT8") {
                     // Latency
                     if($6 == "Latency") {
-                        if($8 ~/[0-9]/) {
-                            int8_ms_bs = $7;
-                            int8_ms_value = $8;
-                        }
+                        int8_ms_bs = $7;
+                        int8_ms_value = $8;
                         int8_ms_url = $9;
                     }
                     // Throughput
                     if($6 == "Throughput") {
-                        if($8 ~/[0-9]/) {
-                            int8_fps_bs = $7;
-                            int8_fps_value = $8;
-                        }
+                        int8_fps_bs = $7;
+                        int8_fps_value = $8;
                         int8_fps_url = $9;
                     }
                     // Accuracy
                     if($6 == "Accuracy") {
-                        if($8 ~/[0-9]/) {
-                            int8_acc_bs = $7;
-                            int8_acc_value = $8;
-                        }
+                        int8_acc_bs = $7;
+                        int8_acc_value = $8;
                         int8_acc_url = $9;
                     }
                 }
             }
         }END {
-            printf("%s;%.5f;%s;%.5f;%s;%s;", int8_ms_bs,int8_ms_value,int8_fps_bs,int8_fps_value,int8_acc_bs,int8_acc_value);
-            printf("%s;%.5f;%s;%.5f;%s;%s;", fp32_ms_bs,fp32_ms_value,fp32_fps_bs,fp32_fps_value,fp32_acc_bs,fp32_acc_value);
+            printf("%s;%s;%s;%s;%s;%s;", int8_ms_bs,int8_ms_value,int8_fps_bs,int8_fps_value,int8_acc_bs,int8_acc_value);
+            printf("%s;%s;%s;%s;%s;%s;", fp32_ms_bs,fp32_ms_value,fp32_fps_bs,fp32_fps_value,fp32_acc_bs,fp32_acc_value);
             printf("%s;%s;%s;%s;%s;%s", int8_ms_url,int8_fps_url,int8_acc_url,fp32_ms_url,fp32_fps_url,fp32_acc_url);
         }
     ' $1
@@ -167,7 +155,7 @@ function generate_html_core {
                     printf("<td>%s</td> <td><a href=%s>%.4f</a></td>\n",a,b,c);
                 }
             }else {
-                if(b == "") {
+                if(b == "" || c == "N/A") {
                     printf("<td></td> <td></td>\n");
                 }else
                 {
