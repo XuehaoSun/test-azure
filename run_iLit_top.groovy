@@ -237,34 +237,33 @@ def doBuild() {
         echo "llsu-----> ${job_framework}"
         job_models.each { job_model ->
             jobs["${job_framework}_${job_model}"] = {
-                catchError {
-                    stage("Run Model ${job_model} on ${job_framework}") {
-                        // execute build
-                        echo "${job_model}, ${job_framework},  ${propagate_status}"
+                
+                stage("Run Model ${job_model} on ${job_framework}") {
+                    // execute build
+                    echo "${job_model}, ${job_framework},  ${propagate_status}"
+                    catchError {
                         def downstreamJob = build job: "intel-iLit-validation", propagate: true, parameters: BuildParams(job_framework, job_model)
-
-                            catchError {
-
-                                copyArtifacts(
-                                        projectName: "intel-iLit-validation",
-                                        selector: specific("${downstreamJob.getNumber()}"),
-                                        filter: '*.log',
-                                        fingerprintArtifacts: true,
-                                        target: "${job_framework}/${job_model}")
-
-                                // Archive in Jenkins
-                                archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
-                            }
-
-                            if (downstreamJob.getResult() != 'SUCCESS')
-                            {
-                                currentBuild.result = "FAILURE"
-                            }
+                        
+                        copyArtifacts(
+                                projectName: "intel-iLit-validation",
+                                selector: specific("${downstreamJob.getNumber()}"),
+                                filter: '*.log',
+                                fingerprintArtifacts: true,
+                                target: "${job_framework}/${job_model}")
+                        
+                        // Archive in Jenkins
+                        archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
+                    }
+                    
+                    if (downstreamJob.getResult() != 'SUCCESS'){
+                        currentBuild.result = "FAILURE"
+                        error("the downstreamJob got Failed!")
                     }
                 }
             }
         }
     }
+    
     if (MR_source_branch != '') {
         echo "enable failFast"
         jobs.failFast = true
