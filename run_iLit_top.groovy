@@ -580,12 +580,14 @@ node( node_label ) {
             fingerprint: true
         }
 
-        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
-            echo "pipeline failed"
-            updateGitlabCommitStatus state: 'failed'
-        } else {
-            echo "pipeline success"
-            updateGitlabCommitStatus state: 'success'
+        if (MR_source_branch != ''){
+            if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
+                echo "pipeline failed"
+                updateGitlabCommitStatus state: 'failed'
+            } else {
+                echo "pipeline success"
+                updateGitlabCommitStatus state: 'success'
+            }
         }
     }
 }
