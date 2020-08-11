@@ -244,7 +244,7 @@ def doBuild() {
                     
                     def downstreamJob
                     catchError {
-                        downstreamJob = build job: "intel-iLit-validation", propagate: true, parameters: BuildParams(job_framework, job_model)
+                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
                         
                         copyArtifacts(
                                 projectName: "intel-iLit-validation",
