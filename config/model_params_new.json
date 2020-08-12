@@ -154,7 +154,7 @@
       "yaml": "conf.yaml",
       "strategy": "bayesian"
     },
-    "resnet101": {
+    "resnext101_32x8d": {
       "model_src_dir": "image_recognition/resnet",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
