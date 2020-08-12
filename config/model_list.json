@@ -27,6 +27,9 @@
       ],
       "resnest": [
         "resnest50"
+      ],
+      "se_resnext": [
+        "se_resnext50_32x4d"
       ]
     },
     "object_detection": {

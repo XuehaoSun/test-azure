@@ -203,6 +203,13 @@
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
+    "se_resnext50_32x4d": {
+      "model_src_dir": "image_recognition/se_resnext",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
+      "input_model": "",
+      "yaml": "conf.yaml",
+      "strategy": "basic"
+    },
     "yolo_v3": {
       "model_src_dir": "object_detection/yolo_v3",
       "dataset_location": "/tf_dataset/pytorch/coco_data_yolo",
