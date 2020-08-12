@@ -137,13 +137,15 @@ function generate_html_core {
     tuning_strategy=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $4}')
     tuning_count=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $5}')
-    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td>${tuning_strategy}</td><td>${tuning_time}</td><td>${tuning_count}</td>" >> ${WORKSPACE}/report.html
+    tuning_log=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $6}')
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td><td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
     
     tuning_strategy=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $4}')
     tuning_count=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $6}')
 
-    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tc=${tuning_count} -F ';' '
+    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tc=${tuning_count} -v tl=${tuning_log} -F ';' '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -259,7 +261,7 @@ function generate_html_core {
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td>Last</td><td>%s</td><td>%s</td><td>%s</td>", ts, tt, tc);
+            printf("</tr>\n<tr><td>Last</td><td><a href=%4$s>%1$s</a></td><td><a href=%4$s>%2$s</a></td><td><a href=%4$s>%3$s</a></td>", ts, tt, tc, tl);
             show_new_last(last_value[1],last_value[13],last_value[2],"ms");
             show_new_last(last_value[3],last_value[14],last_value[4],"fps");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
