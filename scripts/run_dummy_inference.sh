@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 set -eo pipefail
 
@@ -53,7 +54,7 @@ main() {
   fi
 
   cd ${WORKSPACE}/ilit-validation/examples/${framework}
-  if [ ${framework} == "tensorflow" ]; then
+  if [ ${framework} = "tensorflow" ]; then
     run_cmd="python main.py --input-graph ${input_model}"
   else
     TODO
@@ -71,7 +72,7 @@ function run_benchmark {
   ncores_per_instance=${ncores_per_socket}
 
   export OMP_NUM_THREADS=${ncores_per_instance}
-
+  echo "RUN_CMD: ${run_cmd}"
   logFile=${WORKSPACE}/${framework}_${model}_${precision}_throughput
   for((j=0;$j<${total_cores};j=$(($j + ${ncores_per_instance}))));
   do
