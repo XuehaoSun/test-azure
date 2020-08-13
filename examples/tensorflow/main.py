@@ -142,7 +142,7 @@ class eval_classifier_optimized_graph:
                             dest='input')
     arg_parser.add_argument('-o', "--output",
                             help='Specify the output of the model',
-                            dest='predict')
+                            dest='output')
     arg_parser.add_argument('--image_size', dest='image_size',
                             help='image size',
                             type=int, default=224)
