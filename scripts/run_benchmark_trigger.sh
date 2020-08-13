@@ -138,7 +138,14 @@ function run_benchmark {
   fi
 
   export OMP_NUM_THREADS=${ncores_per_instance}
-  parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=100"
+  
+  iters=100
+
+  if [ "${model}" == "wide_deep_large_ds" ]; then
+    iters=200
+  fi
+
+  parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
 
   if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
