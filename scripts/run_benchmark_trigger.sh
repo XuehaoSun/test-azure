@@ -91,6 +91,10 @@ main() {
         topology="resnet50_v1"
     fi
 
+    if [[ "${model}" == *"_qat" ]]; then
+        topology="${model%_qat} "
+    fi
+
     if [ ${precision} == 'int8' ]; then
       input_model=${q_model}
     fi
