@@ -55,7 +55,7 @@ main() {
 
   cd ${WORKSPACE}/ilit-validation/examples/${framework}
   if [ ${framework} = "tensorflow" ]; then
-    run_cmd="python main.py --input-graph ${input_model}"
+    run_cmd="python main.py --input-graph ${input_model} --benchmark"
   else
     TODO
   fi
