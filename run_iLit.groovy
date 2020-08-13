@@ -217,6 +217,7 @@ node( sub_node_label ) {
 
         if (nigthly_test_branch == ''){
             if (model == "resnet50v1.0" || model == "resnet50v1"){
+                batch_size = modelConf."${framework}"."${model}"."batch_size"
                 stage("MR Performance") {
                     precision_list.each {precision ->
                         echo "precision is ${precision}"
