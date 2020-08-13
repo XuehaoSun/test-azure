@@ -215,6 +215,35 @@ node( sub_node_label ) {
             """
         }
 
+        if (nigthly_test_branch == ''){
+            if (model == "resnet50v1.0" || model == "resnet50v1"){
+                stage("MR Performance") {
+                    precision_list.each {precision ->
+                        echo "precision is ${precision}"
+                            sh """#!/bin/bash -x
+                            echo "Running ---- ${framework}, ${model},${precision},throughput ---- Benchmarking"
+                            
+                            echo "-------w-------"
+                            w
+                            echo "-------w-------"
+                            echo "=======cache clean======="
+                            
+                            sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+            
+                            echo "=======cache clean======="
+                            bash ${WORKSPACE}/ilit-validation/scripts/run_dummpy_inference.sh \
+                                --framework=${framework} \
+                                --model=${model} \
+                                --input_model=${input_model} \
+                                --precision=${precision} \
+                                --batch_size=${batch_size} \
+                                --conda_env_name=${framework}-${framework_version}
+                        """
+                        }
+                    }
+                }
+            }
+
         if (nigthly_test_branch != '' && framework != "pytorch"){
             batch_size = modelConf."${framework}"."${model}"."batch_size"
             stage("Performance") {
