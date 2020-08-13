@@ -581,6 +581,11 @@ node( node_label ) {
         }
 
         if (MR_source_branch != ''){
+            // If default model has perf regression, then fail the job.
+            def destFile = new File("${WORKSPACE}/perf_regression.log")
+            if (destFile.exists()) {
+                currentBuild.result == 'FAILURE'
+            }
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
                 updateGitlabCommitStatus state: 'failed'

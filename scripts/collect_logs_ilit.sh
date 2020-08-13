@@ -27,13 +27,6 @@ done
 
 echo "---- $framework, $model ----"
 
-if [ ${precision} = "fp32" ]; then
-  PRECISION='FP32'
-else
-  PRECISION='INT8'
-fi
-
-benchmark_log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}_benchmark.log"
 tuning_file="${framework}/${model}/${framework}-${model}-tune.log"
 
 if [ "${mode}" == "tuning" ]; then
@@ -59,14 +52,30 @@ if [ "${mode}" == "tuning" ]; then
     accuracy_fp32=$(grep -F 'FP32 baseline is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
     echo "${framework};CLX8280;FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
     if [ $model = "resnet50v1.0" ] || [ $model = "resnet50v1" ]; then
-      log_file="${framework}/${model}/${framework}_${model}_${precision}_throughput"
+      log_file="${framework}/${model}/${framework}_${model}_int8_throughput"
       bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
       throughput=$(grep "Throughput: " ${log_file}*  | sed -e s";.*: ;;" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
-      echo "${framework};CLX8280;${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+      echo "${framework};CLX8280;INT8;${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+
+      log_file="${framework}/${model}/${framework}_${model}_fp32_throughput"
+      bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+      throughput_fp32=$(grep "Throughput: " ${log_file}*  | sed -e s";.*: ;;" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
+      echo "${framework};CLX8280;FP32;${model};Inference;Throughput;${bs};${throughput_fp32};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+
+      if (("$throughput" < "$throughput_fp32")); then
+        echo "performance regression" > ${WORKSPACE}/perf_regression.log
+      fi
     fi
   fi
 
   exit 0
+fi
+
+
+if [ ${precision} = "fp32" ]; then
+  PRECISION='FP32'
+else
+  PRECISION='INT8'
 fi
 
 log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}"
