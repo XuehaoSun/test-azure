@@ -62,7 +62,6 @@ main() {
   run_benchmark
 }
 
-
 function run_benchmark {
   # get cpu information for multi-instance
   nsockets=$( lscpu | grep 'Socket(s)' | cut -d: -f2 | xargs echo -n)
@@ -83,3 +82,5 @@ function run_benchmark {
   wait
 
 }
+
+main
