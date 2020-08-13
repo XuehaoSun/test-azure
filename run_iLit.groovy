@@ -231,7 +231,7 @@ node( sub_node_label ) {
                             sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
             
                             echo "=======cache clean======="
-                            bash ${WORKSPACE}/ilit-validation/scripts/run_dummpy_inference.sh \
+                            bash ${WORKSPACE}/ilit-validation/scripts/run_dummy_inference.sh \
                                 --framework=${framework} \
                                 --model=${model} \
                                 --input_model=${input_model} \
