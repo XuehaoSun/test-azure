@@ -3,19 +3,6 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "9" ]; then
-  echo 'ERROR:'
-  echo "Expected 6 parameters got $#"
-  printf 'Please use following parameters:
-    --framework=<framework name>
-    --model=<model name>
-    --input_model=<path to input model>
-    --precision=<kind of data precision>
-    --batch_size=<batch_size for accuracy and throughput>
-    --conda_env_name=<conda environment name>
-    '
-  exit 1
-fi
 
 for i in "$@"; do
   case $i in
