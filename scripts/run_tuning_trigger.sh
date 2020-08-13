@@ -80,6 +80,10 @@ main() {
         topology="resnet50_v1"
     fi
 
+    if [[ "${model}" == *"_qat" ]]; then
+        topology="${model%_qat} "
+    fi
+
     q_model=${WORKSPACE}/${framework}-${model}-tune
     if [ ${framework} == "tensorflow" ]; then
         q_model="${q_model}.pb"
