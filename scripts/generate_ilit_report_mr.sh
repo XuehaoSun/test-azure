@@ -261,10 +261,10 @@ function generate_html_core {
             show_new_last(current_value[11],current_value[18],current_value[12],"acc");
 
             // Compare Current
-            
-            compare_current(current_value[10],current_value[4],"fps");
-            compare_current(current_value[6],current_value[12],"acc"); 
-            
+
+            compare_current(current_value[4],current_value[10],"fps");
+            compare_current(current_value[6],current_value[12],"acc");
+
             // Last values
             split(last_values,last_value,";");
 
@@ -281,10 +281,10 @@ function generate_html_core {
             // current vs last
             printf("</tr>\n<tr><td>New/Last</td><td colspan=2 class=\"col-cell3\"></td>");
 
-            compare_result(last_value[4],current_value[4],"fps");
+            compare_result(current_value[4],last_value[4],"fps");
             compare_result(current_value[6],last_value[6],"acc");
 
-            compare_result(last_value[10],current_value[10],"fps");
+            compare_result(current_value[10],last_value[10],"fps");
             compare_result(current_value[12],last_value[12],"acc");
             printf("</tr>\n");
 
@@ -370,16 +370,16 @@ cat >> ${WORKSPACE}/report.html << eof
 		        <tr>
 
                 <th>bs</th>
-                <th>rough_perf(s)</th>
+                <th>imgs/s</th>
                 <th>bs</th>
                 <th>top1</th>
 
                 <th>bs</th>
-                <th>rough_perf(s)</th>
+                <th>imgs/s</th>
                 <th>bs</th>
                 <th>top1</th>
 
-                <th class="col-cell col-cell1">Performance<br><font size="2px">FP32/INT8>=2</font></th>
+                <th class="col-cell col-cell1">Throughput<br><font size="2px">INT8/FP32>=2</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
 		        </tr>
 eof
