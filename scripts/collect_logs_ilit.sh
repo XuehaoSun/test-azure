@@ -36,12 +36,9 @@ if [ "${mode}" == "tuning" ]; then
 
   if [ "${framework}" == "pytorch" ]; then
     accuracy=$(grep -F 'Best tune result is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
-    echo "${framework};CLX8280;INT8;${model};Inference;Throughput;;N/A;${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
     echo "${framework};CLX8280;INT8;${model};Inference;Accuracy;;${accuracy};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
     accuracy_fp32=$(grep -F 'FP32 baseline is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
-    echo "${framework};CLX8280;FP32;${model};Inference;Throughput;;N/A;${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
     echo "${framework};CLX8280;FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
-
   fi
 
   if [ "${mr}" != "" ]; then
@@ -66,7 +63,6 @@ if [ "${mode}" == "tuning" ]; then
       fi
     fi
   fi
-
   exit 0
 fi
 
