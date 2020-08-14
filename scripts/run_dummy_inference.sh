@@ -61,13 +61,13 @@ main() {
   if [ ${framework} = "mxnet" ]; then
     symbol_file=${input_model}/"resnet50_v1-symbol.json"
     param_file=${input_model}/"resnet50_v1-0000.params"
-    run_cmd="python imagenet_inference.py
-            --symbol-file=${symbol_file}
-            --param-file=${param_file}
-            --batch-size=${batch_size}
-            --num-inference-batches=10
-            --ctx=cpu
-            --rgb-mean=123.68,116.779,103.939 --rgb-std=58.393,57.12,57.375
+    run_cmd="python imagenet_inference.py \
+            --symbol-file=${symbol_file} \
+            --param-file=${param_file} \
+            --batch-size=${batch_size} \
+            --num-inference-batches=100 \
+            --ctx=cpu \
+            --rgb-mean=123.68,116.779,103.939 --rgb-std=58.393,57.12,57.375 \
             --benchmark True"
   fi
 

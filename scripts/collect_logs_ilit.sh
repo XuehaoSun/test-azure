@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 for var in "$@"
 do 
     case $var in
@@ -62,8 +61,6 @@ if [ "${mode}" == "tuning" ]; then
       throughput_fp32=$(grep "Throughput: " ${log_file}*  | sed -e s";.*: ;;" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
       echo "${framework};CLX8280;FP32;${model};Inference;Throughput;${bs};${throughput_fp32};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
       # for test
-      throughput=1
-      throughput_fp32=2
       if (("$throughput" < "$throughput_fp32")); then
         echo "performance regression" > ${WORKSPACE}/perf_regression.log
       fi
