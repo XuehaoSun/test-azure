@@ -167,7 +167,7 @@ function generate_html_core {
                     printf("<td>%s</td> <td><a href=%s>%.4f</a></td>\n",a,b,c);
                 }
             }else {
-                if(b == "") {
+                if(b == "" || c == "N/A") {
                     printf("<td></td> <td></td>\n");
                 }else
                 {
