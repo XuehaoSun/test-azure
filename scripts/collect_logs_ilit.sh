@@ -58,7 +58,7 @@ if [ "${mode}" == "tuning" ]; then
       throughput_fp32=$(grep "Throughput: " ${log_file}*  | sed -e s";.*: ;;" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
       echo "${framework};CLX8280;FP32;${model};Inference;Throughput;${bs};${throughput_fp32};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
       # for test
-      if (("$throughput" < "$throughput_fp32")); then
+      if [ $(echo "$throughput < $troughput_fp32"|bc) -eq 1 ];then
         echo "performance regression" > ${WORKSPACE}/perf_regression.log
       fi
     fi
