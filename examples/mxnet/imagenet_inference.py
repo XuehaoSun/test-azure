@@ -344,9 +344,9 @@ if __name__ == '__main__':
 
     else:
         logger.info('Running model %s for inference' % symbol_file)
-        speed = \
-            (symbol_file, ctx, batch_size,
+        speed = benchmark_score(symbol_file, ctx, batch_size,
                                 args.num_inference_batches, data_layer_type, args.low_precision, logger)
         logger.info('batch size %2d, image/sec: %f', batch_size, speed)
+        print('Batch size = %d' % batch_size)
         print('Latency: %.3f ms' % (1 / speed * 1000))
         print('Throughput: %.3f images/sec' % (speed))

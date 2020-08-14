@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 for var in "$@"
 do 
     case $var in

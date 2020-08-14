@@ -584,7 +584,8 @@ node( node_label ) {
             // If default model has perf regression, then fail the job.
             def destFile = new File("${WORKSPACE}/perf_regression.log")
             if (destFile.exists()) {
-                currentBuild.result == 'FAILURE'
+                currentBuild.result = 'FAILURE'
+                error("------------------Default model performance regression!!!!!!!!!!!!!!!!!!!!!!!")
             }
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
