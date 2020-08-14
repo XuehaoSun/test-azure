@@ -46,7 +46,7 @@ do
     esac
 done
 
-# Run auto tune
+# Run Benchmark
 main() {
     # Import common functions
     source ${WORKSPACE}/ilit-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
@@ -81,9 +81,6 @@ main() {
     if [ ${framework} == "tensorflow" ]; then
         q_model="${q_model}.pb"
     fi
-
-    # run_tuning.sh
-    starttime=`date +'%Y-%m-%d %H:%M:%S'`
 
     # ------ WORKAROUND FOR MXNET RESNET50V1 -----
     topology=${model}
