@@ -34,10 +34,12 @@ if [ "${mode}" == "tuning" ]; then
   tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}'| sed 's/.$//g')
   echo "${framework};${model};${strategy};${tune_time};${tune_count};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/tuning_info.log
 
-  if [ "${framework}" == "pytorch" ]; then
+  if [ "${framework}" == "pytorch" ] && [ "${mr}" == "" ]; then
     accuracy=$(grep -F 'Best tune result is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
+    echo "${framework};CLX8280;INT8;${model};Inference;Throughput;;N/A;${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
     echo "${framework};CLX8280;INT8;${model};Inference;Accuracy;;${accuracy};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
     accuracy_fp32=$(grep -F 'FP32 baseline is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
+    echo "${framework};CLX8280;FP32;${model};Inference;Throughput;;N/A;${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
     echo "${framework};CLX8280;FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
   fi
 
