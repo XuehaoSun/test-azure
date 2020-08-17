@@ -21,22 +21,22 @@ function main {
 }
 
 function createOverview {
-    
+
     jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
     png_path="http://mlpc.intel.com/static/doc/tensorflow/images/24x24"
-    
+
     # unit test
     unit_test=($(grep 'unit-test' ${overview_log} |sed 's/,/ /g'))
-    if [[ "${unit_test[1]}" == *"FAIL"* ]];then 
+    if [[ "${unit_test[1]}" == *"FAIL"* ]];then
         unit_test_status="<img src=${png_path}/red.png></img>"
-    elif [[ "${unit_test[1]}" == *"SUCC"* ]];then 
+    elif [[ "${unit_test[1]}" == *"SUCC"* ]];then
         unit_test_status="<img src=${png_path}/blue.png></img>"
-    else 
+    else
         unit_test_status="<img src=${png_path}/yellow.png></img>"
-    fi    
-    
+    fi
+
     cat >> ${WORKSPACE}/report.html <<  eof
-    
+
     <h2>Overview</h2>
     <table class="features-table" style="width: 60%;margin: 0 auto 0 0;">
         <tr>
@@ -45,7 +45,7 @@ function createOverview {
             <th>Status</th>
         </tr>
         $(
-             if [ "${unit_test[2]}" != "" ];then 
+             if [ "${unit_test[2]}" != "" ];then
                  echo "<tr><td rowspan=3>Unit Test</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}\">${unit_test[0]}#${unit_test[2]}</a></td>"
                  echo "<td>${unit_test_status}</td></tr>"
@@ -84,26 +84,20 @@ function generate_inference {
                 if($3 == "FP32") {
                     // Latency
                     if($6 == "Latency") {
-                        if( $8 ~/[0-9]/) {
-                            fp32_ms_bs = $7;
-                            fp32_ms_value = $8;
-                        }
+                        fp32_ms_bs = $7;
+                        fp32_ms_value = $8;
                         fp32_ms_url = $9;
                     }
                     // Throughput
                     if($6 == "Throughput") {
-                        if($8 ~/[0-9]/) {
-                            fp32_fps_bs = $7;
-                            fp32_fps_value = $8;
-                        }
+                        fp32_fps_bs = $7;
+                        fp32_fps_value = $8;
                         fp32_fps_url = $9;
                     }
                     // Accuracy
                     if($6 == "Accuracy") {
-                        if($8 ~/[0-9]/) {
-                            fp32_acc_bs = $7;
-                            fp32_acc_value = $8;
-                        }
+                        fp32_acc_bs = $7;
+                        fp32_acc_value = $8;
                         fp32_acc_url = $9;
                     }
                 }
@@ -112,33 +106,27 @@ function generate_inference {
                 if($3 == "INT8") {
                     // Latency
                     if($6 == "Latency") {
-                        if($8 ~/[0-9]/) {
-                            int8_ms_bs = $7;
-                            int8_ms_value = $8;
-                        }
+                        int8_ms_bs = $7;
+                        int8_ms_value = $8;
                         int8_ms_url = $9;
                     }
                     // Throughput
                     if($6 == "Throughput") {
-                        if($8 ~/[0-9]/) {
-                            int8_fps_bs = $7;
-                            int8_fps_value = $8;
-                        }
+                        int8_fps_bs = $7;
+                        int8_fps_value = $8;
                         int8_fps_url = $9;
                     }
                     // Accuracy
                     if($6 == "Accuracy") {
-                        if($8 ~/[0-9]/) {
-                            int8_acc_bs = $7;
-                            int8_acc_value = $8;
-                        }
+                        int8_acc_bs = $7;
+                        int8_acc_value = $8;
                         int8_acc_url = $9;
                     }
                 }
             }
         }END {
-            printf("%s;%.5f;%s;%.5f;%s;%s;", int8_ms_bs,int8_ms_value,int8_fps_bs,int8_fps_value,int8_acc_bs,int8_acc_value);
-            printf("%s;%.5f;%s;%.5f;%s;%s;", fp32_ms_bs,fp32_ms_value,fp32_fps_bs,fp32_fps_value,fp32_acc_bs,fp32_acc_value);
+            printf("%s;%s;%s;%s;%s;%s;", int8_ms_bs,int8_ms_value,int8_fps_bs,int8_fps_value,int8_acc_bs,int8_acc_value);
+            printf("%s;%s;%s;%s;%s;%s;", fp32_ms_bs,fp32_ms_value,fp32_fps_bs,fp32_fps_value,fp32_acc_bs,fp32_acc_value);
             printf("%s;%s;%s;%s;%s;%s", int8_ms_url,int8_fps_url,int8_acc_url,fp32_ms_url,fp32_fps_url,fp32_acc_url);
         }
     ' $1
@@ -148,12 +136,16 @@ function generate_html_core {
     
     tuning_strategy=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $4}')
-    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td>${tuning_strategy}</td><td>${tuning_time}</td>" >> ${WORKSPACE}/report.html
+    tuning_count=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $6}')
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td><td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
     
     tuning_strategy=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $6}')
 
-    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -F ';' '
+    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tc=${tuning_count} -v tl=${tuning_log} -F ';' '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -167,7 +159,7 @@ function generate_html_core {
                     printf("<td>%s</td> <td><a href=%s>%.4f</a></td>\n",a,b,c);
                 }
             }else {
-                if(b == "") {
+                if(b == "" || c == "N/A") {
                     printf("<td></td> <td></td>\n");
                 }else
                 {
@@ -269,7 +261,7 @@ function generate_html_core {
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td>Last</td><td>%s</td><td>%s</td>", ts, tt);
+            printf("</tr>\n<tr><td>Last</td><td><a href=%4$s>%1$s</a></td><td><a href=%4$s>%2$s</a></td><td><a href=%4$s>%3$s</a></td>", ts, tt, tc, tl);
             show_new_last(last_value[1],last_value[13],last_value[2],"ms");
             show_new_last(last_value[3],last_value[14],last_value[4],"fps");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
@@ -279,7 +271,7 @@ function generate_html_core {
             printf("</tr>")
             
             // current vs last
-            printf("</tr>\n<tr><td>New/Last</td><td colspan=2 class=\"col-cell3\"></td>");
+            printf("</tr>\n<tr><td>New/Last</td><td colspan=3 class=\"col-cell3\"></td>");
             compare_result(last_value[2],current_value[2],"ms");
             compare_result(current_value[4],last_value[4],"fps");
             compare_result(current_value[6],last_value[6],"acc");
@@ -363,6 +355,7 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">VS</th>
                 <th rowspan="2">Tuning Strategy</th>
                 <th rowspan="2">Tuning time(s)</th>
+                <th rowspan="2">Tuning count</th>
 			          <th colspan="6">INT8</th>
 			          <th colspan="6">FP32</th>
 			          <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>

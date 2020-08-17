@@ -1,4 +1,7 @@
-// Groovy 
+@NonCPS
+def jsonParse(def json) {
+    new groovy.json.JsonSlurperClassic().parseText(json)
+}
 
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
@@ -32,6 +35,20 @@ if ('model' in params && params.model != '') {
     model = params.model
 }
 echo "Running ${model}"
+
+precision  = 'int8,fp32'
+if ('precision' in params && params.precision != '') {
+    precision = params.precision
+}
+def precision_list = parseStrToList(precision)
+echo "Running ${precision}"
+
+mode  = 'accuracy,throughput,latency'
+if ('mode' in params && params.mode != '') {
+    mode = params.mode
+}
+def mode_list = parseStrToList(mode)
+echo "Running ${mode}"
 
 ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
 if ('ilit_url' in params && params.ilit_url != ''){
@@ -82,26 +99,30 @@ def cleanup() {
 
 }
 
-def performance() {
-    sh '''#!/bin/bash -x
-        echo "Running ---- ${framework}, ${model} ----"
-        # copy examples
-        rm -rf ${WORKSPACE}/ilit-models/examples
-        cp -r ${WORKSPACE}/ilit-validation/examples ${WORKSPACE}/ilit-models/
-        echo "-------w-------"
-        w
-        echo "-------w-------"
-        echo "=======cache clean======="
-        
-        sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
-
-        echo "=======cache clean======="
-        bash ${WORKSPACE}/ilit-validation/scripts/run_${framework}.sh \
-            --model=${model} \
-            --conda_env_name=${framework}-${framework_version} \
-            2>&1 | tee ${framework}-${model}.log
-    '''
+def parseStrToList(srtingElements, delimiter=',') {
+    if (srtingElements == ''){
+        return []
+    }
+    return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
+
+//def get_model_params() {
+//    List modelParams = []
+//    def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_new.json"))
+//    model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
+//    dataset_location = modelConf."${framework}"."${model}"."dataset_location"
+//    input_model = modelConf."${framework}"."${model}"."input_model"
+//    yaml = modelConf."${framework}"."${model}"."yaml"
+//    strategy = modelConf."${framework}"."${model}"."strategy"
+//
+//    modelParams += string(name: "model_src_dir", value: "${model_src_dir}")
+//    modelParams += string(name: "dataset_location", value: "${dataset_location}")
+//    modelParams += string(name: "input_model", value: "${input_model}")
+//    modelParams += string(name: "yaml", value: "${yaml}")
+//    modelParams += string(name: "strategy", value: "${strategy}")
+//
+//    return modelParams
+//}
 
 node( sub_node_label ) {
 
@@ -150,16 +171,118 @@ node( sub_node_label ) {
             }
         }
 
-        stage("Performance") {
-            retry(3){
-                performance()
+        // get params for tuning and benchmark
+        def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_new.json"))
+        model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
+        dataset_location = modelConf."${framework}"."${model}"."dataset_location"
+        input_model = modelConf."${framework}"."${model}"."input_model"
+        yaml = modelConf."${framework}"."${model}"."yaml"
+        strategy = modelConf."${framework}"."${model}"."strategy"
+
+        timeout="timeout 21600"
+        if (nigthly_test_branch == ''){
+            timeout="timeout 5400"
+            // use mini dataset for tf mr test
+            if (framework == "tensorflow" && model == "resnet50v1.0"){
+                dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
+                dir("${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir}"){
+                    sh (
+                            script: 'sed -i \'s/IMAGENET_NUM_VAL_IMAGES = 50000/IMAGENET_NUM_VAL_IMAGES = 1000/\' datasets.py',
+                            returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+        echo "Tuning timeout ${timeout}"
+        stage("Tuning") {
+
+            sh """#!/bin/bash -x
+                echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
+                
+                echo "-------w-------"
+                w
+                echo "-------w-------"
+                ${timeout} bash ${WORKSPACE}/ilit-validation/scripts/run_tuning_trigger.sh \
+                    --framework=${framework} \
+                    --model=${model} \
+                    --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \
+                    --dataset_location=${dataset_location} \
+                    --input_model=${input_model} \
+                    --yaml=${yaml} \
+                    --strategy=${strategy} \
+                    --conda_env_name=${framework}-${framework_version} \
+                    2>&1 | tee ${framework}-${model}-tune.log
+            """
+        }
+
+        if (nigthly_test_branch == ''){
+            if (model == "resnet50v1.0" || model == "resnet50v1"){
+                batch_size = modelConf."${framework}"."${model}"."batch_size"
+                stage("MR Performance") {
+                    precision_list.each {precision ->
+                        echo "precision is ${precision}"
+                            sh """#!/bin/bash -x
+                            echo "Running ---- ${framework}, ${model},${precision},throughput ---- Benchmarking"
+                            
+                            echo "-------w-------"
+                            w
+                            echo "-------w-------"
+                            echo "=======cache clean======="
+                            
+                            sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+            
+                            echo "=======cache clean======="
+                            bash ${WORKSPACE}/ilit-validation/scripts/run_dummy_inference.sh \
+                                --framework=${framework} \
+                                --model=${model} \
+                                --input_model=${input_model} \
+                                --precision=${precision} \
+                                --batch_size=${batch_size} \
+                                --conda_env_name=${framework}-${framework_version}
+                        """
+                        }
+                    }
+                }
+            }
+
+        if (nigthly_test_branch != '' && framework != "pytorch"){
+            batch_size = modelConf."${framework}"."${model}"."batch_size"
+            stage("Performance") {
+                precision_list.each { precision ->
+                    echo "precision is ${precision}"
+                    mode_list.each { mode ->
+                        echo "mode is ${mode}"
+                        sh """#!/bin/bash -x
+                            echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
+                            
+                            echo "-------w-------"
+                            w
+                            echo "-------w-------"
+                            echo "=======cache clean======="
+                            
+                            sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+            
+                            echo "=======cache clean======="
+                            bash ${WORKSPACE}/ilit-validation/scripts/run_benchmark_trigger.sh \
+                                --framework=${framework} \
+                                --model=${model} \
+                                --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \\
+                                --dataset_location=${dataset_location} \
+                                --input_model=${input_model} \
+                                --precision=${precision} \
+                                --mode=${mode} \
+                                --batch_size=${batch_size} \
+                                --conda_env_name=${framework}-${framework_version}
+                        """
+                    }
+                }
             }
         }
 
-        stage("check status"){
+        stage("Check status"){
             dir("${WORKSPACE}"){
                 sh '''#!/bin/bash -x
-                    if [ $(grep 'Found a quantized model which meet accuracy goal.' ${framework}-${model}.log | wc -l) == 0 ];then
+                    if [ $(grep 'Found a quantized model which meet accuracy goal.' ${framework}-${model}-tune.log | wc -l) == 0 ];then
                         exit 1
                     fi
                 '''
@@ -173,7 +296,7 @@ node( sub_node_label ) {
 
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "${framework}-${model}.log", excludes: null
+            archiveArtifacts artifacts: "${framework}*.log", excludes: null
             fingerprint: true
         }
     }

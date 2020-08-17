@@ -1,28 +1,32 @@
 #!/bin/bash
-set -x
 
 function main {
     init_params "$@"
+
+    # Import common functions
+    source ${WORKSPACE}/ilit-validation/scripts/common_functions.sh --framework=${framework} --model=${model} --tuning_strategy="" --conda_env_name=${conda_env_name}
+
+    echo -e "\nSetting environment..."
     set_environment
-    if [ "${model}" = "resnet18" ] || [ "${model}" = "resnet50" ] || [ "${model}" = "resnet101" ];then
-      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/resnet50
-      init_cnn_cmd
-    elif [[ ${model} = 'bert'* ]]; then
-      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/bert
-      init_bert_cmd
-    elif [ "${model}" = "dlrm" ]; then
-      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/dlrm
-      init_dlrm_cmd
+    
+    # Get model source dir and model path
+    echo -e "\nGetting benchmark variables..."
+    get_benchmark_envs 
+
+    if [ -d ${benchmark_dir} ]; then
+        cd ${benchmark_dir}
+        echo -e "\nWorking in $(pwd)..."
+    else
+        echo "[ERROR] benchmark_dir \"${benchmark_dir}\" not exists."
+        exit 1
     fi
 
-    if [ "${model_src_dir}" != "" ];then
-        cd ${model_src_dir}
-    fi
-    git remote -v
-    git branch
-    git show |head -5
+    echo -e "\nGetting git information..."
+    echo "$(git remote -v)"
+    echo "$(git branch)"
+    echo "$(git show | head -5)"
 
-    generate_core
+    run_benchmark
 }
 
 # init params
@@ -126,52 +130,23 @@ function init_bert_cmd {
       --output_dir $OUTPUT"
 }
 
-# environment
-function set_environment {
-    export OMP_NUM_THREADS=28
-
-    if [[ ${model} = 'bert'* ]]; then
-      export PATH=${HOME}/miniconda3/bin/:$PATH
-      source activate pytorch-bert-1.6
-    elif [ ${model} = 'dlrm' ]; then
-      export PATH=${HOME}/anaconda3/bin/:$PATH
-      source activate pytorch3
-    else
-      export PATH=${HOME}/miniconda3/bin/:$PATH
-      source activate ${conda_env_name}
-    fi
-
-    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
-    python -V
-    pip list
-    c_ilit=$(pip list | grep -c 'ilit')
-    if [ ${c_ilit} != 0 ]; then
-      pip uninstall ilit -y
-    fi
-    pip list
-}
-
 # run
-function generate_core {
+function run_benchmark {
+    echo "Running benchmark for ${framework} ${model} fp32"
+    case "${model_type}" in
+      cnn) init_cnn_cmd;;
+      bert) init_bert_cmd;;
+      dlrm) init_dlrm_cmd;;
+      *) echo "Model ${model} is not supported."; exit 1;;
+    esac
 
-    # get strategy
-    count=$(grep -c 'strategy: ' ${yaml})
-    if [ ${count} = 0 ]; then
-      strategy='basic'
-    else
-      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
-    fi
-    echo "Tuning strategy: ${strategy}"
-
-    # run tuning
-    run_cmd="numactl -l -C 0-27,56-83 ${cmd} --tune"
-    eval "${run_cmd}"
-    echo "HOSTNAME IS ${HOSTNAME}"
+    logFile=${WORKSPACE}/${framework}_${model}_fp32_throughput_benchmark.log
 
     # run fp32 benchmark
     run_cmd="numactl -l -C 0-27,56-83 ${cmd} --fp32_benchmark"
-    eval "${run_cmd}"
 
+    echo "RUNCMD: ${run_cmd} " > ${logFile}
+    eval "${run_cmd}" >> ${logFile}
 }
 
 main "$@"

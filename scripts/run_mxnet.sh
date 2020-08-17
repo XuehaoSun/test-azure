@@ -1,29 +1,40 @@
 #!/bin/bash
-set -x
 
 function main {
     init_params "$@"
+    
+    # Import common functions
+    source ${WORKSPACE}/ilit-validation/scripts/common_functions.sh --framework=${framework} --model=${model} --tuning_strategy="" --conda_env_name=${conda_env_name}
+
+    echo -e "\nSetting environment..."
     set_environment
+    
+    # Get model source dir and model path
+    echo -e "\nGetting benchmark variables..."
+    get_benchmark_envs 
 
-    if [ "${model}" = "resnet50v1" ] || [ "${model}" = "inceptionv3" ] || [ "${model}" = "mobilenet1.0" ] || [ "${model}" = "mobilenetv2_1.0" ] || [ "${model}" = "resnet18_v1" ] || [ "${model}" = "squeezenet1.0" ]; then
-      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/cnn
-      init_cnn_cmd
-    elif [ "${model}" = "SSD-Mobilenet1.0" ] || [ "${model}" = "SSD-ResNet50_v1" ]; then
-      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/object_detection
-      init_obj_cmd
-    elif [ "${model}" = "bert-MRPC" ] || [ "${model}" = "bert-QA" ]; then
-      model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/bert
-      init_bert_cmd
+    if [ -d ${benchmark_dir} ]; then
+        cd ${benchmark_dir}
+        echo -e "\nWorking in $(pwd)..."
+    else
+        echo "[ERROR] benchmark_dir \"${benchmark_dir}\" not exists."
+        exit 1
     fi
+  
+    echo -e "\nGetting git information..."
+    echo "$(git remote -v)"
+    echo "$(git branch)"
+    echo "$(git show | head -5)"
 
-    if [ "${model_src_dir}" != "" ];then
-        cd ${model_src_dir}
-    fi
-    git remote -v
-    git branch
-    git show |head -5
-
-    generate_core
+    precision_list=(fp32 int8)
+    mode_list=(throughput)  # Temporarily removed latency for MR test
+    for precision in "${precision_list[@]}"
+    do
+        for mode in "${mode_list[@]}"
+        do
+            run_benchmark ${precision} ${mode}
+        done
+    done
 }
 
 # init params
@@ -53,18 +64,16 @@ function init_params {
 
 # init_run_cmd
 function init_cnn_cmd {
-    yaml=${model_src_dir}/rn50.yaml
-    dataset_dir=/tf_dataset/mxnet
     cmd="python imagenet_inference.py \
-        --symbol-file=${dataset_dir}/${model}/${model}-symbol.json\
-        --param-file=${dataset_dir}/${model}/${model}-0000.params\
+        --symbol-file=${input_model}-symbol.json\
+        --param-file=${input_model}-0000.params\
         --rgb-mean=123.68,116.779,103.939 \
         --rgb-std=58.393,57.12,57.375 \
-        --batch-size=64 \
         --num-skipped-batches=50 \
         --num-inference-batches=200 \
         --ctx=cpu \
-        --dataset=${dataset_dir}/val_256_q90.rec "
+        --dataset=${dataset_location}"
+    batch_size=64
 
     if [ ${model} == 'inceptionv3' ]; then
         cmd="${cmd} --image-shape 3,299,299"
@@ -72,7 +81,6 @@ function init_cnn_cmd {
 }
 
 function init_obj_cmd {
-    yaml=${model_src_dir}/ssd.yaml
     if [ "${model}" = "SSD-Mobilenet1.0" ]; then
         network="mobilenet1.0"
 
@@ -81,16 +89,15 @@ function init_obj_cmd {
     fi
     dataset_dir=/tf_dataset/dataset/coco_dataset/raw-data
     cmd="python eval_ssd.py \
-      --network=${network} \
-      --data-shape=512 \
-      --batch-size=18 \
-      --dataset coco \
-      --data_location ${dataset_dir}"
+        --network=${network} \
+        --data-shape=512 \
+        --dataset coco \
+        --data_location ${dataset_dir}"
 
+    batch_size=18
 }
 
 function init_bert_cmd() {
-    yaml=${model_src_dir}/bert.yaml
     param_path=/tf_dataset/mxnet/bert
     if [ "${model}" = "bert-MRPC" ]; then
       cmd="python finetune_classifier.py \
@@ -109,50 +116,51 @@ function init_bert_cmd() {
 }
 
 
-# environment
-function set_environment {
-    export KMP_BLOCKTIME=1
-    export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
-    export OMP_NUM_THREADS=28
-
-    export PATH=${HOME}/miniconda3/bin/:$PATH
-    source activate ${conda_env_name}
-    export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
-    python -V
-    pip list
-    c_ilit=$(pip list | grep -c 'ilit')
-    if [ ${c_ilit} != 0 ]; then
-      pip uninstall ilit -y
-    fi
-    pip list
-}
-
 # run
-function generate_core {
+function run_benchmark {
+    precision=$1
+    mode=$2
 
-    # get strategy
-    count=$(grep -c 'strategy: ' ${yaml})
-    if [ ${count} = 0 ]; then
-      strategy='basic'
+    # ------ WORKAROUND FOR MXNET RESNET50V1 -----
+    topology=${model}
+    if [ "${model}" == "resnet50v1" ]; then
+        topology="resnet50_v1"
+    fi
+
+    input_model=${model_base_path}/${topology}
+
+    
+    if [ $precision == 'int8' ]; then
+      input_model=${WORKSPACE}/${framework}-${model}-tune
+    fi
+
+    case "${model_type}" in
+      cnn) init_cnn_cmd;;
+      obj) init_obj_cmd;;
+      bert) init_bert_cmd;;
+      *) echo "Model ${model} is not supported."; exit 1;;
+    esac
+
+    if [ $mode == 'latency' ]; then
+      export OMP_NUM_THREADS=4
+      pre_cmd="numactl -l -C 0-3,56-59"
+      mode_cmd="--batch-size 1"
     else
-      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
-    fi
-    echo "Tuning strategy: ${strategy}"
-
-    # run tuning
-    run_cmd="numactl -l -C 0-27,56-83 ${cmd} --tune"
-    eval "${run_cmd}"
-    echo "HOSTNAME IS ${HOSTNAME}"
-
-    if [ "${model}" = "resnet50v1" ] || [ "${model}" = "inceptionv3" ] || [ "${model}" = "mobilenet1.0" ] || [ "${model}" = "mobilenetv2_1.0" ] || [ "${model}" = "resnet18_v1" ] || [ "${model}" = "squeezenet1.0" ]; then
-      # run benchmark
-      run_cmd="numactl -l -C 0-27,56-83 ${cmd} --benchmark"
-      eval "${run_cmd}"
+      export OMP_NUM_THREADS=28
+      pre_cmd="numactl -l -C 0-27,56-83"
+      mode_cmd="--batch-size ${batch_size}"
     fi
 
-    # run fp32 benchmark
-    run_cmd="numactl -l -C 0-27,56-83 ${cmd} --fp32_benchmark"
-    eval "${run_cmd}"
+    # run benchmark
+    logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}_benchmark.log
+
+    run_cmd="${pre_cmd} ${cmd} --fp32_benchmark"
+    
+    if [ "${model_type}" == "cnn" ] || [ "${model_type}" == "obj" ]; then
+        run_cmd="${run_cmd} ${mode_cmd}"
+    fi
+    echo "RUNCMD: ${run_cmd} " > ${logFile}
+    eval "${run_cmd}" >> ${logFile}
 }
 
 main "$@"

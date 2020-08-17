@@ -6,6 +6,12 @@ if ('node_label' in params && params.node_label != '') {
 }
 echo "Running on node ${node_label}"
 
+conda_env = "HOSTNAME"
+if ('conda_env' in params && params.conda_env != '') {
+    conda_env = params.conda_env
+}
+echo "Running ut on ${conda_env}"
+
 ilit_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
 if ('ilit_url' in params && params.ilit_url != ''){
     ilit_url = params.ilit_url
@@ -21,8 +27,6 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
 }else{
     MR_source_branch = params.MR_source_branch
     MR_target_branch = params.MR_target_branch
-    updateGitlabCommitStatus state: 'pending'
-    gitLabConnection('gitlab.devtools.intel.com')
 }
 echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
@@ -98,15 +102,41 @@ node(node_label){
         stage('unit test') {
 
             echo "+---------------- unit test ----------------+"
-            sh '''#!/bin/bash -x
+            sh '''#!/bin/bash
                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                source activate tensorflow-1.15.2
-                cd ${WORKSPACE}/ilit-models/test
-                export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/ilit-models/
+                source activate ${conda_env}
+                
+                echo "Checking ilit..."
+                python -V
+                pip list
+                c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
+                if [ ${c_ilit} != 0 ]; then
+                    pip uninstall ilit -y
+                    pip list
+                fi
+            
+                if [ ! -d ${WORKSPACE}/ilit-models ]; then
+                    echo "\\"ilit-model\\" not found. Exiting..."
+                    exit 1
+                fi
+                cd ${WORKSPACE}/ilit-models
+                python setup.py install
+                pip list
+                
+                echo -e "\\nInstalling ut requirements..."
+                cd test
+                if [ -f "requirements.txt" ]; then
+                    sed -i '/ilit/d' requirements.txt
+                    python -m pip install -r requirements.txt
+                    pip list
+                else
+                    echo "Not found requirements.txt file."
+                fi
+               
                 find . -name "test*.py" | sed 's/.\\//python /g' > run.sh
                 ut_log_name=${WORKSPACE}/unit_test.log
                 bash run.sh 2>&1 | tee ${ut_log_name}
-                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] && [ $(grep -c "OK" unit_test.log) == 0 ];then
+                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                     exit 1
                 fi                 
             '''
@@ -122,15 +152,6 @@ node(node_label){
         stage("Artifacts") {
             archiveArtifacts artifacts: '*.log,*/*.log', excludes: null
             fingerprint: true
-        }
-        if ("${MR_source_branch}" != '') {
-            if (currentBuild.result == 'FAILURE') {
-                echo "unit test failed"
-                updateGitlabCommitStatus state: 'failed'
-            } else {
-                echo "unit test success"
-                updateGitlabCommitStatus state: 'success'
-            }
         }
     }
 }

@@ -1,0 +1,48 @@
+{
+  "tensorflow": {
+    "image_recognition": [
+      "resnet50v1.0"
+    ],
+    "object_detection": [
+      "ssd_resnet50_v1"
+    ],
+    "recommendation": {
+      "wide_deep_large_ds": [
+        "wide_deep_large_ds"
+      ]
+    }
+  },
+  "mxnet": {
+    "image_recognition": [
+      "resnet50v1"
+    ],
+    "object_detection": [
+      "SSD-ResNet50_v1"
+    ]
+  },
+  "pytorch": {
+    "image_recognition": {
+      "resnet": [
+        "resnet18"
+      ],
+      "mobilenet_v2": [
+        "mobilenet_v2"
+      ],
+      "se_resnext": [
+        "se_resnext50_32x4d"
+      ]
+    },
+    "object_detection": {
+      "yolo_v3": [
+        "yolo_v3"
+      ]
+    },
+    "language_translation": [
+      "bert_base_MRPC"
+    ],
+    "recommendation": [
+      "dlrm"
+    ]
+  }
+}
+

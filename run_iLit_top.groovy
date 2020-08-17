@@ -1,4 +1,7 @@
-
+@NonCPS
+def jsonParse(def json) {
+    new groovy.json.JsonSlurperClassic().parseText(json)
+}
 credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
 
 // setting test_title
@@ -84,7 +87,12 @@ if ('ilit_url' in params && params.ilit_url != ''){
 }
 echo "ilit_url is ${ilit_url}"
 
-try { echo "RUN_PYLINT=${RUN_PYLINT}"; } catch (Exception e) { RUN_PYLINT="false" ; echo "RUN_PYLINT=${RUN_PYLINT}" }
+RUN_PYLINT=false
+if ('RUN_PYLINT' in params && params.RUN_PYLINT){
+    echo "RUN_PYLINT is true"
+    RUN_PYLINT=params.RUN_PYLINT
+}
+echo "RUN_PYLINT = ${RUN_PYLINT}"
 
 nigthly_test_branch = ''
 MR_source_branch = ''
@@ -208,47 +216,64 @@ def doBuild() {
     job_frameworks = Frameworks.split(',')
 
     job_frameworks.each { job_framework ->
-        job_models = []
+        def job_models = []
         if (job_framework == 'tensorflow'){
             //job_models=eval("${job_framework}_models")
-            job_models = tensorflow_models.split(',')
+            job_models = parseStrToList(tensorflow_models) 
         }else if (job_framework == 'pytorch'){
-            job_models = pytorch_models.split(',')
+            job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
-            job_models = mxnet_models.split(',')
+            job_models = parseStrToList(mxnet_models)
         }
+        if (MR_source_branch != ''){
+            add_models_list = collectModelList(job_framework)
+            job_models = job_models.plus(add_models_list)
+            job_models.unique()
+        }
+        echo "${job_models}"
         echo "llsu-----> ${job_framework}"
         job_models.each { job_model ->
             jobs["${job_framework}_${job_model}"] = {
-                catchError {
-                    stage("Run Model ${job_model} on ${job_framework}") {
-                        // execute build
-                        echo "${job_model}, ${job_framework}"
-                        def downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
-
-                            catchError {
-
-                                copyArtifacts(
-                                        projectName: "intel-iLit-validation",
-                                        selector: specific("${downstreamJob.getNumber()}"),
-                                        filter: '*.log',
-                                        fingerprintArtifacts: true,
-                                        target: "${job_framework}/${job_model}")
-
-                                // Archive in Jenkins
-                                archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
-                            }
-
-                            if (downstreamJob.getResult() != 'SUCCESS')
-                            {
-                                currentBuild.result = "FAILURE"
-                            }
+                
+                stage("Run Model ${job_model} on ${job_framework}") {
+                    // execute build
+                    echo "${job_model}, ${job_framework}"
+                    
+                    def downstreamJob
+                    catchError {
+                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        
+                        copyArtifacts(
+                                projectName: "intel-iLit-validation",
+                                selector: specific("${downstreamJob.getNumber()}"),
+                                filter: '*.log',
+                                fingerprintArtifacts: true,
+                                target: "${job_framework}/${job_model}")
+                        
+                        // Archive in Jenkins
+                        archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
+                    }
+                    
+                    failed_build_result = downstreamJob.result
+                    failed_build_url = downstreamJob.absoluteUrl
+                    
+                    if (failed_build_result != 'SUCCESS' && MR_source_branch != ''){
+                        currentBuild.result = "FAILURE"
+                        
+                        sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                        failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
+                        
+                        error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                     }
                 }
             }
         }
     }
-
+    
+    if (MR_source_branch != '') {
+        echo "enable failFast"
+        jobs.failFast = true
+    }
     parallel jobs
 }
 
@@ -278,36 +303,183 @@ def pylintScan() {
     }
 }
 
+def pylintScan() {
+    catchError {
+        List pylintScanParams = [
+            string(name: "ilit_url", value: "${ilit_url}"),
+            string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        ]
+        def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: pylintScanParams
+        copyArtifacts(
+            projectName: "intel-iLit-format-scan",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.json',
+            fingerprintArtifacts: true,
+            target: "format_scan",
+            optional: true)
+
+        // Archive in Jenkins
+        archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
+
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+        }
+    }
+}
+
 def collectLog() {
 
     echo "---------------------------------------------------------"
     echo "------------  running collectLog  -------------"
     echo "---------------------------------------------------------"
+    precision_list = ["fp32", "int8"]
+    if ( MR_source_branch != '' ) {
+        mode_list = ["throughput"]
+    } else {
+        mode_list = ["throughput", "latency", "accuracy"]
+    }
 
     job_frameworks = Frameworks.split(',')
     job_frameworks.each { job_framework ->
         job_models = []
         if (job_framework == 'tensorflow'){
-            job_models = tensorflow_models.split(',')
+            job_models = parseStrToList(tensorflow_models) 
         }else if (job_framework == 'pytorch'){
-            job_models = pytorch_models.split(',')
+            job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
-            job_models = mxnet_models.split(',')
+            job_models = parseStrToList(mxnet_models)
         }
-        job_models.each { job_model ->
-            withEnv(["current_model=$job_model","current_framework=$job_framework"]) {
 
+        if (MR_source_branch != ''){
+            add_models_list = collectModelList(job_framework)
+            job_models = job_models.plus(add_models_list)
+            job_models.unique()
+        }
+
+        job_models.each { job_model ->
+            echo "-------- ${job_framework} - ${job_model} --------"
+            // Generate tuning info log
+            withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
                 sh '''#!/bin/bash -x
                     cd $WORKSPACE
                     chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
-                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework}                
+                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
                 '''
+            }
+            if (nigthly_test_branch != '') {
+                precision_list.each { precision ->
+                    mode_list.each { mode ->
+                        // For pytorch we collect throughput and accuracy for int8 model from tuning log.
+                        if (job_framework == "pytorch") {
+                            return
+                        }
+                        withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
+
+                            sh '''#!/bin/bash -x
+                            cd $WORKSPACE
+                            chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
+                            ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
+                        '''
+                        }
+                    }
+                }
             }
         }
     }
     echo "done running collectLog ......."
-    stash allowEmpty: true, includes: "*.log", name: "logfile"
+    stash allowEmpty: true, includes: "*.log, *.json", name: "logfile"
 
+}
+
+def unitTest() {
+
+    catchError {
+        List unitTestParams = [
+                string(name: "ilit_url", value: "${ilit_url}"),
+                string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        ]
+        def downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
+
+        text_commnet = readFile file: "${overview_log}"
+        writeFile file: "${overview_log}", text: text_commnet + "iLit-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
+
+        copyArtifacts(
+                projectName: "iLit-unit-test",
+                selector: specific("${downstreamJob.getNumber()}"),
+                filter: '*.log',
+                fingerprintArtifacts: true,
+                target: "unittest")
+
+        // Archive in Jenkins
+        archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+        }
+    }
+
+}
+
+def collectModelList(framework) {
+    add_models_list=[]
+    dir("$WORKSPACE/ilit-models"){
+        def modelconf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_list.json"))
+
+        withEnv(["MR_target_branch=${MR_target_branch}", "framework=${framework}"]) {
+            sh (
+                    script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) > diff.log',
+                    returnStdout: true
+            ).trim()
+            classes = sh (
+                    script: 'echo $(cat diff.log | grep \'examples\' | sed "/README.md/d" | grep "${framework}" | cut -d/ -f3 | sort -u)',
+                    returnStdout: true
+            ).trim()
+        }
+        if ( classes != '' ){
+            classes_list = classes.split(' ')
+            println("classes_list = " + classes_list )
+            classes_list.each{ per_class ->
+                println("per_class -> " + per_class)
+                sub_add_models_list = modelconf."${framework}"."${per_class}"
+                if (sub_add_models_list != null) {
+                    String dataClass = sub_add_models_list.getClass()
+                    if (dataClass != "class java.util.ArrayList") {
+                        withEnv(["framework=${framework}", "class=${per_class}"]) {
+                            series = sh(
+                                    script: 'echo $(cat diff.log | grep \'examples\' | sed "/README.md/d" | grep "${framework}/${class}" | cut -d/ -f4 | sort -u)',
+                                    returnStdout: true
+                            ).trim()
+                        }
+                        series_list = series.split(' ')
+                        series_list.each { per_series ->
+                            println("per_series -> " + per_series)
+                            sub_add_models_list = modelconf."${framework}"."${per_class}"."${per_series}"
+                            if (sub_add_models_list != null){
+                                add_models_list = add_models_list.plus(sub_add_models_list)
+                                println("sub_add_models_list = " + sub_add_models_list)
+                            }
+                        }
+                    } else {
+                        add_models_list = add_models_list.plus(sub_add_models_list)
+                        println("sub_add_models_list = " + sub_add_models_list)
+                    }
+                }
+            }
+        }
+    }
+    println("add_models_list = " + add_models_list)
+    return add_models_list
+}
+
+def parseStrToList(srtingElements, delimiter=',') {
+    if (srtingElements == ''){
+        return []
+    }
+    return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
 
 def unitTest() {
@@ -352,20 +524,20 @@ node( node_label ) {
 
         download()
 
-        summaryLog = "${WORKSPACE}/summary.log"
-        writeFile file: summaryLog, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
+        SUMMARYTXT = "${WORKSPACE}/summary.log"
+        writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
         summaryLogLast = "${WORKSPACE}/reference/summary.log"
 
-        tuneLog = "${WORKSPACE}/tuning_info.log"
-        writeFile file: tuneLog, text: "Framework;Model;Strategy;Tune_time\n"
+        TUNETXT = "${WORKSPACE}/tuning_info.log"
+        writeFile file: TUNETXT, text: "Framework;Model;Strategy;Tune_time\n"
         tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
 
         // over view log
-        overviewLog = "${WORKSPACE}/summary_overview.log"
-        writeFile file: overviewLog,
+        overview_log = "${WORKSPACE}/summary_overview.log"
+        writeFile file: overview_log,
             text: "Jenkins Job, Build Status, Build ID\n"
 
-        if (RUN_PYLINT == "true") {
+        if (RUN_PYLINT) {
             stage("Pylint Scan") {
                 pylintScan()
             }
@@ -385,7 +557,7 @@ node( node_label ) {
                 }
         )
 
-        stage("Collect perf Logs") {
+        stage("Collect Logs") {
             collectLog()
         }
 
@@ -401,7 +573,6 @@ node( node_label ) {
             }
 
             dir(WORKSPACE) {
-
                 qtools_commit = sh (
                     script: 'cd ilit-models && git rev-parse HEAD',
                     returnStdout: true
@@ -410,44 +581,48 @@ node( node_label ) {
                 withEnv([
                     "qtools_branch=${nigthly_test_branch}",
                     "qtools_commit=${qtools_commit}",
-                    "summaryLog=${summaryLog}",
+                    "summaryLog=${SUMMARYTXT}",
                     "summaryLogLast=${summaryLogLast}",
-                    "tuneLog=${tuneLog}",
+                    "tuneLog=${TUNETXT}",
                     "tuneLogLast=${tuneLogLast}",
-                    "overview_log=${overviewLog}"
+                    "overview_log=${overview_log}"
                 ]) {
                     sh '''
-                        chmod 775 ./ilit-validation/scripts/generate_ilit_report.sh
-                        ./ilit-validation/scripts/generate_ilit_report.sh 
+                        if [[ ${qtools_branch} == '' ]]; then
+                            chmod 775 ./ilit-validation/scripts/generate_ilit_report_mr.sh
+                            ./ilit-validation/scripts/generate_ilit_report_mr.sh
+                        else
+                            chmod 775 ./ilit-validation/scripts/generate_ilit_report.sh
+                            ./ilit-validation/scripts/generate_ilit_report.sh
+                        fi     
                     '''
-				}
+                }
             }
         }
 
         stage("send email") {
-             dir("$WORKSPACE") {
-                 if (MR_source_branch != '') {
-                     recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
-                     if ('recipient_list' in params && params.recipient_list != '') {
-                         recipient_list = params.recipient_list + ',' + gitlabUserEmail
-                     }
-                 } else {
-                     recipient_list = 'suyue.chen@intel.com'
-                     if ('recipient_list' in params && params.recipient_list != '') {
-                         recipient_list = params.recipient_list
-                     }
-                 }
+            dir("$WORKSPACE") {
+                if (MR_source_branch != '') {
+                    recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
+                    if ('recipient_list' in params && params.recipient_list != '') {
+                        recipient_list = params.recipient_list + ',' + gitlabUserEmail
+                    }
+                } else {
+                    recipient_list = 'suyue.chen@intel.com'
+                    if ('recipient_list' in params && params.recipient_list != '') {
+                        recipient_list = params.recipient_list
+                    }
+                }
 
-                 emailext subject: "${email_subject}",
-                         to: "${recipient_list}",
-                         replyTo: "${recipient_list}",
-                         body: '''${FILE,path="report.html"}''',
-                         attachmentsPattern: "",
-                         mimeType: 'text/html'
+                emailext subject: "${email_subject}",
+                        to: "${recipient_list}",
+                        replyTo: "${recipient_list}",
+                        body: '''${FILE,path="report.html"}''',
+                        attachmentsPattern: "",
+                        mimeType: 'text/html'
 
-             }
-         }
-
+            }
+        }
 
     } catch (e) {
         // If there was an exception thrown, the build failed
@@ -462,15 +637,18 @@ node( node_label ) {
             fingerprint: true
         }
 
-        if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
-            echo "pipeline failed"
-            if (MR_target_branch != "") {
-                updateGitlabCommitStatus state: 'failed'
+        if (MR_source_branch != ''){
+            // If default model has perf regression, then fail the job.
+            def destFile = new File("${WORKSPACE}/perf_regression.log")
+            if (destFile.exists()) {
+                currentBuild.result = 'FAILURE'
+                error("------------------Default model performance regression!!!!!!!!!!!!!!!!!!!!!!!")
             }
-            
-        } else {
-            echo "pipeline success"
-            if (MR_target_branch != "") {
+            if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
+                echo "pipeline failed"
+                updateGitlabCommitStatus state: 'failed'
+            } else {
+                echo "pipeline success"
                 updateGitlabCommitStatus state: 'success'
             }
         }
