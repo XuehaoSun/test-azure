@@ -25,6 +25,9 @@
       "resnet": [
         "resnet18"
       ],
+      "mobilenet_v2": [
+        "mobilenet_v2"
+      ],
       "se_resnext": [
         "se_resnext50_32x4d"
       ]
