@@ -176,6 +176,13 @@
       "yaml": "conf.yaml",
       "strategy": "bayesian"
     },
+    "mobilenet_v2": {
+      "model_src_dir": "image_recognition/mobilenet_v2",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
+      "input_model": "",
+      "yaml": "conf.yaml",
+      "strategy": "bayesian"
+    },
     "resnet18_qat": {
       "model_src_dir": "image_recognition/resnet_qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
