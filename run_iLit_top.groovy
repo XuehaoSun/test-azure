@@ -275,7 +275,32 @@ def doBuild() {
         jobs.failFast = true
     }
     parallel jobs
+}
 
+def pylintScan() {
+    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+        List pylintScanParams = [
+            string(name: "ilit_url", value: "${ilit_url}"),
+            string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        ]
+        def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: pylintScanParams
+        copyArtifacts(
+            projectName: "intel-iLit-format-scan",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.json',
+            fingerprintArtifacts: true,
+            target: "format_scan",
+            optional: true)
+
+        // Archive in Jenkins
+        archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
+
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+        }
+    }
 }
 
 def pylintScan() {
@@ -455,6 +480,38 @@ def parseStrToList(srtingElements, delimiter=',') {
         return []
     }
     return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
+}
+
+def unitTest() {
+
+    catchError {
+        List unitTestParams = [
+                string(name: "node_label", value: "${sub_node_label}"),
+                string(name: "ilit_url", value: "${ilit_url}"),
+                string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        ]
+        def downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
+
+        text_commnet = readFile file: "${overviewLog}"
+        writeFile file: "${overviewLog}", text: text_commnet + "iLit-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
+
+        copyArtifacts(
+                projectName: "iLit-unit-test",
+                selector: specific("${downstreamJob.getNumber()}"),
+                filter: '*.log',
+                fingerprintArtifacts: true,
+                target: "unittest")
+
+        // Archive in Jenkins
+        archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+        }
+    }
+
 }
 
 node( node_label ) {

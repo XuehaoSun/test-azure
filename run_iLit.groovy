@@ -290,7 +290,7 @@ node( sub_node_label ) {
         }
 
     } catch(e) {
-        currentBuild.result = "FAILED"
+        currentBuild.result = "FAILURE"
         throw e
     } finally {
 
