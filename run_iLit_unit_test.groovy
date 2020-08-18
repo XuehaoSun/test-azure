@@ -145,7 +145,7 @@ node(node_label){
 
     }catch (e) {
         // If there was an exception thrown, the build failed
-        currentBuild.result = "FAILED"
+        currentBuild.result = "FAILURE"
         throw e
     }finally {
         // archive artifacts

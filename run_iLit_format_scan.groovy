@@ -1,5 +1,3 @@
-updateGitlabCommitStatus state: 'pending'
-gitLabConnection('gitlab.devtools.intel.com')
 
 credential = "lab_tfbot"
 
