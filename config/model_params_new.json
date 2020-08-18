@@ -64,6 +64,22 @@
       "strategy": "basic",
       "batch_size": 100
     },
+    "vgg16": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_vgg16.pb",
+      "yaml": "vgg16.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "vgg19": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_vgg19.pb",
+      "yaml": "vgg19.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
     "ssd_resnet50_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
