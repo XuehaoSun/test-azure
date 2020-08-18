@@ -278,7 +278,7 @@ def doBuild() {
 }
 
 def pylintScan() {
-    catchError {
+    try {
         List pylintScanParams = [
             string(name: "ilit_url", value: "${ilit_url}"),
             string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
@@ -286,6 +286,10 @@ def pylintScan() {
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
         ]
         def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: pylintScanParams
+
+        text_commnet = readFile file: "${overview_log}"
+        writeFile file: "${overview_log}", text: text_commnet + "intel-iLit-format-scan," + downstreamJob.result + "," + downstreamJob.number + "\n"
+
         copyArtifacts(
             projectName: "intel-iLit-format-scan",
             selector: specific("${downstreamJob.getNumber()}"),
@@ -296,10 +300,8 @@ def pylintScan() {
 
         // Archive in Jenkins
         archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
-
-        if (downstreamJob.getResult() != "SUCCESS") {
-            currentBuild.result = "FAILURE"
-        }
+    } catch (err) {
+        echo "Pylint scan failed: ${err}"
     }
 }
 
@@ -478,11 +480,6 @@ node( node_label ) {
         writeFile file: overview_log,
             text: "Jenkins Job, Build Status, Build ID\n"
 
-        if (RUN_PYLINT) {
-            stage("Pylint Scan") {
-                pylintScan()
-            }
-        }
 
         parallel(
                 ut:{
@@ -494,6 +491,13 @@ node( node_label ) {
                 perf: {
                     stage("tune-parallel") {
                         doBuild()
+                    }
+                },
+                pylint: {
+                    if (RUN_PYLINT) {
+                        stage("Pylint Scan") {
+                            pylintScan()
+                        }
                     }
                 }
         )
