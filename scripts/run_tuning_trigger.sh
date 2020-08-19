@@ -105,12 +105,23 @@ main() {
 
     echo -e "\nRun_tuning parameters... "
     echo ${parameters}
+    echo "Total resident size (kbytes): $(cat /proc/meminfo |grep 'MemTotal' |sed 's/[^0-9]//g')"
 
-    bash run_tuning.sh ${parameters}
+    /usr/bin/time -v bash run_tuning.sh ${parameters}
     endtime=`date +'%Y-%m-%d %H:%M:%S'`
     start_seconds=$(date --date="$starttime" +%s);
     end_seconds=$(date --date="$endtime" +%s);
     echo "Tuning time spend: "$((end_seconds-start_seconds))"s "
+
+    collect_pb_size
+}
+
+function collect_pb_size {
+    fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
+    int8_pb_size=$(du -s -BM ${q_model} |cut -f1)
+
+    echo "The FP32 PB size is: ${fp32_pb_size}"
+    echo "The INT8 PB size is: ${int8_pb_size}"
 }
 
 function update_yaml_config {
