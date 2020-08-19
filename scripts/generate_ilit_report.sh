@@ -74,25 +74,25 @@ function generate_inference {
 
     awk -v framework="${framework}" -v model="${model}" -F ';' '
         BEGINE {
-            fp32_ms_bs = "nan";
-            fp32_ms_value = "nan";
-            fp32_ms_url = "nan";
-            fp32_fps_bs = "nan";
-            fp32_fps_value = "nan";
-            fp32_fps_url = "nan";
-            fp32_acc_bs = "nan";
-            fp32_acc_value = "nan";
-            fp32_acc_url = "nan";
+            fp32_ms_bs = nan;
+            fp32_ms_value = nan;
+            fp32_ms_url = nan;
+            fp32_fps_bs = nan;
+            fp32_fps_value = nan;
+            fp32_fps_url = nan;
+            fp32_acc_bs = nan;
+            fp32_acc_value = nan;
+            fp32_acc_url = nan;
             
-            int8_ms_bs = "nan";
-            int8_ms_value = "nan";
-            int8_ms_url = "nan";
-            int8_fps_bs = "nan";
-            int8_fps_value = "nan";
-            int8_fps_url = "nan";
-            int8_acc_bs = "nan";
-            int8_acc_value = "nan";
-            int8_acc_url = "nan";
+            int8_ms_bs = nan;
+            int8_ms_value = nan;
+            int8_ms_url = nan;
+            int8_fps_bs = nan;
+            int8_fps_value = nan;
+            int8_fps_url = nan;
+            int8_acc_bs = nan;
+            int8_acc_value = nan;
+            int8_acc_url = nan;
         }{
             if($1 == framework && $4 == model) {
                 // FP32
@@ -142,27 +142,25 @@ function generate_inference {
         }END {
             printf("%s;%s;%s;%s;%s;%s;", int8_ms_bs,int8_ms_value,int8_fps_bs,int8_fps_value,int8_acc_bs,int8_acc_value);
             printf("%s;%s;%s;%s;%s;%s;", fp32_ms_bs,fp32_ms_value,fp32_fps_bs,fp32_fps_value,fp32_acc_bs,fp32_acc_value);
-            printf("%s;%s;%s;%s;%s;%s;", int8_ms_url,int8_fps_url,int8_acc_url,fp32_ms_url,fp32_fps_url,fp32_acc_url);
+            printf("%s;%s;%s;%s;%s;%s", int8_ms_url,int8_fps_url,int8_acc_url,fp32_ms_url,fp32_fps_url,fp32_acc_url);
         }
     ' $1
 }
 
 function generate_html_core {
     
-    tuning_strategy=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $3}')
-    tuning_time=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $4}')
-    tuning_count=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $5}')
-    tuning_log=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $6}')
-    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
-    echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
+    tuning_strategy=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $3}')
+    tuning_time=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td><td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
+    
+    tuning_strategy=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $3}')
+    tuning_time=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
 
-    tuning_strategy=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $3}')
-    tuning_time=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $4}')
-    tuning_count=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $5}')
-    tuning_log=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $6}')
-
-    echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" -v pb_size="${pb_size}" \
-              -v ts="${tuning_strategy}" -v tt="${tuning_time}" -v tc="${tuning_count}" -v tl="${tuning_log}" '
+    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tc=${tuning_count} -v tl=${tuning_log} -F ';' '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -191,37 +189,30 @@ function generate_html_core {
                 if(c == "acc") {
                     target = (a - b) / b;
                     if(target >= -0.01) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < -0.05) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
                     }else{
                        printf("<td rowspan=3>%.4f</td>", target);
                     }
                 }else if(c == "ms") {
                     target = a / b;
                     if(target >= 1.5) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < 1) {
-                       printf("<td  rowspan=3 style=\"background-color:#FFD2D2\">%.4f</td>", target);
+                       printf("<td  rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
                     }else{
                        printf("<td rowspan=3>%.4f</td>", target);
                     }
-                }else if(c == "fps") {
+                }
+                else {
                     target = a / b;
                     if(target >= 2) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < 1) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
                     }else{
                        printf("<td rowspan=3>%.4f</td>", target);
-                    }
-                }else {
-                    // Compare PB size
-                    target = a / b;
-                    if(target > 1) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%s/%s/%s</td>", a,b,c);
-                    }else{
-                       printf("<td rowspan=3>%s/%s/%s</td>", a,b,c);
                     }
                 }
             }else {
@@ -268,9 +259,6 @@ function generate_html_core {
             // Current values
             split(current_values,current_value,";");
 
-            // PB size
-            split(pb_size, pb_size_, ";")
-
             // current
             show_new_last(current_value[1],current_value[13],current_value[2],"ms");
             show_new_last(current_value[3],current_value[14],current_value[4],"fps");
@@ -282,7 +270,7 @@ function generate_html_core {
             // Compare Current
             compare_current(current_value[8],current_value[2],"ms");
             compare_current(current_value[4],current_value[10],"fps");
-            compare_current(current_value[6],current_value[12],"acc");
+            compare_current(current_value[6],current_value[12],"acc"); 
             
             // Last values
             split(last_values,last_value,";");
@@ -298,16 +286,7 @@ function generate_html_core {
             printf("</tr>")
             
             // current vs last
-            if(pb_size_[1] ~/[1-9]/ && pb_size_[2] ~/[1-9]/) {
-                if(pb_size_[1] < pb_size_[2]) {
-                    printf("</tr>\n<tr><td colspan=3 style=\"background-color:#FFD2D2\">Model size(M) INT8/FP32: %s/%s <br> Mem peak: %s</td><td>New/Last</td>", pb_size_[2],pb_size_[1],pb_size_[3]);
-                }else {
-                    printf("</tr>\n<tr><td colspan=3>Model size(M) INT8/FP32: %s/%s <br> Mem peak: %s</td><td>New/Last</td>", pb_size_[2],pb_size_[1],pb_size_[3]);
-                }
-            } else {
-                printf("</tr>\n<tr><td colspan=3></td><td>New/Last</td>");
-            }
-
+            printf("</tr>\n<tr><td>New/Last</td><td colspan=3 class=\"col-cell3\"></td>");
             compare_result(last_value[2],current_value[2],"ms");
             compare_result(current_value[4],last_value[4],"fps");
             compare_result(current_value[6],last_value[6],"acc");
@@ -331,9 +310,6 @@ function generate_results {
         do
             current_values=$(generate_inference ${summaryLog})
             last_values=$(generate_inference ${summaryLogLast})
-
-            # PB Size
-            pb_size=$(grep "^${framework};${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $7,$8,$9)}')
 
             generate_html_core
         done
@@ -392,9 +368,9 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Framework</th>
                 <th rowspan="2">Model</th>
                 <th rowspan="2">VS</th>
-                <th rowspan="2">Tuning<br>Strategy</th>
-                <th rowspan="2">Tuning<br>Time(s)</th>
-                <th rowspan="2">Tuning<br>Count</th>
+                <th rowspan="2">Tuning Strategy</th>
+                <th rowspan="2">Tuning time(s)</th>
+                <th rowspan="2">Tuning count</th>
 			          <th colspan="6">INT8</th>
 			          <th colspan="6">FP32</th>
 			          <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
@@ -423,8 +399,8 @@ function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
 		    <tr>
-			    <td colspan="18"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
-			    <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
+			    <td colspan="17"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+			    <td colspan="4" class="col-cell col-cell1 col-cellf"></td>
 		    </tr>
 	    </table>
 	</div>
@@ -448,7 +424,6 @@ cat > ${WORKSPACE}/report.html << eof
 	        margin: 0;
 	        padding: 0;
 	        background: white no-repeat left top;
-            min-width: 1920px;
         }
         #main
         {
