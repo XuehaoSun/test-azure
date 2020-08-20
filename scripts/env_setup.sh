@@ -93,7 +93,7 @@ function set_environment {
     python setup.py install
     pip list
 
-    export LOGDEVEL=DEBUG
+    export LOGLEVEL=DEBUG
     echo "HOSTNAME IS ${HOSTNAME}"
 }
 
