@@ -105,8 +105,9 @@ main() {
 
     echo -e "\nRun_tuning parameters... "
     echo ${parameters}
+    echo "Total resident size (kbytes): $(cat /proc/meminfo |grep 'MemTotal' |sed 's/[^0-9]//g')"
 
-    bash run_tuning.sh ${parameters}
+    /usr/bin/time -v bash run_tuning.sh ${parameters}
     endtime=`date +'%Y-%m-%d %H:%M:%S'`
     start_seconds=$(date --date="$starttime" +%s);
     end_seconds=$(date --date="$endtime" +%s);
