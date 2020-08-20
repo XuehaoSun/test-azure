@@ -111,6 +111,28 @@ main() {
     start_seconds=$(date --date="$starttime" +%s);
     end_seconds=$(date --date="$endtime" +%s);
     echo "Tuning time spend: "$((end_seconds-start_seconds))"s "
+
+    collect_pb_size
+}
+
+function collect_pb_size {
+
+    if [ "${framework}" == "tensorflow" ];then
+        fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
+        int8_pb_size=$(du -s -BM ${q_model} |cut -f1)
+    elif [ "${framework}" == "mxnet" ];then
+        fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
+        int8_pb_size=$(du -s -BM ${q_model%/*} |cut -f1)
+    elif [ "${framework}" == "pytorch" ];then
+        fp32_pb_size="None"
+        int8_pb_size="None"
+    else
+        fp32_pb_size="0M"
+        int8_pb_size="0M"
+    fi
+
+    echo "The input PB size is: ${fp32_pb_size}"
+    echo "The output PB size is: ${int8_pb_size}"
 }
 
 function update_yaml_config {
