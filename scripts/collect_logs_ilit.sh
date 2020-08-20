@@ -32,7 +32,12 @@ if [ "${mode}" == "tuning" ]; then
   strategy=$(grep 'Tuning strategy:' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}')
   tune_count=$(grep -F 'Tune result is: [' ${tuning_file} | wc -l)
   tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}'| sed 's/.$//g')
-  echo "${framework};${model};${strategy};${tune_time};${tune_count};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/tuning_info.log
+  fp32_pb_size=$(grep 'The input PB size is:' ${tuning_file} |sed 's/[^0-9]//g')
+  int8_pb_size=$(grep 'The output PB size is:' ${tuning_file} |sed 's/[^0-9]//g')
+  total_mem_size=$(grep 'Total resident size' ${tuning_file} |sed 's/[^0-9]//g')
+  max_mem_size=$(grep 'Maximum resident set size' ${tuning_file} |sed 's/[^0-9]//g')
+  mem_percentage=$(echo |awk -v total=${total_mem_size} -v max=${max_mem_size} '{printf("%.0f%", max / total * 100)}')
+  echo "${framework};${model};${strategy};${tune_time};${tune_count};${BUILD_URL}artifact/$tuning_file;${fp32_pb_size};${int8_pb_size};${mem_percentage}" | tee -a ${WORKSPACE}/tuning_info.log
 
   if [ "${framework}" == "pytorch" ] && [ "${mr}" == "" ]; then
     accuracy=$(grep -F 'Best tune result is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
