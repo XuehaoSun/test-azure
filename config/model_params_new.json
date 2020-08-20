@@ -80,6 +80,30 @@
       "strategy": "basic",
       "batch_size": 100
     },
+    "resnetv2_50": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_resnet_v2_50.pb",
+      "yaml": "resnet_v2_50.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "resnetv2_101": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_resnet_v2_101.pb",
+      "yaml": "resnet_v2_101.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "resnetv2_152": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_resnet_v2_152.pb",
+      "yaml": "resnet_v2_152.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
     "ssd_resnet50_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
