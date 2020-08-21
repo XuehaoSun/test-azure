@@ -233,7 +233,7 @@
       "strategy": "bayesian"
     },
     "mobilenet_v2": {
-      "model_src_dir": "image_recognition/mobilenet_v2",
+      "model_src_dir": "image_recognition/resnet",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
