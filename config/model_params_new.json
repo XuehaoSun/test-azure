@@ -104,6 +104,22 @@
       "strategy": "basic",
       "batch_size": 100
     },
+    "mobilenetv1": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_mobilenet_v1.pb",
+      "yaml": "mobilenet_v1.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "mobilenetv2": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_mobilenet_v2.pb",
+      "yaml": "mobilenet_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
     "ssd_resnet50_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
