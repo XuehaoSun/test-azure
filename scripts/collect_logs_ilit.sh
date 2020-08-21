@@ -97,7 +97,7 @@ fi
 
 if [ "${mode}" == "accuracy" ]; then
   log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}.log"
-  bs=$(for param in $(grep 'batch_size=' tensorflow/resnet50v1.0/tensorflow_resnet50v1.0_fp32_accuracy.log); do if [[ ${param} =~ "batch_size" ]]; then echo ${param} | cut -f 2 -d =; fi ; done)
+  bs=$(for param in $(grep 'batch_size=' ${log_file}); do if [[ ${param} =~ "batch_size" ]]; then echo ${param} | cut -f 2 -d =; fi ; done)
   accuracy=$(grep 'Accuracy: ' ${log_file} | awk -F ' ' '{print $2}')
   echo "$framework;CLX8280;${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/${log_file}" | tee -a ${WORKSPACE}/summary.log
 fi
