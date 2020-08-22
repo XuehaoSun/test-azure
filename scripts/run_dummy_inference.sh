@@ -54,8 +54,12 @@ main() {
   fi
 
   cd ${WORKSPACE}/ilit-validation/examples/${framework}
-  if [ ${framework} = "tensorflow" ]; then
+  if [ ${framework} = "tensorflow" ] && [ ${model} = "resnet50v1.0" ]; then
     run_cmd="python main.py --input-graph ${input_model} --input input --output predict  --benchmark"
+  fi
+
+  if [ ${framework} = "tensorflow" ] && [ ${model} = "resnet50v1.5" ]; then
+    run_cmd="python main.py --input-graph ${input_model} --input input_tensor --output softmax_tensor --r_mean 123.68 --g_mean 116.78 --b_mean 103.94 --benchmark"
   fi
 
   if [ ${framework} = "mxnet" ]; then
