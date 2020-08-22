@@ -366,6 +366,7 @@ cat >> ${WORKSPACE}/report.html << eof
 	    <table class="features-table">
 	        <tr>
               <th>Platform</th>
+              <th>Python</th>
               <th>TensorFlow Version</th>
               <th>PyTorch Version</th>
               <th>MXNet Version</th>
@@ -374,9 +375,10 @@ cat >> ${WORKSPACE}/report.html << eof
 		      </tr>
 		      <tr>
 			        <td>CLX8280</td>
-                    <td>${tensorflow_version}</td>
-                    <td>${pytorch_version}</td>
-                    <td>${mxnet_version}</td>
+			        <td>${python_version}</td>
+              <td>${tensorflow_version}</td>
+              <td>${pytorch_version}</td>
+              <td>${mxnet_version}</td>
 			        <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">iLiT</a></td>
               ${Test_Info}
 			    </tr>
