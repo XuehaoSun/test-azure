@@ -142,7 +142,7 @@ if ('strategy' in params && params.strategy != '') {
 }
 echo "Running ${strategy}"
 
-String binary_build_job = "lastSuccessfulBuild"
+binary_build_job = "lastSuccessfulBuild"
 
 def cleanup() {
 

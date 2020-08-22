@@ -68,6 +68,12 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
+binary_build_job=""
+if ('binary_build_job' in params && params.binary_build_job != ''){
+    binary_build_job = params.binary_build_job
+}
+echo "binary_build_job is ${binary_build_job}"
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
