@@ -74,6 +74,12 @@ if ('binary_build_job' in params && params.binary_build_job != ''){
 }
 echo "binary_build_job is ${binary_build_job}"
 
+test_mode=""
+if ('test_mode' in params && params.test_mode != ''){
+    test_mode = params.test_mode
+}
+echo "test_mode is ${test_mode}"
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
