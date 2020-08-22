@@ -62,6 +62,12 @@ if ('requirement_list' in params && params.requirement_list != ''){
 }
 echo "requirement_list is ${requirement_list}"
 
+python_version="3.6"
+if ('python_version' in params && params.python_version != ''){
+    python_version = params.python_version
+}
+echo "python_version is ${python_version}"
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
