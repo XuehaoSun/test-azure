@@ -183,7 +183,7 @@ node( sub_node_label ) {
         if (nigthly_test_branch == ''){
             timeout="timeout 5400"
             // use mini dataset for tf mr test
-            if (framework == "tensorflow" && model == "resnet50v1.5"){
+            if (framework == "tensorflow" && model == "resnet50v1.0"){
                 dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
                 dir("${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir}"){
                     sh (
