@@ -61,7 +61,7 @@ if ('mxnet_models' in params && params.mxnet_models != '') {
 echo "mxnet_models: ${mxnet_models}"
 
 // setting pytorch_version
-pytorch_version = '1.5.0'
+pytorch_version = '1.6.0'
 if ('pytorch_version' in params && params.pytorch_version != '') {
     pytorch_version = params.pytorch_version
 }

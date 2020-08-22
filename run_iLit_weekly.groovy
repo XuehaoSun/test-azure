@@ -200,9 +200,7 @@ node( 'master' ) {
                                 
                                     downstreamJob = build job: "intel-iLit-validation-top-weekly", propagate: false, parameters: [
                                         string(name: 'Frameworks', value:"${fw}"),
-                                        string(name: 'tensorflow_version', value:"${fw_ver}"),
-                                        string(name: 'pytorch_version', value:"${fw_ver}"),
-                                        string(name: 'mxnet_version', value:"${fw_ver}"),
+                                        string(name: "${fw}_version", value:"${fw_ver}"),
                                         string(name: 'strategy', value:"${st}"),
                                         string(name: 'python_version', value:"${py}"),
                                         string(name: 'sub_node_label', value:"${node_label}"),
