@@ -56,6 +56,12 @@ if ('ilit_url' in params && params.ilit_url != ''){
 }
 echo "ilit_url is ${ilit_url}"
 
+requirement_list="ruamel.yaml"
+if ('requirement_list' in params && params.requirement_list != ''){
+    requirement_list = params.requirement_list
+}
+echo "requirement_list is ${requirement_list}"
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -196,6 +202,19 @@ node( sub_node_label ) {
                         ]
                 ]
             }
+
+            // copy ilit binary
+            catchError {
+                copyArtifacts(
+                        projectName: 'iLiT-release-wheel-build',
+                        selector: specific("${binary_build_job}"),
+                        filter: 'ilit*.whl',
+                        fingerprintArtifacts: true,
+                        target: "${WORKSPACE}")
+
+                archiveArtifacts artifacts: "ilit*.whl"
+            }
+
         }
 
         // get params for tuning and benchmark
@@ -204,7 +223,10 @@ node( sub_node_label ) {
         dataset_location = modelConf."${framework}"."${model}"."dataset_location"
         input_model = modelConf."${framework}"."${model}"."input_model"
         yaml = modelConf."${framework}"."${model}"."yaml"
-        // strategy = modelConf."${framework}"."${model}"."strategy"
+        println("test_mode = " + test_mode)
+        if ( test_mode != 'weekly'){
+            strategy = modelConf."${framework}"."${model}"."strategy"
+        }
 
         timeout="timeout 21600"
         if (nigthly_test_branch == ''){

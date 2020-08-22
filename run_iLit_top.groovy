@@ -119,12 +119,30 @@ if ('refer_build' in params && params.refer_build != '') {
 echo "Running ${refer_build}"
 
 email_subject="${test_title}"
+test_mode = ''
 if ( MR_source_branch != ''){
     email_subject="MR${gitlabMergeRequestIid}: ${test_title}"
+}else if ('test_mode' in params && params.test_mode == 'weekly'){
+    test_mode = params.test_mode
+    email_subject="Weekly: ${test_title}"
 }else {
     email_subject="Nightly: ${test_title}"
 }
 echo "email_subject: $email_subject"
+
+python_version = "3.6"
+if ('python_version' in params && params.python_version != '') {
+    python_version = params.python_version
+}
+echo "Running ${python_version}"
+
+strategy = ""
+if ('strategy' in params && params.strategy != '') {
+    strategy = params.strategy
+}
+echo "Running ${strategy}"
+
+String binary_build_job = "lastSuccessfulBuild"
 
 def cleanup() {
 
@@ -207,6 +225,8 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
     ParamsPerJob += string(name: "strategy", value: "${strategy}")
+    ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
+    ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
 
     return ParamsPerJob
 }
@@ -243,10 +263,10 @@ def doBuild() {
                     
                     def downstreamJob
                     catchError {
-                        downstreamJob = build job: "limengfx_run_iLit", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
+                        downstreamJob = build job: "test_suyue_intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
                         
                         copyArtifacts(
-                                projectName: "limengfx_run_iLit",
+                                projectName: "test_suyue_intel-iLit-validation",
                                 selector: specific("${downstreamJob.getNumber()}"),
                                 filter: '*.log',
                                 fingerprintArtifacts: true,
@@ -401,6 +421,28 @@ def unitTest() {
     }
 }
 
+def buildBinary(){
+    catchError {
+        List binaryBuildParams = [
+                string(name: "ilit_url", value: "${ilit_url}"),
+                string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        ]
+        def downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+
+        text_commnet = readFile file: "${overview_log}"
+        writeFile file: "${overview_log}", text: text_commnet + "iLiT-release-wheel-build," + downstreamJob.result + "," + downstreamJob.number + "\n"
+
+        binary_build_job = downstreamJob.getNumber()
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+            failed_build_url = downstreamJob.absoluteUrl
+            error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        }
+    }
+}
+
 def collectModelList(framework) {
     add_models_list=[]
     dir("$WORKSPACE/ilit-models"){
@@ -469,6 +511,10 @@ node( node_label ) {
 
         download()
 
+        stage('build wheel'){
+            buildBinary()
+        }
+
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
         summaryLogLast = "${WORKSPACE}/reference/summary.log"
@@ -483,27 +529,26 @@ node( node_label ) {
             text: "Jenkins Job, Build Status, Build ID\n"
 
 
-        // parallel(
-        //         ut:{
-        //             stage("unit test"){
-        //                 unitTest()
-        //             }
-        //         },
-        // 
-        //         perf: {
-        //             stage("tune-parallel") {
-        //                 doBuild()
-        //             }
-        //         },
-        //         pylint: {
-        //             if (RUN_PYLINT) {
-        //                 stage("Pylint Scan") {
-        //                     pylintScan()
-        //                 }
-        //             }
-        //         }
-        // )
-        doBuild()
+         parallel(
+                 ut:{
+                     stage("unit test"){
+                         unitTest()
+                     }
+                 },
+
+                 perf: {
+                     stage("tune-parallel") {
+                         doBuild()
+                     }
+                 },
+                 pylint: {
+                     if (RUN_PYLINT) {
+                         stage("Pylint Scan") {
+                             pylintScan()
+                         }
+                     }
+                 }
+         )
 
         stage("Collect Logs") {
             collectLog()

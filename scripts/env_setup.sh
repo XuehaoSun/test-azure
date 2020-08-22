@@ -85,13 +85,14 @@ function set_environment {
         pip list
     fi
 
+    cd ${WORKSPACE}
+    pip install ilit*.whl
+
     if [ ! -d ${WORKSPACE}/ilit-models ]; then
         echo "\"ilit-model\" not found. Exiting..."
         exit 1
     fi
     cd ${WORKSPACE}/ilit-models
-    python setup.py install
-    pip list
 
     export LOGLEVEL=DEBUG
     echo "HOSTNAME IS ${HOSTNAME}"

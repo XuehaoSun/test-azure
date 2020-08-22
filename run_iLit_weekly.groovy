@@ -191,7 +191,7 @@ node( 'master' ) {
                                         }
                                     }
                                 
-                                    downstreamJob = build job: "limengfx_run_nightly", propagate: false, parameters: [
+                                    downstreamJob = build job: "intel-iLit-validation-top-weekly", propagate: false, parameters: [
                                         string(name: 'Frameworks', value:"${fw}"),
                                         string(name: 'tensorflow_version', value:"${fw_ver}"),
                                         string(name: 'pytorch_version', value:"${fw_ver}"),
@@ -204,7 +204,8 @@ node( 'master' ) {
                                         string(name: 'pytorch_models', value:"${pytorch_models}"),
                                         string(name: 'mxnet_models', value:"${mxnet_models}"),
                                         string(name: 'ilit_url', value:"${ilit_url}"),
-                                        string(name: 'nigthly_test_branch', value:"${ilit_commit}")
+                                        string(name: 'nigthly_test_branch', value:"${ilit_commit}",
+                                        string(name: 'test_mode', value: "weekly"))
                                     ]
 
                                 } // catchError
