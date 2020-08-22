@@ -183,7 +183,7 @@ def download() {
     }
 }
 
-def BuildParams(job_framework, job_model){
+def BuildParams(job_framework, job_model, python_version, strategy){
 
     framework_version = ''
     if (job_framework == 'tensorflow'){
@@ -205,6 +205,8 @@ def BuildParams(job_framework, job_model){
     ParamsPerJob += string(name: "nigthly_test_branch", value: "${nigthly_test_branch}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
     ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
+    ParamsPerJob += string(name: "python_version", value: "${python_version}")
+    ParamsPerJob += string(name: "strategy", value: "${strategy}")
 
     return ParamsPerJob
 }
@@ -241,10 +243,10 @@ def doBuild() {
                     
                     def downstreamJob
                     catchError {
-                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        downstreamJob = build job: "limengfx_run_iLit", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
                         
                         copyArtifacts(
-                                projectName: "intel-iLit-validation",
+                                projectName: "limengfx_run_iLit",
                                 selector: specific("${downstreamJob.getNumber()}"),
                                 filter: '*.log',
                                 fingerprintArtifacts: true,
@@ -481,26 +483,27 @@ node( node_label ) {
             text: "Jenkins Job, Build Status, Build ID\n"
 
 
-        parallel(
-                ut:{
-                    stage("unit test"){
-                        unitTest()
-                    }
-                },
-
-                perf: {
-                    stage("tune-parallel") {
-                        doBuild()
-                    }
-                },
-                pylint: {
-                    if (RUN_PYLINT) {
-                        stage("Pylint Scan") {
-                            pylintScan()
-                        }
-                    }
-                }
-        )
+        // parallel(
+        //         ut:{
+        //             stage("unit test"){
+        //                 unitTest()
+        //             }
+        //         },
+        // 
+        //         perf: {
+        //             stage("tune-parallel") {
+        //                 doBuild()
+        //             }
+        //         },
+        //         pylint: {
+        //             if (RUN_PYLINT) {
+        //                 stage("Pylint Scan") {
+        //                     pylintScan()
+        //                 }
+        //             }
+        //         }
+        // )
+        doBuild()
 
         stage("Collect Logs") {
             collectLog()
