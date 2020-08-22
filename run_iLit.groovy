@@ -68,13 +68,19 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
+strategy="basic"
+if ('strategy' in params && params.strategy != ''){
+    strategy = params.strategy
+}
+echo "strategy is ${strategy}"
+
 binary_build_job=""
 if ('binary_build_job' in params && params.binary_build_job != ''){
     binary_build_job = params.binary_build_job
 }
 echo "binary_build_job is ${binary_build_job}"
 
-test_mode=""
+test_mode="nightly"
 if ('test_mode' in params && params.test_mode != ''){
     test_mode = params.test_mode
 }
