@@ -115,6 +115,7 @@ def do_binary_build() {
             echo "Build binary..."
             cd ilit-models
             python3 setup.py sdist bdist_wheel
+            cp dist/ilit*.whl ${WORKSPACE}/
         """
     } else if (binary_class == 'conda') {
         sh """#!/bin/bash
