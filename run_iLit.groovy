@@ -106,23 +106,44 @@ def parseStrToList(srtingElements, delimiter=',') {
     return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
 
-//def get_model_params() {
-//    List modelParams = []
-//    def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_new.json"))
-//    model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
-//    dataset_location = modelConf."${framework}"."${model}"."dataset_location"
-//    input_model = modelConf."${framework}"."${model}"."input_model"
-//    yaml = modelConf."${framework}"."${model}"."yaml"
-//    strategy = modelConf."${framework}"."${model}"."strategy"
-//
-//    modelParams += string(name: "model_src_dir", value: "${model_src_dir}")
-//    modelParams += string(name: "dataset_location", value: "${dataset_location}")
-//    modelParams += string(name: "input_model", value: "${input_model}")
-//    modelParams += string(name: "yaml", value: "${yaml}")
-//    modelParams += string(name: "strategy", value: "${strategy}")
-//
-//    return modelParams
-//}
+def create_conda_env(){
+    withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}",
+             "requirement_list=${requirement_list}"]) {
+        sh '''#!/bin/bash -xe
+
+            export PATH=${HOME}/miniconda3/bin/:$PATH
+            pip config set global.index-url https://pypi.douban.com/simple/
+            conda_env_name=${framework}-${framework_version}-${python_version}
+            if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
+                conda create python=${python_version} -y -n ${conda_env_name}
+            else    
+                conda remove --name ${conda_env_name} --all -y
+                conda create python=${python_version} -y -n ${conda_env_name}
+            fi
+        
+            source activate ${conda_env_name}
+        
+            if [ ${framework} == 'tensorflow' ]; then
+                pip install intel-${framework}==${framework_version}
+            elif [ ${framework} == 'pytorch' ]; then
+                pip install torch==${framework_version}
+            elif [ ${framework} == 'mxnet' ]; then 
+                pip install ${framework}-mkl==${framework_version}
+            fi
+        
+            wait
+
+            if [[ ${requirement_list} != '' ]]; then
+                pip install ${requirement_list}
+            fi
+        
+            echo "pip list all the components------------->"
+            pip list
+            sleep 2
+            echo "------------------------------------------"
+        '''
+    }
+}
 
 node( sub_node_label ) {
 
@@ -132,6 +153,12 @@ node( sub_node_label ) {
     }
 
     try {
+
+        stage("Build"){
+            retry(3){
+                create_conda_env()
+            }
+        }
 
         stage("Download") {
             if(MR_source_branch != ''){
@@ -177,7 +204,7 @@ node( sub_node_label ) {
         dataset_location = modelConf."${framework}"."${model}"."dataset_location"
         input_model = modelConf."${framework}"."${model}"."input_model"
         yaml = modelConf."${framework}"."${model}"."yaml"
-        strategy = modelConf."${framework}"."${model}"."strategy"
+        // strategy = modelConf."${framework}"."${model}"."strategy"
 
         timeout="timeout 21600"
         if (nigthly_test_branch == ''){
@@ -210,7 +237,7 @@ node( sub_node_label ) {
                     --input_model=${input_model} \
                     --yaml=${yaml} \
                     --strategy=${strategy} \
-                    --conda_env_name=${framework}-${framework_version} \
+                    --conda_env_name=${framework}-${framework_version}-${python_version} \
                     2>&1 | tee ${framework}-${model}-tune.log
             """
         }
@@ -238,7 +265,7 @@ node( sub_node_label ) {
                                 --input_model=${input_model} \
                                 --precision=${precision} \
                                 --batch_size=${batch_size} \
-                                --conda_env_name=${framework}-${framework_version}
+                                --conda_env_name=${framework}-${framework_version}-${python_version}
                         """
                         }
                     }
@@ -272,7 +299,7 @@ node( sub_node_label ) {
                                 --precision=${precision} \
                                 --mode=${mode} \
                                 --batch_size=${batch_size} \
-                                --conda_env_name=${framework}-${framework_version}
+                                --conda_env_name=${framework}-${framework_version}-${python_version}
                         """
                     }
                 }
