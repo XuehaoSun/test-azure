@@ -431,9 +431,6 @@ def buildBinary(){
         ]
         def downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
 
-        text_commnet = readFile file: "${overview_log}"
-        writeFile file: "${overview_log}", text: text_commnet + "iLiT-release-wheel-build," + downstreamJob.result + "," + downstreamJob.number + "\n"
-
         binary_build_job = downstreamJob.getNumber()
         if (downstreamJob.getResult() != "SUCCESS") {
             currentBuild.result = "FAILURE"

@@ -56,6 +56,13 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
     nigthly_test_branch = params.nigthly_test_branch
 }
 
+// setting refer_build
+refer_build = "x0"
+if ('refer_build' in params && params.refer_build != '') {
+    refer_build = params.refer_build
+}
+echo "Running ${refer_build}"
+
 py_list = pythons.split(",")
 st_list = strategies.split(",")
 fw_list = frameworks.split(",")
@@ -204,8 +211,8 @@ node( 'master' ) {
                                         string(name: 'pytorch_models', value:"${pytorch_models}"),
                                         string(name: 'mxnet_models', value:"${mxnet_models}"),
                                         string(name: 'ilit_url', value:"${ilit_url}"),
-                                        string(name: 'nigthly_test_branch', value:"${ilit_commit}",
-                                        string(name: 'test_mode', value: "weekly"))
+                                        string(name: 'nigthly_test_branch', value:"${ilit_commit}"),
+                                        string(name: 'test_mode', value: "weekly")
                                     ]
 
                                 } // catchError
