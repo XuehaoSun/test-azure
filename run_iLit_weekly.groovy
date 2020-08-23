@@ -125,6 +125,7 @@ node( 'master' ) {
 
     summary_log_init = "${WORKSPACE}/summary_init.log"
     summary_log = "${WORKSPACE}/summary.log"
+    writeFile file: summary_log_init, text:""
     writeFile file: summary_log, text: "Python; FWK; FWK version; Strategy; Status; Job URL; Job Number \n"
 
     try {
