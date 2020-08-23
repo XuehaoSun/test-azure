@@ -132,6 +132,7 @@ if ( MR_source_branch != ''){
 }else if ('test_mode' in params && params.test_mode == 'weekly'){
     test_mode = params.test_mode
     email_subject="Weekly: ${test_title}"
+    RUN_UT=false
 }else {
     email_subject="Nightly: ${test_title}"
 }
