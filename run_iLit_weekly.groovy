@@ -123,12 +123,12 @@ node( 'master' ) {
             returnStdout: true
     ).trim()
 
+    summary_log_init = "${WORKSPACE}/summary_init.log"
     summary_log = "${WORKSPACE}/summary.log"
     writeFile file: summary_log, text: "Python; FWK; FWK version; Strategy; Status; Job URL; Job Number \n"
 
     try {
 
-        // def build_env = [:]
         def build_jobs = [:]
         def refer_number = 'x0'
 
@@ -187,7 +187,7 @@ node( 'master' ) {
 
                                     // set models
                                     if(py == '3.6' && st == 'basic') {
-                                        if (fw == 'tensorflow' && fw_ver == '1.15.2') {
+                                        if (fw == 'tensorflow') {
                                             tensorflow_models = all_tensorflow_models
                                         }
                                         if (fw == 'pytorch' && fw_ver == '1.6.0') {
@@ -219,9 +219,8 @@ node( 'master' ) {
                                 build_result = downstreamJob.result
                                 build_url = downstreamJob.absoluteUrl
                     
-                                context_text = readFile file: summary_log
-                                writeFile file: summary_log, text: context_text + "${py};${fw};${fw_ver};${st};${build_result};${build_url};${build_number}" + "\n"
-
+                                context_text = readFile file: summary_log_init
+                                writeFile file: summary_log_init, text: context_text + "${py};${fw};${fw_ver};${st};${build_result};${build_url}artifact/report.html;${build_number}" + "\n"
                             } // stage
                         } // jobs
                     } // framework_version
@@ -233,7 +232,15 @@ node( 'master' ) {
         parallel build_jobs
 
         // generate report
-        sh " bash ${WORKSPACE}/scripts/generate_ilit_report_weekly.sh "
+        withEnv([
+                "summary_log=${summary_log}",
+                "summary_log_init=${summary_log_init}"
+        ]) {
+            sh '''#!/bin/bash -x
+            sort ${summary_log_init} >> ${summary_log} 
+            bash ${WORKSPACE}/scripts/generate_ilit_report_weekly.sh 
+            '''
+        }
     
     } catch (e) {
         // If there was an exception thrown, the build failed

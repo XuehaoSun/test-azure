@@ -287,6 +287,9 @@ def doBuild() {
                         
                         error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                     }
+                    if (failed_build_result != 'SUCCESS' && test_mode == 'weekly'){
+                        currentBuild.result = "FAILURE"
+                    }
                 }
             }
         }
