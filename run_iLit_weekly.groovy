@@ -70,6 +70,9 @@ tf_list = tensorflow_versions.split(",")
 pt_list = pytorch_versions.split(",")
 mx_list = mxnet_versions.split(",")
 
+def tensorflow_models_pass = ""
+def pytorch_models_pass = ""
+def mxnet_models_pass = ""
 
 // start
 node( 'master' ) {
