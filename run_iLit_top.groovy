@@ -94,6 +94,13 @@ if ('RUN_PYLINT' in params && params.RUN_PYLINT){
 }
 echo "RUN_PYLINT = ${RUN_PYLINT}"
 
+RUN_UT=true
+if ('RUN_UT' in params && params.RUN_UT){
+    echo "RUN_UT is true"
+    RUN_UT=params.RUN_UT
+}
+echo "RUN_UT = ${RUN_UT}"
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -531,8 +538,10 @@ node( node_label ) {
 
          parallel(
                  ut:{
-                     stage("unit test"){
-                         unitTest()
+                     if (RUN_UT) {
+                         stage("unit test") {
+                             unitTest()
+                         }
                      }
                  },
 

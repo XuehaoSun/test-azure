@@ -133,6 +133,10 @@ node( 'master' ) {
         def refer_number = 'x0'
 
         py_list.each { py ->
+            //only for loop st for py3.6
+            if (py != '3.6'){
+                st_list=['basic']
+            }
             fw_list.each { fw ->
 
                 // set framework version
@@ -147,19 +151,6 @@ node( 'master' ) {
                 }
 
                 fw_ver_list.each { fw_ver ->
-
-                    // build env
-                    // build_env["env-${py}-${fw}-${fw_ver}"] = {
-                    // 
-                    //     stage("env-${py}-${fw}-${fw_ver}") {
-                    //         def downstreamEnv = build job: "create_conda_env", propagate: true, parameters: [
-                    //             string(name: 'node_label', value:"${node_label}"),
-                    //             string(name: 'framework', value:"${fw}"),
-                    //             string(name: 'framework_version', value:"${fw_ver}"),
-                    //             string(name: 'python_version', value:"${py}")
-                    //         ]
-                    //     }
-                    // }
 
                     st_list.each { st ->
 
