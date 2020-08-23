@@ -236,7 +236,6 @@ node( sub_node_label ) {
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
 
-                archiveArtifacts artifacts: "ilit*.whl"
             }
 
         }

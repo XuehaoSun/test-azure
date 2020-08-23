@@ -71,14 +71,6 @@ pt_list = pytorch_versions.split(",")
 mx_list = mxnet_versions.split(",")
 
 
-// def all_tensorflow_models = ''
-// def all_pytorch_models = ''
-// def all_mxnet_models = ''
-// def tensorflow_models = ''
-// def pytorch_models = ''
-// def mxnet_models = ''
-
-
 // start
 node( 'master' ) {
     
@@ -155,10 +147,6 @@ node( 'master' ) {
 
                     st_list.each { st ->
 
-                        echo "---- tensorflow_models: ${tensorflow_models}"
-                        echo "---- pytorch_models: ${pytorch_models}"
-                        echo "---- mxnet_models: ${mxnet_models}"
-
                         build_jobs["${py}-${st}-${fw}-${fw_ver}"] = {
                             stage("${py}-${st}-${fw}-${fw_ver}") {
                             
@@ -180,15 +168,23 @@ node( 'master' ) {
                                     // set models
                                     if(py == '3.6' && st == 'basic') {
                                         if (fw == 'tensorflow') {
-                                            tensorflow_models = all_tensorflow_models
+                                            tensorflow_models_pass = all_tensorflow_models
                                         }
                                         if (fw == 'pytorch' && fw_ver == '1.6.0') {
-                                            pytorch_models = all_pytorch_models
+                                            pytorch_models_pass = all_pytorch_models
                                         }
                                         if (fw == 'mxnet' && fw_ver == '1.6.0') {
-                                            mxnet_models = all_mxnet_models
+                                            mxnet_models_pass = all_mxnet_models
                                         }
+                                    }else{
+                                        tensorflow_models_pass = tensorflow_models
+                                        pytorch_models_pass = pytorch_models
+                                        mxnet_models_pass = mxnet_models
                                     }
+
+                                    echo "---- tensorflow_models_pass: ${tensorflow_models_pass}"
+                                    echo "---- pytorch_models_pass: ${pytorch_models_pass}"
+                                    echo "---- mxnet_models_pass: ${mxnet_models_pass}"
                                 
                                     downstreamJob = build job: "intel-iLit-validation-top-weekly", propagate: false, parameters: [
                                         string(name: 'Frameworks', value:"${fw}"),
@@ -197,9 +193,9 @@ node( 'master' ) {
                                         string(name: 'python_version', value:"${py}"),
                                         string(name: 'sub_node_label', value:"${node_label}"),
                                         string(name: 'refer_build', value:"${refer_number}"),
-                                        string(name: 'tensorflow_models', value:"${tensorflow_models}"),
-                                        string(name: 'pytorch_models', value:"${pytorch_models}"),
-                                        string(name: 'mxnet_models', value:"${mxnet_models}"),
+                                        string(name: 'tensorflow_models', value:"${tensorflow_models_pass}"),
+                                        string(name: 'pytorch_models', value:"${pytorch_models_pass}"),
+                                        string(name: 'mxnet_models', value:"${mxnet_models_pass}"),
                                         string(name: 'ilit_url', value:"${ilit_url}"),
                                         string(name: 'nigthly_test_branch', value:"${ilit_commit}"),
                                         string(name: 'test_mode', value: "weekly")
