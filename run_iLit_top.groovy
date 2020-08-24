@@ -272,10 +272,10 @@ def doBuild() {
                     
                     def downstreamJob
                     catchError {
-                        downstreamJob = build job: "test_suyue_intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
+                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
                         
                         copyArtifacts(
-                                projectName: "test_suyue_intel-iLit-validation",
+                                projectName: "intel-iLit-validation",
                                 selector: specific("${downstreamJob.getNumber()}"),
                                 filter: '*.log',
                                 fingerprintArtifacts: true,
