@@ -149,17 +149,17 @@ function generate_inference {
 
 function generate_html_core {
     
-    tuning_strategy=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $3}')
-    tuning_time=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $4}')
-    tuning_count=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $5}')
-    tuning_log=$(grep "^${framework};${model}" ${tuneLog} |awk -F';' '{print $6}')
+    tuning_strategy=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $3}')
+    tuning_time=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
     echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
     echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
 
-    tuning_strategy=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $3}')
-    tuning_time=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $4}')
-    tuning_count=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $5}')
-    tuning_log=$(grep "^${framework};${model}" ${tuneLogLast} |awk -F';' '{print $6}')
+    tuning_strategy=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $3}')
+    tuning_time=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
 
     echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" -v pb_size="${pb_size}" \
               -v ts="${tuning_strategy}" -v tt="${tuning_time}" -v tc="${tuning_count}" -v tl="${tuning_log}" '
