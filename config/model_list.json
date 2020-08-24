@@ -23,7 +23,7 @@
   },
   "pytorch": {
     "image_recognition": {
-      "resnet": [
+      "imagenet": [
         "resnet18"
       ],
       "se_resnext": [
