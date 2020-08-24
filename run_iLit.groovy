@@ -99,14 +99,16 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
-
+def new_conda_env=true
 if(framework == 'pytorch'){
     label=model.split('_')
     if(label[0] == 'bert'){
         sub_node_label='py-bert'
+        new_conda_env=false
     }
     if(model == 'dlrm'){
         sub_node_label='dlrm'
+        new_conda_env=false
     }
 }
 
@@ -193,9 +195,14 @@ node( sub_node_label ) {
     try {
 
         stage("Build"){
-            retry(3){
-                create_conda_env()
+            if (new_conda_env){
+                retry(3){
+                    create_conda_env()
+                }
+            }else{
+                println("Test need a special local conda env, DO NOT create again!!!")
             }
+
         }
 
         stage("Download") {
