@@ -61,7 +61,7 @@ if ('mxnet_models' in params && params.mxnet_models != '') {
 echo "mxnet_models: ${mxnet_models}"
 
 // setting pytorch_version
-pytorch_version = '1.5.0'
+pytorch_version = '1.6.0'
 if ('pytorch_version' in params && params.pytorch_version != '') {
     pytorch_version = params.pytorch_version
 }
@@ -94,6 +94,13 @@ if ('RUN_PYLINT' in params && params.RUN_PYLINT){
 }
 echo "RUN_PYLINT = ${RUN_PYLINT}"
 
+RUN_UT=true
+if ('RUN_UT' in params && params.RUN_UT){
+    echo "RUN_UT is true"
+    RUN_UT=params.RUN_UT
+}
+echo "RUN_UT = ${RUN_UT}"
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -119,12 +126,32 @@ if ('refer_build' in params && params.refer_build != '') {
 echo "Running ${refer_build}"
 
 email_subject="${test_title}"
+test_mode = ''
 if ( MR_source_branch != ''){
     email_subject="MR${gitlabMergeRequestIid}: ${test_title}"
+}else if ('test_mode' in params && params.test_mode == 'weekly'){
+    test_mode = params.test_mode
+    email_subject="Weekly: ${test_title}"
+    RUN_UT=false
+    currentBuild.description = params.weekly_description
 }else {
     email_subject="Nightly: ${test_title}"
 }
 echo "email_subject: $email_subject"
+
+python_version = "3.6"
+if ('python_version' in params && params.python_version != '') {
+    python_version = params.python_version
+}
+echo "Running ${python_version}"
+
+strategy = ""
+if ('strategy' in params && params.strategy != '') {
+    strategy = params.strategy
+}
+echo "Running ${strategy}"
+
+binary_build_job = "lastSuccessfulBuild"
 
 def cleanup() {
 
@@ -183,7 +210,7 @@ def download() {
     }
 }
 
-def BuildParams(job_framework, job_model){
+def BuildParams(job_framework, job_model, python_version, strategy){
 
     framework_version = ''
     if (job_framework == 'tensorflow'){
@@ -205,6 +232,10 @@ def BuildParams(job_framework, job_model){
     ParamsPerJob += string(name: "nigthly_test_branch", value: "${nigthly_test_branch}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
     ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
+    ParamsPerJob += string(name: "python_version", value: "${python_version}")
+    ParamsPerJob += string(name: "strategy", value: "${strategy}")
+    ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
+    ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
 
     return ParamsPerJob
 }
@@ -241,7 +272,7 @@ def doBuild() {
                     
                     def downstreamJob
                     catchError {
-                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model)
+                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
                         
                         copyArtifacts(
                                 projectName: "intel-iLit-validation",
@@ -264,6 +295,9 @@ def doBuild() {
                         failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
                         
                         error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                    }
+                    if (failed_build_result != 'SUCCESS' && test_mode == 'weekly'){
+                        currentBuild.result = "FAILURE"
                     }
                 }
             }
@@ -399,6 +433,25 @@ def unitTest() {
     }
 }
 
+def buildBinary(){
+    catchError {
+        List binaryBuildParams = [
+                string(name: "ilit_url", value: "${ilit_url}"),
+                string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        ]
+        def downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+
+        binary_build_job = downstreamJob.getNumber()
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+            failed_build_url = downstreamJob.absoluteUrl
+            error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        }
+    }
+}
+
 def collectModelList(framework) {
     add_models_list=[]
     dir("$WORKSPACE/ilit-models"){
@@ -467,6 +520,10 @@ node( node_label ) {
 
         download()
 
+        stage('build wheel'){
+            buildBinary()
+        }
+
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
         summaryLogLast = "${WORKSPACE}/reference/summary.log"
@@ -481,26 +538,28 @@ node( node_label ) {
             text: "Jenkins Job, Build Status, Build ID\n"
 
 
-        parallel(
-                ut:{
-                    stage("unit test"){
-                        unitTest()
-                    }
-                },
+         parallel(
+                 ut:{
+                     if (RUN_UT) {
+                         stage("unit test") {
+                             unitTest()
+                         }
+                     }
+                 },
 
-                perf: {
-                    stage("tune-parallel") {
-                        doBuild()
-                    }
-                },
-                pylint: {
-                    if (RUN_PYLINT) {
-                        stage("Pylint Scan") {
-                            pylintScan()
-                        }
-                    }
-                }
-        )
+                 perf: {
+                     stage("tune-parallel") {
+                         doBuild()
+                     }
+                 },
+                 pylint: {
+                     if (RUN_PYLINT) {
+                         stage("Pylint Scan") {
+                             pylintScan()
+                         }
+                     }
+                 }
+         )
 
         stage("Collect Logs") {
             collectLog()

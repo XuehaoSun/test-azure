@@ -62,6 +62,7 @@ main() {
     echo -e "\nInstalling model requirements..."
     if [ -f "requirements.txt" ]; then
         sed -i '/ilit/d' requirements.txt
+        sed -i "/tensorflow==/d;/torch==/d;/mxnet==/d" requirements.txt
         python -m pip install -r requirements.txt
         pip list
     else
