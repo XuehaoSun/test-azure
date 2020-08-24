@@ -133,6 +133,7 @@ if ( MR_source_branch != ''){
     test_mode = params.test_mode
     email_subject="Weekly: ${test_title}"
     RUN_UT=false
+    currentBuild.description = params.weekly_description
 }else {
     email_subject="Nightly: ${test_title}"
 }

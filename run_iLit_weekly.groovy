@@ -73,6 +73,7 @@ mx_list = mxnet_versions.split(",")
 def tensorflow_models_pass = ""
 def pytorch_models_pass = ""
 def mxnet_models_pass = ""
+def weekly_description = ""
 
 // start
 node( 'master' ) {
@@ -150,8 +151,8 @@ node( 'master' ) {
 
                     st_list.each { st ->
 
-                        build_jobs["${py}-${st}-${fw}-${fw_ver}"] = {
-                            stage("${py}-${st}-${fw}-${fw_ver}") {
+                        build_jobs["${py}-${fw}-${fw_ver}-${st}"] = {
+                            stage("${py}-${fw}-${fw_ver}-${st}") {
                             
                                 echo "---- Runing ${fw}-${fw_ver} with py-${py} and strategy-${st} ----"
 
@@ -169,20 +170,23 @@ node( 'master' ) {
                                     }
 
                                     // set models
+                                    tensorflow_models_pass = tensorflow_models
+                                    pytorch_models_pass = pytorch_models
+                                    mxnet_models_pass = mxnet_models
+                                    weekly_description = "${py}-${fw}-${fw_ver}-${st}"
                                     if(py == '3.6' && st == 'basic') {
                                         if (fw == 'tensorflow') {
                                             tensorflow_models_pass = all_tensorflow_models
+                                            weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
                                         }
                                         if (fw == 'pytorch' && fw_ver == '1.6.0') {
                                             pytorch_models_pass = all_pytorch_models
+                                            weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
                                         }
                                         if (fw == 'mxnet' && fw_ver == '1.6.0') {
                                             mxnet_models_pass = all_mxnet_models
+                                            weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
                                         }
-                                    }else{
-                                        tensorflow_models_pass = tensorflow_models
-                                        pytorch_models_pass = pytorch_models
-                                        mxnet_models_pass = mxnet_models
                                     }
 
                                     echo "---- tensorflow_models_pass: ${tensorflow_models_pass}"
@@ -201,7 +205,8 @@ node( 'master' ) {
                                         string(name: 'mxnet_models', value:"${mxnet_models_pass}"),
                                         string(name: 'ilit_url', value:"${ilit_url}"),
                                         string(name: 'nigthly_test_branch', value:"${ilit_commit}"),
-                                        string(name: 'test_mode', value: "weekly")
+                                        string(name: 'test_mode', value: "weekly"),
+                                        string(name: 'weekly_description', value:"${weekly_description}")
                                     ]
 
                                 } // catchError
