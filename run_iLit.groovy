@@ -153,8 +153,16 @@ def create_conda_env(){
         
             source activate ${conda_env_name}
         
-            if [ ${framework} == 'tensorflow' ]; then
-                pip install intel-${framework}==${framework_version}
+            if [ ${framework} == 'tensorflow' ]; then     
+                if [ ${framework_version} == '1.15UP1' ]; then
+                    if [ ${python_version} == '3.6' ]; then
+                        pip install /tf_dataset/tensorflow/tensorflow-1.15.0-cp36-cp36m-linux_x86_64.whl                
+                    else
+                        echo "!!! TF 1.15UP1 do not support ${python_version}"
+                    fi
+                else
+                    pip install intel-${framework}==${framework_version}
+                fi
             elif [ ${framework} == 'pytorch' ]; then
                 pip install torch==${framework_version}
             elif [ ${framework} == 'mxnet' ]; then 
