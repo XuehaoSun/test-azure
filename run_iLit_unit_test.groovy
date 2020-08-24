@@ -32,6 +32,12 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
+binary_build_job="lastSuccessfulBuild"
+if ('binary_build_job' in params && params.binary_build_job != ''){
+    binary_build_job = params.binary_build_job
+}
+echo "binary_build_job is ${binary_build_job}"
+
 
 def cleanup() {
 
@@ -98,13 +104,45 @@ def download() {
 node(node_label){
     try{
         cleanup()
-        download()
+        stage('download'){
+            download()
+        }
+        stage('copy binary'){
+            catchError {
+                copyArtifacts(
+                        projectName: 'iLiT-release-wheel-build',
+                        selector: specific("${binary_build_job}"),
+                        filter: 'ilit*.whl',
+                        fingerprintArtifacts: true,
+                        target: "${WORKSPACE}")
+
+                archiveArtifacts artifacts: "ilit*.whl"
+            }
+        }
+        stage('env_build'){
+            if (MR_source_branch == ''){
+                sh'''#!/bin/bash
+                
+                echo "Nightly Create new conda env for UT..."
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                pip config set global.index-url https://pypi.douban.com/simple/
+                if [ $(conda info -e | grep ${conda_env} | wc -l) == 0 ]; then
+                    conda create python=3.6.9 -y -n ${conda_env}
+                else    
+                    conda remove --name ${conda_env} --all -y
+                    conda create python=3.6.9 -y -n ${conda_env}
+                fi
+                
+                '''
+            }
+        }
         stage('unit test') {
 
             echo "+---------------- unit test ----------------+"
             sh '''#!/bin/bash
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 source activate ${conda_env}
+                pip config set global.index-url https://pypi.douban.com/simple/
                 
                 echo "Checking ilit..."
                 python -V
@@ -114,17 +152,17 @@ node(node_label){
                     pip uninstall ilit -y
                     pip list
                 fi
+                                
+                echo "Install iLiT binary..."
+                pip install ilit*.whl
             
                 if [ ! -d ${WORKSPACE}/ilit-models ]; then
                     echo "\\"ilit-model\\" not found. Exiting..."
                     exit 1
                 fi
-                cd ${WORKSPACE}/ilit-models
-                python setup.py install
-                pip list
                 
                 echo -e "\\nInstalling ut requirements..."
-                cd test
+                cd ${WORKSPACE}/ilit-models/test
                 if [ -f "requirements.txt" ]; then
                     sed -i '/ilit/d' requirements.txt
                     python -m pip install -r requirements.txt
