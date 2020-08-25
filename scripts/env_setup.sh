@@ -57,7 +57,7 @@ function set_PT_env {
       source activate pytorch-bert-1.6
     elif [[ ${model} = 'dlrm' ]]; then
       export PATH=${HOME}/anaconda3/bin/:$PATH
-      source activate pytorch3
+      source activate ${conda_env_name}
     else
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate ${conda_env_name}
