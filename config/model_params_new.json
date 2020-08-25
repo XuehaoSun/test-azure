@@ -136,6 +136,31 @@
       "strategy": "basic",
       "batch_size": 1
     },
+    "faster_rcnn_inception_resnet_v2": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "input_model": "/tf_dataset/pre-train-model-oob/object_detection/faster_rcnn_inception_resnet_v2/frozen_inference_graph.pb",
+      "yaml": "faster_rcnn_inception_resnet_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "faster_rcnn_resnet101": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "input_model": "/tf_dataset/pre-train-model-oob/object_detection/faster_rcnn_resnet101/frozen_inference_graph.pb",
+      "yaml": "faster_rcnn_resnet101.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "mask_rcnn_inception_resnet_v2": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "input_model": "/tf_dataset/pre-train-model-oob/object_detection/mask_rcnn_inception_resnet_v2/frozen_inference_graph.pb",
+      "yaml": "mask_rcnn_inception_resnet_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+
     "wide_deep_large_ds": {
       "model_src_dir": "recommendation/wide_deep_large_ds",
       "dataset_location": "/tf_dataset/tensorflow/wide_deep_large_ds/dataset",
