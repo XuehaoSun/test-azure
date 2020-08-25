@@ -134,13 +134,15 @@ function run_benchmark {
   if [[ ${mode} == "latency" ]]; then
       ncores_per_instance=4
       batch_size=1
+      iters=200
+      counts=3
   else
       ncores_per_instance=${ncores_per_socket}
+      iters=100
+      counts=1
   fi
 
   export OMP_NUM_THREADS=${ncores_per_instance}
-  
-  iters=100
 
   if [ "${model}" == "wide_deep_large_ds" ]; then
     iters=200
@@ -156,12 +158,15 @@ function run_benchmark {
   fi
 
   logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
-  for((j=0;$j<${total_cores};j=$(($j + ${ncores_per_instance}))));
+  for((k=0;$k<${counts};k=$(($k + 1))));
   do
-     numactl -l -C "$j-$((j + ncores_per_instance -1)),$((j + total_cores))-$((j + total_cores + ncores_per_instance- 1))" \
-     ${run_cmd} 2>&1|tee ${logFile}_${total_cores}_${ncores_per_instance}_${j}.log &
+    for((j=0;$j<${total_cores};j=$(($j + ${ncores_per_instance}))));
+    do
+       numactl -l -C "$j-$((j + ncores_per_instance -1)),$((j + total_cores))-$((j + total_cores + ncores_per_instance- 1))" \
+       ${run_cmd} 2>&1|tee ${logFile}_${total_cores}_${ncores_per_instance}_${j}_${k}.log &
+    done
+    wait
   done
-
   wait
 
 }
