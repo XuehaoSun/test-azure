@@ -108,7 +108,6 @@ if(framework == 'pytorch'){
     }
     if(model == 'dlrm'){
         sub_node_label='dlrm'
-        new_conda_env=false
     }
 }
 
@@ -143,12 +142,17 @@ def create_conda_env(){
              "requirement_list=${requirement_list}"]) {
         sh '''#!/bin/bash -xe
 
-            export PATH=${HOME}/miniconda3/bin/:$PATH
+            if [ ${model} = 'dlrm' ]; then
+                export PATH=${HOME}/anaconda3/bin/:$PATH
+            else
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+            fi
+
             pip config set global.index-url https://pypi.douban.com/simple/
             conda_env_name=${framework}-${framework_version}-${python_version}
             if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
                 conda create python=${python_version} -y -n ${conda_env_name}
-            else    
+            else
                 conda remove --name ${conda_env_name} --all -y
                 conda create python=${python_version} -y -n ${conda_env_name}
             fi
