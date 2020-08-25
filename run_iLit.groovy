@@ -74,7 +74,7 @@ if ('strategy' in params && params.strategy != ''){
 }
 echo "strategy is ${strategy}"
 
-binary_build_job=""
+binary_build_job="lastSuccessfulBuild"
 if ('binary_build_job' in params && params.binary_build_job != ''){
     binary_build_job = params.binary_build_job
 }
