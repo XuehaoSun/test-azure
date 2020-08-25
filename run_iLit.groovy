@@ -166,7 +166,7 @@ def create_conda_env(){
                     pip install intel-${framework}==${framework_version}
                 fi
             elif [ ${framework} == 'pytorch' ]; then
-                pip install torch==${framework_version}
+                pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
             elif [ ${framework} == 'mxnet' ]; then 
                 pip install ${framework}-mkl==${framework_version}
             fi
