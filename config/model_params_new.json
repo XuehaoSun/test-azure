@@ -262,7 +262,7 @@
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "resnet18_qat": {
       "model_src_dir": "image_recognition/imagenet_qat",
