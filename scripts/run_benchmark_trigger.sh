@@ -157,6 +157,7 @@ function run_benchmark {
         exit 1
   fi
 
+  echo "BENCHMARK RUNCMD: $run_cmd "
   logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
   for((k=0;$k<${counts};k=$(($k + 1))));
   do
