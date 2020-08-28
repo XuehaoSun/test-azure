@@ -162,7 +162,9 @@ def create_conda_env(){
             if [ ${framework} == 'tensorflow' ]; then     
                 if [ ${framework_version} == '1.15UP1' ]; then
                     if [ ${python_version} == '3.6' ]; then
-                        pip install /tf_dataset/tensorflow/tensorflow-1.15.0-cp36-cp36m-linux_x86_64.whl                
+                        pip install /tf_dataset/tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl                
+                    elif [ ${python_version} == '3.7' ]; then
+                        pip install /tf_dataset/tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
                     else
                         echo "!!! TF 1.15UP1 do not support ${python_version}"
                     fi
