@@ -120,21 +120,19 @@ node(node_label){
             }
         }
         stage('env_build'){
-            if (MR_source_branch == ''){
-                sh'''#!/bin/bash
-                
-                echo "Nightly Create new conda env for UT..."
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                pip config set global.index-url https://pypi.douban.com/simple/
-                if [ $(conda info -e | grep ${conda_env} | wc -l) == 0 ]; then
-                    conda create python=3.6.9 -y -n ${conda_env}
-                else    
-                    conda remove --name ${conda_env} --all -y
-                    conda create python=3.6.9 -y -n ${conda_env}
-                fi
-                
-                '''
-            }
+            sh'''#!/bin/bash
+            
+            echo "Nightly Create new conda env for UT..."
+            export PATH=${HOME}/miniconda3/bin/:$PATH
+            pip config set global.index-url https://pypi.douban.com/simple/
+            if [ $(conda info -e | grep ${conda_env} | wc -l) == 0 ]; then
+                conda create python=3.6.9 -y -n ${conda_env}
+            else    
+                conda remove --name ${conda_env} --all -y
+                conda create python=3.6.9 -y -n ${conda_env}
+            fi
+            
+            '''
         }
         stage('unit test') {
 
