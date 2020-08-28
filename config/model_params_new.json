@@ -80,6 +80,30 @@
       "strategy": "basic",
       "batch_size": 100
     },
+    "densenet121": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/tensorflow/densenet/densenet-121.pb",
+      "yaml": "densenet121.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "densenet161": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/tensorflow/densenet/densenet-161.pb",
+      "yaml": "densenet161.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "densenet169": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/tensorflow/densenet/densenet-169.pb",
+      "yaml": "densenet169.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
     "resnetv2_50": {
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
@@ -160,7 +184,6 @@
       "strategy": "basic",
       "batch_size": 1
     },
-
     "wide_deep_large_ds": {
       "model_src_dir": "recommendation/wide_deep_large_ds",
       "dataset_location": "/tf_dataset/tensorflow/wide_deep_large_ds/dataset",
