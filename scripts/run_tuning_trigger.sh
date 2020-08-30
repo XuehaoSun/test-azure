@@ -157,7 +157,7 @@ function update_yaml_config {
     dataset_params="--calib-data=${dataset_location} --eval-data=${dataset_location}"
 
     if [ "${framework}" == "pytorch" ]; then
-        if [[ "${model_src_dir}" = *"imagenet" ]]; then
+        if [[ "${model_src_dir}" = *"imagenet" ]] || [[ "${model_src_dir}" = *"resnest" ]]; then
             dataset_params="--calib-data=${dataset_location}/train --eval-data=${dataset_location}/val"
         fi
     fi
