@@ -179,7 +179,7 @@ node( 'master' ) {
                                             tensorflow_models_pass = all_tensorflow_models
                                             weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
                                         }
-                                        if (fw == 'pytorch' && fw_ver == '1.6.0') {
+                                        if (fw == 'pytorch' && fw_ver == '1.5.0+cpu') {
                                             pytorch_models_pass = all_pytorch_models
                                             weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
                                         }
