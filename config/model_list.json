@@ -11,7 +11,10 @@
       "wide_deep_large_ds": [
         "wide_deep_large_ds"
       ]
-    }
+    },
+    "style_transfer": [
+      "style_transfer"
+    ]
   },
   "mxnet": {
     "image_recognition": [
