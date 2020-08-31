@@ -195,7 +195,7 @@
     "style_transfer": {
       "model_src_dir": "style_transfer",
       "dataset_location": "style_images,content_images",
-      "input_model": "/tf_dataset/tensorflow/style_transfer/arbitrary_style_transfer",
+      "input_model": "/tf_dataset/tensorflow/style_transfer/arbitrary_style_transfer/model.ckpt",
       "yaml": "conf.yaml",
       "strategy": "basic",
       "batch_size": -1
