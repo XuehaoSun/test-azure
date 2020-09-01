@@ -1,0 +1,11 @@
+numpy
+pandas
+Pillow
+pycocotools
+tensorflow==1.15.2
+mxnet-mkl==1.6.0
+gluoncv
+torch==1.6.0
+torchvision==0.7.0
+scikit-learn
+seqeval

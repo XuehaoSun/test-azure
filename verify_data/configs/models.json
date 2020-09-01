@@ -1,0 +1,525 @@
+{
+    "mxnet": {
+        "image_recognition": [
+            {
+                "name": "generic",
+                "sources": [],
+                "execution": ["python prepare_model.py --model_name %%_topology%% --model_path ./%%_topology%%"],
+                "topologies": [
+                    "resnet18_v1",
+                    "resnet50_v1",
+                    "squeezenet1.0",
+                    "mobilenet1.0",
+                    "mobilenetv2_1.0",
+                    "inceptionv3"
+                ],
+                "built-in": false,
+                "local_path": "%%_topology%%",
+                "remote_path": "/tf_dataset/mxnet/%%_topology%%",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ],
+        "object_detection": [
+            {
+                "name": "generic",
+                "sources": [],
+                "execution": [],
+                "topologies": [
+                    "ssd-resnet50_v1",
+                    "ssd-mobilenet1.0"
+                ],
+                "built-in": true,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ],
+        "language_translation": [
+            {
+                "name": "mrpc",
+                "sources": [],
+                "execution": ["python3 finetune_classifier.py --batch_size 32 --lr 2e-5 --epochs 5 --seed 27 --task_name MRPC --warmup_ratio 0.1"],
+                "topologies": [],
+                "built-in": false,
+                "local_path": "output_dir",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            },
+            {
+                "name": "squad",
+                "sources": [],
+                "execution": ["python finetune_squad.py --optimizer adam --batch_size 12 --lr 3e-5 --epochs 2"],
+                "topologies": [],
+                "built-in": false,
+                "local_path": "output_dir",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            }
+                        
+        ]
+    },
+    "pytorch": {
+        "image_recognition": [
+            {
+                "name": "peleenet",
+                "sources": [
+                    {
+                        "link": "https://github.com/Robert-JunWang/PeleeNet/raw/master/weights/peleenet_acc7208.pth.tar",
+                        "direct": true,
+                        "download": true
+                    }
+                ],
+                "execution": [],
+                "topologies": [],
+                "built-in": false,
+                "local_path": "peleenet_acc7208.pth.tar",
+                "remote_path": "/tf_dataset/pytorch/peleenet/peleenet_acc7208.pth.tar",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            },
+            {
+                "name": "resnest",
+                "sources": [
+                    {
+                        "link": "https://s3.us-west-1.wasabisys.com/resnest/torch/",
+                        "direct": false,
+                        "download": false
+                    }
+                ],
+                "execution": [],
+                "topologies": [],
+                "built-in": true,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            },
+            {
+                "name": "resnet",
+                "sources": [
+                    {
+                        "link": "",
+                        "direct": false,
+                        "download": false
+                    }
+                ],
+                "execution": [],
+                "topologies": [],
+                "built-in": true,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            },
+            {
+                "name": "resnet_qat",
+                "sources": [
+                    {
+                        "link": "",
+                        "direct": false,
+                        "download": false
+                    }
+                ],
+                "execution": [],
+                "topologies": [],
+                "built-in": true,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            },
+            {
+                "name": "se_resnext",
+                "sources": [
+                    {
+                        "link": "http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth",
+                        "direct": true,
+                        "download": false
+                    }
+                ],
+                "execution": [],
+                "topologies": [],
+                "built-in": true,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ],
+        "object_detection": [
+            {
+                "name": "yolo_v3",
+                "sources": [
+                    {
+                        "link": "https://pjreddie.com/media/files/yolov3.weights",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "https://pjreddie.com/media/files/yolov3-tiny.weights",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "https://pjreddie.com/media/files/darknet53.conv.74",
+                        "direct": true,
+                        "download": false
+                    }
+                ],
+                "execution": [
+                    "cd weights",
+                    "bash download_weights.sh"
+                ],
+                "topologies": ["yolo_v3"],
+                "built-in": false,
+                "local_path": "weights/yolov3.weights",
+                "remote_path": "/tf_dataset/pytorch/coco_data_yolo/yolov3.weights",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ],
+        "language_translation": [
+            {
+                "name": "bert_base_glue",
+                "sources": [],
+                "execution": [
+                    "python setup.py install",
+                    "python examples/run_glue_tune.py --model_type bert --model_name_or_path bert-base-uncased --task_name %%_topology%% --do_train --do_eval --do_lower_case --data_dir %%GLUE_DIR%%/%%_topology%% --max_seq_length 128 --per_gpu_eval_batch_size=8 --per_gpu_train_batch_size=8 --learning_rate 2e-5 --num_train_epochs 3.0  --output_dir base_weights/%%_topology%%_output"
+                ],
+                "topologies": [
+                    "CoLA",
+                    "SST-2",
+                    "MRPC",
+                    "STS-B",
+                    "QQP",
+                    "MNLI",
+                    "QNLI",
+                    "RTE",
+                    "WNLI"
+                ],
+                "built-in": false,
+                "local_path": "base_weights/%%_topology%%_output",
+                "remote_path": "/tf_dataset/pytorch/glue_data/base_weights/%%_topology%%_output",
+                "exclude": {
+                    "local": {
+                        "name": ["tokenizer_config.json"],
+                        "path": ["base_weights/%%_topology%%_output/checkpoint-"]
+                    },
+                    "remote": {
+                        "name": ["eval_results.txt"],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {
+                    "GLUE_DIR": "glue_data"
+                }
+            },
+            {
+                "name": "bert_large_glue",
+                "sources": [],
+                "execution": [
+                    "python setup.py install",
+                    "python -m torch.distributed.launch examples/run_glue_tune.py --model_type bert --model_name_or_path bert-large-uncased-whole-word-masking --task_name %%_topology%% --do_train --do_eval --do_lower_case --data_dir %%GLUE_DIR%%/%%_topology%%/ --max_seq_length 128 --per_gpu_eval_batch_size=8 --per_gpu_train_batch_size=8 --learning_rate 2e-5 --num_train_epochs 3.0 --output_dir weights/%%_topology%%_output --overwrite_output_dir --overwrite_cache"
+                ],
+                "topologies": [
+                    "CoLA",
+                    "SST-2",
+                    "MRPC",
+                    "STS-B",
+                    "QQP",
+                    "MNLI",
+                    "QNLI",
+                    "RTE",
+                    "WNLI"
+                ],
+                "built-in": false,
+                "local_path": "weights/%%_topology%%_output",
+                "remote_path": "/tf_dataset/pytorch/glue_data/weights/%%_topology%%_output",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {
+                    "SQUAD_DIR": "squad"
+                }
+            },
+            {
+                "name": "bert_squad",
+                "sources": [],
+                "execution": [
+                    "python setup.py install",
+                    "python -m torch.distributed.launch examples/run_squad.py --model_type bert1 --model_name_or_path bert-large-uncased-whole-word-masking --do_train --do_eval --do_lower_case --train_file %%SQUAD_DIR%%/train-v1.1.json --predict_file %%SQUAD_DIR%%/dev-v1.1.json --learning_rate 3e-5 --num_train_epochs 2 --max_seq_length 384 --doc_stride 128 --output_dir bert_squad --per_gpu_eval_batch_size=3 --per_gpu_train_batch_size=3"
+                ],
+                "topologies": [],
+                "built-in": false,
+                "local_path": "bert_squad",
+                "remote_path": "/tf_dataset/pytorch/glue_data/weights/SQuAD_output",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {
+                    "SQUAD_DIR": "glue_data/SQuAD"
+                }
+            }
+        ],
+        "recommendation": [
+            {
+                "name": "dlrm",
+                "sources": [
+                    {
+                        "link": "https://dlrm.s3-us-west-1.amazonaws.com/models/tb0875_10M.pt",
+                        "direct": true,
+                        "download": true
+                    }
+                ],
+                "execution": [],
+                "topologies": [],
+                "built-in": false,
+                "local_path": "tb0875_10M.pt",
+                "remote_path": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/terabyte_mlperf.pt",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ]
+    },
+    "tensorflow": {
+        "image_recognition": [
+            {
+                "name": "generic",
+                "sources": [
+                    {
+                        "link": "https://github.com/tensorflow/models/tree/master/research/slim#pre-trained-models",
+                        "direct": false,
+                        "download": false
+                    }
+                ],
+                "execution": ["python prepare_model.py --model_name %%_topology%% --model_path %%_topology%%"],
+                "topologies": [
+                    "inception_v1",
+                    "inception_v2",
+                    "inception_v3",
+                    "inception_v4",
+                    "mobilenet_v1",
+                    "mobilenet_v2",
+                    "mobilenet_v3",
+                    "resnet50_v1",
+                    "resnet101_v1",
+                    "resnet_v2_50",
+                    "resnet_v2_101",
+                    "resnet_v2_152"
+                ],
+                "built-in": false,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ],
+        "object_detection": [
+            {
+                "name": "generic",
+                "sources": [
+                    {
+                        "link": "http://download.tensorflow.org/models/object_detection/ssd_resnet50_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03.tar.gz",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2018_01_28.tar.gz",
+                        "direct": true,
+                        "download": false
+                    }
+                ],
+                "execution": ["python prepare_model.py --model_name %%_topology%% --model_path %%_topology%%"],
+                "topologies": [
+                    "ssd_resnet50_v1",
+                    "ssd_mobilenet_v1"
+                ],
+                "built-in": false,
+                "local_path": "",
+                "remote_path": "/tf_dataset/pre-train-model-oob/object_detection/%%_topology%%/frozen_inference_graph.pb",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ],
+        "recommendation": [
+            {
+                "name": "wide_deep_large_ds",
+                "sources": [
+                    {
+                        "link": "https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/wide_deep_fp32_pretrained_model.pb",
+                        "direct": true,
+                        "download": true
+                    }
+                ],
+                "execution": [],
+                "topologies": [],
+                "built-in": false,
+                "local_path": "wide_deep_fp32_pretrained_model.pb",
+                "remote_path": "/tf_dataset/tensorflow/wide_deep_large_ds/fp32_optimized_graph.pb",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ]
+    }
+}

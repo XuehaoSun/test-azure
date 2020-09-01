@@ -1,0 +1,27 @@
+{
+    "name": "",
+    "sources": [
+        {
+            "link": "",
+            "direct": false,
+            "download": false
+        }
+    ],
+    "execution": [],
+    "topologies": [],
+    "built-in": false,
+    "local_path": "",
+    "remote_path": "",
+    "exclude": {
+        "local": {
+            "name": [],
+            "path": []
+        },
+        "remote": {
+            "name": [],
+            "path": []
+        }
+    },
+    "skip": false,
+    "envs": {}
+}

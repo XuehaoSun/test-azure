@@ -1,0 +1,432 @@
+{
+    "mxnet": {
+        "image_recognition": [
+            {
+                "name": "imagenet",
+                "format": "rec",
+                "sources": [
+                    {
+                        "link": "http://data.mxnet.io/data/val_256_q90.rec",
+                        "direct": true,
+                        "download": false
+                    }
+                ],
+                "execution": ["bash prepare_dataset.sh --dataset_location=./data"],
+                "built-in": false,
+                "local_path": "data/val_256_q90.rec",
+                "remote_path": "/tf_dataset/mxnet/val_256_q90.rec",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ],
+        "object_detection": [
+            {
+                "name": "voc2007",
+                "format": "raw",
+                "sources": [
+                    {
+                        "link": "http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar",
+                        "direct": true,
+                        "download": false
+                        
+                    }
+                ],
+                "execution": ["bash prepare_dataset.sh --data_path=./datasets --dataset=voc"],
+                "built-in": false,
+                "local_path": "datasets/voc/VOCdevkit",
+                "remote_path": "/tf_dataset/dataset/VOCdevkit",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            },
+            {
+                "name": "coco2017",
+                "format": "raw",
+                "sources": [
+                    {
+                        "link": "http://images.cocodataset.org/zips/val2017.zip",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "http://images.cocodataset.org/annotations/annotations_trainval2017.zip",
+                        "direct": true,
+                        "download": false
+                    }
+                ],
+                "execution": ["bash prepare_dataset.sh --data_path=./datasets --dataset=coco"],
+                "built-in": false,
+                "local_path": "datasets/coco",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            }
+        ],
+        "language_translation": [
+            {
+                "name": "glue",
+                "format": "",
+                "sources": [],
+                "execution": [],
+                "built-in": true,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            },
+            {
+                "name": "squad",
+                "format": "",
+                "sources": [],
+                "execution": [],
+                "built-in": true,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            }
+        ]
+    },
+    "pytorch": {
+        "image_recognition": [
+            {
+                "name": "imagenet",
+                "format": "raw",
+                "sources": [
+                    {
+                        "link": "http://www.image-net.org/",
+                        "direct": false,
+                        "download": false
+                    }
+                ],
+                "execution": [],
+                "built-in": false,
+                "local_path": "/data/pytorch/imagenet",
+                "remote_path": "/tf_dataset/pytorch/ImageNet/raw",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            }
+        ],
+        "object_detection": [
+            {
+                "name": "coco2014",
+                "format": "raw",
+                "sources": [
+                    {
+                        "link":"https://pjreddie.com/media/files/train2014.zip",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "https://pjreddie.com/media/files/val2014.zip",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "https://pjreddie.com/media/files/instances_train-val2014.zip",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "https://pjreddie.com/media/files/coco/5k.part",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "https://pjreddie.com/media/files/coco/trainvalno5k.part",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "https://pjreddie.com/media/files/coco/labels.tgz",
+                        "direct": true,
+                        "download": false
+                    }
+                ],
+                "execution": [
+                    "cd data",
+                    "bash get_coco_dataset.sh"
+                ],
+                "built-in": false,
+                "local_path": "data",
+                "remote_path": "/tf_dataset/pytorch/coco_data_yolo",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            }
+            
+        ],
+        "language_translation": [
+            {
+                "name": "glue",
+                "format": "txt",
+                "sources": [
+                    {
+                        "link": "https://gist.github.com/W4ngatang/60c2bdb54d156a41194446737ce03e2e",
+                        "direct": false,
+                        "download": false
+                    }
+                ],
+                "execution": [
+                    "wget https://gist.githubusercontent.com/W4ngatang/60c2bdb54d156a41194446737ce03e2e/raw/17b8dd0d724281ed7c3b2aeeda662b92809aadd5/download_glue_data.py",
+                    "python download_glue_data.py --data_dir glue_data --tasks all",
+                    "rm -rf glue_data/diagnostic"
+                ],
+                "built-in": false,
+                "local_path": "glue_data",
+                "remote_path": "/tf_dataset/pytorch/glue_data",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": ["glue_data/MNLI", "glue_data/QQP", "glue_data/SNLI"]
+                    },
+                    "remote": {
+                        "name": ["cached*"],
+                        "path": ["glue_data/base_weights", "glue_data/weights", "glue_data/SQuAD"]
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            },
+            {
+                "name": "squad",
+                "format": "json",
+                "sources": [
+                    {
+                        "link": "https://rajpurkar.github.io/SQuAD-explorer/",
+                        "direct": false,
+                        "download": false
+                    }
+                ],
+                "execution": [],
+                "built-in": false,
+                "local_path": "",
+                "remote_path": "",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            }
+        ],
+        "recommendation": [
+            {
+                "name": "criteo",
+                "format": "raw",
+                "sources": [
+                    {
+                        "link": "http://azuremlsampleexperiments.blob.core.windows.net/criteo/day_{`seq -s ',' 0 23`}.gz",
+                        "direct": true,
+                        "download": true
+                    }
+                ],
+                "execution": [],
+                "built-in": false,
+                "local_path": "",
+                "remote_path": "/mnt/local_disk3/dataset/dlrm/dlrm/input",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": true,
+                "envs": {}
+            }
+        ]
+    },
+    "tensorflow": {
+        "image_recognition": [
+            {
+                "name": "imagenet",
+                "format": "tfrecords",
+                "sources": [
+                    {
+                        "link": "https://github.com/tensorflow/models/tree/master/research/slim#an-automated-script-for-processing-imagenet-data",
+                        "direct": false,
+                        "download": false
+                    }
+                ],
+                "execution": [
+                    "bash prepare_dataset.sh --output_dir=./data --raw_dir=%%IMAGENET_DIR%%/val/ --subset=validation --shards=128",
+                    "bash prepare_dataset.sh --output_dir=./data --raw_dir=%%IMAGENET_DIR%%/train/ --subset=train --shards=1024",
+                    "cp %%TF_IMAGENET_DIR%%/labels.txt ./data/",
+                    "mv data imagenet"
+                ],
+                "built-in": false,
+                "local_path": "imagenet",
+                "remote_path": "/tf_dataset/dataset/imagenet",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {
+                    "IMAGENET_DIR": "/data/pytorch/imagenet",
+                    "TF_IMAGENET_DIR": "/data/TensorFlow/imagenet"
+                }
+            }
+        ],
+        "object_detection": [
+            {
+                "name": "coco2017",
+                "format": "tfrecords",
+                "sources": [
+                    {
+                        "link": "http://images.cocodataset.org/zips/val2017.zip",
+                        "direct": true,
+                        "download": false
+                    },
+                    {
+                        "link": "http://images.cocodataset.org/annotations/annotations_trainval2017.zip",
+                        "direct": true,
+                        "download": false
+                    }
+                ],
+                "execution": [
+                    "bash prepare_dataset.sh"
+                ],
+                "built-in": false,
+                "local_path": "data/tf_val2017/coco_val.record",
+                "remote_path": "/tf_dataset/tensorflow/coco_val.record",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ],
+        "recommendation": [
+            {
+                "name": "criteo",
+                "format": "tfrecords",
+                "sources": [
+                    {
+                        "link": "https://storage.googleapis.com/dataset-uploader/criteo-kaggle/large_version/train.csv",
+                        "direct": true,
+                        "download": true
+                    },
+                    {
+                        "link": "https://storage.googleapis.com/dataset-uploader/criteo-kaggle/large_version/eval.csv",
+                        "direct": true,
+                        "download": true
+                    }
+                ],
+                "execution": [
+                    "mkdir dataset",
+                    "python preprocess_csv_tfrecords.py --inputcsv-datafile train.csv --calibrationcsv-datafile eval.csv --outputfile-name processed_data",
+                    "python preprocess_csv_tfrecords.py --inputcsv-datafile eval.csv --calibrationcsv-datafile train.csv --outputfile-name processed_data",
+                    "mv train_processed_data.tfrecords dataset/",
+                    "mv eval_processed_data.tfrecords dataset/"
+                ],
+                "built-in": false,
+                "local_path": "dataset",
+                "remote_path": "/tf_dataset/tensorflow/wide_deep_large_ds/dataset",
+                "exclude": {
+                    "local": {
+                        "name": [],
+                        "path": []
+                    },
+                    "remote": {
+                        "name": [],
+                        "path": []
+                    }
+                },
+                "skip": false,
+                "envs": {}
+            }
+        ]
+    }
+}
