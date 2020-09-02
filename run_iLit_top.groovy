@@ -102,8 +102,7 @@ if ('RUN_PYLINT' in params && params.RUN_PYLINT){
 echo "RUN_PYLINT = ${RUN_PYLINT}"
 
 RUN_UT=true
-if ('RUN_UT' in params && params.RUN_UT){
-    echo "RUN_UT is true"
+if ('RUN_UT' in params){
     RUN_UT=params.RUN_UT
 }
 echo "RUN_UT = ${RUN_UT}"
