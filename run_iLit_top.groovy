@@ -364,7 +364,9 @@ def collectLog() {
     job_frameworks.each { job_framework ->
         job_models = []
         if (job_framework == 'tensorflow'){
-            job_models = parseStrToList(tensorflow_models) 
+            tf_oob_models = parseStrToList(tensorflow_oob_models)
+            job_models = parseStrToList(tensorflow_models)
+            job_models = job_models.plus(tf_oob_models)
         }else if (job_framework == 'pytorch'){
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
@@ -379,6 +381,9 @@ def collectLog() {
 
         job_models.each { job_model ->
             echo "-------- ${job_framework} - ${job_model} --------"
+            if ( job_model in tensorflow_oob_models){
+                mode_list = ["throughput", "latency"]
+            }
             // Generate tuning info log
             withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
                 sh '''#!/bin/bash -x
