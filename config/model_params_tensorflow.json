@@ -207,7 +207,112 @@
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 100
+    },
+    "arttrack-coco-multi": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/arttrack/coco/tf/arttrack-coco-multi.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "arttrack-mpii-single": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/arttrack/mpii/tf/arttrack-mpii-single.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "ava-face-recognition-3.0.0": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/Security/feature_extraction/ava/tf/ava-face-recognition-3.0.0.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "ava-person-vehicle-detection-stage2-2.0.0": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/Security/object_detection/common/ava/stage2/tf/ava-person-vehicle-detection-stage2-2.0.0.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "bert-base-uncased_L-12_H-768_A-12": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/language_representation/bert/base/uncased_L-12_H-768_A-12/tf/bert-base-uncased_L-12_H-768_A-12.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "darknet19": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/classification/darknet19/darknet19.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "darknet53": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/classification/darknet53/darknet53.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "deeplabv3": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/semantic_segmentation/deeplab/v3/deeplabv3.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "deepvariant_wgs": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/dna_sequencing/deepvariant/wgs/deepvariant_wgs.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "densenet-121": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/densenet/121/tf/densenet-121.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "densenet-161": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/densenet/161/tf/densenet-161.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "densenet-169": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/densenet/169/tf/densenet-169.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "east_resnet_v1_50": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/text_detection/east/tf/east_resnet_v1_50.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
     }
+
   }
 }
 
