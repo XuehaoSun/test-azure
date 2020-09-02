@@ -311,8 +311,151 @@
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 100
+    },
+    "efficientnet-b0": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/efficientnet/b0/tf/efficientnet-b0.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "efficientnet-b0_auto_aug": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/efficientnet/b0_auto_aug/tf/efficientnet-b0_auto_aug.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "efficientnet-b5": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/efficientnet/b5/tf/efficientnet-b5.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "facenet-20180408-102900": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/face_recognition/facenet/CASIA-WebFace/tf/facenet-20180408-102900.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_inception_v2_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_inception_v2_coco/tf/faster_rcnn_inception_v2_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_resnet101_ava_v2.1": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/CKPT/faster_rcnn_resnet101_ava_v2.1_2018_04_30/frozen_inference_graph.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_resnet101_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_resnet101_coco/tf/faster_rcnn_resnet101_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_resnet101_kitti": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/CKPT/faster_rcnn_resnet101_kitti_2018_01_28/frozen_inference_graph.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_resnet101_lowproposals_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/CKPT/faster_rcnn_resnet101_lowproposals_coco_2018_01_28/frozen_inference_graph.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_resnet50_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_resnet50_coco/tf/faster_rcnn_resnet50_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_resnet50_lowproposals_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_resnet50_lowproposals_coco/tf/faster_rcnn_resnet50_lowproposals_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "googlenet-v1": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/googlenet/v1/tf/googlenet-v1.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "googlenet-v2": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/googlenet/v2/tf/googlenet-v2.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "googlenet-v3": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/googlenet/v3/tf/googlenet-v3.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "googlenet-v4": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/googlenet/v4/tf/googlenet-v4.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "Hierarchical_LSTM": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/Hierarchical/text8_freeze.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "image-retrieval-0001": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/image-retrieval-0001/image-retrieval-0001.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "inceptionv2_ssd": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/ssd_inceptionv2/tf/inceptionv2_ssd.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
     }
-
   }
 }
 
