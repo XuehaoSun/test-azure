@@ -343,16 +343,17 @@ node( sub_node_label ) {
 
         if (nigthly_test_branch != '' && framework != "pytorch"){
             batch_size = modelConf."${framework}"."${model}"."batch_size"
-            stage("Performance") {
-                precision_list.each { precision ->
-                    echo "precision is ${precision}"
-                    if (model_src_dir == 'oob_models') {
-                        mode_list = ['throughput', 'latency']
-                        echo "model list is ${mode_list}"
-                    }
-                    mode_list.each { mode ->
-                        echo "mode is ${mode}"
-                        sh """#!/bin/bash -x
+            timeout(21600){
+                stage("Performance") {
+                    precision_list.each { precision ->
+                        echo "precision is ${precision}"
+                        if (model_src_dir == 'oob_models') {
+                            mode_list = ['throughput', 'latency']
+                            echo "model list is ${mode_list}"
+                        }
+                        mode_list.each { mode ->
+                            echo "mode is ${mode}"
+                            sh """#!/bin/bash -x
                             echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
                             
                             echo "-------w-------"
@@ -374,6 +375,7 @@ node( sub_node_label ) {
                                 --batch_size=${batch_size} \
                                 --conda_env_name=${framework}-${framework_version}-${python_version}
                         """
+                        }
                     }
                 }
             }
