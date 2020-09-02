@@ -46,6 +46,13 @@ if ('tensorflow_models' in params && params.tensorflow_models != '') {
 }
 echo "tensorflow_models: ${tensorflow_models}"
 
+// setting tensorflow_oob_models
+tensorflow_oob_models = ""
+if ('tensorflow_oob_models' in params && params.tensorflow_oob_models != '') {
+    tensorflow_oob_models = params.tensorflow_oob_models
+}
+echo "tensorflow_oob_models: ${tensorflow_oob_models}"
+
 // setting mxnet_version
 mxnet_version = '1.6.0'
 if ('mxnet_version' in params && params.mxnet_version != '') {
@@ -250,7 +257,9 @@ def doBuild() {
         def job_models = []
         if (job_framework == 'tensorflow'){
             //job_models=eval("${job_framework}_models")
-            job_models = parseStrToList(tensorflow_models) 
+            tf_oob_models = parseStrToList(tensorflow_oob_models)
+            job_models = parseStrToList(tensorflow_models)
+            job_models = job_models.plus(tf_oob_models)
         }else if (job_framework == 'pytorch'){
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
@@ -272,10 +281,10 @@ def doBuild() {
                     
                     def downstreamJob
                     catchError {
-                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
+                        downstreamJob = build job: "test_suyue_intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
                         
                         copyArtifacts(
-                                projectName: "intel-iLit-validation",
+                                projectName: "test_suyue_intel-iLit-validation",
                                 selector: specific("${downstreamJob.getNumber()}"),
                                 filter: '*.log',
                                 fingerprintArtifacts: true,

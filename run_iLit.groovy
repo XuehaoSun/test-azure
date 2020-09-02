@@ -265,7 +265,7 @@ node( sub_node_label ) {
         }
 
         // get params for tuning and benchmark
-        def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_new.json"))
+        def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_${framework}.json"))
         model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
         dataset_location = modelConf."${framework}"."${model}"."dataset_location"
         input_model = modelConf."${framework}"."${model}"."input_model"
@@ -346,6 +346,10 @@ node( sub_node_label ) {
             stage("Performance") {
                 precision_list.each { precision ->
                     echo "precision is ${precision}"
+                    if (model_src_dir == 'oob_models') {
+                        mode_list = ['throughput', 'latency']
+                        echo "model list is ${model_list}"
+                    }
                     mode_list.each { mode ->
                         echo "mode is ${mode}"
                         sh """#!/bin/bash -x
