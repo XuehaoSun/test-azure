@@ -319,6 +319,7 @@ def pylintScan() {
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
         ]
+
         def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: pylintScanParams
 
         text_commnet = readFile file: "${overview_log}"
@@ -334,8 +335,13 @@ def pylintScan() {
 
         // Archive in Jenkins
         archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
+
+        if (MR_source_branch != '') {
+            currentBuild.result = downstreamJob.getResult()
+        }
     } catch (err) {
         echo "Pylint scan failed: ${err}"
+        pylintStatus == "FAILURE"
     }
 }
 

@@ -35,6 +35,15 @@ function createOverview {
         unit_test_status="<img src=${png_path}/yellow.png></img>"
     fi
 
+    pylint_scan=($(grep 'format-scan' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${pylint_scan[1]}" == *"FAIL"* ]];then
+        pylint_scan_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${pylint_scan[1]}" == *"SUCC"* ]];then
+        pylint_scan_status="<img src=${png_path}/blue.png></img>"
+    else
+        pylint_scan_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
     cat >> ${WORKSPACE}/report.html <<  eof
 
     <h2>Overview</h2>
@@ -46,9 +55,15 @@ function createOverview {
         </tr>
         $(
              if [ "${unit_test[2]}" != "" ];then
-                 echo "<tr><td rowspan=3>Unit Test</td>"
+                 echo "<tr><td>Unit Test</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}\">${unit_test[0]}#${unit_test[2]}</a></td>"
                  echo "<td>${unit_test_status}</td></tr>"
+             fi
+
+             if [ "${pylint_scan[2]}" != "" ]; then
+                 echo "<tr><td>PyLint Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[2]}\">${pylint_scan[0]}#${pylint_scan[2]}</a></td>"
+                 echo "<td>${pylint_scan_status}</td></tr>"
              fi
         )
     </table>
