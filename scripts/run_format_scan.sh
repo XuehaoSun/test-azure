@@ -31,8 +31,18 @@ export PATH=${HOME}/miniconda3/bin/:$PATH
 source activate ${HOSTNAME}
 python -V
 
+# Install pylint and test requirements
 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 pip install pylint
+
+cd ${REPO_DIR}/test
+if [ -f "requirements.txt" ]; then
+    sed -i '/ilit/d' requirements.txt
+    python -m pip install --default-timeout=100 -r requirements.txt
+    pip list
+else
+    echo "Not found requirements.txt file."
+fi
 
 cd ${REPO_DIR}
 
@@ -48,7 +58,7 @@ else
     fi
 fi
 
-python -m pylint -f json --disable=R,C,W,I,E0401,E0611 --enable=line-too-long --max-line-length=99 ilit > ${WORKSPACE}/ilit-pylint.json
+python -m pylint -f json --disable=R,C,W,I,E0401,E0611 --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy ilit > ${WORKSPACE}/ilit-pylint.json
 pylint_code=$?
 if [ ${pylint_code} -ne 0 ]; then
     exit 1
