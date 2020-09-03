@@ -343,7 +343,7 @@ node( sub_node_label ) {
 
         if (nigthly_test_branch != '' && framework != "pytorch"){
             batch_size = modelConf."${framework}"."${model}"."batch_size"
-            timeout(21600){
+            timeout(360){
                 stage("Performance") {
                     precision_list.each { precision ->
                         echo "precision is ${precision}"
