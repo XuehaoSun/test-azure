@@ -381,7 +381,7 @@ def collectLog() {
         job_models.each { job_model ->
             echo "-------- ${job_framework} - ${job_model} --------"
             if ( job_model in tensorflow_oob_models){
-                mode_list = ["throughput", "latency"]
+                mode_list = ["latency"]
             }
             // Generate tuning info log
             withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {

@@ -348,7 +348,7 @@ node( sub_node_label ) {
                     precision_list.each { precision ->
                         echo "precision is ${precision}"
                         if (model_src_dir == 'oob_models') {
-                            mode_list = ['throughput', 'latency']
+                            mode_list = ['latency']
                             echo "model list is ${mode_list}"
                         }
                         mode_list.each { mode ->
