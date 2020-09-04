@@ -1,0 +1,61 @@
+{
+  "mxnet": {
+    "resnet50v1": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
+      "input_model": "/tf_dataset/mxnet/resnet50_v1",
+      "yaml": "cnn.yaml",
+      "strategy": "mse",
+      "batch_size": 64
+    },
+    "inceptionv3": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
+      "input_model": "/tf_dataset/mxnet/inceptionv3",
+      "yaml": "cnn.yaml",
+      "strategy": "mse",
+      "batch_size": 64
+    },
+    "mobilenet1.0": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
+      "input_model": "/tf_dataset/mxnet/mobilenet1.0",
+      "yaml": "cnn.yaml",
+      "strategy": "mse",
+      "batch_size": 64
+    },
+    "mobilenetv2_1.0": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
+      "input_model": "/tf_dataset/mxnet/mobilenetv2_1.0",
+      "yaml": "cnn.yaml",
+      "strategy": "mse",
+      "batch_size": 64
+    },
+    "resnet18_v1": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
+      "input_model": "/tf_dataset/mxnet/resnet18_v1",
+      "yaml": "cnn.yaml",
+      "strategy": "mse",
+      "batch_size": 64
+    },
+    "squeezenet1.0": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
+      "input_model": "/tf_dataset/mxnet/squeezenet1.0",
+      "yaml": "cnn.yaml",
+      "strategy": "mse",
+      "batch_size": 64
+    },
+    "SSD-ResNet50_v1": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/dataset/VOCdevkit",
+      "input_model": "/tf_dataset/mxnet/SSD-ResNet50_v1",
+      "yaml": "ssd.yaml",
+      "strategy": "mse",
+      "batch_size": 256
+    }
+  }
+}
+

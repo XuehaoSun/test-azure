@@ -46,6 +46,13 @@ if ('tensorflow_models' in params && params.tensorflow_models != '') {
 }
 echo "tensorflow_models: ${tensorflow_models}"
 
+// setting tensorflow_oob_models
+tensorflow_oob_models = ""
+if ('tensorflow_oob_models' in params && params.tensorflow_oob_models != '') {
+    tensorflow_oob_models = params.tensorflow_oob_models
+}
+echo "tensorflow_oob_models: ${tensorflow_oob_models}"
+
 // setting mxnet_version
 mxnet_version = '1.6.0'
 if ('mxnet_version' in params && params.mxnet_version != '') {
@@ -95,8 +102,7 @@ if ('RUN_PYLINT' in params && params.RUN_PYLINT){
 echo "RUN_PYLINT = ${RUN_PYLINT}"
 
 RUN_UT=true
-if ('RUN_UT' in params && params.RUN_UT){
-    echo "RUN_UT is true"
+if (params.RUN_UT != null){
     RUN_UT=params.RUN_UT
 }
 echo "RUN_UT = ${RUN_UT}"
@@ -250,7 +256,9 @@ def doBuild() {
         def job_models = []
         if (job_framework == 'tensorflow'){
             //job_models=eval("${job_framework}_models")
-            job_models = parseStrToList(tensorflow_models) 
+            tf_oob_models = parseStrToList(tensorflow_oob_models)
+            job_models = parseStrToList(tensorflow_models)
+            job_models = job_models.plus(tf_oob_models)
         }else if (job_framework == 'pytorch'){
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
@@ -361,7 +369,9 @@ def collectLog() {
     job_frameworks.each { job_framework ->
         job_models = []
         if (job_framework == 'tensorflow'){
-            job_models = parseStrToList(tensorflow_models) 
+            tf_oob_models = parseStrToList(tensorflow_oob_models)
+            job_models = parseStrToList(tensorflow_models)
+            job_models = job_models.plus(tf_oob_models)
         }else if (job_framework == 'pytorch'){
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
@@ -376,6 +386,9 @@ def collectLog() {
 
         job_models.each { job_model ->
             echo "-------- ${job_framework} - ${job_model} --------"
+            if ( job_model in tensorflow_oob_models){
+                mode_list = ["latency"]
+            }
             // Generate tuning info log
             withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
                 sh '''#!/bin/bash -x

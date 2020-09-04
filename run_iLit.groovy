@@ -162,9 +162,11 @@ def create_conda_env(){
             if [ ${framework} == 'tensorflow' ]; then     
                 if [ ${framework_version} == '1.15UP1' ]; then
                     if [ ${python_version} == '3.6' ]; then
-                        pip install /tf_dataset/tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl                
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl                
                     elif [ ${python_version} == '3.7' ]; then
-                        pip install /tf_dataset/tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
+                    elif [ ${python_version} == '3.5' ]; then
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp35-cp35m-manylinux2010_x86_64.whl
                     else
                         echo "!!! TF 1.15UP1 do not support ${python_version}"
                     fi
@@ -265,7 +267,7 @@ node( sub_node_label ) {
         }
 
         // get params for tuning and benchmark
-        def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_new.json"))
+        def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_${framework}.json"))
         model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
         dataset_location = modelConf."${framework}"."${model}"."dataset_location"
         input_model = modelConf."${framework}"."${model}"."input_model"
@@ -343,12 +345,17 @@ node( sub_node_label ) {
 
         if (nigthly_test_branch != '' && framework != "pytorch"){
             batch_size = modelConf."${framework}"."${model}"."batch_size"
-            stage("Performance") {
-                precision_list.each { precision ->
-                    echo "precision is ${precision}"
-                    mode_list.each { mode ->
-                        echo "mode is ${mode}"
-                        sh """#!/bin/bash -x
+            timeout(360){
+                stage("Performance") {
+                    precision_list.each { precision ->
+                        echo "precision is ${precision}"
+                        if (model_src_dir == 'oob_models') {
+                            mode_list = ['latency']
+                            echo "model list is ${mode_list}"
+                        }
+                        mode_list.each { mode ->
+                            echo "mode is ${mode}"
+                            sh """#!/bin/bash -x
                             echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
                             
                             echo "-------w-------"
@@ -370,6 +377,7 @@ node( sub_node_label ) {
                                 --batch_size=${batch_size} \
                                 --conda_env_name=${framework}-${framework_version}-${python_version}
                         """
+                        }
                     }
                 }
             }
