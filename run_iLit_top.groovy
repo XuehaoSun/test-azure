@@ -658,9 +658,11 @@ node( node_label ) {
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
                 updateGitlabCommitStatus state: 'failed'
+                addGitLabMRComment comment: "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL})"
             } else {
                 echo "pipeline success"
                 updateGitlabCommitStatus state: 'success'
+                addGitLabMRComment comment: "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL})"
             }
         }
     }
