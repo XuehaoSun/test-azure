@@ -165,6 +165,8 @@ def cleanup() {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
         sudo rm -rf *
+        git config --global user.email "lab_tfbot@intel.com"
+        git config --global user.name "lab_tfbot"
         '''
     } catch(e) {
         echo "==============================================="
@@ -672,11 +674,11 @@ node( node_label ) {
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
                 updateGitlabCommitStatus state: 'failed'
-                addGitLabMRComment comment: "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL})"
+                addGitLabMRComment comment: "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
             } else {
                 echo "pipeline success"
                 updateGitlabCommitStatus state: 'success'
-                addGitLabMRComment comment: "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL})"
+                addGitLabMRComment comment: "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
             }
         }
     }
