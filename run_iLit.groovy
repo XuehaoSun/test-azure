@@ -43,7 +43,7 @@ if ('precision' in params && params.precision != '') {
 def precision_list = parseStrToList(precision)
 echo "Running ${precision}"
 
-mode  = 'accuracy,throughput,latency'
+mode  = 'accuracy,latency'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
@@ -312,7 +312,7 @@ node( sub_node_label ) {
                     2>&1 | tee ${framework}-${model}-tune.log
             """
         }
-
+        // for MR test dummy inference
         if (nigthly_test_branch == ''){
             if (model == "resnet50v1.5" || model == "resnet50v1"){
                 batch_size = modelConf."${framework}"."${model}"."batch_size"

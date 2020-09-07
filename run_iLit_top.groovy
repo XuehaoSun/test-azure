@@ -157,6 +157,12 @@ if ('strategy' in params && params.strategy != '') {
 }
 echo "Running ${strategy}"
 
+mode  = 'accuracy,latency'
+if ('mode' in params && params.mode != '') {
+    mode = params.mode
+}
+echo "Running ${mode}"
+
 binary_build_job = "lastSuccessfulBuild"
 
 def cleanup() {
@@ -244,6 +250,7 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "strategy", value: "${strategy}")
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
+    ParamsPerJob += string(name: "mode", value: "${mode}")
 
     return ParamsPerJob
 }
@@ -364,7 +371,7 @@ def collectLog() {
     if ( MR_source_branch != '' ) {
         mode_list = ["throughput"]
     } else {
-        mode_list = ["throughput", "latency", "accuracy"]
+        mode_list = parseStrToList(mode)
     }
 
     job_frameworks = Frameworks.split(',')
