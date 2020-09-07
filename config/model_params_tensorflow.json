@@ -355,7 +355,7 @@
     "faster_rcnn_resnet101_ava_v2.1": {
       "model_src_dir": "oob_models",
       "dataset_location": "",
-      "input_model": "/tf_dataset/tensorflow/tf_oob_models/CKPT/faster_rcnn_resnet101_ava_v2.1_2018_04_30/frozen_inference_graph.pb",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_ava_v2.1_2018_04_30/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 100
@@ -371,7 +371,7 @@
     "faster_rcnn_resnet101_kitti": {
       "model_src_dir": "oob_models",
       "dataset_location": "",
-      "input_model": "/tf_dataset/tensorflow/tf_oob_models/CKPT/faster_rcnn_resnet101_kitti_2018_01_28/frozen_inference_graph.pb",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_kitti_2018_01_28/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 100
@@ -379,7 +379,7 @@
     "faster_rcnn_resnet101_lowproposals_coco": {
       "model_src_dir": "oob_models",
       "dataset_location": "",
-      "input_model": "/tf_dataset/tensorflow/tf_oob_models/CKPT/faster_rcnn_resnet101_lowproposals_coco_2018_01_28/frozen_inference_graph.pb",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_lowproposals_coco_2018_01_28/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 100
