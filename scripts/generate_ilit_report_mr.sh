@@ -35,13 +35,22 @@ function createOverview {
         unit_test_status="<img src=${png_path}/yellow.png></img>"
     fi
 
-    pylint_scan=($(grep 'format-scan' ${overview_log} |sed 's/,/ /g'))
-    if [[ "${pylint_scan[1]}" == *"FAIL"* ]];then
+    pylint_scan=($(grep 'format-scan,pylint' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
         pylint_scan_status="<img src=${png_path}/red.png></img>"
-    elif [[ "${pylint_scan[1]}" == *"SUCC"* ]];then
+    elif [[ "${pylint_scan[2]}" == *"SUCC"* ]];then
         pylint_scan_status="<img src=${png_path}/blue.png></img>"
     else
         pylint_scan_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
+    bandit_scan=($(grep 'format-scan,bandit' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${bandit_scan[2]}" == *"FAIL"* ]];then
+        bandit_scan_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
+        bandit_scan_status="<img src=${png_path}/blue.png></img>"
+    else
+        bandit_scan_status="<img src=${png_path}/yellow.png></img>"
     fi
 
     cat >> ${WORKSPACE}/report.html <<  eof
@@ -60,10 +69,16 @@ function createOverview {
                  echo "<td>${unit_test_status}</td></tr>"
              fi
 
-             if [ "${pylint_scan[2]}" != "" ]; then
+             if [ "${pylint_scan[3]}" != "" ]; then
                  echo "<tr><td>PyLint Scan</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[2]}\">${pylint_scan[0]}#${pylint_scan[2]}</a></td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[3]}\">${pylint_scan[0]}#${pylint_scan[3]}</a></td>"
                  echo "<td>${pylint_scan_status}</td></tr>"
+             fi
+
+             if [ "${bandit_scan[3]}" != "" ]; then
+                 echo "<tr><td>Bandit Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${bandit_scan[0]}/${bandit_scan[3]}\">${bandit_scan[0]}#${bandit_scan[3]}</a></td>"
+                 echo "<td>${bandit_scan_status}</td></tr>"
              fi
         )
     </table>
