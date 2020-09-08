@@ -349,7 +349,7 @@ node( sub_node_label ) {
                 stage("Performance") {
                     precision_list.each { precision ->
                         echo "precision is ${precision}"
-                        if (model_src_dir == 'oob_models') {
+                        if (model_src_dir == 'oob_models' || model == 'style_transfer') {
                             mode_list = ['latency']
                             echo "model list is ${mode_list}"
                         }

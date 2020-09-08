@@ -396,7 +396,7 @@ def collectLog() {
         job_models.each { job_model ->
             echo "-------- ${job_framework} - ${job_model} --------"
             tf_oob_models = parseStrToList(tensorflow_oob_models)
-            if ( job_model in tf_oob_models){
+            if ( job_model in tf_oob_models || job_model == 'style_transfer'){
                 mode_list = ["latency"]
             }
             // Generate tuning info log
