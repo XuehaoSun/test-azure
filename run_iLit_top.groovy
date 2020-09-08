@@ -101,6 +101,13 @@ if ('RUN_PYLINT' in params && params.RUN_PYLINT){
 }
 echo "RUN_PYLINT = ${RUN_PYLINT}"
 
+RUN_BANDIT=false
+if ('RUN_BANDIT' in params && params.RUN_BANDIT){
+    echo "RUN_BANDIT is true"
+    RUN_BANDIT=params.RUN_BANDIT
+}
+echo "RUN_BANDIT = ${RUN_BANDIT}"
+
 RUN_UT=true
 if (params.RUN_UT != null){
     RUN_UT=params.RUN_UT
@@ -328,24 +335,25 @@ def doBuild() {
     parallel jobs
 }
 
-def pylintScan() {
+def codeScan(tool) {
     try {
-        List pylintScanParams = [
+        List codeScanParams = [
+            string(name: "TOOL", value: "${tool}"),
             string(name: "ilit_url", value: "${ilit_url}"),
             string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
         ]
 
-        def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: pylintScanParams
+        def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: codeScanParams
 
-        text_commnet = readFile file: "${overview_log}"
-        writeFile file: "${overview_log}", text: text_commnet + "intel-iLit-format-scan," + downstreamJob.result + "," + downstreamJob.number + "\n"
+        text_comment = readFile file: "${overview_log}"
+        writeFile file: "${overview_log}", text: text_comment + "intel-iLit-format-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
 
         copyArtifacts(
             projectName: "intel-iLit-format-scan",
             selector: specific("${downstreamJob.getNumber()}"),
-            filter: '*.json',
+            filter: '*.json,*.log',
             fingerprintArtifacts: true,
             target: "format_scan",
             optional: true)
@@ -357,8 +365,8 @@ def pylintScan() {
             currentBuild.result = downstreamJob.getResult()
         }
     } catch (err) {
-        echo "Pylint scan failed: ${err}"
-        pylintStatus == "FAILURE"
+        echo "Code scan failed: ${err}"
+        currentBuild.result == "FAILURE"
     }
 }
 
@@ -585,7 +593,14 @@ node( node_label ) {
                  pylint: {
                      if (RUN_PYLINT) {
                          stage("Pylint Scan") {
-                             pylintScan()
+                             codeScan("pylint")
+                         }
+                     }
+                 },
+                 bandit: {
+                     if (RUN_BANDIT) {
+                         stage("Bandit Scan") {
+                             codeScan("bandit")
                          }
                      }
                  }
