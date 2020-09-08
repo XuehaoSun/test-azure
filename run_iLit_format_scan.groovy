@@ -17,6 +17,7 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
+echo "TOOL is ${TOOL}"
 
 def cleanup() {
 
@@ -84,15 +85,15 @@ node(node_label) {
     try {
         cleanup()
         download()
-        stage("Pylint Scan") {
+        stage("Code Scan") {
             echo "---------------------------------------------------------"
-            echo "-----------------  Running Pylint Scan  -----------------"
+            echo "-----------------  Running Code Scan  -----------------"
             echo "---------------------------------------------------------"
-            pylint_status = sh(
-            script: "${WORKSPACE}/scripts/run_format_scan.sh --repo_dir=${WORKSPACE}/iLit --target_branch=${MR_target_branch}",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
+            status = sh(
+            script: "${WORKSPACE}/scripts/run_format_scan.sh --tool=${TOOL} --repo_dir=${WORKSPACE}/iLit --target_branch=${MR_target_branch}",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
             returnStatus:true)
-            if (pylint_status != 0) {
-                throw new Exception("Found pylint errors.")
+            if (status != 0) {
+                throw new Exception("Found code format scan errors.")
             }
         }
 
@@ -103,7 +104,7 @@ node(node_label) {
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.json', excludes: null, allowEmptyArchive: true
+            archiveArtifacts artifacts: '*.json,*.log', excludes: null, allowEmptyArchive: true
             fingerprint: true
         }
     }
