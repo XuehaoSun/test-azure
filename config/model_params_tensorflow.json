@@ -455,6 +455,142 @@
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 100
+    },
+    "3d-pose-baseline": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/3d-pose-baseline/tf/3d-pose-baseline.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "cpm-person": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/cpm/person/tf/cpm-person.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "ctpn": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/text_detection/ctpn/tf/ctpn.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "DSSD_12": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/object_detection/common/dssd/DSSD_12/tf/DSSD_12.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "efficientnet-b7_auto_aug": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/efficientnet/b7_auto_aug/tf/efficientnet-b7_auto_aug.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_resnet101_fgvc": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_fgvc_2018_07_19/frozen__graph.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "faster_rcnn_resnet50_fgvc": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet50_fgvc_2018_07_19/frozen__graph.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "handwritten-score-recognition-0003": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/Retail/handwritten-score-recognition/0003/tf/handwritten-score-recognition-0003.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "HugeCTR": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/HugeCTR/dcn_model-0_freeze.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "i3d-flow": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/action_recognition/i3d/flow/tf/i3d-flow.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "i3d-rgb": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/action_recognition/i3d/rgb/tf/i3d-rgb.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "icnet-camvid-ava-0001": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws00/icnet-camvid-ava-0001.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "icnet-camvid-ava-sparse-30-0001": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws30/icnet-camvid-ava-sparse-30-0001.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "icnet-camvid-ava-sparse-60-0001": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws60/icnet-camvid-ava-sparse-60-0001.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "icv-emotions-recognition-0002": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/Retail/object_attributes/emotions_recognition/0002/tf/icv-emotions-recognition-0002.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "inception-resnet-v2": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/inception-resnet/v2/tf/inception-resnet-v2.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "intel-labs-nonlocal-dehazing": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/IntelLabs/FastImageProcessing/NonlocalDehazing/intel-labs-nonlocal-dehazing.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 100
     }
   }
 }
