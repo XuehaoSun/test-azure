@@ -499,7 +499,7 @@
     "faster_rcnn_resnet101_fgvc": {
       "model_src_dir": "oob_models",
       "dataset_location": "",
-      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_fgvc_2018_07_19/frozen__graph.pb",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_fgvc_2018_07_19/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 100
@@ -507,7 +507,7 @@
     "faster_rcnn_resnet50_fgvc": {
       "model_src_dir": "oob_models",
       "dataset_location": "",
-      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet50_fgvc_2018_07_19/frozen__graph.pb",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet50_fgvc_2018_07_19/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 100
