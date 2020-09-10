@@ -120,6 +120,10 @@ main() {
     echo "Tuning time spend: "$((end_seconds-start_seconds))"s "
 
     collect_pb_size
+    # copy tuning result to /tmp
+    save_path=/tmp/${framework}-${model}-tune-$(date +%s)
+    mkdir -p "${save_path}"
+    cp -r "${q_model}"* "${save_path}"
 }
 
 function collect_pb_size {
