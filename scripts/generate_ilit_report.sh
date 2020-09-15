@@ -315,9 +315,9 @@ function generate_html_core {
             // current vs last
             if(pb_size_[1] ~/[1-9]/ && pb_size_[2] ~/[1-9]/) {
                 if(pb_size_[1] < pb_size_[2]) {
-                    printf("</tr>\n<tr><td colspan=3 style=\"background-color:#FFD2D2\">Model size(M) INT8/FP32: %s/%s <br> Mem peak: %s</td><td>New/Last</td>", pb_size_[2],pb_size_[1],pb_size_[3]);
+                    printf("</tr>\n<tr><td colspan=3 style=\"background-color:#FFD2D2\">Model size(M) FP32/INT8: %.2fx <br> Mem peak: %s</td><td>New/Last</td>", pb_size_[1]/pb_size_[2],pb_size_[3]);
                 }else {
-                    printf("</tr>\n<tr><td colspan=3>Model size(M) INT8/FP32: %s/%s <br> Mem peak: %s</td><td>New/Last</td>", pb_size_[2],pb_size_[1],pb_size_[3]);
+                    printf("</tr>\n<tr><td colspan=3>Model size(M) FP32/INT8: %.2fx <br> Mem peak: %s</td><td>New/Last</td>", pb_size_[1]/pb_size_[2],pb_size_[3]);
                 }
             } else {
                 printf("</tr>\n<tr><td colspan=3></td><td>New/Last</td>");
