@@ -262,7 +262,7 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     return ParamsPerJob
 }
 
-def doBuild() {
+def getPerfJobs() {
 
     def jobs = [:]
 
@@ -289,39 +289,40 @@ def doBuild() {
         echo "llsu-----> ${job_framework}"
         job_models.each { job_model ->
             jobs["${job_framework}_${job_model}"] = {
+            
+                // execute build
+                echo "${job_model}, ${job_framework}"
                 
-                stage("Run Model ${job_model} on ${job_framework}") {
-                    // execute build
-                    echo "${job_model}, ${job_framework}"
+                def downstreamJob
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
                     
-                    def downstreamJob
-                    catchError {
-                        downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
-                        
-                        copyArtifacts(
-                                projectName: "intel-iLit-validation",
-                                selector: specific("${downstreamJob.getNumber()}"),
-                                filter: '*.log',
-                                fingerprintArtifacts: true,
-                                target: "${job_framework}/${job_model}")
-                        
-                        // Archive in Jenkins
-                        archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
-                    }
+                    copyArtifacts(
+                            projectName: "intel-iLit-validation",
+                            selector: specific("${downstreamJob.getNumber()}"),
+                            filter: '*.log',
+                            fingerprintArtifacts: true,
+                            target: "${job_framework}/${job_model}")
                     
-                    failed_build_result = downstreamJob.result
-                    failed_build_url = downstreamJob.absoluteUrl
-                    
-                    if (failed_build_result != 'SUCCESS' && MR_source_branch != ''){
+                    // Archive in Jenkins
+                    archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
+
+                    def failed_build_result = downstreamJob.result
+                    def failed_build_url = downstreamJob.absoluteUrl
+                    if (failed_build_result != 'SUCCESS' && MR_source_branch != '') {
                         currentBuild.result = "FAILURE"
-                        
+                    
                         sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                         failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
-                        
+                    
                         error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                     }
-                    if (failed_build_result != 'SUCCESS' && test_mode == 'weekly'){
+                    if (failed_build_result != 'SUCCESS' && test_mode == 'weekly') {
                         currentBuild.result = "FAILURE"
+                    }
+
+                    if (downstreamJob && downstreamJob.result != 'SUCCESS') {
+                        throw new Exception("Downstream Job failed.")
                     }
                 }
             }
@@ -332,7 +333,7 @@ def doBuild() {
         echo "enable failFast"
         jobs.failFast = true
     }
-    parallel jobs
+    return jobs
 }
 
 def codeScan(tool) {
@@ -558,7 +559,7 @@ node( node_label ) {
 
         download()
 
-        stage('build wheel'){
+        stage('Build wheel'){
             buildBinary()
         }
 
@@ -575,42 +576,36 @@ node( node_label ) {
         writeFile file: overview_log,
             text: "Jenkins Job, Build Status, Build ID\n"
 
-
-         parallel(
-                 ut:{
-                     if (RUN_UT) {
-                         stage("unit test") {
-                             unitTest()
-                         }
-                     }
-                 },
-
-                 perf: {
-                     stage("tune-parallel") {
-                         doBuild()
-                     }
-                 },
-                 pylint: {
-                     if (RUN_PYLINT) {
-                         stage("Pylint Scan") {
-                             codeScan("pylint")
-                         }
-                     }
-                 },
-                 bandit: {
-                     if (RUN_BANDIT) {
-                         stage("Bandit Scan") {
-                             codeScan("bandit")
-                         }
-                     }
-                 }
-         )
+        def job_list = [:]
+        if (RUN_UT) {
+            job_list["Unit Test"] = {
+                unitTest()
+            }
+        }
+        if (RUN_PYLINT) {
+            job_list["Pylint Scan"] = {
+                codeScan("pylint")
+            }
+        }
+        if (RUN_BANDIT) {
+            job_list["Bandit Scan"] = {
+                codeScan("bandit")
+            }
+        }
+        
+        def perf_jobs = getPerfJobs()
+        job_list = job_list + perf_jobs
+        if (job_list.size() > 0) {
+            stage("Execute tests") {
+                parallel job_list
+            }
+        }
 
         stage("Collect Logs") {
             collectLog()
         }
 
-        stage("report"){
+        stage("Report"){
 
             if(refer_build != 'x0') {
                 copyArtifacts(
@@ -649,7 +644,7 @@ node( node_label ) {
             }
         }
 
-        stage("send email") {
+        stage("Send email") {
             dir("$WORKSPACE") {
                 if (MR_source_branch != '') {
                     recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
