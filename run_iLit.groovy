@@ -312,71 +312,87 @@ node( sub_node_label ) {
                     2>&1 | tee ${framework}-${model}-tune.log
             """
         }
-        // for MR test dummy inference
-        if (nigthly_test_branch == ''){
-            if (model == "resnet50v1.5" || model == "resnet50v1"){
-                batch_size = modelConf."${framework}"."${model}"."batch_size"
-                stage("MR Performance") {
-                    precision_list.each {precision ->
-                        echo "precision is ${precision}"
-                            sh """#!/bin/bash -x
-                            echo "Running ---- ${framework}, ${model},${precision},throughput ---- Benchmarking"
-                            
-                            echo "-------w-------"
-                            w
-                            echo "-------w-------"
-                            echo "=======cache clean======="
-                            
-                            sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
-            
-                            echo "=======cache clean======="
-                            bash ${WORKSPACE}/ilit-validation/scripts/run_dummy_inference.sh \
-                                --framework=${framework} \
-                                --model=${model} \
-                                --input_model=${input_model} \
-                                --precision=${precision} \
-                                --batch_size=${batch_size} \
-                                --conda_env_name=${framework}-${framework_version}-${python_version}
+
+        // Set Latency mode for MR tests
+        if (nigthly_test_branch == ''&& MR_source_branch != '') {
+            mode_list = ["latency"]
+        }
+
+        // MR test dummy inference
+        def dummy_inference_models = [
+            "resnet50v1.5",
+            "resnet50v1",
+            "inception_v1",
+            "wide_deep_large_ds"]
+        if (nigthly_test_branch == '' && dummy_inference_models.contains(model)) {
+            batch_size = modelConf."${framework}"."${model}"."batch_size"
+            stage("MR Performance") {
+                precision_list.each { precision ->
+                    echo "precision is ${precision}"
+                    mode_list.each { mode ->
+                        if (mode == 'latency') {
+                            batch_size = 1
+                        } 
+                        sh """#!/bin/bash -x
+                        echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
+                        
+                        echo "-------w-------"
+                        w
+                        echo "-------w-------"
+                        echo "=======cache clean======="
+                        
+                        sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+        
+                        echo "=======cache clean======="
+                        bash ${WORKSPACE}/ilit-validation/scripts/run_dummy_inference.sh \
+                            --framework=${framework} \
+                            --model=${model} \
+                            --input_model=${input_model} \
+                            --precision=${precision} \
+                            --mode=${mode} \
+                            --batch_size=${batch_size} \
+                            --conda_env_name=${framework}-${framework_version}-${python_version}
                         """
-                        }
                     }
                 }
             }
-
-        if (nigthly_test_branch != '' && framework != "pytorch"){
-            batch_size = modelConf."${framework}"."${model}"."batch_size"
-            timeout(360){
-                stage("Performance") {
-                    precision_list.each { precision ->
-                        echo "precision is ${precision}"
-                        if (model_src_dir == 'oob_models' || model == 'style_transfer') {
-                            mode_list = ['latency']
-                            echo "model list is ${mode_list}"
-                        }
-                        mode_list.each { mode ->
-                            echo "mode is ${mode}"
-                            sh """#!/bin/bash -x
-                            echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
-                            
-                            echo "-------w-------"
-                            w
-                            echo "-------w-------"
-                            echo "=======cache clean======="
-                            
-                            sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
-            
-                            echo "=======cache clean======="
-                            bash ${WORKSPACE}/ilit-validation/scripts/run_benchmark_trigger.sh \
-                                --framework=${framework} \
-                                --model=${model} \
-                                --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \\
-                                --dataset_location=${dataset_location} \
-                                --input_model=${input_model} \
-                                --precision=${precision} \
-                                --mode=${mode} \
-                                --batch_size=${batch_size} \
-                                --conda_env_name=${framework}-${framework_version}-${python_version}
-                        """
+        } else {
+            // Nightly tests and OOB MR tests 
+            if (framework != "pytorch") {
+                batch_size = modelConf."${framework}"."${model}"."batch_size"
+                timeout(360) {
+                    stage("Performance") {
+                        precision_list.each { precision ->
+                            echo "precision is ${precision}"
+                            if (model_src_dir == 'oob_models' || model == 'style_transfer') {
+                                mode_list = ['latency']
+                                echo "model list is ${mode_list}"
+                            }
+                            mode_list.each { mode ->
+                                echo "mode is ${mode}"
+                                sh """#!/bin/bash -x
+                                echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
+                                
+                                echo "-------w-------"
+                                w
+                                echo "-------w-------"
+                                echo "=======cache clean======="
+                                
+                                sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+                
+                                echo "=======cache clean======="
+                                bash ${WORKSPACE}/ilit-validation/scripts/run_benchmark_trigger.sh \
+                                    --framework=${framework} \
+                                    --model=${model} \
+                                    --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \\
+                                    --dataset_location=${dataset_location} \
+                                    --input_model=${input_model} \
+                                    --precision=${precision} \
+                                    --mode=${mode} \
+                                    --batch_size=${batch_size} \
+                                    --conda_env_name=${framework}-${framework_version}-${python_version}
+                                """
+                            }
                         }
                     }
                 }

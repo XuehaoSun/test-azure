@@ -19,6 +19,8 @@ for i in "$@"; do
   --precision=*)
     precision=$(echo $i | sed "s/${PATTERN}//")
     ;;
+  --mode=*)
+      mode=`echo $i | sed "s/${PATTERN}//"`;;
   --batch_size=*)
     batch_size=$(echo $i | sed "s/${PATTERN}//")
     ;;
@@ -55,11 +57,15 @@ main() {
 
   cd ${WORKSPACE}/ilit-validation/examples/${framework}
   if [ ${framework} = "tensorflow" ] && [ ${model} = "resnet50v1.0" ]; then
-    run_cmd="python main.py --input-graph ${input_model} --input input --output predict  --benchmark"
+    run_cmd="python main.py --input-graph ${input_model} --input input --output predict --benchmark"
   fi
 
   if [ ${framework} = "tensorflow" ] && [ ${model} = "resnet50v1.5" ]; then
     run_cmd="python main.py --input-graph ${input_model} --input input_tensor --output softmax_tensor --r_mean 123.68 --g_mean 116.78 --b_mean 103.94 --benchmark"
+  fi
+
+  if [ ${framework} = "tensorflow" ] && [ ${model} = "inception_v1" ]; then
+    run_cmd="python main.py --input-graph ${input_model} --input input --output InceptionV1/Logits/Predictions/Reshape_1 --benchmark"
   fi
 
   if [ ${framework} = "mxnet" ]; then
@@ -75,6 +81,11 @@ main() {
             --benchmark True"
   fi
 
+  if [ -z "${run_cmd}" ]; then
+    echo "Could not get run_cmd. Exiting."
+    exit 1
+  fi
+
   run_benchmark
 }
 
@@ -84,15 +95,35 @@ function run_benchmark {
   ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
   total_cores=$((nsockets * ncores_per_socket))
 
-  ncores_per_instance=${ncores_per_socket}
+  if [[ ${mode} == "latency" ]]; then
+      ncores_per_instance=4
+      batch_size=1
+      iters=200
+      counts=3
+  else
+      ncores_per_instance=${ncores_per_socket}
+      iters=100
+      counts=1
+  fi
+
+  run_cmd="${run_cmd} --batch-size=${batch_size}"
+  case ${framework} in 
+    "tensorflow")
+      run_cmd="${run_cmd} --steps ${iters}";;
+    "mxnet")
+      run_cmd="${run_cmd} --num-inference-batches ${iters}";;
+  esac
 
   export OMP_NUM_THREADS=${ncores_per_instance}
   echo "RUN_CMD: ${run_cmd}"
-  logFile=${WORKSPACE}/${framework}_${model}_${precision}_throughput
-  for((j=0;$j<${total_cores};j=$(($j + ${ncores_per_instance}))));
+  logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
+  for((k=0;$k<${counts};k=$(($k + 1))));
   do
-     numactl -l -C "$j-$((j + ncores_per_instance -1)),$((j + total_cores))-$((j + total_cores + ncores_per_instance- 1))" \
-     ${run_cmd} 2>&1|tee ${logFile}_${total_cores}_${ncores_per_instance}_${j}.log &
+    for((j=0;$j<${total_cores};j=$(($j + ${ncores_per_instance}))));
+    do
+      numactl -l -C "$j-$((j + ncores_per_instance -1)),$((j + total_cores))-$((j + total_cores + ncores_per_instance- 1))" \
+      ${run_cmd} 2>&1|tee ${logFile}_${total_cores}_${ncores_per_instance}_${j}_${k}.log &
+    done
   done
 
   wait

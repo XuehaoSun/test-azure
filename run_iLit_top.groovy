@@ -376,9 +376,16 @@ def collectLog() {
     echo "---------------------------------------------------------"
     echo "------------  running collectLog  -------------"
     echo "---------------------------------------------------------"
+    def dummy_inference_models = [
+        "resnet50v1.5",
+        "resnet50v1",
+        "inception_v1",
+        "wide_deep_large_ds"
+        ]
+
     precision_list = ["fp32", "int8"]
     if ( MR_source_branch != '' ) {
-        mode_list = ["throughput"]
+        mode_list = ["latency"]
     } else {
         mode_list = parseStrToList(mode)
     }
@@ -416,21 +423,23 @@ def collectLog() {
                     ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
                 '''
             }
-            if (nigthly_test_branch != '') {
-                precision_list.each { precision ->
-                    mode_list.each { mode ->
-                        // For pytorch we collect throughput and accuracy for int8 model from tuning log.
-                        if (job_framework == "pytorch") {
-                            return
-                        }
-                        withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
+            precision_list.each { precision ->
+                mode_list.each { mode ->
+                    // For pytorch we collect throughput and accuracy for int8 model from tuning log.
+                    if (job_framework == "pytorch") {
+                        return
+                    }
 
-                            sh '''#!/bin/bash -x
-                            cd $WORKSPACE
-                            chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
-                            ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
-                        '''
-                        }
+                    if (MR_source_branch != '' && !dummy_inference_models.contains(job_model)) {
+                        return
+                    }
+                    withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
+
+                        sh '''#!/bin/bash -x
+                        cd $WORKSPACE
+                        chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
+                        ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
+                    '''
                     }
                 }
             }
@@ -686,8 +695,9 @@ node( node_label ) {
             def destFile = new File("${WORKSPACE}/perf_regression.log")
             if (destFile.exists()) {
                 currentBuild.result = 'FAILURE'
-                error("------------------Default model performance regression!!!!!!!!!!!!!!!!!!!!!!!")
+                println("------------------Default model performance regression!!!!!!!!!!!!!!!!!!!!!!!")
             }
+
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
                 updateGitlabCommitStatus state: 'failed'

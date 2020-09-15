@@ -283,16 +283,15 @@ function generate_html_core {
             split(current_values,current_value,";");
 
             // current
-
-            show_new_last(current_value[3],current_value[14],current_value[4],"fps");
+            show_new_last(current_value[1],current_value[13],current_value[2],"ms");
             show_new_last(current_value[5],current_value[15],current_value[6],"acc");
 
-            show_new_last(current_value[9],current_value[17],current_value[10],"fps");
+            show_new_last(current_value[7],current_value[16],current_value[8],"ms");
             show_new_last(current_value[11],current_value[18],current_value[12],"acc");
 
             // Compare Current
 
-            compare_current(current_value[4],current_value[10],"fps");
+            compare_current(current_value[8],current_value[2],"ms");
             compare_current(current_value[6],current_value[12],"acc");
 
             // Last values
@@ -301,20 +300,20 @@ function generate_html_core {
             // Last
             printf("</tr>\n<tr><td>Last</td><td>%s</td><td>%s</td>", ts, tt);
 
-            show_new_last(last_value[3],last_value[14],last_value[4],"fps");
+            show_new_last(last_value[1],last_value[13],last_value[2],"ms");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
 
-            show_new_last(last_value[9],last_value[17],last_value[10],"fps");
+            show_new_last(last_value[7],last_value[16],last_value[8],"ms");
             show_new_last(last_value[11],last_value[18],last_value[12],"acc");
             printf("</tr>")
 
             // current vs last
             printf("</tr>\n<tr><td>New/Last</td><td colspan=2 class=\"col-cell3\"></td>");
 
-            compare_result(current_value[4],last_value[4],"fps");
+            compare_result(last_value[2],current_value[2],"ms");
             compare_result(current_value[6],last_value[6],"acc");
 
-            compare_result(current_value[10],last_value[10],"fps");
+            compare_result(last_value[8],current_value[8],"ms");
             compare_result(current_value[12],last_value[12],"acc");
             printf("</tr>\n");
 
@@ -400,16 +399,16 @@ cat >> ${WORKSPACE}/report.html << eof
 		        <tr>
 
                 <th>bs</th>
-                <th>imgs/s</th>
+                <th>ms</th>
                 <th>bs</th>
                 <th>top1</th>
 
                 <th>bs</th>
-                <th>imgs/s</th>
+                <th>ms</th>
                 <th>bs</th>
                 <th>top1</th>
 
-                <th class="col-cell col-cell1">Throughput<br><font size="2px">INT8/FP32>=2</font></th>
+                <th class="col-cell col-cell1">Latency<br><font size="2px">FP32/INT8>=1.5</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
 		        </tr>
 eof
