@@ -48,12 +48,20 @@
       "strategy": "mse",
       "batch_size": 64
     },
-    "SSD-ResNet50_v1": {
+    "ssd-resnet50_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/dataset/VOCdevkit",
-      "input_model": "/tf_dataset/mxnet/SSD-ResNet50_v1",
+      "input_model": "",
       "yaml": "ssd.yaml",
-      "strategy": "mse",
+      "strategy": "basic",
+      "batch_size": 256
+    },
+    "ssd-mobilenet1.0": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/dataset/VOCdevkit",
+      "input_model": "",
+      "yaml": "ssd.yaml",
+      "strategy": "basic",
       "batch_size": 256
     }
   }

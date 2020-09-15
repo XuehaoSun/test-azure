@@ -21,7 +21,7 @@
       "resnet50v1"
     ],
     "object_detection": [
-      "SSD-ResNet50_v1"
+      "ssd-resnet50_v1"
     ]
   },
   "pytorch": {
