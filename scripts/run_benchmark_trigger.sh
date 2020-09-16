@@ -81,7 +81,7 @@ main() {
     if [ ${framework} == "tensorflow" ]; then
         q_model="${q_model}.pb"
     elif [ ${framework} == "mxnet" ] && [[ ${model_src_dir} == *"object_detection" ]]; then
-        q_model="${q_model}/${topology}"
+        q_model="${q_model}/${model}"
     fi
 
     # ------ WORKAROUND FOR MXNET RESNET50V1 -----
