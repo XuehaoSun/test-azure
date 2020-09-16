@@ -294,7 +294,7 @@ def getPerfJobs() {
                 echo "${job_model}, ${job_framework}"
                 
                 def downstreamJob
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                catchError {
                     downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
                     
                     copyArtifacts(
