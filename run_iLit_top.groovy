@@ -296,30 +296,31 @@ def getPerfJobs() {
                 def downstreamJob
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
-                    
-                    copyArtifacts(
-                            projectName: "intel-iLit-validation",
-                            selector: specific("${downstreamJob.getNumber()}"),
-                            filter: '*.log',
-                            fingerprintArtifacts: true,
-                            target: "${job_framework}/${job_model}")
-                    
-                    // Archive in Jenkins
-                    archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
 
                     def failed_build_result = downstreamJob.result
                     def failed_build_url = downstreamJob.absoluteUrl
+
                     if (failed_build_result != 'SUCCESS' && MR_source_branch != '') {
                         currentBuild.result = "FAILURE"
                     
                         sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                         failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
                     
-                        error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                        println("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                     }
                     if (failed_build_result != 'SUCCESS' && test_mode == 'weekly') {
                         currentBuild.result = "FAILURE"
                     }
+
+                    copyArtifacts(
+                            projectName: "intel-iLit-validation",
+                            selector: specific("${downstreamJob.getNumber()}"),
+                            filter: '*.log',
+                            fingerprintArtifacts: true,
+                            target: "${job_framework}/${job_model}")
+
+                    // Archive in Jenkins
+                    archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
 
                     if (downstreamJob && downstreamJob.result != 'SUCCESS') {
                         throw new Exception("Downstream Job failed.")
@@ -364,6 +365,9 @@ def codeScan(tool) {
 
         if (MR_source_branch != '') {
             currentBuild.result = downstreamJob.getResult()
+        }
+        if (downstreamJob && downstreamJob.result != 'SUCCESS') {
+            throw new Exception("Downstream Job failed.")
         }
     } catch (err) {
         echo "Code scan failed: ${err}"
@@ -477,6 +481,9 @@ def unitTest() {
 
         if (downstreamJob.getResult() != "SUCCESS") {
             currentBuild.result = "FAILURE"
+        }
+        if (downstreamJob && downstreamJob.result != 'SUCCESS') {
+            throw new Exception("Downstream Job failed.")
         }
     }
 }
