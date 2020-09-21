@@ -265,7 +265,7 @@ function generate_html_core {
                 printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
             }else {
                 status_png = "background-color:#FFD2D2";
-                printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
+                printf("<td style=\"%s\" colspan=2></td>", status_png);
             }
         }
 
@@ -321,7 +321,7 @@ function generate_html_core {
     job_state=$(tail -1 ${WORKSPACE}/report.html)
     sed -i '$s/.*//' ${WORKSPACE}/report.html
     if [ ${job_state} == 'fail' ]; then
-      echo "new/last performance regression" > ${WORKSPACE}/perf_regression.log
+      echo "new/last performance regression" >> ${WORKSPACE}/perf_regression.log
     fi
 }
 
