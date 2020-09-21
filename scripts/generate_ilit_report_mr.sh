@@ -259,6 +259,7 @@ function generate_html_core {
                         status_png = "background-color:#90EE90";
                     }else {
                         status_png = "background-color:#FFD2D2";
+                        echo "new/last performance regression" > ${WORKSPACE}/perf_regression.log
                     }
                 }
                 printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
