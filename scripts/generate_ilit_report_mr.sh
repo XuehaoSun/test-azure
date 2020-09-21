@@ -259,21 +259,18 @@ function generate_html_core {
                         status_png = "background-color:#90EE90";
                     }else {
                         status_png = "background-color:#FFD2D2";
+                        job_status = "fail"
                     }
                 }
                 printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
             }else {
-                if(a == "nan" || b == "nan") {
-                    printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
-                }else {
-                    printf("<td style=\"col-cell col-cell3\" colspan=2></td>");
-                    job_red++;
-                }
+                status_png = "background-color:#FFD2D2";
+                printf("<td style=\"%s\" colspan=2></td>", status_png);
             }
         }
 
         BEGIN {
-
+            job_status = "pass"
             // issue list
             jira_mobilenet = "https://jira01.devtools.intel.com/browse/PADDLEQ-384";
             jira_resnext = "https://jira01.devtools.intel.com/browse/PADDLEQ-387";
@@ -317,8 +314,15 @@ function generate_html_core {
             compare_result(current_value[12],last_value[12],"acc");
             printf("</tr>\n");
 
+        } END{
+          printf("\n%s", job_status);
         }
     ' >> ${WORKSPACE}/report.html
+    job_state=$(tail -1 ${WORKSPACE}/report.html)
+    sed -i '$s/.*//' ${WORKSPACE}/report.html
+    if [ ${job_state} == 'fail' ]; then
+      echo "new/last performance regression" >> ${WORKSPACE}/perf_regression.log
+    fi
 }
 
 function generate_results {

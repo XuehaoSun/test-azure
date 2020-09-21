@@ -72,7 +72,7 @@ if [ "${mode}" == "tuning" ]; then
       # for test
       yum -y install bc
       if [ $(echo "$latency > $latency_fp32"|bc) -eq 1 ];then
-        echo "performance regression" > ${WORKSPACE}/perf_regression.log
+        echo "int8/fp32 performance regression" > ${WORKSPACE}/perf_regression.log
       fi
     fi
   fi
