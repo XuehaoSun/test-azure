@@ -136,8 +136,11 @@ function run_benchmark {
   if [[ ${mode} == "latency" ]]; then
       ncores_per_instance=4
       batch_size=1
-      iters=200
-      counts=3
+      iters=1000
+      counts=1
+      if [ "${model}" == "wide_deep_large_ds" ]; then
+        batch_size=100
+      fi
   else
       ncores_per_instance=${ncores_per_socket}
       iters=100
@@ -145,10 +148,6 @@ function run_benchmark {
   fi
 
   export OMP_NUM_THREADS=${ncores_per_instance}
-
-  if [ "${model}" == "wide_deep_large_ds" ]; then
-    iters=200
-  fi
 
   parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
 
