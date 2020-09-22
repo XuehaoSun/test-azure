@@ -85,6 +85,10 @@ main() {
         topology="${model%_qat} "
     fi
 
+    if [[ "${model}" == *"_gpu" ]]; then
+        topology="${model%_gpu}"
+    fi
+
     q_model=${WORKSPACE}/${framework}-${model}-tune
     if [ ${framework} == "tensorflow" ]; then
         q_model="${q_model}.pb"
