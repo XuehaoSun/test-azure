@@ -167,9 +167,9 @@ class eval_classifier_optimized_graph:
                             type=float, dest='b_mean', default=0.0)
     arg_parser.add_argument("--label_adjust", help='Such as RN101 need adjust label',
                             dest='label_adjust', action='store_true')
-    arg_parser.add_argument("--warmup-steps", type=int, default=10,
+    arg_parser.add_argument("--warmup-steps", type=int, default=100,
                             help="number of warmup steps")
-    arg_parser.add_argument("--steps", type=int, default=100,
+    arg_parser.add_argument("--steps", type=int, default=1000,
                             help="number of steps")
     arg_parser.add_argument("--config", default=None,
                             help="tuning config")
