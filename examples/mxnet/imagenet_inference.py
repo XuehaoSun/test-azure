@@ -174,7 +174,7 @@ def benchmark_score(symbol_file, ctx, batch_size, num_batches, data_layer_type, 
     batch = mx.io.DataBatch(data, [])  # empty label
 
     # run
-    dry_run = 100                 # use 5 iterations to warm up
+    dry_run = 200                 # use 5 iterations to warm up
     for i in range(dry_run+num_batches):
         if i == dry_run:
             tic = time.time()
