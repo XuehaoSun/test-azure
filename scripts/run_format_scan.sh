@@ -5,13 +5,14 @@ set -x
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "3" ] ; then 
+if [ $# != "4" ] ; then 
     echo 'ERROR:'
-    echo "Expected 3 parameters got $#"
+    echo "Expected 4 parameters got $#"
     printf 'Please use following parameters:
     --repo_dir=<path to repository>
     --target_branch=<MR target branch>
     --tool=<pylint | bandit>
+    --python_version=<conda python version>
     '
     exit 1
 fi
@@ -25,6 +26,8 @@ do
             TARGET_BRANCH=`echo $i | sed "s/${PATTERN}//"`;;
         --tool=*)
             SCAN_TOOL=`echo $i | sed "s/${PATTERN}//"`;;
+        --python_version=*)
+            python_version=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -32,11 +35,13 @@ done
 
 main() {
     export PATH=${HOME}/miniconda3/bin/:$PATH
-    source activate ${HOSTNAME}
+    source activate ilit-format_scan-${python_version}
+    pip -V
     python -V
 
     # Install test requirements
-    pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+    pip config set global.index-url https://pypi.douban.com/simple/
+    pip install -U pip
     cd ${REPO_DIR}/test
     if [ -f "requirements.txt" ]; then
         sed -i '/ilit/d' requirements.txt
