@@ -91,19 +91,15 @@ main() {
 
 function run_benchmark {
   # get cpu information for multi-instance
-  nsockets=$( lscpu | grep 'Socket(s)' | cut -d: -f2 | xargs echo -n)
   ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
-  total_cores=$((nsockets * ncores_per_socket))
 
   if [[ ${mode} == "latency" ]]; then
       ncores_per_instance=4
       batch_size=1
       iters=1000
-      counts=1
   else
       ncores_per_instance=${ncores_per_socket}
       iters=100
-      counts=1
   fi
 
   run_cmd="${run_cmd} --batch-size=${batch_size}"
@@ -117,13 +113,11 @@ function run_benchmark {
   export OMP_NUM_THREADS=${ncores_per_instance}
   echo "RUN_CMD: ${run_cmd}"
   logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
-  for((k=0;$k<${counts};k=$(($k + 1))));
+
+  for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
   do
-    for((j=0;$j<${total_cores};j=$(($j + ${ncores_per_instance}))));
-    do
-      numactl -l -C "$j-$((j + ncores_per_instance -1)),$((j + total_cores))-$((j + total_cores + ncores_per_instance- 1))" \
-      ${run_cmd} 2>&1|tee ${logFile}_${total_cores}_${ncores_per_instance}_${j}_${k}.log &
-    done
+    numactl -m 0 -C "$j-$((j + ncores_per_instance -1))" \
+    ${run_cmd} 2>&1|tee ${logFile}_${ncores_per_socket}_${ncores_per_instance}_${j}.log &
   done
 
   wait

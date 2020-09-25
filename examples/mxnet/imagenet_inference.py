@@ -178,9 +178,12 @@ def benchmark_score(symbol_file, ctx, batch_size, num_batches, data_layer_type, 
     for i in range(dry_run+num_batches):
         if i == dry_run:
             tic = time.time()
+        start_time = time.time()
         mod.forward(batch, is_train=False)
         for output in mod.get_outputs():
             output.wait_to_read()
+        time_consume = time.time() - start_time
+        print('Iteration %d: %.6f sec' % (i, time_consume))
 
     # return num images per second
     return num_batches*batch_size/(time.time() - tic)

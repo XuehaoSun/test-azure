@@ -57,17 +57,16 @@ if [ "${mode}" == "tuning" ]; then
       
     # Read latency result
     if [ "${framework}" != 'pytorch' ]; then
+
       benchmark_mode="latency"
       log_file="${framework}/${model}/${framework}_${model}_int8_${benchmark_mode}"
-
       bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
-      latency=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
+      latency=$(python ${WORKSPACE}/ilit-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "int8" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
       echo "${framework};CLX8280;INT8;${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
 
       log_file="${framework}/${model}/${framework}_${model}_fp32_${benchmark_mode}"
-
       bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
-      latency_fp32=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
+      latency_fp32=$(python ${WORKSPACE}/ilit-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "fp32" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
       echo "${framework};CLX8280;FP32;${model};Inference;Latency;${bs};${latency_fp32};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
       # for test
       yum -y install bc
