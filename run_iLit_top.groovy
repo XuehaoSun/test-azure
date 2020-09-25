@@ -147,6 +147,9 @@ if ( MR_source_branch != ''){
     email_subject="Weekly: ${test_title}"
     RUN_UT=false
     currentBuild.description = params.weekly_description
+}else if ('test_mode' in params && params.test_mode == 'extension'){
+    test_mode = params.test_mode
+    email_subject="${test_title}"
 }else {
     email_subject="Nightly: ${test_title}"
 }
@@ -651,8 +654,14 @@ node( node_label ) {
         stage("Report"){
 
             if(refer_build != 'x0') {
+                def refer_job_name
+                if(test_mode == "extension"){
+                    refer_job_name="intel-iLit-validation-top-mr-extension"
+                }else{
+                    refer_job_name=currentBuild.projectName
+                }
                 copyArtifacts(
-                        projectName: currentBuild.projectName,
+                        projectName: refer_job_name,
                         selector: specific("${refer_build}"),
                         filter: 'summary.log,tuning_info.log',
                         fingerprintArtifacts: true,
