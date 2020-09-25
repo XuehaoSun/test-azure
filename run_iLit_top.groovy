@@ -174,6 +174,27 @@ if ('mode' in params && params.mode != '') {
 echo "Running ${mode}"
 
 binary_build_job = "lastSuccessfulBuild"
+// internal benchmark model list, which should use combine mode
+internal_benchmark_models = [
+//        "resnet50v1.0",
+//        "resnet50v1.5",
+//        "resnet101",
+//        "inception_v1",
+//        "inception_v2",
+//        "inception_v3",
+//        "inception_v4",
+//        "inception_resnet_v2",
+//        "vgg16",
+//        "vgg19",
+//        "densenet121",
+//        "densenet161",
+//        "densenet169",
+//        "resnetv2_50",
+//        "resnetv2_101",
+//        "resnetv2_152",
+//        "mobilenetv1",
+//        "mobilenetv2"
+]
 
 def cleanup() {
 
@@ -244,7 +265,12 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     }else if (job_framework == 'mxnet'){
         framework_version = "${mxnet_version}"
     }
-    echo "llsu-----> ${job_framework} : ${framework_version}"
+    println("llsu-----> ${job_framework} : ${framework_version}")
+
+    if ( internal_benchmark_models.contains(job_model) ){
+        mode_list = ["combine"]
+    }
+    println("llsu-----> ${mode_list}")
 
     List ParamsPerJob = []
 
@@ -391,27 +417,6 @@ def collectLog() {
         "resnet50v1",
         "inception_v1",
         "wide_deep_large_ds"
-    ]
-
-    def internal_benchmark_models = [
-        "resnet50v1.0",
-        "resnet50v1.5",
-        "resnet101",
-        "inception_v1",
-        "inception_v2",
-        "inception_v3",
-        "inception_v4",
-        "inception_resnet_v2",
-        "vgg16",
-        "vgg19",
-        "densenet121",
-        "densenet161",
-        "densenet169",
-        "resnetv2_50",
-        "resnetv2_101",
-        "resnetv2_152",
-        "mobilenetv1",
-        "mobilenetv2"
     ]
 
     precision_list = ["fp32", "int8"]

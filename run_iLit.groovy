@@ -369,11 +369,6 @@ node( sub_node_label ) {
                                 mode_list = ['latency']
                                 echo "mode list is ${mode_list}"
                             }
-                            // internal benchmark config by yaml, run acc and benchmark(bs=1) in one circle
-                            if (model_src_dir == 'image_recognition' && framework == 'tensorflow'){
-                                mode_list = ['combine']
-                                echo "mode list is ${mode_list}"
-                            }
 
                             mode_list.each { mode ->
                                 echo "mode is ${mode}"
