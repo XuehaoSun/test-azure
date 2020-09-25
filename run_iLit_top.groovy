@@ -461,7 +461,7 @@ def collectLog() {
                         return
                     }
 
-                    if (MR_source_branch != '' && !dummy_inference_models.contains(job_model)) {
+                    if (MR_source_branch != '' && dummy_inference_models.contains(job_model)) {
                         return
                     }
                     withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
