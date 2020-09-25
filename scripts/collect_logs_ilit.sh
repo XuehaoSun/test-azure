@@ -106,3 +106,11 @@ if [ "${mode}" == "accuracy" ]; then
   accuracy=$(grep 'Accuracy: ' ${log_file} | awk -F ' ' '{print $2}')
   echo "$framework;CLX8280;${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/${log_file}" | tee -a ${WORKSPACE}/summary.log
 fi
+
+if [ "${mode}" == "combine" ]; then
+  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '= ' '{print $2}')
+  accuracy=$(grep 'Accuracy is' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $6}')
+  echo "$framework;CLX8280;${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+  latency=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
+  echo "${framework};CLX8280;${PRECISION};${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+fi

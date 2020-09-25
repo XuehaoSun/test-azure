@@ -8,10 +8,10 @@ parser.add_argument("--yaml", type=str, required=True, help="Path to yaml config
 parser.add_argument("--strategy", type=str, required=False, help="Strategy to update.")
 parser.add_argument("--calib-data", type=str, required=False, help="Path to calibration dataset.")
 parser.add_argument("--eval-data", type=str, required=False, help="Path to evaluation dataset.")
-args = parser.parse_args()
+parser.add_argument("--benchmark-data", type=str, required=False, help="Path to benchmark dataset.")
+parser.add_argument("--batch-size", type=int, required=False, help="Real time batch size.")
 
-if not (args.strategy or args.calib_data or args.eval_data):
-    raise Exception("No changes. Please specify strategy, calib_data or eval_data parameter to make changes in yaml file.")
+args = parser.parse_args()
 
 tuning_config = {}
 with open(args.yaml) as yaml_file:
@@ -29,7 +29,27 @@ if args.strategy:
         tuning_config.update({"strategy": args.strategy})
         print(f"Changed {strategy} to {args.strategy}")
 
+if args.batch_size:
+    try:
+        dataloader = yaml_config.get("dataloader", {})
+        batch_size = dataloader.get("batch_size", None)
+        dataloader.update({"batch_size": args.batch_size})
+        print(f"Changed batch size from {batch_size} to {args.batch_size}")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
+
+# for tuning dataset replace
 if args.calib_data:
+
+    try:
+        dataset = yaml_config.get("dataloader", {}).get("dataset", {})
+        root = dataset.get("root", None)
+        dataset.update({"root": args.calib_data})
+        print(f"Replaced dataset path {root} to {args.calib_data}")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
+
+    # "-" mode such as pytorch example
     try:
         dataset = yaml_config.get("calibration", {}).get("dataloader", {}).get("dataset", {})
         for item in dataset:
@@ -40,7 +60,16 @@ if args.calib_data:
     except Exception as e:
         print(f"[ WARNING ] {e}")
 
-if args.eval_data:
+    # non "-" mode such as tf example
+    try:
+        dataset = yaml_config.get("calibration", {}).get("dataloader", {}).get("dataset", {})
+        calib_data = dataset.get("root", None)
+        if calib_data:
+            dataset.update({"root": args.calib_data})
+            print(f"Replaced calibration dataset path from {calib_data} to {args.calib_data}.")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
+
     try:
         dataset = yaml_config.get("evaluation", {}).get("dataloader", {}).get("dataset", {})
         for item in dataset:
@@ -48,6 +77,26 @@ if args.eval_data:
                 eval_data = item.get("root")
                 item.update({"root": args.eval_data})
                 print(f"Replaced evaluation dataset path from {eval_data} to {args.eval_data}.")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
+
+    try:
+        dataset = yaml_config.get("evaluation", {}).get("dataloader", {}).get("dataset", {})
+        eval_data = dataset.get("root", None)
+        if eval_data:
+            dataset.update({"root": args.eval_data})
+            print(f"Replaced evaluation dataset path from {eval_data} to {args.eval_data}.")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
+
+# for benchmark dataset replace
+if args.benchmark_data:
+    try:
+        dataset = yaml_config.get("benchmark", {}).get("dataloader", {}).get("dataset", {})
+        benchmark_data = dataset.get("root", None)
+        if benchmark_data:
+            dataset.update({"root": args.benchmark_data})
+            print(f"Replaced benchmark dataset path from {benchmark_data} to {args.benchmark_data}.")
     except Exception as e:
         print(f"[ WARNING ] {e}")
 

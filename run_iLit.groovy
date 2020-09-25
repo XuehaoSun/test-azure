@@ -364,10 +364,17 @@ node( sub_node_label ) {
                     stage("Performance") {
                         precision_list.each { precision ->
                             echo "precision is ${precision}"
+                            // oob only support dummy data
                             if (model_src_dir == 'oob_models' || model == 'style_transfer') {
                                 mode_list = ['latency']
-                                echo "model list is ${mode_list}"
+                                echo "mode list is ${mode_list}"
                             }
+                            // internal benchmark config by yaml, run acc and benchmark(bs=1) in one circle
+                            if (model_src_dir == 'image_recognition' && framework == 'tensorflow'){
+                                mode_list = ['combine']
+                                echo "mode list is ${mode_list}"
+                            }
+
                             mode_list.each { mode ->
                                 echo "mode is ${mode}"
                                 sh """#!/bin/bash -x
@@ -390,7 +397,8 @@ node( sub_node_label ) {
                                     --precision=${precision} \
                                     --mode=${mode} \
                                     --batch_size=${batch_size} \
-                                    --conda_env_name=${framework}-${framework_version}-${python_version}
+                                    --conda_env_name=${framework}-${framework_version}-${python_version}\
+                                    --yaml=${yaml}
                                 """
                             }
                         }

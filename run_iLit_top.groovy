@@ -388,7 +388,28 @@ def collectLog() {
         "resnet50v1",
         "inception_v1",
         "wide_deep_large_ds"
-        ]
+    ]
+
+    def internal_benchmark_models = [
+        "resnet50v1.0",
+        "resnet50v1.5",
+        "resnet101",
+        "inception_v1",
+        "inception_v2",
+        "inception_v3",
+        "inception_v4",
+        "inception_resnet_v2",
+        "vgg16",
+        "vgg19",
+        "densenet121",
+        "densenet161",
+        "densenet169",
+        "resnetv2_50",
+        "resnetv2_101",
+        "resnetv2_152",
+        "mobilenetv1",
+        "mobilenetv2"
+    ]
 
     precision_list = ["fp32", "int8"]
     if ( MR_source_branch != '' ) {
@@ -421,6 +442,9 @@ def collectLog() {
             tf_oob_models = parseStrToList(tensorflow_oob_models)
             if ( job_model in tf_oob_models || job_model == 'style_transfer'){
                 mode_list = ["latency"]
+            }
+            if ( internal_benchmark_models.contains(job_model) ){
+                mode_list = ["combine"]
             }
             // Generate tuning info log
             withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
