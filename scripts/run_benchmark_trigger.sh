@@ -3,7 +3,7 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "9" ] ; then
+if [ $# != "10" ] ; then
     echo 'ERROR:'
     echo "Expected 9 parameters got $#"
     printf 'Please use following parameters:
@@ -16,6 +16,7 @@ if [ $# != "9" ] ; then
     --mode=<benchmark mode>
     --batch_size=<batch_size for accuracy and throughput>
     --conda_env_name=<conda environment name>
+    --yaml=<path to ilit yaml configuration>
     '
     exit 1
 fi
@@ -41,6 +42,8 @@ do
             batch_size=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
+        --yaml=*)
+            yaml=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -100,6 +103,7 @@ main() {
     # set parameters for benchmark
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
 
+    echo -e "\nStart run function..."
     case ${mode} in
       accuracy)
         run_accuracy;;
@@ -107,6 +111,8 @@ main() {
         run_benchmark;;
       latency)
         run_benchmark;;
+      combine)
+        run_combine;;
       *)
         echo "MODE ${mode} not recognized."; exit 1;;
     esac
@@ -170,6 +176,57 @@ function run_benchmark {
     wait
   done
   wait
+
+}
+
+# new internal benchmark combine accuracy and latency
+function run_combine {
+  # get cpu information for multi-instance
+  nsockets=$( lscpu | grep 'Socket(s)' | cut -d: -f2 | xargs echo -n)
+  ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
+  total_cores=$((nsockets * ncores_per_socket))
+
+  ncores_per_instance=4
+  batch_size=1
+
+  export OMP_NUM_THREADS=${ncores_per_instance}
+  update_yaml_config
+  echo -e "\nPrint_updated_yaml... "
+  cat ${yaml}
+  parameters="--config=${yaml} --input_model=${input_model}"
+
+  if [ -f "run_benchmark.sh" ]; then
+        run_cmd="bash run_benchmark.sh ${parameters}"
+  else
+        echo "Not found run_benchmark file."
+        exit 1
+  fi
+
+  echo "BENCHMARK RUNCMD: $run_cmd "
+  logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
+
+  for((j=0;$j<${total_cores};j=$(($j + ${ncores_per_instance}))));
+  do
+     numactl -l -C "$j-$((j + ncores_per_instance -1)),$((j + total_cores))-$((j + total_cores + ncores_per_instance- 1))" \
+     ${run_cmd} 2>&1|tee ${logFile}_${total_cores}_${ncores_per_instance}_${j}_${k}.log &
+  done
+  wait
+
+}
+
+function update_yaml_config {
+    if [ ! -f ${yaml} ]; then
+        echo "Not found yaml config at \"${yaml}\" location."
+        exit 1
+    fi
+    update_yaml_params=''
+    if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
+        update_yaml_params=" --batch-size ${batch_size} --benchmark-data ${dataset_location} "
+    fi
+
+    if [ "${update_yaml_params}" != "" ]; then
+        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
+    fi
 
 }
 
