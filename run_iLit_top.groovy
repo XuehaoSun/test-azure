@@ -268,9 +268,9 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     println("llsu-----> ${job_framework} : ${framework_version}")
 
     if ( internal_benchmark_models.contains(job_model) ){
-        mode_list = ["combine"]
+        mode = "combine"
     }
-    println("llsu-----> ${mode_list}")
+    println("llsu-----> ${mode}")
 
     List ParamsPerJob = []
 
