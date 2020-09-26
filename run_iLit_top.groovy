@@ -661,7 +661,7 @@ node( node_label ) {
             if(refer_build != 'x0') {
                 def refer_job_name
                 if(test_mode == "extension"){
-                    refer_job_name="intel-iLit-validation-top-mr-extension"
+                    refer_job_name="intel-iLit-validation-top-nightly"
                 }else{
                     refer_job_name=currentBuild.projectName
                 }
