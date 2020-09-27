@@ -678,7 +678,7 @@ node( node_label ) {
                     script: 'cd ilit-models && git rev-parse HEAD',
                     returnStdout: true
                 ).trim()
-
+                Jenkins_job_status=currentBuild.result
                 withEnv([
                     "qtools_branch=${nigthly_test_branch}",
                     "qtools_commit=${qtools_commit}",
@@ -686,7 +686,8 @@ node( node_label ) {
                     "summaryLogLast=${summaryLogLast}",
                     "tuneLog=${TUNETXT}",
                     "tuneLogLast=${tuneLogLast}",
-                    "overview_log=${overview_log}"
+                    "overview_log=${overview_log}",
+                    "Jenkins_job_status=${Jenkins_job_status}"
                 ]) {
                     sh '''
                         if [[ ${qtools_branch} == '' ]]; then
@@ -695,7 +696,7 @@ node( node_label ) {
                         else
                             chmod 775 ./ilit-validation/scripts/generate_ilit_report.sh
                             ./ilit-validation/scripts/generate_ilit_report.sh
-                        fi     
+                        fi
                     '''
                 }
             }

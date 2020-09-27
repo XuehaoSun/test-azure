@@ -13,6 +13,7 @@ function main {
     echo "tunelog: ${tuneLog}"
     echo "last tunelog: ${tuneLogLast}"
     echo "overview_log: ${overview_log}"
+    echo "Jenkins_job_status: ${Jenkins_job_status}"
     generate_html_head
     generate_html_body
     generate_results
@@ -369,7 +370,7 @@ cat >> ${WORKSPACE}/report.html << eof
 <body>
     <div id="main">
 	    <h1 align="center">ILit Tuning Tests ${MR_TITLE}
-        [ <a href="${BUILD_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
+        [ <a href="${BUILD_URL}">Job-${BUILD_NUMBER}</a> ] ${Jenkins_job_status}</h1>
 
         <h2>Summary</h2>
 	    <table class="features-table">
