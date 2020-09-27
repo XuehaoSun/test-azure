@@ -215,6 +215,7 @@ function generate_html_core {
                        printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < -0.05) {
                        printf("<td rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       job_status = "fail"
                     }else{
                        printf("<td rowspan=3>%.4f</td>", target);
                     }
@@ -224,6 +225,7 @@ function generate_html_core {
                        printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < 1) {
                        printf("<td  rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       job_status = "fail"
                     }else{
                        printf("<td rowspan=3>%.4f</td>", target);
                     }
@@ -234,6 +236,7 @@ function generate_html_core {
                        printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
                     }else if(target < 1) {
                        printf("<td rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       job_status = "fail"
                     }else{
                        printf("<td rowspan=3>%.4f</td>", target);
                     }
@@ -325,7 +328,7 @@ function generate_html_core {
     job_state=$(tail -1 ${WORKSPACE}/report.html)
     sed -i '$s/.*//' ${WORKSPACE}/report.html
     if [ ${job_state} == 'fail' ]; then
-      echo "new/last performance regression" >> ${WORKSPACE}/perf_regression.log
+      echo "performance regression" >> ${WORKSPACE}/perf_regression.log
     fi
 }
 
