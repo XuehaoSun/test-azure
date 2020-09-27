@@ -176,7 +176,8 @@ function generate_html_core {
     tuning_count=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
     tuning_log=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
 
-    echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" -v pb_size="${pb_size}" \
+    echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
+              -v pb_size="${pb_size}" -v last_pb_size="${last_pb_size}" \
               -v ts="${tuning_strategy}" -v tt="${tuning_time}" -v tc="${tuning_count}" -v tl="${tuning_log}" '
 
         function abs(x) { return x < 0 ? -x : x }
@@ -285,8 +286,18 @@ function generate_html_core {
 
             // PB size
             split(pb_size, pb_size_, ";")
+            split(last_pb_size, last_pb_size_, ";")
 
             // current
+            if(pb_size_[1] ~/[1-9]/ && pb_size_[2] ~/[1-9]/) {
+                if(pb_size_[1] < pb_size_[2]) {
+                    printf("<td style=\"background-color:#FFD2D2\">%.2fx</td>", pb_size_[1]/pb_size_[2]);
+                }else {
+                    printf("<td>%.2fx</td>", pb_size_[1]/pb_size_[2]);
+                }
+            } else {
+                printf("<td>NaN</td>");
+            }
             show_new_last(current_value[1],current_value[13],current_value[2],"ms");
             show_new_last(current_value[3],current_value[14],current_value[4],"fps");
             show_new_last(current_value[5],current_value[15],current_value[6],"acc");
@@ -304,6 +315,11 @@ function generate_html_core {
 
             // Last
             printf("</tr>\n<tr><td>Last</td><td><a href=%4$s>%1$s</a></td><td><a href=%4$s>%2$s</a></td><td><a href=%4$s>%3$s</a></td>", ts, tt, tc, tl);
+            if(last_pb_size_[1] ~/[1-9]/ && last_pb_size_[2] ~/[1-9]/) {
+                printf("<td>%.2fx</td>", last_pb_size_[1]/last_pb_size_[2]);
+            }else {
+                printf("<td>NaN</td>");
+            }
             show_new_last(last_value[1],last_value[13],last_value[2],"ms");
             show_new_last(last_value[3],last_value[14],last_value[4],"fps");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
@@ -313,15 +329,7 @@ function generate_html_core {
             printf("</tr>")
             
             // current vs last
-            if(pb_size_[1] ~/[1-9]/ && pb_size_[2] ~/[1-9]/) {
-                if(pb_size_[1] < pb_size_[2]) {
-                    printf("</tr>\n<tr><td colspan=3 style=\"background-color:#FFD2D2\">Model size(M) FP32/INT8: %.2fx <br> Mem peak: %s</td><td>New/Last</td>", pb_size_[1]/pb_size_[2],pb_size_[3]);
-                }else {
-                    printf("</tr>\n<tr><td colspan=3>Model size(M) FP32/INT8: %.2fx <br> Mem peak: %s</td><td>New/Last</td>", pb_size_[1]/pb_size_[2],pb_size_[3]);
-                }
-            } else {
-                printf("</tr>\n<tr><td colspan=3></td><td>New/Last</td>");
-            }
+            printf("</tr>\n<tr><td>New/Last</td><td colspan=4>Mem Peak:%s</td>", pb_size_[3]);
 
             compare_result(last_value[2],current_value[2],"ms");
             compare_result(current_value[4],last_value[4],"fps");
@@ -349,6 +357,7 @@ function generate_results {
 
             # PB Size
             pb_size=$(grep "^${framework};${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $7,$8,$9)}')
+            last_pb_size=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $7,$8,$9)}')
 
             generate_html_core
         done
@@ -412,6 +421,7 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Tuning<br>Strategy</th>
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
+                <th rowspan="2">Models Size<br>FP32/INT8</th>
 			          <th colspan="6">INT8</th>
 			          <th colspan="6">FP32</th>
 			          <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
