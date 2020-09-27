@@ -134,6 +134,7 @@ main() {
 
     # copy tuning result to /tmp
     save_path=/tmp/${framework}-${model}-tune-$(date +%s)
+    echo "HOSTNAME IS ${HOSTNAME}"
     echo "!!!tune model save path is ${save_path} !!!"
     mkdir -p "${save_path}"
     cp -r "${q_model}"* "${save_path}"

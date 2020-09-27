@@ -95,7 +95,6 @@ function set_environment {
     cd ${WORKSPACE}/ilit-models
 
     export LOGLEVEL=DEBUG
-    echo "HOSTNAME IS ${HOSTNAME}"
 }
 
 
