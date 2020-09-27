@@ -131,7 +131,6 @@ main() {
     echo "Tuning time spend: "$((end_seconds-start_seconds))"s "
 
     collect_pb_size
-    python ${WORKSPACE}/ilit-validation/scripts/count_quantize_op.py
 
     # copy tuning result to /tmp
     save_path=/tmp/${framework}-${model}-tune-$(date +%s)
@@ -145,6 +144,7 @@ function collect_pb_size {
     if [ "${framework}" == "tensorflow" ];then
         fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
         int8_pb_size=$(du -s -BM ${q_model} |cut -f1)
+        python ${WORKSPACE}/ilit-validation/scripts/count_quantize_op.py --fp32_model ${input_model} --int8_model ${q_model}
     elif [ "${framework}" == "mxnet" ];then
         fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
         int8_pb_size=$(du -s -BM ${q_model%/*} |cut -f1)
