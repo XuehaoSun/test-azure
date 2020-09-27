@@ -131,6 +131,8 @@ main() {
     echo "Tuning time spend: "$((end_seconds-start_seconds))"s "
 
     collect_pb_size
+    python ${WORKSPACE}/ilit-validation/scripts/count_quantize_op.py
+
     # copy tuning result to /tmp
     save_path=/tmp/${framework}-${model}-tune-$(date +%s)
     echo "!!!tune model save path is ${save_path} !!!"
