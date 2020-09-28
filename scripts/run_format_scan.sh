@@ -57,7 +57,7 @@ main() {
         echo "TARGET BRANCH not provided. Executing pylint on current branch: $(git name-rev --name-only HEAD)."
     else
         mkdir diff_dir
-        cp -pv --parents $(git --no-pager diff --name-only $(git show-ref -s remotes/origin/${TARGET_BRANCH})) ./diff_dir
+        (cp -pv --parents $(git --no-pager diff --name-only $(git show-ref -s remotes/origin/${TARGET_BRANCH})) ./diff_dir) || true
         cd diff_dir
         if [ ! -d "ilit" ]; then
             echo "No changes in ilit module."
