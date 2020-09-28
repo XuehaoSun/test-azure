@@ -273,7 +273,7 @@ node( sub_node_label ) {
         input_model = modelConf."${framework}"."${model}"."input_model"
         yaml = modelConf."${framework}"."${model}"."yaml"
         println("test_mode = " + test_mode)
-        if ( test_mode != 'weekly'){
+        if ( test_mode != 'weekly' && test_mode != 'extension'){
             strategy = modelConf."${framework}"."${model}"."strategy"
         }
 
