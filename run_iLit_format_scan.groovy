@@ -91,7 +91,19 @@ def create_conda_env() {
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 conda_env_name=ilit-format_scan-${PYTHON_VERSION}
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-                    conda create python=${PYTHON_VERSION} -y -n ${conda_env_name}
+                    # conda create python=${PYTHON_VERSION} -y -n ${conda_env_name}
+                    retry_num=0
+                    while true
+                    do
+                        tmp_status=$(conda create python=${PYTHON_VERSION} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
+                
+                        ((retry_num++))
+                        echo $retry_num
+                
+                        if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
+                            break
+                        fi
+                    done
                 fi
 
                 source activate ${conda_env_name}
