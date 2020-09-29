@@ -102,17 +102,17 @@ def download() {
 
 def do_binary_build() {
     if (binary_class == 'wheel') {
-        sh """#!/bin/bash
+        sh '''#!/bin/bash
             echo "Create conda env..."
             export PATH=${HOME}/miniconda3/bin/:$PATH
-            if [ \$(conda info -e | grep ${conda_env} | wc -l) == 0 ]; then
+            if [ $(conda info -e | grep ${conda_env} | wc -l) == 0 ]; then
                 # conda create python=3.6.9 -y -n ${conda_env}
                 retry_num=0
                 while true
                 do
                     tmp_status=$(conda create python=3.6.9 -y -n ${conda_env} > /dev/null 2>&1 && echo $? || echo $?)
                 
-                    ((retry_num++))
+                    retry_num=$[ $retry_num + 1 ]
                     echo $retry_num
                 
                     if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
@@ -128,7 +128,7 @@ def do_binary_build() {
             cd ilit-models
             python3 setup.py sdist bdist_wheel
             cp dist/ilit*.whl ${WORKSPACE}/
-        """
+        '''
     } else if (binary_class == 'conda') {
         sh """#!/bin/bash
             echo "TODO"

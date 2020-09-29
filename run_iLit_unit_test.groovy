@@ -132,7 +132,7 @@ node(node_label){
                 do
                     tmp_status=$(conda create python=3.6.9 -y -n ${conda_env} > /dev/null 2>&1 && echo $? || echo $?)
                 
-                    ((retry_num++))
+                    retry_num=$[ $retry_num + 1 ]
                     echo $retry_num
                 
                     if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
@@ -147,7 +147,7 @@ node(node_label){
                 do
                     tmp_status=$(conda create python=3.6.9 -y -n ${conda_env} > /dev/null 2>&1 && echo $? || echo $?)
                 
-                    ((retry_num++))
+                    retry_num=$[ $retry_num + 1 ]
                     echo $retry_num
                 
                     if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
