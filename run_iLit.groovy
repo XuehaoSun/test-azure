@@ -157,7 +157,7 @@ def create_conda_env(){
                 do
                     tmp_status=$(conda create python=${python_version} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
                 
-                    ((retry_num++))
+                    retry_num=$[ $retry_num + 1 ]
                     echo $retry_num
                 
                     if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
@@ -172,7 +172,7 @@ def create_conda_env(){
                 do
                     tmp_status=$(conda create python=${python_version} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
                 
-                    ((retry_num++))
+                    retry_num=$[ $retry_num + 1 ]
                     echo $retry_num
                 
                     if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
