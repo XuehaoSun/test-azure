@@ -151,10 +151,34 @@ def create_conda_env(){
             pip config set global.index-url https://pypi.douban.com/simple/
             conda_env_name=${framework}-${framework_version}-${python_version}
             if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-                conda create python=${python_version} -y -n ${conda_env_name}
+                # conda create python=${python_version} -y -n ${conda_env_name}
+                retry_num=0
+                while true
+                do
+                    tmp_status=$(conda create python=${python_version} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
+                
+                    ((retry_num++))
+                    echo $retry_num
+                
+                    if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
+                        break
+                    fi
+                done
             else
                 conda remove --name ${conda_env_name} --all -y
-                conda create python=${python_version} -y -n ${conda_env_name}
+                # conda create python=${python_version} -y -n ${conda_env_name}
+                retry_num=0
+                while true
+                do
+                    tmp_status=$(conda create python=${python_version} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
+                
+                    ((retry_num++))
+                    echo $retry_num
+                
+                    if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
+                        break
+                    fi
+                done
             fi
         
             source activate ${conda_env_name}

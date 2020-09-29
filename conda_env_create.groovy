@@ -88,7 +88,22 @@ node(node_label){
                 else    
                     if [ ${refresh_env} = true ]; then
                         conda remove --name ${conda_env_name} --all -y
-                        conda create python=3.6.9 -y -n ${conda_env_name}
+
+                        # conda create python=3.6.9 -y -n ${conda_env_name}
+                        retry_num=0
+                        while true
+                        do
+
+	                        tmp_status=$(conda create python=3.6.9 -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
+	
+	                        ((retry_num++))
+	                        echo $retry_num
+	
+	                        if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
+		                        break
+	                        fi
+
+                        done
                     fi
                 fi
                 
