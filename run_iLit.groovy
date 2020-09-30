@@ -224,16 +224,16 @@ node( sub_node_label ) {
 
     cleanup()
     dir('ilit-validation') {
-        checkout scm
+        retry(5) {
+            checkout scm
+        }
     }
 
     try {
 
         stage("Build"){
             if (new_conda_env){
-                retry(3){
-                    create_conda_env()
-                }
+                create_conda_env()
             }else{
                 println("Test need a special local conda env, DO NOT create again!!!")
             }
@@ -241,40 +241,42 @@ node( sub_node_label ) {
         }
 
         stage("Download") {
-            if(MR_source_branch != ''){
-                checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : [[name: "${MR_source_branch}"]],
-                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
-                                [$class: 'CloneOption', timeout: 60],
-                                [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
-                        ],
-                        submoduleCfg                     : [],
-                        userRemoteConfigs                : [
-                                [credentialsId: "${credential}",
-                                 url          : "${ilit_url}"]
-                        ]
-                ]
-            }
-            else {
-                checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : [[name: "${nigthly_test_branch}"]],
-                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
-                                [$class: 'CloneOption', timeout: 60]
-                        ],
-                        submoduleCfg                     : [],
-                        userRemoteConfigs                : [
-                                [credentialsId: "${credential}",
-                                 url          : "${ilit_url}"]
-                        ]
-                ]
+            retry(5) {
+                if(MR_source_branch != ''){
+                    checkout changelog: true, poll: true, scm: [
+                            $class                           : 'GitSCM',
+                            branches                         : [[name: "${MR_source_branch}"]],
+                            browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                            doGenerateSubmoduleConfigurations: false,
+                            extensions                       : [
+                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                    [$class: 'CloneOption', timeout: 60],
+                                    [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+                            ],
+                            submoduleCfg                     : [],
+                            userRemoteConfigs                : [
+                                    [credentialsId: "${credential}",
+                                    url          : "${ilit_url}"]
+                            ]
+                    ]
+                }
+                else {
+                    checkout changelog: true, poll: true, scm: [
+                            $class                           : 'GitSCM',
+                            branches                         : [[name: "${nigthly_test_branch}"]],
+                            browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                            doGenerateSubmoduleConfigurations: false,
+                            extensions                       : [
+                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                    [$class: 'CloneOption', timeout: 60]
+                            ],
+                            submoduleCfg                     : [],
+                            userRemoteConfigs                : [
+                                    [credentialsId: "${credential}",
+                                    url          : "${ilit_url}"]
+                            ]
+                    ]
+                }
             }
 
             // copy ilit binary

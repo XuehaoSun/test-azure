@@ -82,7 +82,9 @@ node( 'master' ) {
     dir( WORKSPACE ) {
         deleteDir()
         sh " rm -rf ./* "
-        checkout scm
+        retry(5) {
+            checkout scm
+        }
     }
 
     // copy reference
@@ -97,21 +99,24 @@ node( 'master' ) {
     }
 
     // download iLit
-    checkout changelog: true, poll: true, scm: [
-            $class                           : 'GitSCM',
-            branches                         : [[name: "${nigthly_test_branch}"]],
-            browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-            doGenerateSubmoduleConfigurations: false,
-            extensions                       : [
-                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-ilit"],
-                    [$class: 'CloneOption', timeout: 60]
-            ],
-            submoduleCfg                     : [],
-            userRemoteConfigs                : [
-                    [credentialsId: "${credential}",
-                     url          : "${ilit_url}"]
-            ]
-    ]
+    retry(5) {
+        checkout changelog: true, poll: true, scm: [
+                $class                           : 'GitSCM',
+                branches                         : [[name: "${nigthly_test_branch}"]],
+                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                doGenerateSubmoduleConfigurations: false,
+                extensions                       : [
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-ilit"],
+                        [$class: 'CloneOption', timeout: 60]
+                ],
+                submoduleCfg                     : [],
+                userRemoteConfigs                : [
+                        [credentialsId: "${credential}",
+                        url          : "${ilit_url}"]
+                ]
+        ]
+    }
+
     def ilit_commit = sh (
             script: """
                 cd ilit-ilit  &&  git rev-parse HEAD
