@@ -60,43 +60,44 @@ def cleanup() {
 
 def download() {
     dir(WORKSPACE) {
+        retry(5) {
+            checkout scm
 
-        checkout scm
-
-        if(MR_source_branch != ''){
-            checkout changelog: true, poll: true, scm: [
-                    $class                           : 'GitSCM',
-                    branches                         : [[name: "${MR_source_branch}"]],
-                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
-                            [$class: 'CloneOption', timeout: 60],
-                            [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
-                    ],
-                    submoduleCfg                     : [],
-                    userRemoteConfigs                : [
-                            [credentialsId: "${credential}",
-                             url          : "${ilit_url}"]
-                    ]
-            ]
-        }
-        else {
-            checkout changelog: true, poll: true, scm: [
-                    $class                           : 'GitSCM',
-                    branches                         : [[name: "${nigthly_test_branch}"]],
-                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
-                            [$class: 'CloneOption', timeout: 60]
-                    ],
-                    submoduleCfg                     : [],
-                    userRemoteConfigs                : [
-                            [credentialsId: "${credential}",
-                             url          : "${ilit_url}"]
-                    ]
-            ]
+            if(MR_source_branch != '') {
+                checkout changelog: true, poll: true, scm: [
+                        $class                           : 'GitSCM',
+                        branches                         : [[name: "${MR_source_branch}"]],
+                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions                       : [
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                [$class: 'CloneOption', timeout: 60],
+                                [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+                        ],
+                        submoduleCfg                     : [],
+                        userRemoteConfigs                : [
+                                [credentialsId: "${credential}",
+                                url          : "${ilit_url}"]
+                        ]
+                ]
+            }
+            else {
+                checkout changelog: true, poll: true, scm: [
+                        $class                           : 'GitSCM',
+                        branches                         : [[name: "${nigthly_test_branch}"]],
+                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions                       : [
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                [$class: 'CloneOption', timeout: 60]
+                        ],
+                        submoduleCfg                     : [],
+                        userRemoteConfigs                : [
+                                [credentialsId: "${credential}",
+                                url          : "${ilit_url}"]
+                        ]
+                ]
+            }
         }
     }
 }

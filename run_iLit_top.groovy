@@ -218,40 +218,42 @@ def cleanup() {
 }
 
 def download() {
-    if(MR_source_branch != ''){
-        checkout changelog: true, poll: true, scm: [
-                $class                           : 'GitSCM',
-                branches                         : [[name: "${MR_source_branch}"]],
-                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                doGenerateSubmoduleConfigurations: false,
-                extensions                       : [
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
-                        [$class: 'CloneOption', timeout: 60],
-                        [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
-                ],
-                submoduleCfg                     : [],
-                userRemoteConfigs                : [
-                        [credentialsId: "${credential}",
-                         url          : "${ilit_url}"]
-                ]
-        ]
-    }
-    else {
-        checkout changelog: true, poll: true, scm: [
-                $class                           : 'GitSCM',
-                branches                         : [[name: "${nigthly_test_branch}"]],
-                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                doGenerateSubmoduleConfigurations: false,
-                extensions                       : [
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
-                        [$class: 'CloneOption', timeout: 60]
-                ],
-                submoduleCfg                     : [],
-                userRemoteConfigs                : [
-                        [credentialsId: "${credential}",
-                         url          : "${ilit_url}"]
-                ]
-        ]
+    retry(5) {
+        if(MR_source_branch != ''){
+            checkout changelog: true, poll: true, scm: [
+                    $class                           : 'GitSCM',
+                    branches                         : [[name: "${MR_source_branch}"]],
+                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions                       : [
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                            [$class: 'CloneOption', timeout: 60],
+                            [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+                    ],
+                    submoduleCfg                     : [],
+                    userRemoteConfigs                : [
+                            [credentialsId: "${credential}",
+                            url          : "${ilit_url}"]
+                    ]
+            ]
+        }
+        else {
+            checkout changelog: true, poll: true, scm: [
+                    $class                           : 'GitSCM',
+                    branches                         : [[name: "${nigthly_test_branch}"]],
+                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions                       : [
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                            [$class: 'CloneOption', timeout: 60]
+                    ],
+                    submoduleCfg                     : [],
+                    userRemoteConfigs                : [
+                            [credentialsId: "${credential}",
+                            url          : "${ilit_url}"]
+                    ]
+            ]
+        }
     }
 }
 
@@ -605,7 +607,9 @@ node( node_label ) {
     try {
         cleanup()
         dir('ilit-validation') {
-            checkout scm
+            retry(5) {
+                checkout scm
+            }
         }
 
         download()
@@ -725,7 +729,6 @@ node( node_label ) {
 
             }
         }
-
     } catch (e) {
         // If there was an exception thrown, the build failed
         currentBuild.result = "FAILURE"

@@ -43,7 +43,7 @@ def cleanup() {
 def download() {
     stage("Download") {
         dir(WORKSPACE) {
-
+        retry(5) {
             checkout scm
 
             if(MR_source_branch != ''){
@@ -79,6 +79,7 @@ def download() {
                                 url          : "${ilit_url}"]
                         ]
                 ]
+            }
             }
         }
     }
