@@ -24,7 +24,7 @@ function main {
 function createOverview {
 
     jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
-    png_path="http://mlpc.intel.com/static/doc/tensorflow/images/24x24"
+    png_path="https://inteltf-jenk.sh.intel.com/static/93433cd1/images/24x24"
 
     # unit test
     unit_test=($(grep 'unit-test' ${overview_log} |sed 's/,/ /g'))
