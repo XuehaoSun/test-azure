@@ -27,6 +27,8 @@ def cleanup() {
         sh '''#!/bin/bash -x
             cd $WORKSPACE
             sudo rm -rf *
+            git config --global user.email "lab_tfbot@intel.com"
+            git config --global user.name "lab_tfbot"
         '''
         } catch(e) {
             echo "==============================================="
