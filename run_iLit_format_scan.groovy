@@ -45,43 +45,27 @@ def cleanup() {
 def download() {
     stage("Download") {
         dir(WORKSPACE) {
-        retry(5) {
-            checkout scm
-
-            if(MR_source_branch != ''){
+            retry(5) {
+                checkout scm
+                ilit_branch = nigthly_test_branch
+                if (MR_source_branch != "") {
+                    ilit_branch = MR_source_branch
+                }
                 checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : [[name: "${MR_source_branch}"]],
-                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
-                                [$class: 'CloneOption', timeout: 60],
-                                [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
-                        ],
-                        submoduleCfg                     : [],
-                        userRemoteConfigs                : [
-                                [credentialsId: "${credential}",
-                                url          : "${ilit_url}"]
-                        ]
+                    $class: 'GitSCM',
+                    branches: [[name: "${ilit_branch}"]],
+                    browser: [$class: 'AssemblaWeb', repoUrl: ''],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions : [
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
+                        [$class: 'CloneOption', timeout: 60]
+                    ],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [
+                        [credentialsId: "${credential}",
+                        url: "${ilit_url}"]
+                    ]
                 ]
-            } else {
-                checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : [[name: "${nigthly_test_branch}"]],
-                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
-                                [$class: 'CloneOption', timeout: 60]
-                        ],
-                        submoduleCfg                     : [],
-                        userRemoteConfigs                : [
-                                [credentialsId: "${credential}",
-                                url          : "${ilit_url}"]
-                        ]
-                ]
-            }
             }
         }
     }
