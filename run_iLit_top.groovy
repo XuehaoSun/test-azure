@@ -323,48 +323,44 @@ def getPerfJobs() {
             
                 // execute build
                 echo "${job_model}, ${job_framework}"
-                
-                def downstreamJob
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
 
-                    def failed_build_result = downstreamJob.result
-                    def failed_build_url = downstreamJob.absoluteUrl
+                downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
 
-                    if (failed_build_result != 'SUCCESS' && test_mode == 'weekly') {
-                        currentBuild.result = "FAILURE"
-                    }
-                    if (failed_build_result != 'SUCCESS' && MR_source_branch != '') {
-                        currentBuild.result = "FAILURE"
-                    }
+                copyArtifacts(
+                    projectName: "intel-iLit-validation",
+                    selector: specific("${downstreamJob.getNumber()}"),
+                    filter: '*.log',
+                    fingerprintArtifacts: true,
+                    target: "${job_framework}/${job_model}",
+                    optional: true)
 
-                    copyArtifacts(
-                            projectName: "intel-iLit-validation",
-                            selector: specific("${downstreamJob.getNumber()}"),
-                            filter: '*.log',
-                            fingerprintArtifacts: true,
-                            target: "${job_framework}/${job_model}")
+                // Archive in Jenkins
+                archiveArtifacts artifacts: "${job_framework}/${job_model}/**", allowEmptyArchive: true
 
-                    // Archive in Jenkins
-                    archiveArtifacts artifacts: "${job_framework}/${job_model}/**"
+                downstreamJobStatus = downstreamJob.result
+                def failed_build_result = downstreamJob.result
+                def failed_build_url = downstreamJob.absoluteUrl
 
-                    if (failed_build_result != 'SUCCESS' && MR_source_branch != '') {
+                if (failed_build_result != 'SUCCESS' && (MR_source_branch != '' || test_mode == 'extension')) {
+                    sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                    failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
+                    currentBuild.result = "FAILURE"
+                    error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                }
 
-                        sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
-                        failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
+                if (failed_build_result != 'SUCCESS' && test_mode == 'weekly') {
+                    currentBuild.result = "FAILURE"
+                    error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                }
 
-                        error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
-                    }
-
-                    if (downstreamJob && downstreamJob.result != 'SUCCESS') {
-                        throw new Exception("Downstream Job failed.")
-                    }
+                if (downstreamJob.result != 'SUCCESS') {
+                    error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                 }
             }
         }
     }
     
-    if (MR_source_branch != '') {
+    if (MR_source_branch != '' || test_mode == 'extension') {
         echo "enable failFast"
         jobs.failFast = true
     }
@@ -372,40 +368,35 @@ def getPerfJobs() {
 }
 
 def codeScan(tool) {
-    try {
-        List codeScanParams = [
-            string(name: "TOOL", value: "${tool}"),
-            string(name: "ilit_url", value: "${ilit_url}"),
-            string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
-            string(name: "MR_source_branch", value: "${MR_source_branch}"),
-            string(name: "MR_target_branch", value: "${MR_target_branch}"),
-        ]
+    List codeScanParams = [
+        string(name: "TOOL", value: "${tool}"),
+        string(name: "ilit_url", value: "${ilit_url}"),
+        string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+        string(name: "MR_source_branch", value: "${MR_source_branch}"),
+        string(name: "MR_target_branch", value: "${MR_target_branch}"),
+    ]
 
-        def downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: codeScanParams
+    downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: codeScanParams
 
-        text_comment = readFile file: "${overview_log}"
-        writeFile file: "${overview_log}", text: text_comment + "intel-iLit-format-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
+    copyArtifacts(
+        projectName: "intel-iLit-format-scan",
+        selector: specific("${downstreamJob.getNumber()}"),
+        filter: '*.json,*.log',
+        fingerprintArtifacts: true,
+        target: "format_scan",
+        optional: true)
 
-        copyArtifacts(
-            projectName: "intel-iLit-format-scan",
-            selector: specific("${downstreamJob.getNumber()}"),
-            filter: '*.json,*.log',
-            fingerprintArtifacts: true,
-            target: "format_scan",
-            optional: true)
+    text_comment = readFile file: "${overview_log}"
+    writeFile file: "${overview_log}", text: text_comment + "intel-iLit-format-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
 
-        // Archive in Jenkins
-        archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
-
+    // Archive in Jenkins
+    archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
+    
+    if (downstreamJob.result != 'SUCCESS') {
+        currentBuild.result = "FAILURE"
         if (MR_source_branch != '') {
-            currentBuild.result = downstreamJob.getResult()
+            error("${tool} scan failed!")
         }
-        if (downstreamJob && downstreamJob.result != 'SUCCESS') {
-            throw new Exception("Downstream Job failed.")
-        }
-    } catch (err) {
-        echo "Code scan failed: ${err}"
-        currentBuild.result == "FAILURE"
     }
 }
 
@@ -493,54 +484,119 @@ def collectLog() {
 
 def unitTest() {
 
-    catchError {
-        List unitTestParams = [
-                string(name: "binary_build_job", value: "${binary_build_job}"),
-                string(name: "ilit_url", value: "${ilit_url}"),
-                string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
-                string(name: "MR_source_branch", value: "${MR_source_branch}"),
-                string(name: "MR_target_branch", value: "${MR_target_branch}"),
-        ]
-        def downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
+    List unitTestParams = [
+            string(name: "binary_build_job", value: "${binary_build_job}"),
+            string(name: "ilit_url", value: "${ilit_url}"),
+            string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+    ]
+    downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
 
-        text_commnet = readFile file: "${overview_log}"
-        writeFile file: "${overview_log}", text: text_commnet + "iLit-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
+    text_commnet = readFile file: "${overview_log}"
+    writeFile file: "${overview_log}", text: text_commnet + "iLit-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
 
-        copyArtifacts(
-                projectName: "iLit-unit-test",
-                selector: specific("${downstreamJob.getNumber()}"),
-                filter: '*.log',
-                fingerprintArtifacts: true,
-                target: "unittest")
+    copyArtifacts(
+            projectName: "iLit-unit-test",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.log',
+            fingerprintArtifacts: true,
+            target: "unittest")
 
-        // Archive in Jenkins
-        archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+    // Archive in Jenkins
+    archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
 
-        if (downstreamJob.getResult() != "SUCCESS") {
-            currentBuild.result = "FAILURE"
-        }
-        if (downstreamJob && downstreamJob.result != 'SUCCESS') {
-            throw new Exception("Downstream Job failed.")
-        }
+    if (downstreamJob.result != 'SUCCESS') {
+        error("Unit tests failed.")
     }
 }
 
 def buildBinary(){
-    catchError {
-        List binaryBuildParams = [
-                string(name: "ilit_url", value: "${ilit_url}"),
-                string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
-                string(name: "MR_source_branch", value: "${MR_source_branch}"),
-                string(name: "MR_target_branch", value: "${MR_target_branch}"),
-        ]
-        def downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+    List binaryBuildParams = [
+            string(name: "ilit_url", value: "${ilit_url}"),
+            string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+    ]
+    downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+    
+    binary_build_job = downstreamJob.getNumber()
+    echo "binary_build_job: ${binary_build_job}"
+    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+    if (downstreamJob.getResult() != "SUCCESS") {
+        currentBuild.result = "FAILURE"
+        failed_build_url = downstreamJob.absoluteUrl
+        echo "failed_build_url: ${failed_build_url}"
+        error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+    }
+}
 
-        binary_build_job = downstreamJob.getNumber()
-        if (downstreamJob.getResult() != "SUCCESS") {
-            currentBuild.result = "FAILURE"
-            failed_build_url = downstreamJob.absoluteUrl
-            error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+def generateReport() {
+    if(refer_build != 'x0') {
+        def refer_job_name
+        if(test_mode == "extension"){
+            refer_job_name="intel-iLit-validation-top-nightly"
+        }else{
+            refer_job_name=currentBuild.projectName
         }
+        copyArtifacts(
+                projectName: refer_job_name,
+                selector: specific("${refer_build}"),
+                filter: 'summary.log,tuning_info.log',
+                fingerprintArtifacts: true,
+                target: "reference")
+    }
+
+    dir(WORKSPACE) {
+        qtools_commit = sh (
+            script: 'cd ilit-models && git rev-parse HEAD',
+            returnStdout: true
+        ).trim()
+        Jenkins_job_status=currentBuild.result
+        withEnv([
+            "qtools_branch=${nigthly_test_branch}",
+            "qtools_commit=${qtools_commit}",
+            "summaryLog=${SUMMARYTXT}",
+            "summaryLogLast=${summaryLogLast}",
+            "tuneLog=${TUNETXT}",
+            "tuneLogLast=${tuneLogLast}",
+            "overview_log=${overview_log}",
+            "Jenkins_job_status=${Jenkins_job_status}"
+        ]) {
+            sh '''
+                if [[ ${qtools_branch} == '' ]]; then
+                    chmod 775 ./ilit-validation/scripts/generate_ilit_report_mr.sh
+                    ./ilit-validation/scripts/generate_ilit_report_mr.sh
+                else
+                    chmod 775 ./ilit-validation/scripts/generate_ilit_report.sh
+                    ./ilit-validation/scripts/generate_ilit_report.sh
+                fi
+            '''
+        }
+    }
+}
+
+def sendReport() {
+    dir("$WORKSPACE") {
+        if (MR_source_branch != '') {
+            recipient_list = "${gitlabUserEmail}"
+            if ('recipient_list' in params && params.recipient_list != '') {
+                recipient_list = params.recipient_list + ',' + gitlabUserEmail
+            }
+        } else {
+            recipient_list = ''
+            if ('recipient_list' in params && params.recipient_list != '') {
+                recipient_list = params.recipient_list
+            }
+        }
+
+        emailext subject: "${email_subject}",
+                to: "${recipient_list}",
+                replyTo: "${recipient_list}",
+                body: '''${FILE,path="report.html"}''',
+                attachmentsPattern: "",
+                mimeType: 'text/html'
+
     }
 }
 
@@ -612,12 +668,8 @@ node( node_label ) {
             }
         }
 
-        download()
-
-        stage('Build wheel'){
-            buildBinary()
-        }
-
+        // Setup logs path
+        echo "WORKSPACE IS ${WORKSPACE}"
         SUMMARYTXT = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
         summaryLogLast = "${WORKSPACE}/reference/summary.log"
@@ -630,6 +682,12 @@ node( node_label ) {
         overview_log = "${WORKSPACE}/summary_overview.log"
         writeFile file: overview_log,
             text: "Jenkins Job, Build Status, Build ID\n"
+
+        download()
+
+        stage('Build wheel'){
+            buildBinary()
+        }
 
         def job_list = [:]
         if (RUN_UT) {
@@ -655,90 +713,25 @@ node( node_label ) {
                 parallel job_list
             }
         }
-
-        stage("Collect Logs") {
-            collectLog()
-        }
-
-        stage("Report"){
-
-            if(refer_build != 'x0') {
-                def refer_job_name
-                if(test_mode == "extension"){
-                    refer_job_name="intel-iLit-validation-top-nightly"
-                }else{
-                    refer_job_name=currentBuild.projectName
-                }
-                copyArtifacts(
-                        projectName: refer_job_name,
-                        selector: specific("${refer_build}"),
-                        filter: 'summary.log,tuning_info.log',
-                        fingerprintArtifacts: true,
-                        target: "reference")
-            }
-
-            dir(WORKSPACE) {
-                qtools_commit = sh (
-                    script: 'cd ilit-models && git rev-parse HEAD',
-                    returnStdout: true
-                ).trim()
-                Jenkins_job_status=currentBuild.result
-                withEnv([
-                    "qtools_branch=${nigthly_test_branch}",
-                    "qtools_commit=${qtools_commit}",
-                    "summaryLog=${SUMMARYTXT}",
-                    "summaryLogLast=${summaryLogLast}",
-                    "tuneLog=${TUNETXT}",
-                    "tuneLogLast=${tuneLogLast}",
-                    "overview_log=${overview_log}",
-                    "Jenkins_job_status=${Jenkins_job_status}"
-                ]) {
-                    sh '''
-                        if [[ ${qtools_branch} == '' ]]; then
-                            chmod 775 ./ilit-validation/scripts/generate_ilit_report_mr.sh
-                            ./ilit-validation/scripts/generate_ilit_report_mr.sh
-                        else
-                            chmod 775 ./ilit-validation/scripts/generate_ilit_report.sh
-                            ./ilit-validation/scripts/generate_ilit_report.sh
-                        fi
-                    '''
-                }
-            }
-        }
-
-        stage("Send email") {
-            dir("$WORKSPACE") {
-                if (MR_source_branch != '') {
-                    recipient_list = 'suyue.chen@intel.com,' + "${gitlabUserEmail}"
-                    if ('recipient_list' in params && params.recipient_list != '') {
-                        recipient_list = params.recipient_list + ',' + gitlabUserEmail
-                    }
-                } else {
-                    recipient_list = 'suyue.chen@intel.com'
-                    if ('recipient_list' in params && params.recipient_list != '') {
-                        recipient_list = params.recipient_list
-                    }
-                }
-
-                emailext subject: "${email_subject}",
-                        to: "${recipient_list}",
-                        replyTo: "${recipient_list}",
-                        body: '''${FILE,path="report.html"}''',
-                        attachmentsPattern: "",
-                        mimeType: 'text/html'
-
-            }
-        }
     } catch (e) {
         // If there was an exception thrown, the build failed
         currentBuild.result = "FAILURE"
-        throw e
+        error(e.toString())
 
     } finally {
+        stage("Collect Logs") {
+            collectLog()
+        }
+        stage("Generate report") {
+            generateReport()
+        }
 
+        stage("Send report") {
+            sendReport()
+        }
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log,*.html', excludes: null
+            archiveArtifacts artifacts: '*.log,*.html', excludes: null, allowEmptyArchive: true
             fingerprint: true
         }
 
