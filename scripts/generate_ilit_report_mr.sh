@@ -370,7 +370,7 @@ cat >> ${WORKSPACE}/report.html << eof
 <body>
     <div id="main">
 	    <h1 align="center">ILit Tuning Tests ${MR_TITLE}
-        [ <a href="${BUILD_URL}">Job-${BUILD_NUMBER}</a> ] ${Jenkins_job_status}</h1>
+        [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ] ${Jenkins_job_status}</h1>
 
         <h2>Summary</h2>
 	    <table class="features-table">
