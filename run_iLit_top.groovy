@@ -360,7 +360,7 @@ def getPerfJobs() {
         }
     }
     
-    if (MR_source_branch != '' || test_mode == 'extension') {
+    if (MR_source_branch != '') {
         echo "enable failFast"
         jobs.failFast = true
     }
