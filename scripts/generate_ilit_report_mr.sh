@@ -259,7 +259,7 @@ function generate_html_core {
                     }
                 }else {
                     target = a / b;
-                    if(target >= 0.95) {
+                    if(target >= 0.945) {
                         status_png = "background-color:#90EE90";
                     }else {
                         status_png = "background-color:#FFD2D2";
