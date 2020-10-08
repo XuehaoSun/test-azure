@@ -159,19 +159,19 @@ python_version = "3.6"
 if ('python_version' in params && params.python_version != '') {
     python_version = params.python_version
 }
-echo "Running ${python_version}"
+echo "Python version: ${python_version}"
 
 strategy = ""
 if ('strategy' in params && params.strategy != '') {
     strategy = params.strategy
 }
-echo "Running ${strategy}"
+echo "Strategy: ${strategy}"
 
 mode  = 'accuracy,latency'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
-echo "Running ${mode}"
+echo "Mode: ${mode}"
 
 binary_build_job = "lastSuccessfulBuild"
 // internal benchmark model list, which should use combine mode
@@ -414,10 +414,14 @@ def collectLog() {
 
     precision_list = ["fp32", "int8"]
     if ( MR_source_branch != '' ) {
+        echo "Setting mode_list to latency..."
         mode_list = ["latency"]
     } else {
+        echo "Parsing ${mode} to list..."
         mode_list = parseStrToList(mode)
     }
+    echo "Global mode list: ${mode_list}"
+
 
     job_frameworks = Frameworks.split(',')
     job_frameworks.each { job_framework ->
@@ -441,10 +445,13 @@ def collectLog() {
         job_models.each { job_model ->
             echo "-------- ${job_framework} - ${job_model} --------"
             tf_oob_models = parseStrToList(tensorflow_oob_models)
-            if ( job_model in tf_oob_models || job_model == 'style_transfer'){
+
+            if ( job_model in tf_oob_models || job_model == 'style_transfer') {
+                echo "Found OOB model or \"style_transfer\" model. Setting \"latency\" mode."
                 mode_list = ["latency"]
             }
             if ( internal_benchmark_models.contains(job_model) ){
+                echo "Found \"internal benchmark model\". Setting \"combine\" mode."
                 mode_list = ["combine"]
             }
             // Generate tuning info log
@@ -455,23 +462,23 @@ def collectLog() {
                     ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
                 '''
             }
+            // For pytorch we collect throughput and accuracy for int8 model from tuning log.
+            if (job_framework == "pytorch") {
+                return
+            }
+
+            if (MR_source_branch != '' && dummy_inference_models.contains(job_model)) {
+                return
+            }
             precision_list.each { precision ->
                 mode_list.each { mode ->
-                    // For pytorch we collect throughput and accuracy for int8 model from tuning log.
-                    if (job_framework == "pytorch") {
-                        return
-                    }
-
-                    if (MR_source_branch != '' && dummy_inference_models.contains(job_model)) {
-                        return
-                    }
+                    echo "Getting results for ${job_framework} - ${job_model} - ${precision} - ${mode}"
                     withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
-
                         sh '''#!/bin/bash -x
-                        cd $WORKSPACE
-                        chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
-                        ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
-                    '''
+                            cd $WORKSPACE
+                            chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
+                            ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
+                        '''
                     }
                 }
             }
