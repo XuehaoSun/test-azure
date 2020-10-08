@@ -1,4 +1,4 @@
-credential = "lab_tfbot"
+credential = "5da0b320-00b8-4312-b653-36d4cf980fcb"
 
 node_label = "clx8280"
 if ('node_label' in params && params.node_label != '') {

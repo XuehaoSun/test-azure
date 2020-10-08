@@ -1,4 +1,4 @@
-credential = "lab_tfbot"
+credential = "5da0b320-00b8-4312-b653-36d4cf980fcb"
 
 // setting node_label
 node_label = "ilit"
@@ -84,7 +84,7 @@ node(node_label){
 
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-                conda_env_name=${framework}-${framework_version}
+                conda_env_name=${framework}-${framework_version}-${python_version}
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
                     # conda create python=3.6.9 -y -n ${conda_env_name}
                     retry_num=0
