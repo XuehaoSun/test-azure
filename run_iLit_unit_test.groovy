@@ -188,7 +188,13 @@ node(node_label){
                 cd ${WORKSPACE}/ilit-models/test
                 if [ -f "requirements.txt" ]; then
                     sed -i '/ilit/d' requirements.txt
-                    python -m pip install -r requirements.txt
+                    n=0
+                    until [ "$n" -ge 5 ]
+                    do
+                       python -m pip install -r requirements.txt && break
+                       n=$((n+1))
+                       sleep 5
+                    done
                     pip list
                 else
                     echo "Not found requirements.txt file."
@@ -199,7 +205,7 @@ node(node_label){
                 bash run.sh 2>&1 | tee ${ut_log_name}
                 if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                     exit 1
-                fi                 
+                fi
             '''
 
         }
