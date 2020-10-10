@@ -303,7 +303,7 @@ node( sub_node_label ) {
             strategy = modelConf."${framework}"."${model}"."strategy"
         }
 
-        timeout="timeout 21600"
+        timeout="timeout 10800"
         if (nigthly_test_branch == ''){
             timeout="timeout 5400"
             // use mini dataset for tf mr test
