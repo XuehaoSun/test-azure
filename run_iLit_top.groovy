@@ -569,7 +569,7 @@ def generateReport() {
         ).trim()
         def Jenkins_job_status = currentBuild.result
         println("Jenkins_job_status ==== " + Jenkins_job_status)
-        if (Jenkins_job_status == "null"){
+        if (Jenkins_job_status == null){
             Jenkins_job_status = "CHECK"
         }
         withEnv([
