@@ -5,7 +5,7 @@
       "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
       "input_model": "/tf_dataset/mxnet/resnet50_v1",
       "yaml": "cnn.yaml",
-      "strategy": "mse",
+      "strategy": "basic",
       "batch_size": 64
     },
     "inceptionv3": {
@@ -13,7 +13,7 @@
       "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
       "input_model": "/tf_dataset/mxnet/inceptionv3",
       "yaml": "cnn.yaml",
-      "strategy": "mse",
+      "strategy": "basic",
       "batch_size": 64
     },
     "mobilenet1.0": {
@@ -21,7 +21,7 @@
       "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
       "input_model": "/tf_dataset/mxnet/mobilenet1.0",
       "yaml": "cnn.yaml",
-      "strategy": "mse",
+      "strategy": "basic",
       "batch_size": 64
     },
     "mobilenetv2_1.0": {
@@ -29,7 +29,7 @@
       "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
       "input_model": "/tf_dataset/mxnet/mobilenetv2_1.0",
       "yaml": "cnn.yaml",
-      "strategy": "mse",
+      "strategy": "basic",
       "batch_size": 64
     },
     "resnet18_v1": {
@@ -37,7 +37,7 @@
       "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
       "input_model": "/tf_dataset/mxnet/resnet18_v1",
       "yaml": "cnn.yaml",
-      "strategy": "mse",
+      "strategy": "basic",
       "batch_size": 64
     },
     "squeezenet1.0": {
@@ -45,7 +45,7 @@
       "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
       "input_model": "/tf_dataset/mxnet/squeezenet1.0",
       "yaml": "cnn.yaml",
-      "strategy": "mse",
+      "strategy": "basic",
       "batch_size": 64
     },
     "ssd-resnet50_v1": {

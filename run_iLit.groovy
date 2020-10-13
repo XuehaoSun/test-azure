@@ -298,9 +298,16 @@ node( sub_node_label ) {
         dataset_location = modelConf."${framework}"."${model}"."dataset_location"
         input_model = modelConf."${framework}"."${model}"."input_model"
         yaml = modelConf."${framework}"."${model}"."yaml"
-        println("test_mode = " + test_mode)
-        if ( test_mode != 'weekly' && test_mode != 'extension'){
-            strategy = modelConf."${framework}"."${model}"."strategy"
+
+        //mr test will cover different strategies, the other test mode will use the passed strategy
+        if ( MR_source_branch != '' ){
+            if (framework == "tensorflow"){
+                strategy = "basic"
+            }else if(framework == "pytorch"){
+                strategy = "bayesian"
+            }else if(framework == "mxnet"){
+                strategy = "mse"
+            }
         }
 
         timeout="timeout 10800"

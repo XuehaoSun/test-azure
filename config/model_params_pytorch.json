@@ -5,35 +5,35 @@
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "resnet50": {
       "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "resnet50_gpu": {
       "model_src_dir": "image_recognition/imagenet/gpu",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "resnext101_32x8d": {
       "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "inception_v3": {
       "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "mobilenet_v2": {
       "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
@@ -47,21 +47,21 @@
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "resnet50_qat": {
       "model_src_dir": "image_recognition/imagenet/cpu/QAT",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "resnet101_qat": {
       "model_src_dir": "image_recognition/imagenet/cpu/QAT",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "bayesian"
+      "strategy": "basic"
     },
     "peleenet": {
       "model_src_dir": "image_recognition/peleenet",
