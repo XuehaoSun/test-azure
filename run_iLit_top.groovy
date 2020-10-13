@@ -176,24 +176,24 @@ echo "Mode: ${mode}"
 binary_build_job = "lastSuccessfulBuild"
 // internal benchmark model list, which should use combine mode
 internal_benchmark_models = [
-//        "resnet50v1.0",
-//        "resnet50v1.5",
-//        "resnet101",
-//        "inception_v1",
-//        "inception_v2",
-//        "inception_v3",
-//        "inception_v4",
-//        "inception_resnet_v2",
-//        "vgg16",
-//        "vgg19",
-//        "densenet121",
-//        "densenet161",
-//        "densenet169",
-//        "resnetv2_50",
-//        "resnetv2_101",
-//        "resnetv2_152",
-//        "mobilenetv1",
-//        "mobilenetv2"
+        "resnet50v1.0",
+        "resnet50v1.5",
+        "resnet101",
+        "inception_v1",
+        "inception_v2",
+        "inception_v3",
+        "inception_v4",
+        "inception_resnet_v2",
+        "vgg16",
+        "vgg19",
+        "densenet121",
+        "densenet161",
+        "densenet169",
+        "resnetv2_50",
+        "resnetv2_101",
+        "resnetv2_152",
+        "mobilenetv1",
+        "mobilenetv2"
 ]
 
 def cleanup() {
@@ -269,10 +269,11 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     }
     println("llsu-----> ${job_framework} : ${framework_version}")
 
+    pass_mode=mode
     if ( internal_benchmark_models.contains(job_model) ){
-        mode = "combine"
+        pass_mode = "combine"
     }
-    println("llsu-----> ${mode}")
+    println("llsu-----> ${pass_mode}")
 
     List ParamsPerJob = []
 
@@ -288,7 +289,7 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "strategy", value: "${strategy}")
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
-    ParamsPerJob += string(name: "mode", value: "${mode}")
+    ParamsPerJob += string(name: "mode", value: "${pass_mode}")
 
     return ParamsPerJob
 }
@@ -445,6 +446,12 @@ def collectLog() {
         job_models.each { job_model ->
             echo "-------- ${job_framework} - ${job_model} --------"
             tf_oob_models = parseStrToList(tensorflow_oob_models)
+            // reset mode_list for each model
+            if ( MR_source_branch != '' ) {
+                mode_list = ["latency"]
+            } else {
+                mode_list = parseStrToList(mode)
+            }
 
             if ( job_model in tf_oob_models || job_model == 'style_transfer') {
                 echo "Found OOB model or \"style_transfer\" model. Setting \"latency\" mode."
@@ -454,6 +461,7 @@ def collectLog() {
                 echo "Found \"internal benchmark model\". Setting \"combine\" mode."
                 mode_list = ["combine"]
             }
+            println("mode_list---->" + mode_list)
             // Generate tuning info log
             withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
                 sh '''#!/bin/bash -x
