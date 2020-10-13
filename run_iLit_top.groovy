@@ -568,6 +568,7 @@ def generateReport() {
             returnStdout: true
         ).trim()
         Jenkins_job_status=currentBuild.result
+        println("Jenkins_job_status ==== " + Jenkins_job_status)
         if (Jenkins_job_status == 'null'){
             Jenkins_job_status = 'SUCCESS'
         }
