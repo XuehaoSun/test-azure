@@ -567,10 +567,10 @@ def generateReport() {
             script: 'cd ilit-models && git rev-parse HEAD',
             returnStdout: true
         ).trim()
-        Jenkins_job_status=currentBuild.result
+        def Jenkins_job_status = currentBuild.result
         println("Jenkins_job_status ==== " + Jenkins_job_status)
-        if (Jenkins_job_status == 'null'){
-            Jenkins_job_status = 'SUCCESS'
+        if (Jenkins_job_status == "null"){
+            Jenkins_job_status = "CHECK"
         }
         withEnv([
             "qtools_branch=${nigthly_test_branch}",
@@ -740,14 +740,6 @@ node( node_label ) {
     } finally {
         stage("Collect Logs") {
             collectLog()
-            if (MR_source_branch != '') {
-                // If default model has perf regression, then fail the job.
-                def destFile = new File("${WORKSPACE}/perf_regression.log")
-                if (destFile.exists()) {
-                    currentBuild.result = 'FAILURE'
-                    println("------------------Default model performance regression!!!!!!!!!!!!!!!!!!!!!!!")
-                }
-            }
         }
         stage("Generate report") {
             generateReport()
@@ -763,6 +755,12 @@ node( node_label ) {
         }
 
         if (MR_source_branch != ''){
+            // If default model has perf regression, then fail the job.
+            def destFile = new File("${WORKSPACE}/perf_regression.log")
+            if (destFile.exists()) {
+                currentBuild.result = 'FAILURE'
+                println("------------------Default model performance regression!!!!!!!!!!!!!!!!!!!!!!!")
+            }
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
                 updateGitlabCommitStatus state: 'failed'
