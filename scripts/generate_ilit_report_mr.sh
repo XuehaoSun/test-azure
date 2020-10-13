@@ -268,7 +268,7 @@ function generate_html_core {
                 }
                 printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
             }else {
-              if(a == "nan" || b == "nan") {
+              if(a == nan || b == nan) {
                 printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
               }else {
                 status_png = "background-color:#FFD2D2";
