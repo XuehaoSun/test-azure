@@ -43,7 +43,7 @@ if ('precision' in params && params.precision != '') {
 def precision_list = parseStrToList(precision)
 echo "Running ${precision}"
 
-mode  = 'accuracy,latency'
+mode = 'accuracy,latency'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
