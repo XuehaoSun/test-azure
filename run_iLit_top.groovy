@@ -173,6 +173,18 @@ if ('mode' in params && params.mode != '') {
 }
 echo "Mode: ${mode}"
 
+tuning_timeout="10800"
+if ('tuning_timeout' in params && params.tuning_timeout != ''){
+    tuning_timeout=params.tuning_timeout
+}
+echo "tuning_timeout: ${tuning_timeout}"
+
+tune_only=false
+if (params.tune_only != null){
+    tune_only=params.tune_only
+}
+echo "tune_only = ${tune_only}"
+
 binary_build_job = "lastSuccessfulBuild"
 // internal benchmark model list, which should use combine mode
 internal_benchmark_models = [
@@ -290,6 +302,8 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
     ParamsPerJob += string(name: "mode", value: "${pass_mode}")
+    ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
+    ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
 
     return ParamsPerJob
 }
@@ -351,10 +365,6 @@ def getPerfJobs() {
 
                 if (failed_build_result != 'SUCCESS' && test_mode == 'weekly') {
                     currentBuild.result = "FAILURE"
-                    error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
-                }
-
-                if (downstreamJob.result != 'SUCCESS') {
                     error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                 }
             }
