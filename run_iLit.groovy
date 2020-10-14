@@ -99,6 +99,19 @@ echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
+timeout="timeout 10800"
+if ('tuning_timeout' in params && params.tuning_timeout != ''){
+    tuning_timeout=params.tuning_timeout
+    timeout="timeout ${tuning_timeout}"
+}
+echo "timeout: ${timeout}"
+
+tune_only=false
+if (params.tune_only != null){
+    tune_only=params.tune_only
+}
+echo "tune_only = ${tune_only}"
+
 def new_conda_env=true
 if(framework == 'pytorch'){
     label=model.split('_')
@@ -310,7 +323,6 @@ node( sub_node_label ) {
             }
         }
 
-        timeout="timeout 10800"
         if (nigthly_test_branch == ''){
             timeout="timeout 5400"
         }
@@ -381,7 +393,7 @@ node( sub_node_label ) {
             }
         } else {
             // Nightly tests and OOB MR tests 
-            if (framework != "pytorch") {
+            if (framework != "pytorch" && !tune_only) {
                 batch_size = modelConf."${framework}"."${model}"."batch_size"
                 timeout(360) {
                     stage("Performance") {
