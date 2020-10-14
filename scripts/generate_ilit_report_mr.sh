@@ -179,12 +179,14 @@ function generate_html_core {
 
     tuning_strategy=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $4}')
-    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td>${tuning_strategy}</td><td>${tuning_time}</td>" >> ${WORKSPACE}/report.html
+    tuning_log=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td><td><a href=${tuning_log}>${tuning_time}</a></td>" >> ${WORKSPACE}/report.html
 
     tuning_strategy=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $4}')
+    tuning_log=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
 
-    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -F ';' '
+    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tl=${tuning_log} -F ';' '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -268,7 +270,7 @@ function generate_html_core {
                 }
                 printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
             }else {
-              if(a == nan || b == nan) {
+              if(a == nan && b == nan) {
                 printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
               }else {
                 status_png = "background-color:#FFD2D2";
@@ -303,7 +305,7 @@ function generate_html_core {
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td>Last</td><td>%s</td><td>%s</td>", ts, tt);
+            printf("</tr>\n<tr><td>Last</td><td><a href=%3$s>%1$s</a></td><td><a href=%3$s>%2$s</a></td>", ts, tt, tl);
 
             show_new_last(last_value[1],last_value[13],last_value[2],"ms");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
@@ -371,7 +373,7 @@ cat >> ${WORKSPACE}/report.html << eof
     <div id="main">
 	    <h1 align="center">iLiT Tuning Tests ${MR_TITLE}
         [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
-      <h1 align="center">Test_status: ${Jenkins_job_status}</h1>
+      <h1 align="center">Test Status: ${Jenkins_job_status}</h1>
         <h2>Summary</h2>
 	    <table class="features-table">
 	        <tr>
