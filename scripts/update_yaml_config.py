@@ -18,16 +18,28 @@ with open(args.yaml) as yaml_file:
     yaml_config = yaml.round_trip_load(yaml_file, preserve_quotes=True)
 
 if args.strategy:
+
     tuning_config = yaml_config.get("tuning", {})
+    strategy = {}
     if isinstance(tuning_config, list):
+        # "-" mode
         for config in tuning_config:
-            strategy = config.get("strategy", None)
-            config.update({"strategy": args.strategy})
-            print(f"Changed {strategy} to {args.strategy}")
+            strategy = config.get("strategy", {})
+            if not strategy:
+                config.update({"strategy": {}})
+                strategy = config.get("strategy", {})
+            strategy_name = strategy.get("name", None)
+            strategy.update({"name": args.strategy})
+            print(f"Changed {strategy_name} to {args.strategy}")
     else:
-        strategy = tuning_config.get("strategy", None)
-        tuning_config.update({"strategy": args.strategy})
-        print(f"Changed {strategy} to {args.strategy}")
+        strategy = tuning_config.get("strategy", {})
+        if not strategy:
+            tuning_config.update({"strategy": {}})
+            strategy = tuning_config.get("strategy", {})
+        strategy_name = strategy.get("name", None)
+        strategy.update({"name": args.strategy})
+        print(f"Changed {strategy_name} to {args.strategy}")
+
 
 if args.batch_size:
     try:
