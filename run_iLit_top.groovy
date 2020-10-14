@@ -185,6 +185,12 @@ if (params.tune_only != null){
 }
 echo "tune_only = ${tune_only}"
 
+pipeline_failFast=false
+if (params.pipeline_failFast != null){
+    pipeline_failFast=params.pipeline_failFast
+}
+echo "pipeline_failFast = ${pipeline_failFast}"
+
 binary_build_job = "lastSuccessfulBuild"
 // internal benchmark model list, which should use combine mode
 internal_benchmark_models = [
@@ -371,7 +377,7 @@ def getPerfJobs() {
         }
     }
     
-    if (MR_source_branch != '') {
+    if (MR_source_branch != ''|| pipeline_failFast) {
         echo "enable failFast"
         jobs.failFast = true
     }
