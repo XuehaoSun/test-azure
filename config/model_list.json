@@ -1,7 +1,7 @@
 {
   "tensorflow": {
     "image_recognition": [
-      "resnet50v1.0",
+      "resnet50v1.5",
       "vgg16"
     ],
     "object_detection": [

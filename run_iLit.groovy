@@ -313,16 +313,6 @@ node( sub_node_label ) {
         timeout="timeout 10800"
         if (nigthly_test_branch == ''){
             timeout="timeout 5400"
-            // use mini dataset for tf mr test
-            if (framework == "tensorflow" && model == "resnet50v1.0"){
-                dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
-                dir("${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir}"){
-                    sh (
-                            script: 'sed -i \'s/IMAGENET_NUM_VAL_IMAGES = 50000/IMAGENET_NUM_VAL_IMAGES = 1000/\' datasets.py',
-                            returnStdout: true
-                    ).trim()
-                }
-            }
         }
         echo "Tuning timeout ${timeout}"
         stage("Tuning") {
