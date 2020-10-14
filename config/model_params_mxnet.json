@@ -48,6 +48,14 @@
       "strategy": "basic",
       "batch_size": 64
     },
+    "resnet152_v1": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/mxnet/val_256_q90.rec",
+      "input_model": "/tf_dataset/mxnet/resnet152_v1",
+      "yaml": "cnn.yaml",
+      "strategy": "basic",
+      "batch_size": 64
+    },
     "ssd-resnet50_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/dataset/VOCdevkit",
