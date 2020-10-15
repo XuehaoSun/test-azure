@@ -187,13 +187,6 @@ function update_yaml_config {
         python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params} ${dataset_params}
     fi
 
-    count=$(grep -c 'strategy: ' "${yaml}") || true  # Prevent from exiting when 'strategy' not found
-    if [ ${count} == 0 ]; then
-      strategy='basic'
-    else
-      strategy=$(grep 'strategy: ' ${yaml} | awk -F 'strategy: ' '{print$2}')
-    fi
-
     echo "Tuning strategy: ${strategy}"
 }
 
