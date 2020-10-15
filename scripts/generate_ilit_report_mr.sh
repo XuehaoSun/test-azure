@@ -270,19 +270,25 @@ function generate_html_core {
                 }
                 printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
             }else {
-              if(c == "acc") {
-                if(a == nan){
-                  status_png = "background-color:#FFD2D2";
-                  printf("<td style=\"%s\" colspan=2></td>", status_png);
-                }else{
-                  printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
-                }
+              if(a == nan && b == nan){
+                printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
               }else{
-                if(b == nan){
-                  status_png = "background-color:#FFD2D2";
-                  printf("<td style=\"%s\" colspan=2></td>", status_png);
+                if(c == "acc") {
+                  if(a == nan){
+                    job_status = "fail"
+                    status_png = "background-color:#FFD2D2";
+                    printf("<td style=\"%s\" colspan=2></td>", status_png);
+                  }else{
+                    printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
+                  }
                 }else{
-                  printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
+                  if(b == nan){
+                    job_status = "fail"
+                    status_png = "background-color:#FFD2D2";
+                    printf("<td style=\"%s\" colspan=2></td>", status_png);
+                  }else{
+                    printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
+                  }
                 }
               }
             }
