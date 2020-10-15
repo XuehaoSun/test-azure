@@ -192,27 +192,6 @@ if (params.pipeline_failFast != null){
 echo "pipeline_failFast = ${pipeline_failFast}"
 
 binary_build_job = "lastSuccessfulBuild"
-// internal benchmark model list, which should use combine mode
-internal_benchmark_models = [
-        "resnet50v1.0",
-        "resnet50v1.5",
-        "resnet101",
-        "inception_v1",
-        "inception_v2",
-        "inception_v3",
-        "inception_v4",
-        "inception_resnet_v2",
-        "vgg16",
-        "vgg19",
-        "densenet121",
-        "densenet161",
-        "densenet169",
-        "resnetv2_50",
-        "resnetv2_101",
-        "resnetv2_152",
-        "mobilenetv1",
-        "mobilenetv2"
-]
 
 def cleanup() {
 
@@ -288,9 +267,6 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     println("llsu-----> ${job_framework} : ${framework_version}")
 
     pass_mode=mode
-    if ( internal_benchmark_models.contains(job_model) ){
-        pass_mode = "combine"
-    }
     println("llsu-----> ${pass_mode}")
 
     List ParamsPerJob = []
@@ -472,10 +448,6 @@ def collectLog() {
             if ( job_model in tf_oob_models || job_model == 'style_transfer') {
                 echo "Found OOB model or \"style_transfer\" model. Setting \"latency\" mode."
                 mode_list = ["latency"]
-            }
-            if ( internal_benchmark_models.contains(job_model) ){
-                echo "Found \"internal benchmark model\". Setting \"combine\" mode."
-                mode_list = ["combine"]
             }
             println("mode_list---->" + mode_list)
             // Generate tuning info log

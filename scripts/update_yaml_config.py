@@ -9,7 +9,8 @@ parser.add_argument("--strategy", type=str, required=False, help="Strategy to up
 parser.add_argument("--calib-data", type=str, required=False, help="Path to calibration dataset.")
 parser.add_argument("--eval-data", type=str, required=False, help="Path to evaluation dataset.")
 parser.add_argument("--benchmark-data", type=str, required=False, help="Path to benchmark dataset.")
-parser.add_argument("--batch-size", type=int, required=False, help="Real time batch size.")
+parser.add_argument("--batch-size", type=int, required=False, help="Benchmark batch size.")
+parser.add_argument("--iteration", type=int, required=False, help="Benchmark iteration")
 
 args = parser.parse_args()
 
@@ -40,15 +41,36 @@ if args.strategy:
         strategy.update({"name": args.strategy})
         print(f"Changed {strategy_name} to {args.strategy}")
 
-
+# benchmark batch_size replace
 if args.batch_size:
     try:
-        dataloader = yaml_config.get("dataloader", {})
+        benchmark = yaml_config.get("benchmark", {})
+        if not benchmark:
+            yaml_config.update({"benchmark": {}})
+            benchmark = yaml_config.get("benchmark", {})
+        dataloader = benchmark.get("dataloader", {})
+        if not dataloader:
+            benchmark.update({"dataloader": {}})
+            dataloader = benchmark.get("dataloader", {})
         batch_size = dataloader.get("batch_size", None)
         dataloader.update({"batch_size": args.batch_size})
         print(f"Changed batch size from {batch_size} to {args.batch_size}")
     except Exception as e:
         print(f"[ WARNING ] {e}")
+
+# benchmark iteration replace
+if args.iteration:
+    try:
+        benchmark = yaml_config.get("benchmark", {})
+        if not benchmark:
+            yaml_config.update({"benchmark": {}})
+            benchmark = yaml_config.get("benchmark", {})
+        iteration = benchmark.get("iteration", None)
+        benchmark.update({"iteration": args.iteration})
+        print(f"Changed batch size from {iteration} to {args.iteration}")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
+
 
 # for tuning dataset replace
 if args.calib_data:

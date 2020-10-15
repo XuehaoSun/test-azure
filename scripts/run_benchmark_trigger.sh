@@ -111,8 +111,6 @@ main() {
         run_benchmark;;
       latency)
         run_benchmark;;
-      combine)
-        run_combine;;
       *)
         echo "MODE ${mode} not recognized."; exit 1;;
     esac
@@ -120,6 +118,14 @@ main() {
 
 function run_accuracy {
   parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
+
+  if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
+     iters=-1
+     update_yaml_config
+     echo -e "\nPrint_updated_yaml... "
+     cat ${yaml}
+     parameters="--config=${yaml} --input_model=${input_model}"
+  fi
 
   if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
@@ -153,6 +159,13 @@ function run_benchmark {
 
   parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
 
+  if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
+     update_yaml_config
+     echo -e "\nPrint_updated_yaml... "
+     cat ${yaml}
+     parameters="--config=${yaml} --input_model=${input_model}"
+  fi
+
   if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
   else
@@ -173,53 +186,18 @@ function run_benchmark {
 
 }
 
-# new internal benchmark combine accuracy and latency
-function run_combine {
-  # get cpu information for multi-instance
-  ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
-
-  ncores_per_instance=4
-  batch_size=1
-
-  export OMP_NUM_THREADS=${ncores_per_instance}
-  update_yaml_config
-  echo -e "\nPrint_updated_yaml... "
-  cat ${yaml}
-  parameters="--config=${yaml} --input_model=${input_model}"
-
-  if [ -f "run_benchmark.sh" ]; then
-        run_cmd="bash run_benchmark.sh ${parameters}"
-  else
-        echo "Not found run_benchmark file."
-        exit 1
-  fi
-
-  echo "BENCHMARK RUNCMD: $run_cmd "
-  logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
-
-  for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
-  do
-    numactl -m 0 -C "$j-$((j + ncores_per_instance -1))" \
-    ${run_cmd} 2>&1|tee ${logFile}_${ncores_per_socket}_${ncores_per_instance}_${j}.log &
-  done
-  wait
-
-}
 
 function update_yaml_config {
     if [ ! -f ${yaml} ]; then
         echo "Not found yaml config at \"${yaml}\" location."
         exit 1
     fi
-    update_yaml_params=''
-    if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
-        update_yaml_params=" --batch-size ${batch_size} --benchmark-data ${dataset_location} "
-    fi
+
+    update_yaml_params=" --batch-size ${batch_size} --benchmark-data ${dataset_location} --iteration ${iters}"
 
     if [ "${update_yaml_params}" != "" ]; then
         python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
     fi
-
 }
 
 main
