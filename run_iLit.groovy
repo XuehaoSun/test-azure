@@ -316,9 +316,9 @@ node( sub_node_label ) {
         if ( MR_source_branch != '' ){
             if (framework == "tensorflow"){
                 strategy = "basic"
-            }else if(framework == "pytorch"){
+            }else if(framework == "pytorch" && model == "resnet18"){
                 strategy = "bayesian"
-            }else if(framework == "mxnet"){
+            }else if(framework == "mxnet" && model == "resnet50v1"){
                 strategy = "mse"
             }
         }
