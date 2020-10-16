@@ -1,14 +1,14 @@
 {
   "pytorch": {
     "resnet18": {
-      "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
+      "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
     "resnet50": {
-      "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
+      "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
@@ -22,42 +22,42 @@
       "strategy": "basic"
     },
     "resnext101_32x8d": {
-      "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
+      "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
     "inception_v3": {
-      "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
+      "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
     "mobilenet_v2": {
-      "model_src_dir": "image_recognition/imagenet/cpu/PTQ",
+      "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
     "resnet18_qat": {
-      "model_src_dir": "image_recognition/imagenet/cpu/QAT",
+      "model_src_dir": "image_recognition/imagenet/cpu/qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
     "resnet50_qat": {
-      "model_src_dir": "image_recognition/imagenet/cpu/QAT",
+      "model_src_dir": "image_recognition/imagenet/cpu/qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic"
     },
     "resnet101_qat": {
-      "model_src_dir": "image_recognition/imagenet/cpu/QAT",
+      "model_src_dir": "image_recognition/imagenet/cpu/qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
