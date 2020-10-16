@@ -170,6 +170,11 @@ function update_yaml_config {
         echo "Not found yaml config at \"${yaml}\" location."
         exit 1
     fi
+    # update dataset
+    if [ "${framework}" != "pytorch" ]; then
+      sed -i "/\/path\/to\/calibration\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
+      sed -i "/\/path\/to\/evaluation\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
+    fi
 
     update_yaml_params=""
     # Replace tuning strategy in yaml file
@@ -177,14 +182,8 @@ function update_yaml_config {
         update_yaml_params="${update_yaml_params} --strategy=${strategy}"
     fi
 
-    dataset_params="--calib-data=${dataset_location} --eval-data=${dataset_location}"
-
-    if [ "${framework}" == "pytorch" ]; then
-       dataset_params=" "
-    fi
-
     if [ "${update_yaml_params}" != "" ]; then
-        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params} ${dataset_params}
+        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
     fi
 
     echo "Tuning strategy: ${strategy}"
