@@ -28,19 +28,25 @@ if args.strategy:
     except Exception as e:
         print(f"[ WARNING ] {e}")
 
-# benchmark batch_size and iteration replace
+# performance iteration replace
 if args.iteration:
     try:
-        dataloader = yaml_config.get("evaluation", {}).get("performance", {}).get("dataloader", {})
-        iteration = dataloader.get("iteration", None)
-        dataloader.update({"iteration": args.iteration})
+        performance = yaml_config.get("evaluation", {}).get("performance", {})
+        iteration = performance.get("iteration", None)
+        performance.update({"iteration": args.iteration})
         print(f"Changed batch size from {iteration} to {args.iteration}")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
+
+# performance batch_size replace
+if args.batch_size:
+    try:
+        dataloader = yaml_config.get("evaluation", {}).get("performance", {}).get("dataloader", {})
         batch_size = dataloader.get("batch_size", None)
         dataloader.update({"batch_size": args.batch_size})
         print(f"Changed batch size from {batch_size} to {args.batch_size}")
     except Exception as e:
         print(f"[ WARNING ] {e}")
-
 
 print(f"Saving yaml config back to {args.yaml}")
 
