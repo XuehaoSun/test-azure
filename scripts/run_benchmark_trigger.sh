@@ -193,7 +193,7 @@ function update_yaml_config {
         exit 1
     fi
 
-    update_yaml_params=" --batch-size ${batch_size} --benchmark-data ${dataset_location} --iteration ${iters}"
+    update_yaml_params=" --batch-size ${batch_size} --iteration ${iters}"
 
     if [ "${update_yaml_params}" != "" ]; then
         python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
