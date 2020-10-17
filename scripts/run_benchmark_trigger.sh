@@ -120,9 +120,7 @@ function run_accuracy {
   parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
 
   if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
-     iters=-1
-     update_yaml_config
-     echo -e "\nPrint_updated_yaml... "
+     echo -e "\nPrint_yaml... "
      cat ${yaml}
      parameters="--config=${yaml} --input_model=${input_model}"
   fi
