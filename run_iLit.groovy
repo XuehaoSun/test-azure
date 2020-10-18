@@ -128,6 +128,7 @@ def cleanup() {
 
     try {
         sh '''#!/bin/bash -x
+        sudo rm -rf /home/tensorflow/.ilit
         cd $WORKSPACE
         sudo rm -rf *           
         '''
