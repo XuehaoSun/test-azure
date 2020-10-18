@@ -173,7 +173,7 @@ if ('mode' in params && params.mode != '') {
 }
 echo "Mode: ${mode}"
 
-tuning_timeout="10800"
+tuning_timeout="7200"
 if ('tuning_timeout' in params && params.tuning_timeout != ''){
     tuning_timeout=params.tuning_timeout
 }
