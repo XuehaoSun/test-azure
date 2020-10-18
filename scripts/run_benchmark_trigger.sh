@@ -120,7 +120,9 @@ function run_accuracy {
   parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
 
   if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
-     echo -e "\nPrint_yaml... "
+     iters=-1
+     update_yaml_config
+     echo -e "\nPrint_updated_yaml... "
      cat ${yaml}
      parameters="--config=${yaml} --input_model=${input_model}"
   fi
@@ -155,7 +157,7 @@ function run_benchmark {
 
   export OMP_NUM_THREADS=${ncores_per_instance}
 
-  parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
+    parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
 
   if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
      update_yaml_config
