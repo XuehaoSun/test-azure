@@ -851,7 +851,7 @@
     "vgg19-oob": {
       "model_src_dir": "oob_models",
       "dataset_location": "",
-      "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/vgg/19/tf/vgg19.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 1
