@@ -76,7 +76,7 @@ function set_environment {
             echo "Framework ${framework} not recognized."; exit 1;;
     esac
 
-    echo "Checking ilit..."
+    echo "Checking pip list..."
     python -V
     pip list
     c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
@@ -87,6 +87,8 @@ function set_environment {
 
     cd ${WORKSPACE}
     pip install ilit*.whl
+    echo "Checking ilit..."
+    pip list
 
     if [ ! -d ${WORKSPACE}/ilit-models ]; then
         echo "\"ilit-model\" not found. Exiting..."
