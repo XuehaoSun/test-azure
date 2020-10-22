@@ -323,16 +323,18 @@ def getPerfJobs() {
 
                 downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
 
-                copyArtifacts(
-                    projectName: "intel-iLit-validation",
-                    selector: specific("${downstreamJob.getNumber()}"),
-                    filter: '*.log',
-                    fingerprintArtifacts: true,
-                    target: "${job_framework}/${job_model}",
-                    optional: true)
+                catchError {
+                    copyArtifacts(
+                            projectName: "intel-iLit-validation",
+                            selector: specific("${downstreamJob.getNumber()}"),
+                            filter: '*.log',
+                            fingerprintArtifacts: true,
+                            target: "${job_framework}/${job_model}",
+                            optional: true)
 
-                // Archive in Jenkins
-                archiveArtifacts artifacts: "${job_framework}/${job_model}/**", allowEmptyArchive: true
+                    // Archive in Jenkins
+                    archiveArtifacts artifacts: "${job_framework}/${job_model}/**", allowEmptyArchive: true
+                }
 
                 downstreamJobStatus = downstreamJob.result
                 def failed_build_result = downstreamJob.result
