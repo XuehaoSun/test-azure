@@ -208,6 +208,15 @@ def create_conda_env(){
                     else
                         echo "!!! TF 1.15UP1 do not support ${python_version}"
                     fi
+                elif [ ${framework_version} == '2.4.0' ]; then
+                    wheel_dir=/tf_dataset/tensorflow/wheel
+                    if [ ${python_version} == '3.6' ]; then
+                        pip install ${wheel_dir}/intel_tensorflow-2.4.0-cp36-cp36m-manylinux2010_x86_64.whl
+                    elif [ ${python_version} == '3.7' ]; then
+                        pip install ${wheel_dir}/intel_tensorflow-2.4.0-cp37-cp37m-manylinux2010_x86_64.whl
+                    else
+                        echo "!!! local build TF 2.4.0 do not support ${python_version}"
+                    fi
                 else
                     pip install intel-${framework}==${framework_version}
                 fi
