@@ -51,6 +51,7 @@ done
 
 # Run Benchmark
 main() {
+
     # Import common functions
     source ${WORKSPACE}/ilit-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
 
@@ -74,6 +75,11 @@ main() {
         echo "Not found requirements.txt file."
     fi
 
+    echo -e "\nSet a modified yaml..."
+    echo "${yaml}"
+    cp "${yaml}" "modified_${yaml}"
+    yaml="modified_${yaml}"
+    echo "${yaml}"
 
     echo -e "\nGetting git information..."
     echo "$(git remote -v)"
@@ -157,7 +163,7 @@ function run_benchmark {
 
   export OMP_NUM_THREADS=${ncores_per_instance}
 
-    parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
+  parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
 
   if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
      update_yaml_config
@@ -193,7 +199,7 @@ function update_yaml_config {
         exit 1
     fi
 
-    update_yaml_params=" --batch-size ${batch_size} --iteration ${iters}"
+    update_yaml_params=" --batch-size ${batch_size} --iteration ${iters} --mode ${mode}"
 
     if [ "${update_yaml_params}" != "" ]; then
         python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}

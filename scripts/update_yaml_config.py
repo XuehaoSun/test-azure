@@ -6,6 +6,7 @@ import re
 parser = argparse.ArgumentParser()
 parser.add_argument("--yaml", type=str, required=True, help="Path to yaml config.")
 parser.add_argument("--strategy", type=str, required=False, help="Strategy to update.")
+parser.add_argument("--mode", type=str, required=False, help="Benchmark mode.")
 parser.add_argument("--batch-size", type=int, required=False, help="Benchmark batch size.")
 parser.add_argument("--iteration", type=int, required=False, help="Benchmark iteration")
 
@@ -28,23 +29,38 @@ if args.strategy:
     except Exception as e:
         print(f"[ WARNING ] {e}")
 
-# performance iteration replace
-if args.iteration:
+if args.mode == 'accuracy':
     try:
+        # delete performance part in yaml if exist
         performance = yaml_config.get("evaluation", {}).get("performance", {})
-        iteration = performance.get("iteration", None)
-        performance.update({"iteration": args.iteration})
-        print(f"Changed batch size from {iteration} to {args.iteration}")
+        if performance:
+            yaml_config.get("evaluation", {}).pop("performance", {})
+        # accuracy batch_size replace
+        if args.batch_size:
+            try:
+                dataloader = yaml_config.get("evaluation", {}).get("accuracy", {}).get("dataloader", {})
+                batch_size = dataloader.get("batch_size", None)
+                dataloader.update({"batch_size": args.batch_size})
+                print(f"Changed accuracy batch size from {batch_size} to {args.batch_size}")
+            except Exception as e:
+                print(f"[ WARNING ] {e}")
     except Exception as e:
         print(f"[ WARNING ] {e}")
-
-# performance batch_size replace
-if args.batch_size:
+elif args.mode:
     try:
-        dataloader = yaml_config.get("evaluation", {}).get("performance", {}).get("dataloader", {})
-        batch_size = dataloader.get("batch_size", None)
-        dataloader.update({"batch_size": args.batch_size})
-        print(f"Changed batch size from {batch_size} to {args.batch_size}")
+        # delete accuracy part in yaml if exist
+        accuracy = yaml_config.get("evaluation", {}).get("accuracy", {})
+        if accuracy:
+            yaml_config.get("evaluation", {}).pop("accuracy", {})
+        # performance iteration replace
+        if args.iteration:
+            try:
+                performance = yaml_config.get("evaluation", {}).get("performance", {})
+                iteration = performance.get("iteration", None)
+                performance.update({"iteration": args.iteration})
+                print(f"Changed performance batch size from {iteration} to {args.iteration}")
+            except Exception as e:
+                print(f"[ WARNING ] {e}")
     except Exception as e:
         print(f"[ WARNING ] {e}")
 
