@@ -75,7 +75,6 @@ def download() {
     }
 }
 
-
 def create_conda_env() {
     stage("Create conda env") {
         withEnv(["PYTHON_VERSION=${python_version}"]) {
