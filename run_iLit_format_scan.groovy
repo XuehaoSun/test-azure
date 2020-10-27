@@ -77,16 +77,16 @@ def download() {
 
 def create_conda_env() {
     stage("Create conda env") {
-        withEnv(["PYTHON_VERSION=${python_version}"]) {
+        withEnv(["python_version=${python_version}"]) {
             sh '''#!/bin/bash
                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                conda_env_name=ilit-format_scan-${PYTHON_VERSION}
+                conda_env_name=ilit-format_scan-${python_version}
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-                    # conda create python=${PYTHON_VERSION} -y -n ${conda_env_name}
+                    # conda create python=${python_version} -y -n ${conda_env_name}
                     retry_num=0
                     while true
                     do
-                        tmp_status=$(conda create python=${PYTHON_VERSION} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
+                        tmp_status=$(conda create python=${python_version} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
                 
                         retry_num=$[ $retry_num + 1 ]
                         echo $retry_num
@@ -120,7 +120,7 @@ node(node_label) {
             echo "-----------------  Running Code Scan  -----------------"
             echo "---------------------------------------------------------"
             status = sh(
-            script: "${WORKSPACE}/scripts/run_format_scan.sh --python_version=${PYTHON_VERSION} --tool=${TOOL} --repo_dir=${WORKSPACE}/iLit",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
+            script: "${WORKSPACE}/scripts/run_format_scan.sh --python_version=${python_version} --tool=${TOOL} --repo_dir=${WORKSPACE}/iLit",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
             returnStatus:true)
             if (status != 0) {
                 throw new Exception("Found code format scan errors.")
