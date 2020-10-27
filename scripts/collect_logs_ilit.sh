@@ -29,6 +29,17 @@ echo "---- $framework, $model ----"
 tuning_file="${framework}/${model}/${framework}-${model}-tune.log"
 
 if [ "${mode}" == "tuning" ]; then
+  # Temporary change for helloworld_keras
+  if [ "${model}" == "helloworld_keras" ]; then
+    if [ $(grep 'Inference is done.' ${tuning_file} | wc -l) == 1 ]; then
+      status="SUCCESS";
+    else
+      status="FAILURE"
+    fi
+
+    echo -e "Helloworld Keras,${status},${BUILD_URL}artifact/$tuning_file\n" | tee -a ${WORKSPACE}/summary_overview.log
+    exit 0
+  fi
   strategy=$(grep 'Tuning strategy:' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}')
   tune_count=$(grep -F 'Tune result is: [' ${tuning_file} | wc -l)
   tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}'| sed 's/.$//g')
