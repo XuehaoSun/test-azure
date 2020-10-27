@@ -54,6 +54,15 @@ function createOverview {
         bandit_scan_status="<img src=${png_path}/yellow.png></img>"
     fi
 
+    helloworld_keras=($(grep 'Helloworld Keras' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${helloworld_keras[2]}" == *"FAIL"* ]];then
+        helloworld_keras_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${helloworld_keras[2]}" == *"SUCC"* ]];then
+        helloworld_keras_status="<img src=${png_path}/blue.png></img>"
+    else
+        helloworld_keras_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
     cat >> ${WORKSPACE}/report.html <<  eof
 
     <h2>Overview</h2>
@@ -80,6 +89,12 @@ function createOverview {
                  echo "<tr><td>Bandit Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${bandit_scan[0]}/${bandit_scan[3]}\">${bandit_scan[0]}#${bandit_scan[3]}</a></td>"
                  echo "<td>${bandit_scan_status}</td></tr>"
+             fi
+
+             if [ "${helloworld_keras[3]}" != "" ]; then
+                 echo "<tr><td>Helloworld Keras</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${helloworld_keras[3]}\">Log link</a></td>"
+                 echo "<td>${helloworld_keras_status}</td></tr>"
              fi
         )
     </table>

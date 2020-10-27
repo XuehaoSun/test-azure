@@ -403,7 +403,7 @@ node( sub_node_label ) {
             }
         } else {
             // Nightly tests and OOB MR tests 
-            if (framework != "pytorch" && !tune_only) {
+            if (framework != "pytorch" && !tune_only && model != "helloworld_keras") {
                 batch_size = modelConf."${framework}"."${model}"."batch_size"
                 timeout(360) {
                     stage("Performance") {
@@ -450,7 +450,11 @@ node( sub_node_label ) {
         stage("Check status"){
             dir("${WORKSPACE}"){
                 sh '''#!/bin/bash -x
-                    if [ $(grep 'Found a quantized model which meet accuracy goal.' ${framework}-${model}-tune.log | wc -l) == 0 ];then
+                    control_phrase="Found a quantized model which meet accuracy goal."
+                    if [ "${model}" == "helloworld_keras" ]; then
+                        control_phrase="Inference is done."
+                    fi
+                    if [ $(grep "${control_phrase}" ${framework}-${model}-tune.log | wc -l) == 0 ];then
                         exit 1
                     fi
                 '''

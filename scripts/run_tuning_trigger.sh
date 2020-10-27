@@ -50,6 +50,11 @@ main() {
 
     echo -e "\nSetting environment..."
     set_environment
+
+    # Temporary change for helloworld_keras
+    if [ "${model}" == "helloworld_keras" ]; then
+        model_src_dir="${WORKSPACE}/ilit-models/examples/helloworld"
+    fi
     
     if [ -d ${model_src_dir} ]; then
         cd ${model_src_dir}
@@ -74,6 +79,14 @@ main() {
     echo "$(git remote -v)"
     echo "$(git branch)"
     echo "$(git show | head -5)"
+
+    # Temporary change for helloworld_keras
+    if [ "${model}" == "helloworld_keras" ]; then
+        python train.py
+        cd "tf2.x"
+        python test.py
+        exit 0
+    fi
 
     # ------ WORKAROUND FOR MXNET RESNET50V1 -----
     topology=${model}
