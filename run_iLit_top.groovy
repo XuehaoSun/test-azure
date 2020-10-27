@@ -303,6 +303,10 @@ def getPerfJobs() {
             tf_oob_models = parseStrToList(tensorflow_oob_models)
             job_models = parseStrToList(tensorflow_models)
             job_models = job_models.plus(tf_oob_models)
+            // Temporary change for helloworld_keras
+            if (MR_source_branch != '') {
+                job_models << "helloworld_keras"
+            }
         }else if (job_framework == 'pytorch'){
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
@@ -400,6 +404,7 @@ def collectLog() {
     echo "---------------------------------------------------------"
     echo "------------  running collectLog  -------------"
     echo "---------------------------------------------------------"
+
     def dummy_inference_models = [
         "resnet50v1.5",
         "resnet50v1",
@@ -425,6 +430,10 @@ def collectLog() {
             tf_oob_models = parseStrToList(tensorflow_oob_models)
             job_models = parseStrToList(tensorflow_models)
             job_models = job_models.plus(tf_oob_models)
+            // Temporary change for helloworld_keras
+            if (MR_source_branch != '') {
+                job_models << "helloworld_keras"
+            }
         }else if (job_framework == 'pytorch'){
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
@@ -439,6 +448,7 @@ def collectLog() {
 
         job_models.each { job_model ->
             echo "-------- ${job_framework} - ${job_model} --------"
+
             tf_oob_models = parseStrToList(tensorflow_oob_models)
             // reset mode_list for each model
             if ( MR_source_branch != '' ) {
@@ -461,7 +471,7 @@ def collectLog() {
                 '''
             }
             // For pytorch we collect throughput and accuracy for int8 model from tuning log.
-            if (job_framework == "pytorch") {
+            if (job_framework == "pytorch" || job_model == "helloworld_keras") {
                 return
             }
 
