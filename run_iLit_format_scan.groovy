@@ -75,40 +75,10 @@ def download() {
     }
 }
 
-def create_conda_env(){
-    withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}",
-             "requirement_list=${requirement_list}"]) {
-        sh '''#!/bin/bash -xe
-
-
-            pip config set global.index-url https://pypi.douban.com/simple/
-            conda_env_name=${hostname}
-            if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-                conda create python=${python_version} -y -n ${conda_env_name}
-            else
-                conda remove --name ${conda_env_name} --all -y
-                conda create python=${python_version} -y -n ${conda_env_name}
-            fi
-        
-            source activate ${conda_env_name}
-
-            wait
-
-            if [[ ${requirement_list} != '' ]]; then
-                pip install ${requirement_list}
-            fi
-        
-            echo "pip list all the components------------->"
-            pip list
-            sleep 2
-            echo "------------------------------------------"
-        '''
-    }
-}
 
 def create_conda_env() {
     stage("Create conda env") {
-        withEnv(["PYTHON_VERSION=${PYTHON_VERSION}"]) {
+        withEnv(["PYTHON_VERSION=${python_version}"]) {
             sh '''#!/bin/bash
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 conda_env_name=ilit-format_scan-${PYTHON_VERSION}
