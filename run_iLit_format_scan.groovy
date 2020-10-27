@@ -71,6 +71,7 @@ def download() {
                     ]
                 ]
             }
+        }
     }
 }
 
