@@ -10,7 +10,6 @@ if [ $# != "4" ] ; then
     echo "Expected 4 parameters got $#"
     printf 'Please use following parameters:
     --repo_dir=<path to repository>
-    --target_branch=<MR target branch>
     --tool=<pylint | bandit>
     --python_version=<conda python version>
     '
@@ -22,8 +21,6 @@ do
     case $i in
         --repo_dir=*)
             REPO_DIR=`echo $i | sed "s/${PATTERN}//"`;;
-        --target_branch=*)
-            TARGET_BRANCH=`echo $i | sed "s/${PATTERN}//"`;;
         --tool=*)
             SCAN_TOOL=`echo $i | sed "s/${PATTERN}//"`;;
         --python_version=*)
@@ -53,17 +50,7 @@ main() {
 
     cd ${REPO_DIR}
 
-    if [[ ${TARGET_BRANCH} == '' ]]; then
-        echo "TARGET BRANCH not provided. Executing pylint on current branch: $(git name-rev --name-only HEAD)."
-    else
-        mkdir diff_dir
-        (cp -pv --parents $(git --no-pager diff --name-only $(git show-ref -s remotes/origin/${TARGET_BRANCH})) ./diff_dir) || true
-        cd diff_dir
-        if [ ! -d "ilit" ]; then
-            echo "No changes in ilit module."
-            exit 0
-        fi
-    fi
+    echo "Executing pylint on branch: $(git name-rev --name-only HEAD)."
 
     case ${SCAN_TOOL} in
         "pylint") run_pylint;;
