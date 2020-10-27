@@ -10,9 +10,14 @@ ilit_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
 if ('ilit_url' in params && params.ilit_url != ''){
     ilit_url = params.ilit_url
 }
+
 echo "ilit_url is ${ilit_url}"
 
-try{ echo "PYTHON_VERSION is ${PYTHON_VERSION}"; } catch (Exception e) { PYTHON_VERSION="3.6" ; echo "PYTHON_VERSION is ${PYTHON_VERSION}" }
+python_version="3.6"
+if ('python_version' in params && params.python_version != ''){
+    python_version = params.python_version
+}
+echo "python_version is ${python_version}"
 
 echo "nigthly_test_branch: $nigthly_test_branch"
 echo "MR_source_branch: $MR_source_branch"
@@ -66,6 +71,37 @@ def download() {
                     ]
                 ]
             }
+    }
+}
+
+def create_conda_env(){
+    withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}",
+             "requirement_list=${requirement_list}"]) {
+        sh '''#!/bin/bash -xe
+
+
+            pip config set global.index-url https://pypi.douban.com/simple/
+            conda_env_name=${hostname}
+            if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
+                conda create python=${python_version} -y -n ${conda_env_name}
+            else
+                conda remove --name ${conda_env_name} --all -y
+                conda create python=${python_version} -y -n ${conda_env_name}
+            fi
+        
+            source activate ${conda_env_name}
+
+            wait
+
+            if [[ ${requirement_list} != '' ]]; then
+                pip install ${requirement_list}
+            fi
+        
+            echo "pip list all the components------------->"
+            pip list
+            sleep 2
+            echo "------------------------------------------"
+        '''
         }
     }
 }
@@ -115,7 +151,7 @@ node(node_label) {
             echo "-----------------  Running Code Scan  -----------------"
             echo "---------------------------------------------------------"
             status = sh(
-            script: "${WORKSPACE}/scripts/run_format_scan.sh --python_version=${PYTHON_VERSION} --tool=${TOOL} --repo_dir=${WORKSPACE}/iLit --target_branch=${MR_target_branch}",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
+            script: "${WORKSPACE}/scripts/run_format_scan.sh --python_version=${PYTHON_VERSION} --tool=${TOOL} --repo_dir=${WORKSPACE}/iLit",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
             returnStatus:true)
             if (status != 0) {
                 throw new Exception("Found code format scan errors.")
