@@ -108,23 +108,12 @@ def do_binary_build() {
         sh '''#!/bin/bash
             echo "Create conda env..."
             export PATH=${HOME}/miniconda3/bin/:$PATH
-            if [ $(conda info -e | grep ${conda_env} | wc -l) == 0 ]; then
-                # conda create python=3.6.9 -y -n ${conda_env}
-                retry_num=0
-                while true
-                do
-                    tmp_status=$(conda create python=3.6.9 -y -n ${conda_env} > /dev/null 2>&1 && echo $? || echo $?)
-                
-                    retry_num=$[ $retry_num + 1 ]
-                    echo $retry_num
-                
-                    if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
-                        break
-                    fi
-                done
-            else    
+            if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
                 echo "${conda_env} exist!"
             fi
+
+            conda create python=3.6.9 -y -n ${conda_env}
+
             source activate ${conda_env}
             
             echo "Build binary..."
