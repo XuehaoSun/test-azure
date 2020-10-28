@@ -498,13 +498,16 @@ def collectLog() {
 }
 
 def unitTest() {
-
     List unitTestParams = [
             string(name: "binary_build_job", value: "${binary_build_job}"),
             string(name: "ilit_url", value: "${ilit_url}"),
             string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "python_version", value: "${python_version}"),
+            string(name: "tensorflow_version", value: "${tensorflow_version}"),
+            string(name: "mxnet_version", value: "${mxnet_version}"),
+            string(name: "pytorch_version", value: "${pytorch_version}"),
     ]
     downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
 
