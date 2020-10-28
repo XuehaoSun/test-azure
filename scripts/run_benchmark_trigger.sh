@@ -165,6 +165,12 @@ function run_benchmark {
 
   parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
 
+  # Workaround for deeplab stability
+  if [ "${topology}" == "deeplabv3" ]; then
+    warmup_iters=200
+    sed -i "s/num_warmup [[:digit:]]*/num_warmup ${warmup_iters}/g" ${model_src_dir}/run_benchmark.sh
+  fi
+
   if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
      update_yaml_config
      echo -e "\nPrint_updated_yaml... "
