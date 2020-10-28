@@ -194,7 +194,13 @@ def create_conda_env(){
                     fi
                     pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
                 elif [ ${framework} == 'mxnet' ]; then 
-                    pip install ${framework}-mkl==${framework_version}
+                    if [ ${framework_version} == '1.6.0' ]; then
+                        pip install ${framework}-mkl==${framework_version}
+                    elif [ ${framework_version} == '1.7.0' ]; then
+                        pip install ${framework}==${framework_version}.post1
+                    else
+                        pip install ${framework}==${framework_version}
+                    fi
                 fi
             
                 wait
