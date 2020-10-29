@@ -82,6 +82,7 @@ node(node_label){
     stage("build"){
         retry(5) {
             sh'''#!/bin/bash
+                set -xe
 
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
