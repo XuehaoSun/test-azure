@@ -154,92 +154,67 @@ def parseStrToList(srtingElements, delimiter=',') {
 def create_conda_env(){
     withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}",
              "requirement_list=${requirement_list}"]) {
-        sh '''#!/bin/bash -xe
+        retry(5){
 
-            if [ ${model} = 'dlrm' ]; then
-                export PATH=${HOME}/anaconda3/bin/:$PATH
-            else
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-            fi
+            sh '''#!/bin/bash -xe
 
-            pip config set global.index-url https://pypi.douban.com/simple/
-            conda_env_name=${framework}-${framework_version}-${python_version}
-            if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-                # conda create python=${python_version} -y -n ${conda_env_name}
-                retry_num=0
-                while true
-                do
-                    tmp_status=$(conda create python=${python_version} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
-                
-                    retry_num=$[ $retry_num + 1 ]
-                    echo $retry_num
-                
-                    if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
-                        break
-                    fi
-                done
-            else
-                conda remove --name ${conda_env_name} --all -y
-                # conda create python=${python_version} -y -n ${conda_env_name}
-                retry_num=0
-                while true
-                do
-                    tmp_status=$(conda create python=${python_version} -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
-                
-                    retry_num=$[ $retry_num + 1 ]
-                    echo $retry_num
-                
-                    if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
-                        break
-                    fi
-                done
-            fi
-        
-            source activate ${conda_env_name}
-        
-            if [ ${framework} == 'tensorflow' ]; then     
-                if [ ${framework_version} == '1.15UP1' ]; then
-                    if [ ${python_version} == '3.6' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl                
-                    elif [ ${python_version} == '3.7' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
-                    elif [ ${python_version} == '3.5' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp35-cp35m-manylinux2010_x86_64.whl
-                    else
-                        echo "!!! TF 1.15UP1 do not support ${python_version}"
-                    fi
-                elif [ ${framework_version} == '2.4.0' ]; then
-                    wheel_dir=/tf_dataset/tensorflow/wheel
-                    if [ ${python_version} == '3.6' ]; then
-                        pip install ${wheel_dir}/intel_tensorflow-2.4.0-cp36-cp36m-manylinux2010_x86_64.whl
-                    elif [ ${python_version} == '3.7' ]; then
-                        pip install ${wheel_dir}/intel_tensorflow-2.4.0-cp37-cp37m-manylinux2010_x86_64.whl
-                    else
-                        echo "!!! local build TF 2.4.0 do not support ${python_version}"
-                    fi
+                if [ ${model} = 'dlrm' ]; then
+                    export PATH=${HOME}/anaconda3/bin/:$PATH
                 else
-                    pip install intel-${framework}==${framework_version}
+                    export PATH=${HOME}/miniconda3/bin/:$PATH
                 fi
-            elif [ ${framework} == 'pytorch' ]; then
-                if [ ${model} == 'resnest50' ]; then
-                    framework_version='1.6.0+cpu'
-                fi
-                pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
-            elif [ ${framework} == 'mxnet' ]; then 
-                pip install ${framework}-mkl==${framework_version}
-            fi
-        
-            wait
 
-            if [[ ${requirement_list} != '' ]]; then
-                pip install ${requirement_list}
-            fi
-        
-            echo "pip list all the components------------->"
-            pip list
-            sleep 2
-            echo "------------------------------------------"
-        '''
+                pip config set global.index-url https://pypi.douban.com/simple/
+                conda_env_name=${framework}-${framework_version}-${python_version}
+                if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
+                    conda remove --name ${conda_env_name} --all -y
+                fi
+
+               conda create python=${python_version} -y -n ${conda_env_name}
+
+                source activate ${conda_env_name}
+            
+                if [ ${framework} == 'tensorflow' ]; then     
+                    if [ ${framework_version} == '1.15UP1' ]; then
+                        if [ ${python_version} == '3.6' ]; then
+                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl                
+                        elif [ ${python_version} == '3.7' ]; then
+                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
+                        elif [ ${python_version} == '3.5' ]; then
+                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp35-cp35m-manylinux2010_x86_64.whl
+                        else
+                            echo "!!! TF 1.15UP1 do not support ${python_version}"
+                        fi
+                    else
+                        pip install intel-${framework}==${framework_version}
+                    fi
+                elif [ ${framework} == 'pytorch' ]; then
+                    if [ ${model} == 'resnest50' ]; then
+                        framework_version='1.6.0+cpu'
+                    fi
+                    pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
+                elif [ ${framework} == 'mxnet' ]; then 
+                    if [ ${framework_version} == '1.6.0' ]; then
+                        pip install ${framework}-mkl==${framework_version}
+                    elif [ ${framework_version} == '1.7.0' ]; then
+                        pip install ${framework}==${framework_version}.post1
+                    else
+                        pip install ${framework}==${framework_version}
+                    fi
+                fi
+            
+                wait
+
+                if [[ ${requirement_list} != '' ]]; then
+                    pip install ${requirement_list}
+                fi
+            
+                echo "pip list all the components------------->"
+                pip list
+                sleep 2
+                echo "------------------------------------------"
+            '''
+        }
     }
 }
 

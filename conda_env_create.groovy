@@ -80,45 +80,17 @@ node(node_label){
     }
 
     stage("build"){
+        retry(5) {
             sh'''#!/bin/bash
 
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
                 conda_env_name=${framework}-${framework_version}-${python_version}
-                if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-                    # conda create python=3.6.9 -y -n ${conda_env_name}
-                    retry_num=0
-                    while true
-                    do
-                        tmp_status=$(conda create python=3.6.9 -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
-                    
-                        retry_num=$[ $retry_num + 1 ]
-                        echo $retry_num
-                    
-                        if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
-                            break
-                        fi
-                    done
-                else    
+                if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                     if [ ${refresh_env} = true ]; then
                         conda remove --name ${conda_env_name} --all -y
-
-                        # conda create python=3.6.9 -y -n ${conda_env_name}
-                        retry_num=0
-                        while true
-                        do
-
-	                        tmp_status=$(conda create python=3.6.9 -y -n ${conda_env_name} > /dev/null 2>&1 && echo $? || echo $?)
-	
-	                        retry_num=$[ $retry_num + 1 ]
-	                        echo $retry_num
-	
-	                        if [ $tmp_status -eq 0 -o $retry_num -ge 5 ];then
-		                        break
-	                        fi
-
-                        done
                     fi
+                    conda create python=3.6.9 -y -n ${conda_env_name}
                 fi
                 
                 source activate ${conda_env_name}
@@ -149,6 +121,7 @@ node(node_label){
                 echo "------------------------------------------"
             '''
         }
+    }
 
 }
 
