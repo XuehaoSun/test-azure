@@ -156,7 +156,8 @@ def create_conda_env(){
              "requirement_list=${requirement_list}"]) {
         retry(5){
 
-            sh '''#!/bin/bash -xe
+            sh '''#!/bin/bash
+                set -xe
 
                 if [ ${model} = 'dlrm' ]; then
                     export PATH=${HOME}/anaconda3/bin/:$PATH

@@ -80,6 +80,7 @@ def create_conda_env() {
         withEnv(["python_version=${python_version}"]) {
             retry(5) {
                 sh '''#!/bin/bash
+                    set -xe
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     conda_env_name=ilit-format_scan-${python_version}
                     if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
