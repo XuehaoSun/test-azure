@@ -83,11 +83,11 @@ def create_conda_env() {
                     set -xe
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     conda_env_name=ilit-format_scan-${python_version}
-                    if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
+                    if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                         echo "${conda_env} exist!"
+                    else
+                        conda create python=${python_version} -y -n ${conda_env_name}
                     fi
-
-                    conda create python=${python_version} -y -n ${conda_env_name}
 
                     source activate ${conda_env_name}
 
