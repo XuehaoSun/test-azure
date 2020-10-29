@@ -180,6 +180,7 @@ node(node_label){
             withEnv(["torchvision_version=${torchvision_version}"]) {
                 retry(5) {
                     sh'''#!/bin/bash
+                        set -xe
                         echo "Create new conda env for UT..."
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         # pip config set global.index-url https://pypi.douban.com/simple/

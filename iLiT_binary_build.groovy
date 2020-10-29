@@ -106,6 +106,7 @@ def download() {
 def do_binary_build() {
     if (binary_class == 'wheel') {
         sh '''#!/bin/bash
+            set -xe
             echo "Create conda env..."
             export PATH=${HOME}/miniconda3/bin/:$PATH
             if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
