@@ -182,7 +182,7 @@ node(node_label){
                     sh'''#!/bin/bash
                         echo "Create new conda env for UT..."
                         export PATH=${HOME}/miniconda3/bin/:$PATH
-                        pip config set global.index-url https://pypi.douban.com/simple/
+                        # pip config set global.index-url https://pypi.douban.com/simple/
 
                         if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
                             conda remove --name ${conda_env} --all -y
