@@ -193,6 +193,9 @@ node(node_label){
 
                         source activate ${conda_env}
 
+                        # Upgrade pip
+                        pip install -U pip
+
                         # Install TF
                         if [ ${tensorflow_version} == '1.15UP1' ]; then
                             if [ ${python_version} == '3.6' ]; then

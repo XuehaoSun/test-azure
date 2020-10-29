@@ -171,10 +171,13 @@ def create_conda_env(){
                     conda remove --name ${conda_env_name} --all -y
                 fi
 
-               conda create python=${python_version} -y -n ${conda_env_name}
+                conda create python=${python_version} -y -n ${conda_env_name}
 
                 source activate ${conda_env_name}
-            
+
+                # Upgrade pip
+                pip install -U pip
+
                 if [ ${framework} == 'tensorflow' ]; then     
                     if [ ${framework_version} == '1.15UP1' ]; then
                         if [ ${python_version} == '3.6' ]; then

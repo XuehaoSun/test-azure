@@ -116,7 +116,10 @@ def do_binary_build() {
             conda create python=3.6.9 -y -n ${conda_env}
 
             source activate ${conda_env}
-            
+
+            # Upgrade pip
+            pip install -U pip
+
             echo "Build binary..."
             cd ilit-models
             python3 setup.py sdist bdist_wheel

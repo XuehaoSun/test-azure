@@ -95,7 +95,10 @@ node(node_label){
                 fi
                 
                 source activate ${conda_env_name}
-                
+
+                # Upgrade pip
+                pip install -U pip
+
                 if [ ${requirement_only} = false ]; then
                     if [ ${framework} == 'tensorflow' ]; then
                         pip install intel-${framework}==${framework_version}

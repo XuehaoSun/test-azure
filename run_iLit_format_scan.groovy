@@ -93,6 +93,9 @@ def create_conda_env() {
 
                     wait
 
+                    # Upgrade pip
+                    pip install -U pip
+
                     echo "pip list all the components------------->"
                     pip list
                     sleep 2
