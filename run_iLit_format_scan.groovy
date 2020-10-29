@@ -77,16 +77,16 @@ def download() {
 
 def create_conda_env() {
     stage("Create conda env") {
-        withEnv(["PYTHON_VERSION=${PYTHON_VERSION}"]) {
+        withEnv(["python_version=${python_version}"]) {
             retry(5) {
                 sh '''#!/bin/bash
                     export PATH=${HOME}/miniconda3/bin/:$PATH
-                    conda_env_name=ilit-format_scan-${PYTHON_VERSION}
+                    conda_env_name=ilit-format_scan-${python_version}
                     if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
                         echo "${conda_env} exist!"
                     fi
 
-                    conda create python=${PYTHON_VERSION} -y -n ${conda_env_name}
+                    conda create python=${python_version} -y -n ${conda_env_name}
 
                     source activate ${conda_env_name}
 
