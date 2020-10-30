@@ -127,10 +127,16 @@ if(framework == 'pytorch'){
 def cleanup() {
 
     try {
-        sh '''#!/bin/bash -x
+        sh '''#!/bin/bash 
+        set -x
         sudo rm -rf /home/tensorflow/.ilit
         cd $WORKSPACE
-        sudo rm -rf *           
+        sudo rm -rf *
+        # set perf BKC
+        cat /sys/devices/system/cpu/intel_pstate/no_turbo
+        lscpu
+        echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+        cat /proc/sys/kernel/numa_balancing
         '''
     } catch(e) {
         echo "==============================================="
