@@ -31,6 +31,11 @@ tuning_file="${framework}/${model}/${framework}-${model}-tune.log"
 if [ "${mode}" == "tuning" ]; then
   # Temporary change for helloworld_keras
   if [ "${model}" == "helloworld_keras" ]; then
+    if [ ! -f ${tuning_file} ]; then
+      echo "Helloworld Keras log does not exists. Skipping."
+      exit 0
+    fi
+
     if [ $(grep 'Inference is done.' ${tuning_file} | wc -l) == 1 ]; then
       status="SUCCESS";
     else
