@@ -237,7 +237,7 @@ node(node_label){
             }
         }
         stage('unit test') {
-            timeout(15) {
+            timeout(60) {
                 echo "+---------------- unit test ----------------+"
                 sh '''#!/bin/bash
                     export PATH=${HOME}/miniconda3/bin/:$PATH
