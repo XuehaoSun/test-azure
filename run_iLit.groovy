@@ -175,6 +175,11 @@ def create_conda_env(){
                 conda_env_name=${framework}-${framework_version}-${python_version}
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                     conda remove --name ${conda_env_name} --all -y
+
+                    conda_dir=$(dirname $(dirname $(which conda)))
+                    if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
+                        rm -rf ${conda_dir}/envs/${conda_env_name}
+                    fi
                 fi
 
                 conda create python=${python_version} -y -n ${conda_env_name}

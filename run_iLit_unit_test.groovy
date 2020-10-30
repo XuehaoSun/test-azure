@@ -187,6 +187,11 @@ node(node_label){
 
                         if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
                             conda remove --name ${conda_env} --all -y
+
+                            conda_dir=$(dirname $(dirname $(which conda)))
+                            if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
+                                rm -rf ${conda_dir}/envs/${conda_env_name}
+                            fi
                         fi
 
                         conda create python=${python_version} -y -n ${conda_env}
