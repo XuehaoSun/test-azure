@@ -189,8 +189,8 @@ node(node_label){
                             conda remove --name ${conda_env} --all -y
 
                             conda_dir=$(dirname $(dirname $(which conda)))
-                            if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
-                                rm -rf ${conda_dir}/envs/${conda_env_name}
+                            if [ -d ${conda_dir}/envs/${conda_env} ]; then
+                                rm -rf ${conda_dir}/envs/${conda_env}
                             fi
                         fi
 
