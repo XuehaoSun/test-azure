@@ -1,7 +1,7 @@
 
 // Groovy
 
-credential = '5da0b320-00b8-4312-b653-36d4cf980fcb'
+credential = 'lab_tfbot'
 
 // Parameters Pre-defined
 node_label = "iLit"
