@@ -247,7 +247,7 @@ node(node_label){
                 sh '''#!/bin/bash
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
-                    pip config set global.index-url https://pypi.douban.com/simple/
+                    # pip config set global.index-url https://pypi.douban.com/simple/
                     
                     echo "Checking ilit..."
                     python -V
