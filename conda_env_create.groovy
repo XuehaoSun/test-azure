@@ -85,7 +85,7 @@ node(node_label){
                 set -xe
 
                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+                # pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
                 conda_env_name=${framework}-${framework_version}-${python_version}
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                     if [ ${refresh_env} = true ]; then
