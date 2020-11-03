@@ -135,7 +135,7 @@ def cleanup() {
         # set perf BKC
         cat /sys/devices/system/cpu/intel_pstate/no_turbo
         lscpu
-        echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+        cpupower frequency-set -g performance
         cat /proc/sys/kernel/numa_balancing
         '''
     } catch(e) {
