@@ -96,7 +96,7 @@ function run_benchmark {
   if [[ ${mode} == "latency" ]]; then
       ncores_per_instance=4
       batch_size=1
-      iters=1000
+      iters=500
   else
       ncores_per_instance=${ncores_per_socket}
       iters=100
