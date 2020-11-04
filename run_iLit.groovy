@@ -316,6 +316,11 @@ node( sub_node_label ) {
         if ( MR_source_branch != '' ){
             if (framework == "tensorflow"){
                 strategy = "basic"
+                if (model_src_dir == "image_recognition"){
+                    dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
+                    println("MR test tensorflow model_src_dir is image_recognition.")
+                    println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
+                }
             }else if(framework == "pytorch" && model == "resnet18"){
                 strategy = "bayesian"
             }else if(framework == "mxnet" && model == "resnet50v1"){
@@ -323,7 +328,7 @@ node( sub_node_label ) {
             }
         }
 
-        if (nigthly_test_branch == ''){
+        if ( MR_source_branch != '' ){
             timeout="timeout 5400"
         }
         echo "Tuning timeout ${timeout}"
