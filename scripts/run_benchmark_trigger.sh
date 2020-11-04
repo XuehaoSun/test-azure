@@ -152,7 +152,7 @@ function run_benchmark {
   if [[ ${mode} == "latency" ]]; then
       ncores_per_instance=4
       batch_size=1
-      iters=1000
+      iters=500
       if [ "${model}" == "wide_deep_large_ds" ]; then
         batch_size=100
       fi
