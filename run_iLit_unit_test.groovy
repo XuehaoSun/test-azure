@@ -259,8 +259,14 @@ node(node_label){
                     fi
                                     
                     echo "Install iLiT binary..."
-                    pip install ilit*.whl
-                
+                    n=0
+                    until [ "$n" -ge 5 ]
+                    do
+                        pip install ilit*.whl && break
+                        n=$((n+1))
+                        sleep 5
+                    done
+                    
                     if [ ! -d ${WORKSPACE}/ilit-models ]; then
                         echo "\\"ilit-model\\" not found. Exiting..."
                         exit 1
@@ -278,9 +284,9 @@ node(node_label){
                         n=0
                         until [ "$n" -ge 5 ]
                         do
-                        python -m pip install -r requirements.txt && break
-                        n=$((n+1))
-                        sleep 5
+                            python -m pip install -r requirements.txt && break
+                            n=$((n+1))
+                            sleep 5
                         done
 
                         pip list
