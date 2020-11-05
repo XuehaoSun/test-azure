@@ -9,7 +9,7 @@ parser.add_argument("--strategy", type=str, required=False, help="Strategy to up
 parser.add_argument("--mode", type=str, required=False, help="Benchmark mode.")
 parser.add_argument("--batch-size", type=int, required=False, help="Benchmark batch size.")
 parser.add_argument("--iteration", type=int, required=False, help="Benchmark iteration")
-
+parser.add_argument("--max-trials", type=int, required=False, help="Limit for tuning trials.")
 args = parser.parse_args()
 
 tuning_config = {}
@@ -26,6 +26,21 @@ if args.strategy:
         strategy_name = strategy.get("name", None)
         strategy.update({"name": args.strategy})
         print(f"Changed {strategy_name} to {args.strategy}")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
+
+if args.max_trials:
+    try:
+        tuning_config = yaml_config.get("tuning", {})
+        exit_policy = tuning_config.get("exit_policy", {})
+        if not exit_policy:
+            tuning_config.update({"exit_policy": {
+                "max_trials": args.max_trials
+            }})
+        else:
+            max_trials = exit_policy.get("max_trials", None)
+            exit_policy.update({"max_trials": args.max_trials})
+            print(f"Changed {max_trials} to {args.max_trials}")
     except Exception as e:
         print(f"[ WARNING ] {e}")
 

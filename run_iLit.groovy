@@ -106,6 +106,12 @@ if ('tuning_timeout' in params && params.tuning_timeout != ''){
 }
 echo "timeout: ${timeout}"
 
+max_trials=""
+if ('max_trials' in params && params.max_trials != ''){
+    max_trials=params.max_trials
+}
+echo "max_trials: ${max_trials}"
+
 tune_only=false
 if (params.tune_only != null){
     tune_only=params.tune_only
@@ -348,6 +354,7 @@ node( sub_node_label ) {
                     --input_model=${input_model} \
                     --yaml=${yaml} \
                     --strategy=${strategy} \
+                    --max_trials=${max_trials} \
                     --conda_env_name=${framework}-${framework_version}-${python_version} \
                     2>&1 | tee ${framework}-${model}-tune.log
             """
