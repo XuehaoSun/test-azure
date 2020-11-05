@@ -179,6 +179,12 @@ if ('tuning_timeout' in params && params.tuning_timeout != ''){
 }
 echo "tuning_timeout: ${tuning_timeout}"
 
+max_trials=""
+if ('max_trials' in params && params.max_trials != ''){
+    max_trials=params.max_trials
+}
+echo "max_trials: ${max_trials}"
+
 tune_only=false
 if (params.tune_only != null){
     tune_only=params.tune_only
@@ -285,6 +291,7 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
     ParamsPerJob += string(name: "mode", value: "${pass_mode}")
     ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
+    ParamsPerJob += string(name: "max_trials", value: "${max_trials}")
     ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
 
     return ParamsPerJob
