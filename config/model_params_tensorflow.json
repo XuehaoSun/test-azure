@@ -1,5 +1,13 @@
 {
   "tensorflow": {
+    "helloworld_keras": {
+      "model_src_dir": "",
+      "dataset_location": "",
+      "input_model": "",
+      "yaml": "",
+      "strategy": "basic",
+      "batch_size": 1
+    },
     "resnet50v1.0": {
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
@@ -976,11 +984,299 @@
       "strategy": "basic",
       "batch_size": 1
     },
-    "helloworld_keras": {
-      "model_src_dir": "",
+    "ALBERT": {
+      "model_src_dir": "oob_models",
       "dataset_location": "",
-      "input_model": "",
-      "yaml": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/ALBERT/ALBERT.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "BERT_BASE": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/BERT_BASE/BERT_BASE.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "BERT-LARGE": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/BERT_LARGE/BERT_LARGE.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "CapsuleNet": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/CapsuleNet/CapsuleNet.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "CharCNN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/CharCNN/epoch000.model.meta",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "CRNN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "DIEN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/DIEN/dien.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "dense_vnet_abdominal_ct": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/semantic_segmentation/dense_vnet/tf/dense_vnet_abdominal_ct.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "dilation": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/Dilation/dilation.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "faster_rcnn_inception_resnet_v2_atrous_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_inception_resnet_v2_atrous_coco/tf/faster_rcnn_inception_resnet_v2_atrous_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "faster_rcnn_inception_resnet_v2_atrous_lowproposals_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "faster_rcnn_nas_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_nas_coco/frozen_inference_graph.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "faster_rcnn_nas_lowproposals_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_nas_lowproposals_coco/tf/faster_rcnn_nas_lowproposals_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "GAN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/GAN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "gmcnn-places2": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/image_inpainting/gmcnn/tf/gmcnn-places2.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "LSGAN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/LSGAN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "mask_rcnn_inception_resnet_v2_atrous_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/instance_segmentation/mask_rcnn/mask_rcnn_inception_resnet_v2_atrous_coco/tf/mask_rcnn_inception_resnet_v2_atrous_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "NCF-1B": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/ncf_trained_movielens_1m/ncf.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "R-FCN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/R-FCN/rfcn_resnet101_coco_2018_01_28/frozen_inference_graph.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "TextCNN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "TextRNN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "Transformer-LT": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/transformer_lt_official_fp32_pretrained_model/graph/fp32_graphdef.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "ACGAN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/ACGAN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "BEGAN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/BEGAN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "CGAN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/CGAN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "DRAGAN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/DRAGAN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "EBGAN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/EBGAN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "infoGAN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/infoGAN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "mask_rcnn_resnet101_atrous_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/instance_segmentation/mask_rcnn/mask_rcnn_resnet101_atrous_coco/tf/mask_rcnn_resnet101_atrous_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "mask_rcnn_resnet50_atrous_coco": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/instance_segmentation/mask_rcnn/mask_rcnn_resnet50_atrous_coco/tf/mask_rcnn_resnet50_atrous_coco.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "person-vehicle-bike-detection-crossroad-yolov3-1024": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/Security/object_detection/crossroad/1024/tf/person-vehicle-bike-detection-crossroad-yolov3-1024.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "srgan": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "SSD-ResNet34_1200x1200": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/SSD-ResNet34_1200x1200/ssd_resnet34_fp32_1200x1200_pretrained_model.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "unet-3d-isensee_2017": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/volumetric_segmentation/unet/3d/isensee_2017/tf/unet-3d-isensee_2017.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "unet-3d-origin": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/volumetric_segmentation/unet/3d/origin/tf/unet-3d-origin.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "WGAN_GP": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/WGAN_GP.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "wide_deep": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/wide_deep/wide_deep.pb",
+      "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 1
     }
