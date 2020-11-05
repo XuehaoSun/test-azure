@@ -199,6 +199,8 @@ echo "pipeline_failFast = ${pipeline_failFast}"
 
 binary_build_job = "lastSuccessfulBuild"
 
+try{ echo "COBERTURA=${COBERTURA}"; } catch (Exception e) { COBERTURA=false; echo "COBERTURA=${COBERTURA}" }
+
 def cleanup() {
 
     try {
@@ -524,12 +526,33 @@ def unitTest() {
     copyArtifacts(
             projectName: "iLit-unit-test",
             selector: specific("${downstreamJob.getNumber()}"),
-            filter: '*.log',
+            filter: '*.log, *.txt, **/coverage_results/**/*',
             fingerprintArtifacts: true,
             target: "unittest")
 
     // Archive in Jenkins
     archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+    if (COBERTURA) {
+        step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false,
+            coberturaReportFile: '**/coverage.xml', failUnhealthy: false, failUnstable: false,
+            maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+    }
+    
+    // Update timestamps of the test reports
+    sh '''
+        cd ${WORKSPACE}/unittest
+        touch *.xml
+    '''
+
+    overview = readFile file: "${overview_log}"
+    coverage_status = readFile file: "unittest/coverage_status.txt"
+    writeFile file: "${overview_log}", text: overview + coverage_status + "\n"
+
+    // Coverage decrease is not allowed in MRs
+    if (nigthly_test_branch == "" && coverage_status.split(",")[1] != "SUCCESS") {
+        currentBuild.result = "FAILURE"
+    }
+
 
     if (downstreamJob.result != 'SUCCESS') {
         error("Unit tests failed.")
@@ -590,6 +613,8 @@ def generateReport() {
             "tuneLog=${TUNETXT}",
             "tuneLogLast=${tuneLogLast}",
             "overview_log=${overview_log}",
+            "coverage_summary=${coverage_summary}",
+            "coverage_summary_base=${coverage_summary_base}",
             "Jenkins_job_status=${Jenkins_job_status}"
         ]) {
             sh '''
@@ -706,6 +731,9 @@ node( node_label ) {
         TUNETXT = "${WORKSPACE}/tuning_info.log"
         writeFile file: TUNETXT, text: "Framework;Model;Strategy;Tune_time\n"
         tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
+
+        coverage_summary = "${WORKSPACE}/unittest/coverage_summary.log"
+        coverage_summary_base = "${WORKSPACE}/unittest/coverage_summary_base.log"
 
         // over view log
         overview_log = "${WORKSPACE}/summary_overview.log"

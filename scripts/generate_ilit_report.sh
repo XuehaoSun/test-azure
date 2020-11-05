@@ -6,6 +6,11 @@
 # tuneLog=tuning_info.log
 # tuneLogLast=tuning_info.log
 # overview_log=summary_overview.log
+# coverage_summary=coverage_summary.log
+
+lines_coverage_threshold=80
+branches_coverage_threshold=60
+
 
 function main {
     echo "summaryLog: ${summaryLog}"
@@ -13,6 +18,7 @@ function main {
     echo "tunelog: ${tuneLog}"
     echo "last tunelog: ${tuneLogLast}"
     echo "overview log: ${overview_log}"
+    echo "coverage_summary: ${coverage_summary}"
     generate_html_head
     generate_html_body
     generate_results
@@ -62,6 +68,19 @@ function createOverview {
         helloworld_keras_status="<img src=${png_path}/yellow.png></img>"
     fi
 
+    if [ -f "${coverage_summary}" ]; then
+        coverage=($(grep 'coverage_status' ${overview_log} |sed 's/,/ /g'))
+        echo "Coverage: ${coverage}"
+        if [[ "${coverage[1]}" == *"FAIL"* ]];then
+            coverage_status="<img src=${png_path}/red.png></img>"
+        elif [[ "${coverage[1]}" == *"SUCC"* ]];then
+            coverage_status="<img src=${png_path}/blue.png></img>"
+        else
+            coverage_status="<img src=${png_path}/yellow.png></img>"
+        fi
+    fi
+
+
     cat >> ${WORKSPACE}/report.html <<  eof
 
     <h2>Overview</h2>
@@ -95,10 +114,69 @@ function createOverview {
                  echo "<td style=\"text-align:left\"><a href=\"${helloworld_keras[3]}\">Log link</a></td>"
                  echo "<td>${helloworld_keras_status}</td></tr>"
              fi
+
+             if [ ${#coverage[@]} -gt 0 ] && [ "${coverage[1]}" != "" ]; then
+                echo "<tr><td>Code Coverage Scan</td>"
+                echo "<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a></td>"
+                echo "<td>${coverage_status}</td></tr>"
+            fi
+
         )
     </table>
 eof
 }
+
+function createCoverageOverview {
+    lines_coverage=($(grep 'lines_coverage' ${coverage_summary} |sed 's/,/ /g'))
+    branches_coverage=($(grep 'branches_coverage' ${coverage_summary} |sed 's/,/ /g'))
+
+    echo """
+        <h2>Code Coverage</h2> 
+        <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;empty-cells: hide\">
+        <tr>
+            <th></th>
+            <th>Covered</th>
+            <th>Total</th>
+            <th>Coverage</th>
+        </tr>
+        <tr>
+            <td>Lines</td>
+            <td>${lines_coverage[1]}</td>
+            <td>${lines_coverage[2]}</td>
+    """ >> ${WORKSPACE}/report.html
+
+    awk -v lines_coverage="${lines_coverage[3]}" -v lines_coverage_threshold="${lines_coverage_threshold}" -F ';' '
+    BEGIN {
+        if(lines_coverage < lines_coverage_threshold) {
+            printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", lines_coverage);
+        } else {
+            printf("<td style=\"background-color:#90EE90\">%.2f %</td>", lines_coverage);
+        }
+    }' >> ${WORKSPACE}/report.html
+
+    echo """
+        </tr>
+        <tr>
+            <td>Branches</td>
+            <td>${branches_coverage[1]}</td>
+            <td>${branches_coverage[2]}</td>
+    """ >> ${WORKSPACE}/report.html
+
+    awk -v branches_coverage="${branches_coverage[3]}" -v branches_coverage_threshold="${branches_coverage_threshold}" -F ';' '
+    BEGIN {
+        if(branches_coverage < branches_coverage_threshold) {
+                printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", branches_coverage);
+            } else {
+                printf("<td style=\"background-color:#90EE90\">%.2f %</td>", branches_coverage);
+            }
+    }' >> ${WORKSPACE}/report.html
+
+    echo """
+        </tr>
+        </table>
+    """ >> ${WORKSPACE}/report.html
+}
+
 
 function generate_inference {
 
@@ -425,6 +503,9 @@ cat >> ${WORKSPACE}/report.html << eof
 eof
 
 createOverview
+if [ -f "${coverage_summary}" ]; then
+    createCoverageOverview
+fi
 
 cat >> ${WORKSPACE}/report.html << eof
 	    <h2>Benchmark</h2>

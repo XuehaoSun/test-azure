@@ -95,6 +95,10 @@ if (pytorch_version_postfix != "") {
 }
 println("torchvision_version: " + torchvision_version)
 
+lines_coverage_threshold = 80
+branches_coverage_threshold = 60
+
+
 def cleanup() {
 
     try {
@@ -128,7 +132,6 @@ def download() {
                         extensions                       : [
                                 [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
                                 [$class: 'CloneOption', timeout: 60],
-                                [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                         ],
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
@@ -136,6 +139,22 @@ def download() {
                                 url          : "${ilit_url}"]
                         ]
                 ]
+                checkout changelog: true, poll: true, scm: [
+                    $class                           : 'GitSCM',
+                    branches                         : [[name: "${MR_target_branch}"]],
+                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions                       : [
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models-base"],
+                            [$class: 'CloneOption', timeout: 60]
+                    ],
+                    submoduleCfg                     : [],
+                    userRemoteConfigs                : [
+                            [credentialsId: "${credential}",
+                             url          : "${ilit_url}"]
+                    ]
+                ]
+
             }
             else {
                 checkout changelog: true, poll: true, scm: [
@@ -159,12 +178,12 @@ def download() {
 }
 
 node(node_label){
-    try{
+    try {
         cleanup()
-        stage('download'){
+        stage('download') {
             download()
         }
-        stage('copy binary'){
+        stage('copy binary') {
             catchError {
                 copyArtifacts(
                         projectName: 'iLiT-release-wheel-build',
@@ -176,7 +195,7 @@ node(node_label){
                 archiveArtifacts artifacts: "ilit*.whl"
             }
         }
-        stage('env_build'){
+        stage('env_build') {
             withEnv(["torchvision_version=${torchvision_version}"]) {
                 retry(5) {
                     sh'''#!/bin/bash
@@ -241,10 +260,11 @@ node(node_label){
                 }
             }
         }
+
         stage('unit test') {
             timeout(30) {
                 echo "+---------------- unit test ----------------+"
-                sh '''#!/bin/bash
+                ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
                     # pip config set global.index-url https://pypi.douban.com/simple/
@@ -284,7 +304,7 @@ node(node_label){
                         n=0
                         until [ "$n" -ge 5 ]
                         do
-                            python -m pip install -r requirements.txt && break
+                            python -m pip install -r requirements.txt && pip install coverage && break
                             n=$((n+1))
                             sleep 5
                         done
@@ -293,26 +313,149 @@ node(node_label){
                     else
                         echo "Not found requirements.txt file."
                     fi
-                
-                    find . -name "test*.py" | sed 's/.\\//python /g' > run.sh
+
+                    export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
+
+                    ilit_path=$(python -c 'import ilit; import os; print(os.path.dirname(ilit.__file__))')
+                    find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${ilit_path}"' --append ,g' > run.sh
                     ut_log_name=${WORKSPACE}/unit_test.log
+                    coverage erase
                     bash run.sh 2>&1 | tee ${ut_log_name}
+                    coverage report -m
+                    coverage html -d ${WORKSPACE}/coverage_results/htmlcov
+                    coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml
                     if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                         exit 1
                     fi
-                '''
+                    ''')
+                if (ut_status != 0) {
+                    currentBuild.result = 'FAILURE'
+                }
             }
-
         }
 
-    }catch (e) {
+        stage("Coverage status check") {
+            branch = nigthly_test_branch
+            if (MR_source_branch != "") {
+                branch = MR_source_branch
+            }
+            println("Getting coverage on branch \"" + branch + "\"")
+            // Get coverage summary
+            sh '''#!/bin/bash
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                source activate ${conda_env}
+                python ${WORKSPACE}/scripts/get_coverage_summary.py \
+                    --cov-xml=${WORKSPACE}/coverage_results/coverage.xml \
+                    --summary-file=${WORKSPACE}/coverage_summary.log
+            '''
+            lines_coverage = Float.parseFloat(sh(
+                script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
+                returnStdout: true
+                ).trim())
+            println("Lines coverage: " + lines_coverage)
+
+            branches_coverage = Float.parseFloat(sh(
+                script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
+                returnStdout: true
+                ).trim())
+            println("Branches coverage: " + branches_coverage)
+
+            if (MR_source_branch == "") {
+                try {
+                    if (lines_coverage < lines_coverage_threshold) {
+                        println("Lines coverage below threshold!")
+                        error("Lines coverage below threshold!")
+                    }
+                    if (branches_coverage < branches_coverage_threshold) {
+                        println("Branches coverage below threshold!")
+                        error("Branches coverage below threshold!")
+                    }
+                    echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
+                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
+                } catch(e) {
+                    echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
+                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
+                }
+            } else {
+                println("Getting base coverage on branch \"" + MR_target_branch + "\"")
+                sh '''#!/bin/bash
+                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    source activate ${conda_env}
+
+                    pip uninstall ilit -y
+                    cd ${WORKSPACE}/ilit-models-base
+                    python setup.py install
+                    pip list
+
+                    cd ${WORKSPACE}/ilit-models-base/test
+                    if [ -f "requirements.txt" ]; then
+                        sed -i '/^ilit/d' requirements.txt
+                        sed -i '/^intel-tensorflow/d' requirements.txt
+                        sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                        sed -i '/^torch/d' requirements.txt
+                        sed -i '/^mxnet-mkl/d' requirements.txt
+
+                        n=0
+                        until [ "$n" -ge 5 ]
+                        do
+                        python -m pip install -r requirements.txt && break
+                        n=$((n+1))
+                        sleep 5
+                        done
+
+                        pip list
+                    else
+                        echo "Not found requirements.txt file."
+                    fi
+                
+                    export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
+
+                    ilit_path=$(python -c 'import ilit; import os; print(os.path.dirname(ilit.__file__))')
+                    find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${ilit_path}"' --append ,g' > run.sh
+                    ut_log_name=${WORKSPACE}/unit_test_base.log
+                    coverage erase
+                    bash run.sh 2>&1 | tee ${ut_log_name}
+                    coverage report -m
+                    coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml
+
+                    python ${WORKSPACE}/scripts/get_coverage_summary.py \
+                        --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
+                        --summary-file=${WORKSPACE}/coverage_summary_base.log
+
+                '''
+                lines_coverage_base = Float.parseFloat(sh(
+                    script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
+                    returnStdout: true
+                    ).trim())
+                branches_coverage_base = Float.parseFloat(sh(
+                    script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
+                    returnStdout: true
+                    ).trim())
+                try {
+                    if (lines_coverage < lines_coverage_base) {
+                        error("Lines coverage decreased!")
+                    }
+
+                    if (branches_coverage < branches_coverage_base) {
+                        error("Branches coverage decreased!")
+                    }
+
+                    echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
+                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
+                } catch(e) {
+                    echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
+                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
+                }
+            }
+        }
+    } catch (e) {
         // If there was an exception thrown, the build failed
         currentBuild.result = "FAILURE"
         throw e
-    }finally {
+    } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log,*/*.log', excludes: null
+            archiveArtifacts artifacts: '*.log, coverage_status.txt, **/coverage_results/**/*', excludes: null
             fingerprint: true
         }
     }

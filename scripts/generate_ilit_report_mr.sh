@@ -6,6 +6,8 @@
 # tuneLog=tuning_info.log
 # tuneLogLast=tuning_info.log
 # overview_log=summary_overview.log
+# coverage_summary=coverage_summary.log
+# coverage_summary_base=coverage_summary_base.log
 
 function main {
     echo "summaryLog: ${summaryLog}"
@@ -14,6 +16,8 @@ function main {
     echo "last tunelog: ${tuneLogLast}"
     echo "overview_log: ${overview_log}"
     echo "Jenkins_job_status: ${Jenkins_job_status}"
+    echo "coverage_summary: ${coverage_summary}"
+    echo "coverage_summary_base: ${coverage_summary_base}"
     generate_html_head
     generate_html_body
     generate_results
@@ -63,6 +67,18 @@ function createOverview {
         helloworld_keras_status="<img src=${png_path}/yellow.png></img>"
     fi
 
+    if [ -f "${coverage_summary}" ] && [ -f "${coverage_summary_base}" ]; then
+        coverage=($(grep 'coverage_status' ${overview_log} |sed 's/,/ /g'))
+        echo "Coverage: ${coverage}"
+        if [[ "${coverage[1]}" == *"FAIL"* ]];then
+            coverage_status="<img src=${png_path}/red.png></img>"
+        elif [[ "${coverage[1]}" == *"SUCC"* ]];then
+            coverage_status="<img src=${png_path}/blue.png></img>"
+        else
+            coverage_status="<img src=${png_path}/yellow.png></img>"
+        fi
+    fi
+
     cat >> ${WORKSPACE}/report.html <<  eof
 
     <h2>Overview</h2>
@@ -96,9 +112,69 @@ function createOverview {
                  echo "<td style=\"text-align:left\"><a href=\"${helloworld_keras[3]}\">Log link</a></td>"
                  echo "<td>${helloworld_keras_status}</td></tr>"
              fi
+
+             if [ ${#coverage[@]} -gt 0 ] && [ "${coverage[1]}" != "" ]; then
+                echo "<tr><td>Code Coverage Scan</td>"
+                echo "<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a></td>"
+                echo "<td>${coverage_status}</td></tr>"
+            fi
+
         )
     </table>
 eof
+}
+
+function createCoverageOverview {
+    lines_coverage=($(grep 'lines_coverage' ${coverage_summary} |sed 's/,/ /g'))
+    branches_coverage=($(grep 'branches_coverage' ${coverage_summary} |sed 's/,/ /g'))
+
+    lines_coverage_base=($(grep 'lines_coverage' ${coverage_summary_base} |sed 's/,/ /g'))
+    branches_coverage_base=($(grep 'branches_coverage' ${coverage_summary_base} |sed 's/,/ /g'))
+
+    echo """
+        <h2>Code Coverage</h2> 
+        <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;\">
+        <tr>
+            <td></td>
+            <td>Base branch coverage</td>
+            <td>MR branch coverage</td>
+            <td>Diff</td>
+        </tr>
+        <tr>
+            <td>Lines</td>
+            <td>${lines_coverage_base[3]} %</td>
+            <td>${lines_coverage[3]} %</td>
+    """ >> ${WORKSPACE}/report.html
+
+    awk -v lines_coverage="${lines_coverage[3]}" -v lines_coverage_base="${lines_coverage_base[3]}" -F ';' '
+    BEGIN {
+        lines_coverage_diff = lines_coverage - lines_coverage_base
+        if(lines_coverage_diff < 0) {
+            printf("<td style=\"background-color:#FFD2D2\">%.2f</td>", lines_coverage_diff);
+        } else {
+            printf("<td style=\"background-color:#90EE90\">%.2f</td>", lines_coverage_diff);
+        }
+    }' >> ${WORKSPACE}/report.html
+    echo """
+        </tr>
+        <tr>
+            <td>Branches</td>
+            <td>${branches_coverage_base[3]} %</td>
+            <td>${branches_coverage[3]} %</td>
+    """ >> ${WORKSPACE}/report.html
+    awk -v branches_coverage="${branches_coverage[3]}" -v branches_coverage_base="${branches_coverage_base[3]}" -F ';' '
+    BEGIN {
+        branches_coverage_diff = branches_coverage - branches_coverage_base
+        if(branches_coverage_diff < 0) {
+            printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", branches_coverage_diff);
+        } else {
+            printf("<td style=\"background-color:#90EE90\">%.2f %</td>", branches_coverage_diff);
+        }
+    }' >> ${WORKSPACE}/report.html
+    echo """
+        </tr>
+        </table>
+    """ >> ${WORKSPACE}/report.html
 }
 
 function generate_inference {
@@ -426,6 +502,7 @@ cat >> ${WORKSPACE}/report.html << eof
 eof
 
 createOverview
+createCoverageOverview
 
 cat >> ${WORKSPACE}/report.html << eof
         <h2>Benchmark</h2>
