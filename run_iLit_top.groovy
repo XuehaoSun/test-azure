@@ -124,6 +124,7 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
         MR_source_branch = "${gitlabSourceBranch}"
         MR_target_branch = "${gitlabTargetBranch}"
         updateGitlabCommitStatus state: 'pending'
+        addGitLabMRComment comment: "Pipeline started: [Job-${BUILD_NUMBER}](${BUILD_URL})"
         gitLabConnection('gitlab.devtools.intel.com')
     }
 }
