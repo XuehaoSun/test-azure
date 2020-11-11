@@ -166,9 +166,9 @@ function createCoverageOverview {
     BEGIN {
         branches_coverage_diff = branches_coverage - branches_coverage_base
         if(branches_coverage_diff < 0) {
-            printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", branches_coverage_diff);
+            printf("<td style=\"background-color:#FFD2D2\">%.2f</td>", branches_coverage_diff);
         } else {
-            printf("<td style=\"background-color:#90EE90\">%.2f %</td>", branches_coverage_diff);
+            printf("<td style=\"background-color:#90EE90\">%.2f</td>", branches_coverage_diff);
         }
     }' >> ${WORKSPACE}/report.html
     echo """
