@@ -146,6 +146,17 @@ function run_accuracy {
 }
 
 function run_benchmark {
+  # define a low iteration list to save time
+  # if latency ~ 500 ms , then set iter = 200. if latency ~ 1000 ms, then set iter = 100
+  latency_high_500=("arttrack-coco-multi" "arttrack-mpii-single" "east_resnet_v1_50" \
+  "DeepLab" "mask_rcnn_resnet50_atrous_coco")
+
+  latency_high_1000=("efficientnet-b7_auto_aug" "i3d-flow" "i3d-rgb" "VNet" "icnet-camvid-ava-0001" \
+  "icnet-camvid-ava-sparse-30-0001" "icnet-camvid-ava-sparse-60-0001" "dilation" \
+  "faster_rcnn_inception_resnet_v2_atrous_coco" "faster_rcnn_nas_coco" "faster_rcnn_nas_lowproposals_coco" \
+  "gmcnn-places2" "mask_rcnn_inception_resnet_v2_atrous_coco" "Transformer-LT" "mask_rcnn_resnet101_atrous_coco" \
+  "person-vehicle-bike-detection-crossroad-yolov3-1024" "unet-3d-isensee_2017" "unet-3d-origin")
+
   # get cpu information for multi-instance
   ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
 
@@ -155,6 +166,12 @@ function run_benchmark {
       iters=500
       if [ "${model}" == "wide_deep_large_ds" ]; then
         batch_size=100
+      fi
+      # custom iteration
+      if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
+        iters=200
+      elif [[ "${latency_high_1000[@]}" =~ "${model}" ]]; then
+        iters=100
       fi
   else
       ncores_per_instance=${ncores_per_socket}
