@@ -71,6 +71,7 @@ pt_list = pytorch_versions.split(",")
 mx_list = mxnet_versions.split(",")
 
 def tensorflow_models_pass = ""
+def tensorflow_oob_models_pass = ""
 def pytorch_models_pass = ""
 def mxnet_models_pass = ""
 def weekly_description = ""
@@ -176,19 +177,21 @@ node( 'master' ) {
 
                                     // set models
                                     tensorflow_models_pass = tensorflow_models
+                                    tensorflow_oob_models_pass = tensorflow_oob_models
                                     pytorch_models_pass = pytorch_models
                                     mxnet_models_pass = mxnet_models
                                     weekly_description = "${py}-${fw}-${fw_ver}-${st}"
                                     if(py == '3.6' && st == 'basic') {
-                                        if (fw == 'tensorflow') {
+                                        if (fw == 'tensorflow' && fw_ver == '2.2.0') {
                                             tensorflow_models_pass = all_tensorflow_models
+                                            tensorflow_oob_models_pass = all_tensorflow_oob_models
                                             weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
                                         }
                                         if (fw == 'pytorch' && fw_ver == '1.5.0+cpu') {
                                             pytorch_models_pass = all_pytorch_models
                                             weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
                                         }
-                                        if (fw == 'mxnet' && fw_ver == '1.6.0') {
+                                        if (fw == 'mxnet' && fw_ver == '1.7.0') {
                                             mxnet_models_pass = all_mxnet_models
                                             weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
                                         }
@@ -206,6 +209,7 @@ node( 'master' ) {
                                         string(name: 'sub_node_label', value:"${node_label}"),
                                         string(name: 'refer_build', value:"${refer_number}"),
                                         string(name: 'tensorflow_models', value:"${tensorflow_models_pass}"),
+                                        string(name: 'tensorflow_oob_models', value:"${tensorflow_oob_models_pass}"),
                                         string(name: 'pytorch_models', value:"${pytorch_models_pass}"),
                                         string(name: 'mxnet_models', value:"${mxnet_models_pass}"),
                                         string(name: 'ilit_url', value:"${ilit_url}"),
