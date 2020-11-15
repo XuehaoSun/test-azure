@@ -125,12 +125,14 @@ main() {
 function run_accuracy {
   parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
 
-  if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
-     iters=-1
-     update_yaml_config
-     echo -e "\nPrint_updated_yaml... "
-     cat ${yaml}
-     parameters="--config=${yaml} --input_model=${input_model}"
+  if [ "${framework}" == "tensorflow" ]; then
+    if [[ "${model_src_dir}" == *"image_recognition" ]] || [[ "${model_src_dir}" == *"object_detection" ]]; then
+      iters=-1
+      update_yaml_config
+      echo -e "\nPrint_updated_yaml... "
+      cat ${yaml}
+      parameters="--config=${yaml} --input_model=${input_model}"
+    fi
   fi
 
   if [ -f "run_benchmark.sh" ]; then
@@ -188,11 +190,13 @@ function run_benchmark {
     sed -i "s/num_warmup [[:digit:]]*/num_warmup ${warmup_iters}/g" ${model_src_dir}/run_benchmark.sh
   fi
 
-  if [ "${framework}" == "tensorflow" ] && [[ "${model_src_dir}" == *"image_recognition" ]]; then
-     update_yaml_config
-     echo -e "\nPrint_updated_yaml... "
-     cat ${yaml}
-     parameters="--config=${yaml} --input_model=${input_model}"
+  if [ "${framework}" == "tensorflow" ]; then
+    if [[ "${model_src_dir}" == *"image_recognition" ]] || [[ "${model_src_dir}" == *"object_detection" ]]; then
+      update_yaml_config
+      echo -e "\nPrint_updated_yaml... "
+      cat ${yaml}
+      parameters="--config=${yaml} --input_model=${input_model}"
+    fi
   fi
 
   if [ -f "run_benchmark.sh" ]; then

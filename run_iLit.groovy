@@ -118,6 +118,12 @@ if (params.tune_only != null){
 }
 echo "tune_only = ${tune_only}"
 
+val_branch="master"
+if ('val_branch' in params && params.val_branch != ''){
+    val_branch=params.val_branch
+}
+echo "val_branch: ${val_branch}"
+
 def new_conda_env=true
 if(framework == 'pytorch'){
     label=model.split('_')

@@ -201,6 +201,12 @@ binary_build_job = "lastSuccessfulBuild"
 
 try{ echo "COBERTURA=${COBERTURA}"; } catch (Exception e) { COBERTURA=false; echo "COBERTURA=${COBERTURA}" }
 
+val_branch="master"
+if ('val_branch' in params && params.val_branch != ''){
+    val_branch=params.val_branch
+}
+echo "val_branch: ${val_branch}"
+
 def cleanup() {
 
     try {
@@ -295,6 +301,7 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
     ParamsPerJob += string(name: "max_trials", value: "${max_trials}")
     ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
+    ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
 
     return ParamsPerJob
 }
