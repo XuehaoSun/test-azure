@@ -33,7 +33,7 @@ if ('Frameworks' in params && params.Frameworks != '') {
 echo "Frameworks: ${Frameworks}"
 
 // setting tensorflow_version
-tensorflow_version = '1.15.2'
+tensorflow_version = '2.2.0'
 if ('tensorflow_version' in params && params.tensorflow_version != '') {
     tensorflow_version = params.tensorflow_version
 }
@@ -54,7 +54,7 @@ if ('tensorflow_oob_models' in params && params.tensorflow_oob_models != '') {
 echo "tensorflow_oob_models: ${tensorflow_oob_models}"
 
 // setting mxnet_version
-mxnet_version = '1.6.0'
+mxnet_version = '1.7.0'
 if ('mxnet_version' in params && params.mxnet_version != '') {
     mxnet_version = params.mxnet_version
 }
