@@ -150,9 +150,9 @@ function createCoverageOverview {
     BEGIN {
         lines_coverage_diff = lines_coverage - lines_coverage_base
         if(lines_coverage_diff < 0) {
-            printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", lines_coverage_diff);
+            printf("<td style=\"background-color:#FFD2D2\">%.2f%</td>", lines_coverage_diff);
         } else {
-            printf("<td style=\"background-color:#90EE90\">%.2f %</td>", lines_coverage_diff);
+            printf("<td style=\"background-color:#90EE90\">%.2f%</td>", lines_coverage_diff);
         }
     }' >> ${WORKSPACE}/report.html
     echo """
@@ -166,9 +166,9 @@ function createCoverageOverview {
     BEGIN {
         branches_coverage_diff = branches_coverage - branches_coverage_base
         if(branches_coverage_diff < 0) {
-            printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", branches_coverage_diff);
+            printf("<td style=\"background-color:#FFD2D2\">%.2f%</td>", branches_coverage_diff);
         } else {
-            printf("<td style=\"background-color:#90EE90\">%.2f %</td>", branches_coverage_diff);
+            printf("<td style=\"background-color:#90EE90\">%.2f%</td>", branches_coverage_diff);
         }
     }' >> ${WORKSPACE}/report.html
     echo """
@@ -288,7 +288,7 @@ function generate_html_core {
                 }else if(d == "fps") {
                     printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",a,b,c);
                 }else {
-                    printf("<td>%s</td> <td><a href=%s>%.2f %</a></td>\n",a,b,c*100);
+                    printf("<td>%s</td> <td><a href=%s>%.2f%</a></td>\n",a,b,c*100);
                 }
             }else {
                 if(b == "" || c == "N/A") {
@@ -306,12 +306,12 @@ function generate_html_core {
                 if(c == "acc") {
                     target = (a - b) / b;
                     if(target >= -0.01) {
-                       printf("<td rowspan=3 style='background-color:#90EE90'>%.2f %</td>", target*100);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.2f%</td>", target*100);
                     }else if(target < -0.05) {
-                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.2f %</td>", target*100);
+                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.2f%</td>", target*100);
                        job_status = "fail"
                     }else{
-                       printf("<td rowspan=3>%.2f %</td>", target*100);
+                       printf("<td rowspan=3>%.2f%</td>", target*100);
                     }
                 }else if(c == "ms") {
                     target = a / b;
@@ -350,6 +350,7 @@ function generate_html_core {
                     }else {
                         status_png = "background-color:#FFD2D2";
                     }
+                    printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
                 }else {
                     target = a / b;
                     if(target >= 0.945) {
@@ -358,8 +359,8 @@ function generate_html_core {
                         status_png = "background-color:#FFD2D2";
                         job_status = "fail"
                     }
+                    printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
                 }
-                printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
             }else {
               if(a == nan && b == nan){
                 printf("<td class=\"col-cell col-cell3\" colspan=2></td>");

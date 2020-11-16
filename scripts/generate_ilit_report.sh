@@ -148,9 +148,9 @@ function createCoverageOverview {
     awk -v lines_coverage="${lines_coverage[3]}" -v lines_coverage_threshold="${lines_coverage_threshold}" -F ';' '
     BEGIN {
         if(lines_coverage < lines_coverage_threshold) {
-            printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", lines_coverage);
+            printf("<td style=\"background-color:#FFD2D2\">%.2f%</td>", lines_coverage);
         } else {
-            printf("<td style=\"background-color:#90EE90\">%.2f %</td>", lines_coverage);
+            printf("<td style=\"background-color:#90EE90\">%.2f%</td>", lines_coverage);
         }
     }' >> ${WORKSPACE}/report.html
 
@@ -165,9 +165,9 @@ function createCoverageOverview {
     awk -v branches_coverage="${branches_coverage[3]}" -v branches_coverage_threshold="${branches_coverage_threshold}" -F ';' '
     BEGIN {
         if(branches_coverage < branches_coverage_threshold) {
-                printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", branches_coverage);
+                printf("<td style=\"background-color:#FFD2D2\">%.2f%</td>", branches_coverage);
             } else {
-                printf("<td style=\"background-color:#90EE90\">%.2f %</td>", branches_coverage);
+                printf("<td style=\"background-color:#90EE90\">%.2f%</td>", branches_coverage);
             }
     }' >> ${WORKSPACE}/report.html
 
@@ -300,11 +300,11 @@ function generate_html_core {
                 if(c == "acc") {
                     target = (a - b) / b;
                     if(target >= -0.01) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f %</td>", target*100);
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f%</td>", target*100);
                     }else if(target < -0.05) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f %</td>", target*100);
+                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f%</td>", target*100);
                     }else{
-                       printf("<td rowspan=3>%.2f %</td>", target*100);
+                       printf("<td rowspan=3>%.2f%</td>", target*100);
                     }
                 }else if(c == "ms") {
                     target = a / b;
@@ -348,6 +348,7 @@ function generate_html_core {
                     }else {
                         status_png = "background-color:#FFD2D2";
                     }
+                    printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
                 }else {
                     target = a / b;
                     if(target >= 0.95) {
@@ -355,8 +356,8 @@ function generate_html_core {
                     }else {
                         status_png = "background-color:#FFD2D2";
                     }
+                    printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
                 }
-                printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
             }else {
                 if(a == "nan" || b == "nan") {
                     printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
