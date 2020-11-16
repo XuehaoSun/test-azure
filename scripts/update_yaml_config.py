@@ -10,11 +10,21 @@ parser.add_argument("--mode", type=str, required=False, help="Benchmark mode.")
 parser.add_argument("--batch-size", type=int, required=False, help="Benchmark batch size.")
 parser.add_argument("--iteration", type=int, required=False, help="Benchmark iteration")
 parser.add_argument("--max-trials", type=int, required=False, help="Limit for tuning trials.")
+parser.add_argument("--timeout", type=int, required=False, help="Tuning timeout.")
 args = parser.parse_args()
 
 tuning_config = {}
 with open(args.yaml) as yaml_file:
     yaml_config = yaml.round_trip_load(yaml_file, preserve_quotes=True)
+
+if args.timeout:
+    try:
+        exit_policy = yaml_config.get("tuning", {}).get("exit_policy", {})
+        timeout = exit_policy.get("timeout", None)
+        exit_policy.update({"timeout": args.timeout})
+        print(f"Changed {timeout} to {args.timeout}")
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
 
 if args.strategy:
     try:
