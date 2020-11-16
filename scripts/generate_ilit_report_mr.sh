@@ -288,7 +288,7 @@ function generate_html_core {
                 }else if(d == "fps") {
                     printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",a,b,c);
                 }else {
-                    printf("<td>%s</td> <td><a href=%s>%.4f</a></td>\n",a,b,c);
+                    printf("<td>%s</td> <td><a href=%s>%.2f %</a></td>\n",a,b,c*100);
                 }
             }else {
                 if(b == "" || c == "N/A") {
@@ -306,33 +306,33 @@ function generate_html_core {
                 if(c == "acc") {
                     target = (a - b) / b;
                     if(target >= -0.01) {
-                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.2f %</td>", target*100);
                     }else if(target < -0.05) {
-                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.2f %</td>", target*100);
                        job_status = "fail"
                     }else{
-                       printf("<td rowspan=3>%.4f</td>", target);
+                       printf("<td rowspan=3>%.2f %</td>", target*100);
                     }
                 }else if(c == "ms") {
                     target = a / b;
                     if(target >= 1.5) {
-                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.2f</td>", target);
                     }else if(target < 1) {
-                       printf("<td  rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       printf("<td  rowspan=3 style='background-color:#FFD2D2'>%.2f</td>", target);
                        job_status = "fail"
                     }else{
-                       printf("<td rowspan=3>%.4f</td>", target);
+                       printf("<td rowspan=3>%.2f</td>", target);
                     }
                 }
                 else {
                     target = a / b;
                     if(target >= 2) {
-                       printf("<td rowspan=3 style='background-color:#90EE90'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#90EE90'>%.2f</td>", target);
                     }else if(target < 1) {
-                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.4f</td>", target);
+                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.2f</td>", target);
                        job_status = "fail"
                     }else{
-                       printf("<td rowspan=3>%.4f</td>", target);
+                       printf("<td rowspan=3>%.2f</td>", target);
                     }
                 }
             }else {
@@ -359,7 +359,7 @@ function generate_html_core {
                         job_status = "fail"
                     }
                 }
-                printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
+                printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
             }else {
               if(a == nan && b == nan){
                 printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
