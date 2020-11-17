@@ -282,7 +282,7 @@ function generate_html_core {
                 }else if(d == "fps") {
                     printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",a,b,c);
                 }else {
-                    printf("<td>%s</td> <td><a href=%s>%.2f %</a></td>\n",a,b,c*100);
+                    printf("<td>%s</td> <td><a href=%s>%.2f%</a></td>\n",a,b,c*100);
                 }
             }else {
                 if(b == "" || c == "N/A") {
