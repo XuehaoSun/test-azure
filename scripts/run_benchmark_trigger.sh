@@ -189,6 +189,13 @@ function run_benchmark {
     warmup_iters=200
     sed -i "s/num_warmup [[:digit:]]*/num_warmup ${warmup_iters}/g" ${model_src_dir}/run_benchmark.sh
   fi
+  # Disable fp32 optimization for oob models on TF1.15UP1
+  if [ "${topology}" == "RetinaNet50" ] || [ "${topology}" == "ssd_resnet50_v1_fpn_coco" ]; then
+    tensorflow_version=$(pip list| grep intel-tensorflow | awk -F ' ' '{print $2}')
+    if [ "${precision}" == "fp32" ] && [ "${tensorflow_version}" == "1.15.0up1" ]; then
+      sed -i "/models_need_disable_optimize/a ${topology}" ${model_src_dir}/run_benchmark.sh
+    fi
+  fi
 
   if [ "${framework}" == "tensorflow" ]; then
     if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
