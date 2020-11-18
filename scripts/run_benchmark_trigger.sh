@@ -77,8 +77,8 @@ main() {
 
     echo -e "\nSet a modified yaml..."
     echo "${yaml}"
-    cp "${yaml}" "modified_${yaml}"
-    yaml="modified_${yaml}"
+    cp "${yaml}" "${yaml}_modified"
+    yaml="${yaml}_modified"
     echo "${yaml}"
 
     echo -e "\nGetting git information..."
