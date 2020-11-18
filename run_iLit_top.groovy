@@ -141,16 +141,15 @@ echo "Running ${refer_build}"
 
 email_subject="${test_title}"
 test_mode = 'nightly'
+if ('test_mode' in params && params.test_mode != ''){
+    test_mode = params.test_mode
+}
 if ( MR_source_branch != ''){
     test_mode = 'mr'
     email_subject="MR${gitlabMergeRequestIid}: ${test_title}"
-}else if ('test_mode' in params && params.test_mode == 'weekly'){
-    test_mode = params.test_mode
+}else if (test_mode == 'weekly'){
     email_subject="Weekly: ${test_title}"
     currentBuild.description = params.weekly_description
-}else if ('test_mode' in params && params.test_mode == 'extension'){
-    test_mode = params.test_mode
-    email_subject="${test_title}"
 }else {
     email_subject="Nightly: ${test_title}"
 }
