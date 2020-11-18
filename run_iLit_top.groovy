@@ -139,7 +139,6 @@ if ('refer_build' in params && params.refer_build != '') {
 }
 echo "Running ${refer_build}"
 
-email_subject="${test_title}"
 test_mode = 'nightly'
 if ('test_mode' in params && params.test_mode != ''){
     test_mode = params.test_mode
@@ -150,8 +149,10 @@ if ( MR_source_branch != ''){
 }else if (test_mode == 'weekly'){
     email_subject="Weekly: ${test_title}"
     currentBuild.description = params.weekly_description
-}else {
+}else if (test_mode == 'nightly') {
     email_subject="Nightly: ${test_title}"
+}else{
+    email_subject="${test_title}"
 }
 echo "test_mode: ${test_mode}"
 echo "email_subject: $email_subject"
