@@ -129,7 +129,7 @@ main() {
 
     # new config with yaml
     if [ "${framework}" == "tensorflow" ]; then
-      if [[ "${model_src_dir}" == *"image_recognition" ]] || [[ "${model_src_dir}" == *"object_detection" ]]; then
+      if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
         parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
       fi
     fi

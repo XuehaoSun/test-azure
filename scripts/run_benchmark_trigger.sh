@@ -126,7 +126,7 @@ function run_accuracy {
   parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
 
   if [ "${framework}" == "tensorflow" ]; then
-    if [[ "${model_src_dir}" == *"image_recognition" ]] || [[ "${model_src_dir}" == *"object_detection" ]]; then
+    if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
       iters=-1
       update_yaml_config
       echo -e "\nPrint_updated_yaml... "
@@ -191,7 +191,7 @@ function run_benchmark {
   fi
 
   if [ "${framework}" == "tensorflow" ]; then
-    if [[ "${model_src_dir}" == *"image_recognition" ]] || [[ "${model_src_dir}" == *"object_detection" ]]; then
+    if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
       update_yaml_config
       echo -e "\nPrint_updated_yaml... "
       cat ${yaml}
