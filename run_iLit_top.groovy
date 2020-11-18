@@ -140,8 +140,9 @@ if ('refer_build' in params && params.refer_build != '') {
 echo "Running ${refer_build}"
 
 email_subject="${test_title}"
-test_mode = ''
+test_mode = 'nightly'
 if ( MR_source_branch != ''){
+    test_mode = 'mr'
     email_subject="MR${gitlabMergeRequestIid}: ${test_title}"
 }else if ('test_mode' in params && params.test_mode == 'weekly'){
     test_mode = params.test_mode
@@ -153,6 +154,7 @@ if ( MR_source_branch != ''){
 }else {
     email_subject="Nightly: ${test_title}"
 }
+echo "test_mode: ${test_mode}"
 echo "email_subject: $email_subject"
 
 python_version = "3.6"
@@ -360,14 +362,9 @@ def getPerfJobs() {
                 def failed_build_result = downstreamJob.result
                 def failed_build_url = downstreamJob.absoluteUrl
 
-                if (failed_build_result != 'SUCCESS' && (MR_source_branch != '' || test_mode == 'extension')) {
+                if (failed_build_result != 'SUCCESS' && test_mode != 'nightly') {
                     sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                     failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
-                    currentBuild.result = "FAILURE"
-                    error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
-                }
-
-                if (failed_build_result != 'SUCCESS' && test_mode == 'weekly') {
                     currentBuild.result = "FAILURE"
                     error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                 }
