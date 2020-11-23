@@ -5,168 +5,192 @@
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "resnet50": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "resnet50_gpu": {
       "model_src_dir": "image_recognition/imagenet/gpu",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "resnext101_32x8d": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "inception_v3": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "mobilenet_v2": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "resnet18_qat": {
       "model_src_dir": "image_recognition/imagenet/cpu/qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "resnet50_qat": {
       "model_src_dir": "image_recognition/imagenet/cpu/qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "resnet101_qat": {
       "model_src_dir": "image_recognition/imagenet/cpu/qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "peleenet": {
       "model_src_dir": "image_recognition/peleenet",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "/tf_dataset/pytorch/peleenet/peleenet_acc7208.pth.tar",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "resnest50": {
       "model_src_dir": "image_recognition/resnest",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "se_resnext50_32x4d": {
       "model_src_dir": "image_recognition/se_resnext",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
       "input_model": "",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "yolo_v3": {
       "model_src_dir": "object_detection/yolo_v3",
       "dataset_location": "/tf_dataset/pytorch/coco_data_yolo",
       "input_model": "/tf_dataset/pytorch/coco_data_yolo/yolov3.weights",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 100
     },
     "bert_base_MRPC": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/MRPC_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_base_CoLA": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/CoLA/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/CoLA_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_base_STS-B": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/STS-B/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/STS-B_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_base_SST-2": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/SST-2/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/SST-2_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_base_RTE": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/RTE/",
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/RTE_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_large_MRPC": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/MRPC_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_large_SQuAD": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/SQuAD/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/SQuAD_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_large_QNLI": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/QNLI/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/QNLI_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_large_RTE": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/RTE/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/RTE_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "bert_large_CoLA": {
       "model_src_dir": "language_translation",
       "dataset_location": "/tf_dataset/pytorch/glue_data/CoLA/",
       "input_model": "/tf_dataset/pytorch/glue_data/weights/CoLA_output",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     },
     "dlrm": {
       "model_src_dir": "recommendation",
       "dataset_location": "/mnt/local_disk3/dataset/dlrm/dlrm/input",
       "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/terabyte_mlperf.pt",
       "yaml": "conf.yaml",
-      "strategy": "basic"
+      "strategy": "basic",
+      "batch_size": 64
     }
   }
 }

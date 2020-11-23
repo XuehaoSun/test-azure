@@ -103,11 +103,17 @@ main() {
         topology="${model%_qat} "
     fi
 
-    if [ ${precision} == 'int8' ]; then
+    # pytorch int8 still use fp32 input_model
+    if [ ${precision} == "int8" ] && [ ${framework} != "pytorch" ]; then
       input_model=${q_model}
     fi
     # set parameters for benchmark
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
+
+    # add flag for pytorch int8
+    if [ ${framework} == "pytorch" ] && [ ${precision} == "int8" ]; then
+      parameters="${parameters} --int8=true"
+    fi
 
     echo -e "\nStart run function..."
     case ${mode} in
@@ -169,6 +175,11 @@ function run_benchmark {
       if [ "${model}" == "wide_deep_large_ds" ]; then
         batch_size=100
       fi
+      
+      # walk around for pytorch yolov3 model, failed in load 194 iteration.
+      if [ "${model}" == "yolo_v3" ] && [ "${framework}" == "pytorch" ]; then
+        iters=150
+      fi 
       # custom iteration
       if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
         iters=200
