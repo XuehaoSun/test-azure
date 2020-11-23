@@ -411,7 +411,8 @@ node( sub_node_label ) {
             }
         } else {
             // Nightly tests and OOB MR tests 
-            if (framework != "pytorch" && !tune_only && model != "helloworld_keras") {
+            if (!tune_only && model != "helloworld_keras") {
+                println("==========nightly benchmark========")
                 batch_size = modelConf."${framework}"."${model}"."batch_size"
                 timeout(360) {
                     stage("Performance") {

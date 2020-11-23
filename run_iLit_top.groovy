@@ -489,8 +489,8 @@ def collectLog() {
                     ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
                 '''
             }
-            // For pytorch we collect throughput and accuracy for int8 model from tuning log.
-            if (job_framework == "pytorch" || job_model == "helloworld_keras") {
+            // helloworld keras with specific log collection in tuning mode
+            if (job_model == "helloworld_keras") {
                 return
             }
 

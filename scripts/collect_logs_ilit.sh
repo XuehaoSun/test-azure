@@ -55,15 +55,6 @@ if [ "${mode}" == "tuning" ]; then
   mem_percentage=$(echo |awk -v total=${total_mem_size} -v max=${max_mem_size} '{printf("%.0f%", max / total * 100)}')
   echo "${framework};${model};${strategy};${tune_time};${tune_count};${BUILD_URL}artifact/$tuning_file;${fp32_pb_size};${int8_pb_size};${mem_percentage}" | tee -a ${WORKSPACE}/tuning_info.log
 
-  if [ "${framework}" == "pytorch" ] && [ "${mr}" == "" ]; then
-    accuracy=$(grep -F 'Best tune result is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
-    echo "${framework};CLX8280;INT8;${model};Inference;Throughput;;N/A;${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
-    echo "${framework};CLX8280;INT8;${model};Inference;Accuracy;;${accuracy};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
-    accuracy_fp32=$(grep -F 'FP32 baseline is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
-    echo "${framework};CLX8280;FP32;${model};Inference;Throughput;;N/A;${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
-    echo "${framework};CLX8280;FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
-  fi
-
   if [ "${mr}" != "" ]; then
     # Read result from tuning log
     accuracy=$(grep -F 'Best tune result is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
@@ -117,7 +108,10 @@ fi
 
 if [ "${mode}" == "accuracy" ]; then
   log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}.log"
-  bs=$(for param in $(grep 'batch_size=' ${log_file}); do if [[ ${param} =~ "batch_size" ]]; then echo ${param} | cut -f 2 -d =; fi ; done)
+  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+  if [ "${bs}" == "" ]; then
+    bs=$(for param in $(grep 'batch_size=' ${log_file}); do if [[ ${param} =~ "batch_size" ]]; then echo ${param} | cut -f 2 -d =; break; fi ; done)
+  fi
   accuracy=$(grep 'Accuracy: ' ${log_file} | awk -F ' ' '{print $2}')
   if [ "${accuracy}" == "" ]; then
     accuracy=$(grep 'Accuracy is' ${log_file} | awk -F ' ' '{print $3}')
