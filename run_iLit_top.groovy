@@ -774,6 +774,14 @@ node( node_label ) {
         writeFile file: overview_log,
             text: "Jenkins Job, Build Status, Build ID\n"
 
+        def fw_versions = [
+            "tensorflow": tensorflow_version,
+            "pytorch": pytorch_version,
+            "mxnet": mxnet_version
+        ]
+
+        writeJSON file: "fw_versions.json", json: fw_versions, pretty: 4
+        
         download()
 
         stage('Build wheel'){
@@ -829,7 +837,7 @@ node( node_label ) {
         }
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log,*.html, *.xlsx', excludes: null, allowEmptyArchive: true
+            archiveArtifacts artifacts: '*.log, *.html, *.xlsx, *.json', excludes: null, allowEmptyArchive: true
             fingerprint: true
         }
 
