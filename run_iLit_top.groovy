@@ -114,6 +114,12 @@ if (params.RUN_UT != null){
 }
 echo "RUN_UT = ${RUN_UT}"
 
+EXCEL_REPORT=false
+if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
+    echo "EXCEL_REPORT is true"
+    EXCEL_REPORT=params.EXCEL_REPORT
+}
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -634,6 +640,30 @@ def generateReport() {
     }
 }
 
+def generateExcelReport() {
+    withEnv([
+        "summaryLog=${SUMMARYTXT}",
+        "tuneLog=${TUNETXT}",
+    ]) {
+        sh '''#!/bin/bash
+            set -xe
+
+            if [ ! -d "${WORKSPACE}/.ilit-report-generator" ]; then
+                python3 -m venv ${WORKSPACE}/.ilit-report-generator
+            fi
+            source ${WORKSPACE}/.ilit-report-generator/bin/activate
+
+            python -m pip install --index-url https://pypi.douban.com/simple -r ./ilit-validation/scripts/report_generator/requirements.txt
+            python ./ilit-validation/scripts/report_generator/generate_excel_report.py \
+                --tuning-log="${tuneLog}" \
+                --summary-log="${summaryLog}" \
+                --tensorflow-version="${tensorflow_version}" \
+                --mxnet-version="${mxnet_version}" \
+                --pytorch-version="${pytorch_version}"
+        '''
+    }
+}
+
 def sendReport() {
     dir("$WORKSPACE") {
         if (MR_source_branch != '') {
@@ -652,7 +682,7 @@ def sendReport() {
                 to: "${recipient_list}",
                 replyTo: "${recipient_list}",
                 body: '''${FILE,path="report.html"}''',
-                attachmentsPattern: "",
+                attachmentsPattern: "ilit_report.xlsx",
                 mimeType: 'text/html'
 
     }
@@ -783,8 +813,15 @@ node( node_label ) {
         stage("Collect Logs") {
             collectLog()
         }
+
         stage("Generate report") {
             generateReport()
+        }
+
+        if (EXCEL_REPORT) {
+            stage("Generate excel report") {
+                generateExcelReport()
+            }
         }
 
         stage("Send report") {
@@ -792,7 +829,7 @@ node( node_label ) {
         }
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log,*.html', excludes: null, allowEmptyArchive: true
+            archiveArtifacts artifacts: '*.log,*.html, *.xlsx', excludes: null, allowEmptyArchive: true
             fingerprint: true
         }
 
