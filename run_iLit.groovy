@@ -74,7 +74,7 @@ if ('strategy' in params && params.strategy != ''){
 }
 echo "strategy is ${strategy}"
 
-binary_build_job="lastSuccessfulBuild"
+binary_build_job=""
 if ('binary_build_job' in params && params.binary_build_job != ''){
     binary_build_job = params.binary_build_job
 }
@@ -303,8 +303,31 @@ node( sub_node_label ) {
                     ]
                 }
             }
+        }
 
-            // copy ilit binary
+        if ("${binary_build_job}" == "") {
+            stage('Build binary') {
+                List binaryBuildParams = [
+                        string(name: "ilit_url", value: "${ilit_url}"),
+                        string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                        string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                        string(name: "MR_target_branch", value: "${MR_target_branch}"),
+                ]
+                downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+                
+                binary_build_job = downstreamJob.getNumber()
+                echo "binary_build_job: ${binary_build_job}"
+                echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+                if (downstreamJob.getResult() != "SUCCESS") {
+                    currentBuild.result = "FAILURE"
+                    failed_build_url = downstreamJob.absoluteUrl
+                    echo "failed_build_url: ${failed_build_url}"
+                    error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                }
+            }
+        }
+
+        stage('Copy binary') {
             catchError {
                 copyArtifacts(
                         projectName: 'iLiT-release-wheel-build',
@@ -313,8 +336,8 @@ node( sub_node_label ) {
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
 
+                archiveArtifacts artifacts: "ilit*.whl"
             }
-
         }
 
         // get params for tuning and benchmark
