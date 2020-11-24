@@ -769,7 +769,11 @@ def cancelPreviousBuilds() {
 }
 
 if ("${MR_source_branch}" != '') {
-    cancelPreviousBuilds()
+    stage("Cancel previous builds") {
+        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+            cancelPreviousBuilds()
+        }
+    }
 }
 
 node( node_label ) {
