@@ -125,6 +125,12 @@ if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
     EXCEL_REPORT=params.EXCEL_REPORT
 }
 
+ABORT_PREVIOUS_MR = false
+if ('ABORT_PREVIOUS_MR' in params && params.ABORT_PREVIOUS_MR){
+    echo "ABORT_PREVIOUS_MR is true"
+    ABORT_PREVIOUS_MR=params.ABORT_PREVIOUS_MR
+}
+
 nigthly_test_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -768,7 +774,7 @@ def cancelPreviousBuilds() {
   }
 }
 
-if ("${MR_source_branch}" != '') {
+if (ABORT_PREVIOUS_MR && "${MR_source_branch}" != '') {
     stage("Cancel previous builds") {
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
             cancelPreviousBuilds()
