@@ -845,23 +845,31 @@ node( node_label ) {
 
     } finally {
         stage("Collect Logs") {
-            collectLog()
+            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                collectLog()
+            }
         }
 
         stage("Generate report") {
-            generateReport()
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                generateReport()
+            }
         }
 
         if (EXCEL_REPORT) {
             stage("Generate excel report") {
-                retry(5){
-                    generateExcelReport()
-                } || true
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    retry(5) {
+                        generateExcelReport()
+                    }
+                }
             }
         }
 
         stage("Send report") {
-            sendReport()
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                sendReport()
+            }
         }
         // archive artifacts
         stage("Artifacts") {
