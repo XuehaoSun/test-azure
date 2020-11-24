@@ -768,7 +768,7 @@ def cancelPreviousBuilds() {
   }
 }
 
-if ("${gitlabSourceBranch}" != '') {
+if ("${MR_source_branch}" != '') {
     cancelPreviousBuilds()
 }
 
