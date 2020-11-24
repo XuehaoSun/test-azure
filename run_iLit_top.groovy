@@ -854,7 +854,9 @@ node( node_label ) {
 
         if (EXCEL_REPORT) {
             stage("Generate excel report") {
-                generateExcelReport()
+                retry(5){
+                    generateExcelReport()
+                }
             }
         }
 
