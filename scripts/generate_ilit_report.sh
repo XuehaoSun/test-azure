@@ -93,7 +93,7 @@ function createOverview {
         $(
              if [ "${unit_test[2]}" != "" ];then
                  echo "<tr><td>Unit Test</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]/artifact/unit_test.log}\">${unit_test[0]}#${unit_test[2]}</a></td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}/artifact/unit_test.log\">${unit_test[0]}#${unit_test[2]}</a></td>"
                  echo "<td>${unit_test_status}</td></tr>"
              fi
 
