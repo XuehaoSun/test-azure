@@ -270,14 +270,17 @@ function generate_html_core {
 
     tuning_strategy=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
     tuning_log=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
-    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td><td><a href=${tuning_log}>${tuning_time}</a></td>" >> ${WORKSPACE}/report.html
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
+    echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
 
     tuning_strategy=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $3}')
     tuning_time=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
     tuning_log=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
 
-    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tl=${tuning_log} -F ';' '
+    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tc="${tuning_count}" -v tl=${tuning_log} -F ';' '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -412,7 +415,7 @@ function generate_html_core {
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td>Last</td><td><a href=%3$s>%1$s</a></td><td><a href=%3$s>%2$s</a></td>", ts, tt, tl);
+            printf("</tr>\n<tr><td>Last</td><td><a href=%4$s>%1$s</a></td><td><a href=%4$s>%2$s</a></td><td><a href=%4$s>%3$s</a></td>", ts, tt, tc, tl);
 
             show_new_last(last_value[1],last_value[13],last_value[2],"ms");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
@@ -422,7 +425,7 @@ function generate_html_core {
             printf("</tr>")
 
             // current vs last
-            printf("</tr>\n<tr><td>New/Last</td><td colspan=2 class=\"col-cell3\"></td>");
+            printf("</tr>\n<tr><td>New/Last</td><td colspan=3 class=\"col-cell3\"></td>");
 
             compare_result(last_value[2],current_value[2],"ms");
             compare_result(current_value[6],last_value[6],"acc");
@@ -512,8 +515,9 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Framework</th>
                 <th rowspan="2">Model</th>
                 <th rowspan="2">VS</th>
-                <th rowspan="2">Tuning Strategy</th>
-                <th rowspan="2">Tuning time(s)</th>
+                <th rowspan="2">Tuning<br>Strategy</th>
+                <th rowspan="2">Tuning<br>Time(s)</th>
+                <th rowspan="2">Tuning<br>Count</th>
 			          <th colspan="4">INT8</th>
 			          <th colspan="4">FP32</th>
 			          <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
@@ -540,7 +544,7 @@ function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
 		    <tr>
-			    <td colspan="13"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+			    <td colspan="14"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
 			    <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
 		    </tr>
 	    </table>

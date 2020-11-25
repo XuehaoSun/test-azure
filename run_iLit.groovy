@@ -333,6 +333,16 @@ node( sub_node_label ) {
                     println("MR test tensorflow model_src_dir is image_recognition.")
                     println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
                 }
+                if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
+                    // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
+                    dataset_location = "/tf_dataset/tensorflow/mini-coco-500.record"
+                    withEnv(["model_src_dir=${model_src_dir}"]) {
+                        sh(
+                                script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
+                                returnStdout: true
+                        ).trim()
+                    }
+                }
             }else if(framework == "pytorch" && model == "resnet18"){
                 strategy = "bayesian"
             }else if(framework == "mxnet" && model == "resnet50v1"){
