@@ -113,7 +113,7 @@ class Result(JsonSerializer):
     @model.setter
     def model(self, value: str) -> None:
         """Set result model."""
-        self._model = value
+        self._model = value.lower()
         if all(getattr(self, attr) for attr in ["_framework", "_model"]):
             self._config_hash = hashlib.sha256(
                 "_".join([self._framework, self._model]).encode('utf-8')
