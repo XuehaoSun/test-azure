@@ -843,6 +843,12 @@ node( node_label ) {
         
         def perf_jobs = getPerfJobs()
         job_list = job_list + perf_jobs
+
+        if (MR_source_branch != ''|| pipeline_failFast) {
+            echo "enable failFast"
+            job_list.failFast = true
+        }
+
         if (job_list.size() > 0) {
             stage("Execute tests") {
                 parallel job_list
