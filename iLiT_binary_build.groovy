@@ -111,9 +111,9 @@ def do_binary_build() {
             export PATH=${HOME}/miniconda3/bin/:$PATH
             if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
                 echo "${conda_env} exist!"
+            else
+                conda create python=3.6.9 -y -n ${conda_env}
             fi
-
-            conda create python=3.6.9 -y -n ${conda_env}
 
             source activate ${conda_env}
 
