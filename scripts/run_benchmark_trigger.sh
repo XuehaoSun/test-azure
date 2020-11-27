@@ -196,8 +196,8 @@ function run_benchmark {
   parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
 
   # Workaround for deeplab stability
-  if [ "${topology}" == "deeplabv3" ]; then
-    warmup_iters=200
+  if [[ "${model_src_dir}" == *"tf_oob_models"* ]]; then
+    warmup_iters=100
     sed -i "s/num_warmup [[:digit:]]*/num_warmup ${warmup_iters}/g" ${model_src_dir}/run_benchmark.sh
   fi
   # Disable fp32 optimization for oob models on TF1.15UP1
