@@ -527,6 +527,30 @@ def collectLog() {
 
 }
 
+def collectUTLog(job_num) {
+    echo "------------  running collectUTLog  -------------"
+    dir("$WORKSPACE/unittest"){
+        def ex_tfs = ["1.15.2","1.15UP1","${tensorflow_version}"]
+        ex_tfs.unique()
+        ex_tfs.each { tf_version ->
+            withEnv(["tf_version=${tf_version}", "job_num=${job_num}"]){
+                sh ''' #!/bin/bash
+                   overview_log="${WORKSPACE}/summary_overview.log"
+                   if [ $(ls -l | grep -c ${tf_version}) != 0 ]; then
+                     ut_log_name=$WORKSPACE/unittest/unit_test_${tf_version}.log
+                     if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                       ut_status='FAILURE'
+                     else
+                       ut_status='SUCCESS'
+                     fi
+                     echo "unit_test_TF${tf_version},${ut_status},${BUILD_URL}artifact/unittest/unit_test_${tf_version}.log" | tee -a ${overview_log}
+                   fi
+                '''
+            }
+        }
+    }
+}
+
 def unitTest() {
     List unitTestParams = [
             string(name: "binary_build_job", value: "${binary_build_job}"),
@@ -538,11 +562,9 @@ def unitTest() {
             string(name: "tensorflow_version", value: "${tensorflow_version}"),
             string(name: "mxnet_version", value: "${mxnet_version}"),
             string(name: "pytorch_version", value: "${pytorch_version}"),
+            string(name: "val_branch", value: "${val_branch}")
     ]
     downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
-
-    text_commnet = readFile file: "${overview_log}"
-    writeFile file: "${overview_log}", text: text_commnet + "iLit-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
 
     copyArtifacts(
             projectName: "iLit-unit-test",
@@ -550,6 +572,13 @@ def unitTest() {
             filter: '*.log, *.txt, **/coverage_results/**/*',
             fingerprintArtifacts: true,
             target: "unittest")
+    // collect log for MR UT test
+    if (MR_source_branch != ''){
+        collectUTLog(downstreamJob.number)
+    }else {
+        text_commnet = readFile file: "${overview_log}"
+        writeFile file: "${overview_log}", text: text_commnet + "iLit-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
+    }
 
     // Archive in Jenkins
     archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
@@ -574,8 +603,8 @@ def unitTest() {
         currentBuild.result = "FAILURE"
     }
 
-
     if (downstreamJob.result != 'SUCCESS') {
+        currentBuild.result = "FAILURE"
         error("Unit tests failed.")
     }
 }

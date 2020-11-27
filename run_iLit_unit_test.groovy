@@ -177,52 +177,10 @@ def download() {
     }
 }
 
-node(node_label){
-    try {
-        cleanup()
-        stage('download') {
-            download()
-        }
-
-        if ("${binary_build_job}" == "") {
-            stage('Build binary') {
-                List binaryBuildParams = [
-                        string(name: "ilit_url", value: "${ilit_url}"),
-                        string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
-                        string(name: "MR_source_branch", value: "${MR_source_branch}"),
-                        string(name: "MR_target_branch", value: "${MR_target_branch}"),
-                ]
-                downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
-                
-                binary_build_job = downstreamJob.getNumber()
-                echo "binary_build_job: ${binary_build_job}"
-                echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
-                if (downstreamJob.getResult() != "SUCCESS") {
-                    currentBuild.result = "FAILURE"
-                    failed_build_url = downstreamJob.absoluteUrl
-                    echo "failed_build_url: ${failed_build_url}"
-                    error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
-                }
-            }
-        }
-
-        stage('Copy binary') {
-            catchError {
-                copyArtifacts(
-                        projectName: 'iLiT-release-wheel-build',
-                        selector: specific("${binary_build_job}"),
-                        filter: 'ilit*.whl',
-                        fingerprintArtifacts: true,
-                        target: "${WORKSPACE}")
-
-                archiveArtifacts artifacts: "ilit*.whl"
-            }
-        }
-        
-        stage('env_build') {
-            withEnv(["torchvision_version=${torchvision_version}"]) {
-                retry(5) {
-                    sh'''#!/bin/bash
+def build_conda_env() {
+    withEnv(["torchvision_version=${torchvision_version}","tensorflow_version=${tensorflow_version}"]) {
+        retry(5) {
+            sh'''#!/bin/bash
                         set -xe
                         echo "Create new conda env for UT..."
                         export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -281,8 +239,54 @@ node(node_label){
                             pip install mxnet==${mxnet_version}
                         fi
                     '''
+        }
+    }
+}
+
+node(node_label){
+    try {
+        cleanup()
+        stage('download') {
+            download()
+        }
+
+        if ("${binary_build_job}" == "") {
+            stage('Build binary') {
+                List binaryBuildParams = [
+                        string(name: "ilit_url", value: "${ilit_url}"),
+                        string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                        string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                        string(name: "MR_target_branch", value: "${MR_target_branch}"),
+                ]
+                downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+                
+                binary_build_job = downstreamJob.getNumber()
+                echo "binary_build_job: ${binary_build_job}"
+                echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+                if (downstreamJob.getResult() != "SUCCESS") {
+                    currentBuild.result = "FAILURE"
+                    failed_build_url = downstreamJob.absoluteUrl
+                    echo "failed_build_url: ${failed_build_url}"
+                    error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
                 }
             }
+        }
+
+        stage('Copy binary') {
+            catchError {
+                copyArtifacts(
+                        projectName: 'iLiT-release-wheel-build',
+                        selector: specific("${binary_build_job}"),
+                        filter: 'ilit*.whl',
+                        fingerprintArtifacts: true,
+                        target: "${WORKSPACE}")
+
+                archiveArtifacts artifacts: "ilit*.whl"
+            }
+        }
+        
+        stage('env_build') {
+            build_conda_env()
         }
 
         stage('unit test') {
@@ -342,7 +346,7 @@ node(node_label){
 
                     ilit_path=$(python -c 'import ilit; import os; print(os.path.dirname(ilit.__file__))')
                     find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${ilit_path}"' --append ,g' > run.sh
-                    ut_log_name=${WORKSPACE}/unit_test.log
+                    ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
                     coverage erase
                     bash run.sh 2>&1 | tee ${ut_log_name}
                     coverage report -m
@@ -354,6 +358,7 @@ node(node_label){
                     ''')
                 if (ut_status != 0) {
                     currentBuild.result = 'FAILURE'
+                    error("Unit test failed!")
                 }
             }
         }
@@ -472,6 +477,92 @@ node(node_label){
                 }
             }
         }
+
+        if (MR_source_branch != ''){
+            stage("unit test extension") {
+                origin_tf_version=tensorflow_version
+                def ex_tfs = ["1.15.2","1.15UP1"]
+                ex_tfs.each { tf_version ->
+                    // if the tf version has been ran, then return
+                    if (tf_version == origin_tf_version){
+                        return
+                    }
+
+                    tensorflow_version=tf_version
+                    // build specific conda env for extension ut test
+                    echo "+--------------For TF ${tensorflow_version} unit extension test -------------+"
+                    build_conda_env()
+                    // start ut test
+                    withEnv(["tensorflow_version=${tensorflow_version}"]){
+                        timeout(30) {
+                            ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            source activate ${conda_env}
+                            # pip config set global.index-url https://pypi.douban.com/simple/
+                    
+                            echo "Checking ilit..."
+                            python -V
+                            pip list
+                            c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
+                            if [ ${c_ilit} != 0 ]; then
+                                pip uninstall ilit -y
+                                pip list
+                            fi
+                                    
+                            echo "Install iLiT binary..."
+                            n=0
+                            until [ "$n" -ge 5 ]
+                            do
+                                pip install ilit*.whl && break
+                                n=$((n+1))
+                                sleep 5
+                            done
+                    
+                            if [ ! -d ${WORKSPACE}/ilit-models ]; then
+                                echo "\\"ilit-model\\" not found. Exiting..."
+                                exit 1
+                            fi
+                    
+                            echo -e "\\nInstalling ut requirements..."
+                            cd ${WORKSPACE}/ilit-models/test
+                            if [ -f "requirements.txt" ]; then
+                                sed -i '/^ilit/d' requirements.txt
+                                sed -i '/^intel-tensorflow/d' requirements.txt
+                                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                                sed -i '/^torch/d' requirements.txt
+                                sed -i '/^mxnet-mkl/d' requirements.txt
+        
+                                n=0
+                                until [ "$n" -ge 5 ]
+                                do
+                                    python -m pip install -r requirements.txt && break
+                                    n=$((n+1))
+                                    sleep 5
+                                done
+        
+                                pip list
+                            else
+                                echo "Not found requirements.txt file."
+                            fi
+
+                            find . -name "test*.py" | sed 's,.\\/,python ,g' > run.sh
+                            ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
+                            bash run.sh 2>&1 | tee ${ut_log_name}
+                            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                                exit 1
+                            fi
+                        ''')
+                            if (ut_status != 0) {
+                                currentBuild.result = 'FAILURE'
+                                error("Unit test extension failed!")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
     } catch (e) {
         // If there was an exception thrown, the build failed
         currentBuild.result = "FAILURE"

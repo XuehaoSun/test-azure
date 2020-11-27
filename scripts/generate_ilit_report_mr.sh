@@ -28,54 +28,71 @@ function main {
 function createOverview {
 
     jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
-    png_path="https://inteltf-jenk.sh.intel.com/static/93433cd1/images/24x24"
 
     # unit test
-    unit_test=($(grep 'unit-test' ${overview_log} |sed 's/,/ /g'))
-    if [[ "${unit_test[1]}" == *"FAIL"* ]];then
-        unit_test_status="<img src=${png_path}/red.png></img>"
-    elif [[ "${unit_test[1]}" == *"SUCC"* ]];then
-        unit_test_status="<img src=${png_path}/blue.png></img>"
+    unit_test_1_15_2=($(grep 'TF1.15.2' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${unit_test_1_15_2[1]}" == *"FAIL"* ]];then
+        unit_test_1_15_2_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${unit_test_1_15_2[1]}" == *"SUCC"* ]];then
+        unit_test_1_15_2_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        unit_test_status="<img src=${png_path}/yellow.png></img>"
+        unit_test_1_15_2_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
+
+    unit_test_1_15UP=($(grep 'TF1.15UP' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${unit_test_1_15UP[1]}" == *"FAIL"* ]];then
+        unit_test_1_15UP_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${unit_test_1_15UP[1]}" == *"SUCC"* ]];then
+        unit_test_1_15UP_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        unit_test_1_15UP_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
+
+    unit_test_2_x=($(grep 'TF2.' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${unit_test_2_x[1]}" == *"FAIL"* ]];then
+        unit_test_2_x_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${unit_test_2_x[1]}" == *"SUCC"* ]];then
+        unit_test_2_x_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        unit_test_2_x_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     pylint_scan=($(grep 'format-scan,pylint' ${overview_log} |sed 's/,/ /g'))
     if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
-        pylint_scan_status="<img src=${png_path}/red.png></img>"
+        pylint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${pylint_scan[2]}" == *"SUCC"* ]];then
-        pylint_scan_status="<img src=${png_path}/blue.png></img>"
+        pylint_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        pylint_scan_status="<img src=${png_path}/yellow.png></img>"
+        pylint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     bandit_scan=($(grep 'format-scan,bandit' ${overview_log} |sed 's/,/ /g'))
     if [[ "${bandit_scan[2]}" == *"FAIL"* ]];then
-        bandit_scan_status="<img src=${png_path}/red.png></img>"
+        bandit_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
-        bandit_scan_status="<img src=${png_path}/blue.png></img>"
+        bandit_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        bandit_scan_status="<img src=${png_path}/yellow.png></img>"
+        bandit_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     helloworld_keras=($(grep 'Helloworld Keras' ${overview_log} |sed 's/,/ /g'))
     if [[ "${helloworld_keras[2]}" == *"FAIL"* ]];then
-        helloworld_keras_status="<img src=${png_path}/red.png></img>"
+        helloworld_keras_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${helloworld_keras[2]}" == *"SUCC"* ]];then
-        helloworld_keras_status="<img src=${png_path}/blue.png></img>"
+        helloworld_keras_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        helloworld_keras_status="<img src=${png_path}/yellow.png></img>"
+        helloworld_keras_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     if [ -f "${coverage_summary}" ] && [ -f "${coverage_summary_base}" ]; then
         coverage=($(grep 'coverage_status' ${overview_log} |sed 's/,/ /g'))
         echo "Coverage: ${coverage}"
         if [[ "${coverage[1]}" == *"FAIL"* ]];then
-            coverage_status="<img src=${png_path}/red.png></img>"
+            coverage_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
         elif [[ "${coverage[1]}" == *"SUCC"* ]];then
-            coverage_status="<img src=${png_path}/blue.png></img>"
+            coverage_status="<td style=\"background-color:#90EE90\">Pass</td>"
         else
-            coverage_status="<img src=${png_path}/yellow.png></img>"
+            coverage_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
         fi
     fi
 
@@ -89,34 +106,46 @@ function createOverview {
             <th>Status</th>
         </tr>
         $(
-             if [ "${unit_test[2]}" != "" ];then
-                 echo "<tr><td>Unit Test</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}/artifact/unit_test.log\">${unit_test[0]}#${unit_test[2]}</a></td>"
-                 echo "<td>${unit_test_status}</td></tr>"
+             if [ "${unit_test_1_15_2[2]}" != "" ];then
+                 echo "<tr><td>Unit test TF1.15.2</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${unit_test_1_15_2[2]}\">${unit_test_1_15_2[0]}</a></td>"
+                 echo "${unit_test_1_15_2_status}</tr>"
+             fi
+
+             if [ "${unit_test_1_15UP[2]}" != "" ];then
+                 echo "<tr><td>Unit test TF1.15UP1</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${unit_test_1_15UP[2]}\">${unit_test_1_15UP[0]}</a></td>"
+                 echo "${unit_test_1_15UP_status}</tr>"
+             fi
+
+             if [ "${unit_test_2_x[2]}" != "" ];then
+                 echo "<tr><td>Unit test TF2.x</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${unit_test_2_x[2]}\">${unit_test_2_x[0]}</a></td>"
+                 echo "${unit_test_2_x_status}</tr>"
              fi
 
              if [ "${pylint_scan[3]}" != "" ]; then
                  echo "<tr><td>PyLint Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[3]}\">${pylint_scan[0]}#${pylint_scan[3]}</a></td>"
-                 echo "<td>${pylint_scan_status}</td></tr>"
+                 echo "${pylint_scan_status}</tr>"
              fi
 
              if [ "${bandit_scan[3]}" != "" ]; then
                  echo "<tr><td>Bandit Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${bandit_scan[0]}/${bandit_scan[3]}\">${bandit_scan[0]}#${bandit_scan[3]}</a></td>"
-                 echo "<td>${bandit_scan_status}</td></tr>"
+                 echo "${bandit_scan_status}</tr>"
              fi
 
              if [ "${helloworld_keras[3]}" != "" ]; then
                  echo "<tr><td>Helloworld Keras</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${helloworld_keras[3]}\">Log link</a></td>"
-                 echo "<td>${helloworld_keras_status}</td></tr>"
+                 echo "${helloworld_keras_status}</tr>"
              fi
 
              if [ ${#coverage[@]} -gt 0 ] && [ "${coverage[1]}" != "" ]; then
                 echo "<tr><td>Code Coverage Scan</td>"
                 echo "<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a></td>"
-                echo "<td>${coverage_status}</td></tr>"
+                echo "${coverage_status}</tr>"
             fi
 
         )
@@ -352,6 +381,9 @@ function generate_html_core {
                         status_png = "background-color:#90EE90";
                     }else {
                         status_png = "background-color:#FFD2D2";
+                        if(target < -0.0001) {
+                            job_status = "fail"
+                        }
                     }
                     printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
                 }else {
