@@ -14,8 +14,7 @@ class ResultCollector(JsonSerializer):
     def read_perf(self, perf_log_path: str):
         with open(perf_log_path, newline="") as summary_file:
             header = summary_file.readline().lower().strip().split(";")
-            summary_lower = (line.lower() for line in summary_file)
-            reader = csv.DictReader(summary_lower, fieldnames=header, delimiter=";")
+            reader = csv.DictReader(summary_file, fieldnames=header, delimiter=";")
             for row in reader:
                 new_config = True
                 result, mode, precision, value, url = self.parse_perf_result(row)
@@ -43,7 +42,7 @@ class ResultCollector(JsonSerializer):
                 result, strategy, time, trials, model_size_ratio, url = self.parse_tuning_result(line)
                 # Check if config already exists
                 search_result = self.get_result_by_hash(result.config_hash)
-                if search_result:
+                if search_result and search_result.tuning.strategy == strategy:
                     new_config = False
                     result = search_result
 
@@ -58,6 +57,14 @@ class ResultCollector(JsonSerializer):
             if result.config_hash == config_hash:
                 return result
         return None
+
+    def get_results_by_version(self, framework: str, version: str) -> Optional[List[Result]]:
+        """Search for configs with required framework version."""
+        results = []
+        for result in self.results:
+            if result.framework == framework and result.version == version:
+                results.append(result)
+        return results
 
     def parse_perf_result(self, raw_data):
         result = Result()
@@ -75,7 +82,7 @@ class ResultCollector(JsonSerializer):
 
     def parse_tuning_result(self, line):
         """Parse tuning entry."""
-        data = line.strip().lower().split(";")
+        data = line.strip().split(";")
         result = Result()
         result.framework = data[0]
         result.version = self.additional_data.get(f"{result.framework}_version", "")
