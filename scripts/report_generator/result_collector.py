@@ -73,8 +73,8 @@ class ResultCollector(JsonSerializer):
         result.platform = raw_data.get("platform")
         result.model = raw_data.get("model")
 
-        precision = raw_data.get("precision")
-        mode = raw_data.get("type")
+        precision = raw_data.get("precision").lower()
+        mode = raw_data.get("type").lower()
         value = raw_data.get("value")
         url = raw_data.get("url")
 
