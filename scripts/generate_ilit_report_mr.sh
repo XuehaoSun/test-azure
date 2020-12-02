@@ -377,13 +377,11 @@ function generate_html_core {
             if(a ~/[1-9]/ && b ~/[1-9]/) {
                 if(c == "acc") {
                     target = a - b;
-                    if(target >= -0.0001 && target <= 0.0001) {
+                    if(target > -0.00001 && target < 0.00001) {
                         status_png = "background-color:#90EE90";
                     }else {
                         status_png = "background-color:#FFD2D2";
-                        if(target < -0.0001) {
-                            job_status = "fail"
-                        }
+                        job_status = "fail"
                     }
                     printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
                 }else {
