@@ -200,6 +200,8 @@ def create_conda_env(){
 
                 # Upgrade pip
                 pip install -U pip
+                export https_proxy=http://child-prc.intel.com:913
+                export http_proxy=http://child-prc.intel.com:913
 
                 if [ ${framework} == 'tensorflow' ]; then     
                     if [ ${framework_version} == '1.15UP1' ]; then
