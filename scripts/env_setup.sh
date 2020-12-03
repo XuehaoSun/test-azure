@@ -86,6 +86,8 @@ function set_environment {
     fi
 
     cd ${WORKSPACE}
+    export https_proxy=http://child-prc.intel.com:913
+    export http_proxy=http://child-prc.intel.com:913
     pip install ilit*.whl
     echo "Checking ilit..."
     pip list
