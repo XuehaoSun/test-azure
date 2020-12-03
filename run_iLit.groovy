@@ -216,16 +216,20 @@ def create_conda_env(){
                         pip install intel-${framework}==${framework_version}
                     fi
                 elif [ ${framework} == 'pytorch' ]; then
-                    
                     if [ ${model} == 'dlrm' ]; then
-                        pip install /home/torch/lpot/torch-1.5.0+cpu-cp36-cp36m-linux_x86_64.whl
+                        torch_whl_path=/home/torch/lpot
                     else
-                        if [ ${model} == 'resnest50' ]; then
-                            framework_version='1.6.0+cpu'
-                        fi
+                        torch_whl_path=/tf_dataset/pytorch/pypi    
+                    fi
+                    if [ ${model} == 'resnest50' ]; then
+                        framework_version='1.6.0+cpu'
+                    fi
+                    torch_whl=${torch_whl_path}/${python_version}/torch-${framework_version}-*.whl
+                    if [ -f ${torch_whl} ]; then   
+                        pip install ${torch_whl}
+                    else
                         pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
                     fi
-                    
                 elif [ ${framework} == 'mxnet' ]; then 
                     if [ ${framework_version} == '1.6.0' ]; then
                         pip install ${framework}-mkl==${framework_version}
