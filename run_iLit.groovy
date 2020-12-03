@@ -217,7 +217,7 @@ def create_conda_env(){
                     fi
                 elif [ ${framework} == 'pytorch' ]; then
                     if [ ${model} == 'dlrm' ]; then
-                        torch_whl_path=/home/torch/lpot
+                        torch_whl_path=/home/torch/lpot/pytorch/pypi
                     else
                         torch_whl_path=/tf_dataset/pytorch/pypi    
                     fi
