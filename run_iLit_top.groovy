@@ -30,8 +30,8 @@ if ('node_label' in params && params.sub_node_label != '') {
 }
 echo "Running on node ${node_label}"
 
-// chose test frameworks
-Frameworks = "tensorflow,mxnet,pytorch"
+// chose test frameworks tensorflow,mxnet,pytorch
+Frameworks = ""
 if ('Frameworks' in params && params.Frameworks != '') {
     Frameworks = params.Frameworks
 }
