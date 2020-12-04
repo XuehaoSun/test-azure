@@ -86,6 +86,28 @@ if ('pytorch_models' in params && params.pytorch_models != '') {
 }
 echo "pytorch_models: ${pytorch_models}"
 
+
+// setting onnx_version
+onnx_version = '1.7.0'
+if ('onnx_version' in params && params.onnx_version != '') {
+    onnx_version = params.onnx_version
+}
+echo "onnx_version: ${onnx_version}"
+
+// setting onnxruntime version
+onnxruntime_version = '1.5.2'
+if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
+    onnxruntime_version = params.onnxruntime_version
+}
+println("onnxruntime_version: " + onnxruntime_version)
+
+// setting onnx models
+onnx_models = ""
+if ('onnx_models' in params && params.onnx_models != '') {
+    onnx_models = params.onnx_models
+}
+echo "onnx_models: ${onnx_models}"
+
 // ilit-validation branch to get test groovy
 validation_branch = 'master'
 if ('validation_branch' in params && params.validation_branch != '') {
@@ -562,6 +584,8 @@ def unitTest() {
             string(name: "tensorflow_version", value: "${tensorflow_version}"),
             string(name: "mxnet_version", value: "${mxnet_version}"),
             string(name: "pytorch_version", value: "${pytorch_version}"),
+            string(name: "onnx_version", value: "${onnx_version}"),
+            string(name: "onnxruntime_version", value: "${onnxruntime_version}"),
             string(name: "val_branch", value: "${val_branch}")
     ]
     downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams

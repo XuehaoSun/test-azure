@@ -95,6 +95,20 @@ if (pytorch_version_postfix != "") {
 }
 println("torchvision_version: " + torchvision_version)
 
+
+// setting onnx and onnxruntime version
+onnx_version = '1.7.0'
+if ('onnx_version' in params && params.onnx_version != '') {
+    onnx_version = params.onnx_version
+}
+echo "onnx_version: ${onnx_version}"
+
+onnxruntime_version = '1.5.2'
+if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
+    onnxruntime_version = params.onnxruntime_version
+}
+println("onnxruntime_version: " + onnxruntime_version)
+
 lines_coverage_threshold = 80
 branches_coverage_threshold = 60
 
@@ -178,7 +192,11 @@ def download() {
 }
 
 def build_conda_env() {
-    withEnv(["torchvision_version=${torchvision_version}","tensorflow_version=${tensorflow_version}"]) {
+    withEnv([
+        "torchvision_version=${torchvision_version}",
+        "tensorflow_version=${tensorflow_version}",
+        "onnx_version=${onnx_version}",
+        "onnxruntime_version=${onnxruntime_version}"]) {
         retry(5) {
             sh'''#!/bin/bash
                         set -xe
@@ -238,6 +256,10 @@ def build_conda_env() {
                         else
                             pip install mxnet==${mxnet_version}
                         fi
+
+                        # Install ONNX
+                        pip install onnx==${onnx_version}
+                        pip install onnxruntime==${onnxruntime_version}
                     '''
         }
     }
@@ -328,6 +350,7 @@ node(node_label){
                         sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                         sed -i '/^torch/d' requirements.txt
                         sed -i '/^mxnet-mkl/d' requirements.txt
+                        sed -i '/^onnx/d' requirements.txt
 
                         n=0
                         until [ "$n" -ge 5 ]
