@@ -259,7 +259,11 @@ def build_conda_env() {
 
                         # Install ONNX
                         pip install onnx==${onnx_version}
-                        pip install onnxruntime==${onnxruntime_version}
+                        if [ ${onnxruntime_version} == "nightly" ]; then
+                            pip install -i https://test.pypi.org/simple/ ort-nightly
+                        else
+                            pip install onnxruntime==${onnxruntime_version}
+                        fi
                     '''
         }
     }
