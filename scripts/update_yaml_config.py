@@ -10,12 +10,30 @@ parser.add_argument("--mode", type=str, required=False, help="Benchmark mode.")
 parser.add_argument("--batch-size", type=int, required=False, help="Benchmark batch size.")
 parser.add_argument("--iteration", type=int, required=False, help="Benchmark iteration")
 parser.add_argument("--max-trials", type=int, required=False, help="Limit for tuning trials.")
+parser.add_argument("--algorithm", type=str, required=False, help="Algorithm for quantization.")
 parser.add_argument("--timeout", type=int, required=False, help="Tuning timeout.")
 args = parser.parse_args()
 
 tuning_config = {}
 with open(args.yaml) as yaml_file:
     yaml_config = yaml.round_trip_load(yaml_file, preserve_quotes=True)
+
+if args.algorithm:
+    try:
+        model_wise = yaml_config.get("quantization", {}).get("model_wise", {})
+        activation = model_wise.get("activation", {})
+        if not activation:
+            model_wise.update({"activation": {}})
+            activation = model_wise.get("activation", {})
+        activation.update({"algorithm": args.algorithm})
+
+        weight = model_wise.get("weight", {})
+        if not weight:
+            model_wise.update({"weight": {}})
+            weight = model_wise.get("weight", {})
+        weight.update({"algorithm": args.algorithm})
+    except Exception as e:
+        print(f"[ WARNING ] {e}")
 
 if args.timeout:
     try:

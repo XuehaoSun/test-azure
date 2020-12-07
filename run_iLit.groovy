@@ -124,6 +124,7 @@ if ('val_branch' in params && params.val_branch != ''){
 }
 echo "val_branch: ${val_branch}"
 
+def algorithm=''
 def new_conda_env=true
 if(framework == 'pytorch'){
     label=model.split('_')
@@ -388,6 +389,10 @@ node( sub_node_label ) {
                         ).trim()
                     }
                 }
+                if (model == "inception_v1"){
+                    // set kl test for inception_v1
+                    algorithm='kl'
+                }
             }else if(framework == "pytorch" && model == "resnet18"){
                 strategy = "bayesian"
             }else if(framework == "mxnet" && model == "resnet50v1"){
@@ -416,6 +421,7 @@ node( sub_node_label ) {
                     --yaml=${yaml} \
                     --strategy=${strategy} \
                     --max_trials=${max_trials} \
+                    --algorithm=${algorithm} \
                     --conda_env_name=${framework}-${framework_version}-${python_version} \
                     2>&1 | tee ${framework}-${model}-tune.log
             """
