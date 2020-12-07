@@ -1375,6 +1375,142 @@
       "yaml": "config.yaml",
       "strategy": "basic",
       "batch_size": 1
+    },
+    "DynamicMemory": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/checkpoint_dynamic_memory_network/DynamicMemory.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "EntityNet": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/checkpoint_entity_network2/EntityNet.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "Seq2seqAttn": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/Seq2seqAttn/Seq2seqAttn.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "show_and_tell": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/show_and_tell/Show_and_tell.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "SqueezeNet": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/SqueezeNet-tf/SqueezeNet.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "ssd_resnet34_1200x1200": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/ssd_resnet34_model/ssd_resnet34_1200x1200.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "deepspeech": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/deepspeech/v1/tf/deepspeech.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "TextRCNN": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/TextRCNN/TextRCNN.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "U-Net": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/unet/unet.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "wavenet": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/wavenet/wavenet.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "HierAtteNet": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/text_hier_atten_title_desc_checkpoint_MHA/HierAtteNet.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "SphereFace": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/SphereFace/SphereFace.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "ResNet-50v1.5": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/ResNet50_v1_5/model_dir/ResNet-50_v1.5.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "ResNeXt-50": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/ResNext_50/ResNext_50.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "MiniGo": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/MiniGo/MiniGo.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "ResNeXt-101": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/ResNext_101/ResNext_101.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "COVID-Net": {
+      "model_src_dir": "oob_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/tensorflow/tf_oob_models/COVID-Net/COVID-Net.pb",
+      "yaml": "config.yaml",
+      "strategy": "basic",
+      "batch_size": 1
     }
   }
 }
