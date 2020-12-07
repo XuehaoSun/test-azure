@@ -9,7 +9,7 @@
 # coverage_summary=coverage_summary.log
 
 lines_coverage_threshold=80
-branches_coverage_threshold=60
+branches_coverage_threshold=75
 
 
 function main {
