@@ -231,7 +231,7 @@ def build_conda_env() {
                             else
                                 echo "!!! TF 1.15UP1 do not support ${python_version}"
                             fi
-                        elif [ ${framework_version} == '1.15UP2' ]; then
+                        elif [ ${tensorflow_version} == '1.15UP2' ]; then
                             if [ ${python_version} == '3.6' ]; then
                                 pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp36-cp36m-manylinux2010_x86_64.whl                
                             elif [ ${python_version} == '3.7' ]; then
