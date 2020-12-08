@@ -3,7 +3,7 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "9" ] ; then 
+if [ $# != "10" ] ; then
     echo 'ERROR:'
     echo "Expected 9 parameters got $#"
     printf 'Please use following parameters:
@@ -15,6 +15,7 @@ if [ $# != "9" ] ; then
     --yaml=<path to ilit yaml configuration>
     --strategy=<tuning strategy>
     --max_trials=<max tuning trials>
+    --algorithm=<algorithm for quantization>
     --conda_env_name=<conda environment name>
     '
     exit 1
@@ -39,6 +40,8 @@ do
             strategy=`echo $i | sed "s/${PATTERN}//"`;;
         --max_trials=*)
             max_trials=`echo $i | sed "s/${PATTERN}//"`;;
+        --algorithm=*)
+            algorithm=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         *)
@@ -202,6 +205,10 @@ function update_yaml_config {
 
     if [ "${max_trials}" != "" ]; then
         update_yaml_params="${update_yaml_params} --max-trials=${max_trials}"
+    fi
+
+    if [ "${algorithm}" != "" ]; then
+        update_yaml_params="${update_yaml_params} --algorithm=${algorithm}"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then
