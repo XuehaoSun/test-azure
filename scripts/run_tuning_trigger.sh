@@ -73,7 +73,7 @@ main() {
     echo -e "\nInstalling model requirements..."
     if [ -f "requirements.txt" ]; then
         sed -i '/ilit/d' requirements.txt
-        sed -i "/tensorflow==/d;/torch==/d;/mxnet==/d" requirements.txt
+        sed -i "/tensorflow==/d;/torch==/d;/mxnet==/d;/onnx/d" requirements.txt
         python -m pip install -r requirements.txt
         pip list
     else
@@ -114,27 +114,23 @@ main() {
     elif [ ${framework} == "mxnet" ]; then
         mkdir -p ${q_model}
         q_model="${q_model}/${topology}"
+    elif [ ${framework} == "onnx" ]; then
+        q_model="${q_model}.onnx"
     fi
 
     # run_tuning.sh
     starttime=`date +'%Y-%m-%d %H:%M:%S'`
 
-    parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
-
-    if [ "${framework}" == "tensorflow" ] || [ "${framework}" == "mxnet" ]; then
-        parameters="${parameters} --output_model=${q_model}"
-    fi
-
-    # workaround for style_transfer
-    if [ "${framework}" == "tensorflow" ] && [ "${model}" == "style_transfer" ]; then
-        parameters="--dataset_location=${dataset_location} --input_model=${input_model} --output_model=${q_model}"
-    fi
+    parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model} --output_model=${q_model}"
 
     # new config with yaml
     if [ "${framework}" == "tensorflow" ]; then
       if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
         parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
       fi
+    fi
+    if [ "${framework}" == "onnx" ] && [[ "${model_src_dir}" == *"image_recognition"* ]]; then
+      parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
     fi
 
     update_yaml_config

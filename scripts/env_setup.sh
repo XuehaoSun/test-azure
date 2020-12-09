@@ -64,6 +64,13 @@ function set_PT_env {
     fi
 }
 
+function set_ONNX_env {
+    export KMP_AFFINITY=granularity=fine,noduplicates,compact,1,0
+    export OMP_NUM_THREADS=28
+    export PATH=${HOME}/miniconda3/bin/:$PATH
+    source activate ${conda_env_name}
+}
+
 function set_environment {
     case "${framework}" in
         tensorflow)
@@ -72,6 +79,8 @@ function set_environment {
             set_MXNet_env;;
         pytorch)
             set_PT_env;;
+        onnx)
+            set_ONNX_env;;
         *)
             echo "Framework ${framework} not recognized."; exit 1;;
     esac

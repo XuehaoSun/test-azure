@@ -30,13 +30,13 @@ if ('framework_version' in params && params.framework_version != '') {
 echo "framework_version: ${framework_version}"
 
 // model
-model  = 'resnet50'
+model = 'resnet50'
 if ('model' in params && params.model != '') {
     model = params.model
 }
 echo "Running ${model}"
 
-precision  = 'int8,fp32'
+precision = 'int8,fp32'
 if ('precision' in params && params.precision != '') {
     precision = params.precision
 }
@@ -251,6 +251,9 @@ def create_conda_env(){
                     else
                         pip install ${framework}==${framework_version}
                     fi
+                elif [ ${framework} == 'onnx' ]; then
+                    pip install ${framework}==${framework_version}
+                    pip install onnxruntime==1.5.2
                 fi
             
                 wait
@@ -397,6 +400,8 @@ node( sub_node_label ) {
                 strategy = "bayesian"
             }else if(framework == "mxnet" && model == "resnet50v1"){
                 strategy = "mse"
+            }else{
+                strategy = "basic"
             }
         }
 
