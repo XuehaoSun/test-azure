@@ -79,13 +79,12 @@ if ('pytorch_version' in params && params.pytorch_version != '') {
 }
 echo "pytorch_version: ${pytorch_version}"
 
-// setting mxnet models
+// setting pytorch models
 pytorch_models = ""
 if ('pytorch_models' in params && params.pytorch_models != '') {
     pytorch_models = params.pytorch_models
 }
 echo "pytorch_models: ${pytorch_models}"
-
 
 // setting onnx_version
 onnx_version = '1.7.0'
@@ -318,6 +317,8 @@ def BuildParams(job_framework, job_model, python_version, strategy){
         framework_version = "${pytorch_version}"
     }else if (job_framework == 'mxnet'){
         framework_version = "${mxnet_version}"
+    }else if (job_framework == 'onnx'){
+        framework_version = "${onnx_version}"
     }
     println("llsu-----> ${job_framework} : ${framework_version}")
 
@@ -368,6 +369,8 @@ def getPerfJobs() {
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
             job_models = parseStrToList(mxnet_models)
+        }else if (job_framework == 'onnx'){
+            job_models = parseStrToList(onnx_models)
         }
         if (MR_source_branch != ''){
             add_models_list = collectModelList(job_framework)

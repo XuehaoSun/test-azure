@@ -91,6 +91,8 @@ main() {
         q_model="${q_model}.pb"
     elif [ ${framework} == "mxnet" ] && [[ ${model_src_dir} == *"object_detection" ]]; then
         q_model="${q_model}/${model}"
+    elif [ ${framework} == "onnx" ]; then
+        q_model="${q_model}.onnx"
     fi
 
     # ------ WORKAROUND FOR MXNET RESNET50V1 -----
@@ -131,15 +133,9 @@ main() {
 function run_accuracy {
   parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
 
-  if [ "${framework}" == "tensorflow" ]; then
-    if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
-      iters=-1
-      update_yaml_config
-      echo -e "\nPrint_updated_yaml... "
-      cat ${yaml}
-      parameters="--config=${yaml} --input_model=${input_model}"
-    fi
-  fi
+  # general yaml for new config format
+  iters=-1
+  config_new_yaml
 
   if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
@@ -203,14 +199,8 @@ function run_benchmark {
     fi
   fi
 
-  if [ "${framework}" == "tensorflow" ]; then
-    if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
-      update_yaml_config
-      echo -e "\nPrint_updated_yaml... "
-      cat ${yaml}
-      parameters="--config=${yaml} --input_model=${input_model}"
-    fi
-  fi
+  # general yaml for new config format
+  config_new_yaml
 
   if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
@@ -232,7 +222,7 @@ function run_benchmark {
 
 }
 
-
+# update yaml file
 function update_yaml_config {
     if [ ! -f ${yaml} ]; then
         echo "Not found yaml config at \"${yaml}\" location."
@@ -244,6 +234,27 @@ function update_yaml_config {
     if [ "${update_yaml_params}" != "" ]; then
         python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
     fi
+}
+
+# general yaml for new config format
+function config_new_yaml {
+
+  if [ "${framework}" == "tensorflow" ]; then
+    if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
+      update_yaml_config
+      echo -e "\nPrint_updated_yaml... "
+      cat ${yaml}
+      parameters="--config=${yaml} --input_model=${input_model}"
+    fi
+  fi
+
+  if [ "${framework}" == "onnx" ] && [[ "${model_src_dir}" == *"image_recognition"* ]]; then
+      update_yaml_config
+      echo -e "\nPrint_updated_yaml... "
+      cat ${yaml}
+      parameters="--config=${yaml} --input_model=${input_model}"
+  fi
+
 }
 
 main
