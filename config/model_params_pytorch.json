@@ -195,7 +195,7 @@
     "blendcnn": {
       "model_src_dir": "distill-bert",
       "dataset_location": "/tf_dataset/pytorch/blendcnn/MRPC/",
-      "input_model": "/tf_dataset/pytorch/blendcnn/model/",
+      "input_model": "/tf_dataset/pytorch/blendcnn/models/",
       "yaml": "blendcnn.yaml",
       "strategy": "basic",
       "batch_size": 32
