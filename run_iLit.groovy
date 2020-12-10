@@ -234,7 +234,7 @@ def create_conda_env(){
                     else
                         torch_whl_path=/tf_dataset/pytorch/pypi    
                     fi
-                    if [ ${model} == 'resnest50' ]; then
+                    if [ ${model} == 'resnest50' ] || [ ${model} == 'blendcnn' ]; then
                         framework_version='1.6.0+cpu'
                     fi
                     torch_whl=${torch_whl_path}/${python_version}/torch-${framework_version}-*.whl
