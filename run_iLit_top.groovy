@@ -101,11 +101,11 @@ if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
 println("onnxruntime_version: " + onnxruntime_version)
 
 // setting onnx models
-onnx_models = ""
-if ('onnx_models' in params && params.onnx_models != '') {
-    onnx_models = params.onnx_models
+onnxrt_models = ""
+if ('onnxrt_models' in params && params.onnxrt_models != '') {
+    onnxrt_models = params.onnxrt_models
 }
-echo "onnx_models: ${onnx_models}"
+echo "onnxrt_models: ${onnxrt_models}"
 
 // ilit-validation branch to get test groovy
 validation_branch = 'master'
@@ -317,8 +317,8 @@ def BuildParams(job_framework, job_model, python_version, strategy){
         framework_version = "${pytorch_version}"
     }else if (job_framework == 'mxnet'){
         framework_version = "${mxnet_version}"
-    }else if (job_framework == 'onnx'){
-        framework_version = "${onnx_version}"
+    }else if (job_framework == 'onnxrt'){
+        framework_version = "${onnxruntime_version}"
     }
     println("llsu-----> ${job_framework} : ${framework_version}")
 
@@ -330,6 +330,7 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "sub_node_label", value: "${sub_node_label}")
     ParamsPerJob += string(name: "framework", value: "${job_framework}")
     ParamsPerJob += string(name: "framework_version", value: "${framework_version}")
+    ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
     ParamsPerJob += string(name: "model", value: "${job_model}")
     ParamsPerJob += string(name: "ilit_url", value: "${ilit_url}")
     ParamsPerJob += string(name: "nigthly_test_branch", value: "${nigthly_test_branch}")
@@ -369,8 +370,8 @@ def getPerfJobs() {
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
             job_models = parseStrToList(mxnet_models)
-        }else if (job_framework == 'onnx'){
-            job_models = parseStrToList(onnx_models)
+        }else if (job_framework == 'onnxrt'){
+            job_models = parseStrToList(onnxrt_models)
         }
         if (MR_source_branch != ''){
             add_models_list = collectModelList(job_framework)
@@ -493,6 +494,8 @@ def collectLog() {
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
             job_models = parseStrToList(mxnet_models)
+        }else if (job_framework == 'onnxrt'){
+            job_models = parseStrToList(onnxrt_models)
         }
 
         if (MR_source_branch != ''){

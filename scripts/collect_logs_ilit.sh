@@ -67,12 +67,12 @@ if [ "${mode}" == "tuning" ]; then
 
       benchmark_mode="latency"
       log_file="${framework}/${model}/${framework}_${model}_int8_${benchmark_mode}"
-      bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+      bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
       latency=$(python ${WORKSPACE}/ilit-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "int8" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
       echo "${framework};CLX8280;INT8;${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
 
       log_file="${framework}/${model}/${framework}_${model}_fp32_${benchmark_mode}"
-      bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+      bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
       latency_fp32=$(python ${WORKSPACE}/ilit-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "fp32" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
       echo "${framework};CLX8280;FP32;${model};Inference;Latency;${bs};${latency_fp32};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
       # for test
@@ -95,20 +95,20 @@ fi
 log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}"
 
 if [ "${mode}" == "throughput" ]; then
-  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
   throughput=$(grep "Throughput: " ${log_file}*  | sed -e s";.*: ;;" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
   echo "${framework};CLX8280;${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
 fi
 
 if [ "${mode}" == "latency" ]; then
-    bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+    bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
     latency=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
     echo "${framework};CLX8280;${PRECISION};${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
 fi
 
 if [ "${mode}" == "accuracy" ]; then
   log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}.log"
-  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F ' ' '{print $4}')
+  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
   if [ "${bs}" == "" ]; then
     bs=$(for param in $(grep 'batch_size=' ${log_file}); do if [[ ${param} =~ "batch_size" ]]; then echo ${param} | cut -f 2 -d =; break; fi ; done)
   fi
