@@ -74,8 +74,8 @@ main() {
     if [ -f "requirements.txt" ]; then
         sed -i '/ilit/d' requirements.txt
         sed -i "/tensorflow==/d;/torch==/d;/mxnet==/d" requirements.txt
-        if [ "${framework}" == "onnx" ]; then
-          sed -i '/onnx/d' requirements.txt
+        if [ "${framework}" == "onnxrt" ]; then
+          sed -i '/onnx/d;/onnxruntime/d' requirements.txt
         fi
         python -m pip install -r requirements.txt
         pip list
@@ -117,7 +117,7 @@ main() {
     elif [ ${framework} == "mxnet" ]; then
         mkdir -p ${q_model}
         q_model="${q_model}/${topology}"
-    elif [ ${framework} == "onnx" ]; then
+    elif [ ${framework} == "onnxrt" ]; then
         q_model="${q_model}.onnx"
     fi
 
@@ -132,7 +132,7 @@ main() {
         parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
       fi
     fi
-    if [ "${framework}" == "onnx" ] && [[ "${model_src_dir}" == *"image_recognition"* ]]; then
+    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" == *"image_recognition"* ]]; then
       parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
     fi
 

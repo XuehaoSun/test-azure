@@ -29,6 +29,13 @@ if ('framework_version' in params && params.framework_version != '') {
 }
 echo "framework_version: ${framework_version}"
 
+// setting onnx_version
+onnx_version  = '1.7.0'
+if ('onnx_version' in params && params.onnx_version != '') {
+    onnx_version = params.onnx_version
+}
+echo "onnx_version: ${onnx_version}"
+
 // model
 model = 'resnet50'
 if ('model' in params && params.model != '') {
@@ -171,7 +178,7 @@ def parseStrToList(srtingElements, delimiter=',') {
 }
 
 def create_conda_env(){
-    withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}",
+    withEnv(["framework=${framework}","framework_version=${framework_version}","onnx_version=${onnx_version}","python_version=${python_version}",
              "requirement_list=${requirement_list}"]) {
         retry(5){
 
@@ -251,9 +258,12 @@ def create_conda_env(){
                     else
                         pip install ${framework}==${framework_version}
                     fi
-                elif [ ${framework} == 'onnx' ]; then
-                    pip install ${framework}==${framework_version}
-                    pip install onnxruntime==1.5.2
+                elif [ ${framework} == 'onnxrt' ]; then
+                    pip install onnx==${onnx_version}
+                    # if onnxrt==nightly then use requirements to install
+                    if [ ${framework_version} != "nightly" ]; then
+                        pip install onnxruntime==${framework_version}
+                    fi
                 fi
             
                 wait

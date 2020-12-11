@@ -91,7 +91,7 @@ main() {
         q_model="${q_model}.pb"
     elif [ ${framework} == "mxnet" ] && [[ ${model_src_dir} == *"object_detection" ]]; then
         q_model="${q_model}/${model}"
-    elif [ ${framework} == "onnx" ]; then
+    elif [ ${framework} == "onnxrt" ]; then
         q_model="${q_model}.onnx"
     fi
 
@@ -248,7 +248,7 @@ function config_new_yaml {
     fi
   fi
 
-  if [ "${framework}" == "onnx" ] && [[ "${model_src_dir}" == *"image_recognition"* ]]; then
+  if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" == *"image_recognition"* ]]; then
       update_yaml_config
       echo -e "\nPrint_updated_yaml... "
       cat ${yaml}
