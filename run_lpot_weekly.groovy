@@ -184,10 +184,10 @@ def main() {
                     st_list.each { st ->
                         if (PARALLEL) {
                             build_jobs["${py}-${fw}-${fw_ver}-${st}"] = {
-                                getJob(py, fw, fw_ver, st, ilit_commit)
+                                getJob(py, fw, fw_ver, st, lpot_commit)
                             } // jobs
                         } else {
-                            getJob(py, fw, fw_ver, st, ilit_commit)
+                            getJob(py, fw, fw_ver, st, lpot_commit)
                         }
                     } // framework_version
                 } // framework
@@ -206,7 +206,7 @@ def main() {
         ]) {
             sh '''#!/bin/bash -x
             sort ${summary_log_init} >> ${summary_log} 
-            bash ${WORKSPACE}/scripts/generate_ilit_report_weekly.sh 
+            bash ${WORKSPACE}/scripts/generate_lpot_report_weekly.sh 
             '''
         }
 
@@ -222,7 +222,7 @@ def main() {
         }
 
         // send report
-        emailext subject: "iLiT Weekly",
+        emailext subject: "LPOT Weekly",
             to: "${recipient_list}",
             replyTo: "${recipient_list}",
             body: '''${FILE,path="report.html"}''',
@@ -232,7 +232,7 @@ def main() {
     }
 } // node
 
-def getJob(python_version, framework, framework_version, strategy, ilit_commit) {
+def getJob(python_version, framework, framework_version, strategy, lpot_commit) {
     stage("${python_version}-${framework}-${framework_version}-${strategy}") {
         echo "---- Runing ${framework}-${framework_version} with python-${python_version} and strategy-${strategy} ----"
 
@@ -306,7 +306,7 @@ def getJob(python_version, framework, framework_version, strategy, ilit_commit) 
 
         catchError {
             copyArtifacts(
-                    projectName: "intel-iLit-validation-top-weekly",
+                    projectName: "intel-lpot-validation-top-weekly",
                     selector: specific("${build_number}"),
                     filter: 'tuning_info.log',
                     fingerprintArtifacts: true,
