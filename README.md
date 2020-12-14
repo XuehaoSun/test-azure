@@ -1,3 +1,3 @@
-# ilit-validation
+# lpot-validation
 
-validation scripts for ilit
+validation scripts for lpot

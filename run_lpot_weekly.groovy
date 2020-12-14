@@ -4,7 +4,7 @@
 credential = 'lab_tfbot'
 
 // Parameters Pre-defined
-node_label = "iLit"
+node_label = "lpot"
 if ('node_label' in params && params.node_label != '') {
     node_label = params.node_label
 }
@@ -16,7 +16,7 @@ if ('pythons' in params && params.pythons != '') {
 }
 echo "---- pythons: ${pythons} ----"
 
-strategies = "ILIT"
+strategies = "lpot"
 if ('strategies' in params && params.strategies != '') {
     strategies = params.strategies
 }
@@ -27,17 +27,17 @@ if ('frameworks' in params && params.frameworks != '') {
     frameworks = params.frameworks
 }
 
-tensorflow_versions = "ILIT"
+tensorflow_versions = "lpot"
 if ('tensorflow_versions' in params && params.tensorflow_versions != '') {
     tensorflow_versions = params.tensorflow_versions
 }
 
-pytorch_versions = "ILIT"
+pytorch_versions = "lpot"
 if ('pytorch_versions' in params && params.pytorch_versions != '') {
     pytorch_versions = params.pytorch_versions
 }
 
-mxnet_versions = "ILIT"
+mxnet_versions = "lpot"
 if ('mxnet_versions' in params && params.mxnet_versions != '') {
     mxnet_versions = params.mxnet_versions
 }
@@ -46,14 +46,14 @@ echo "---- tensorflow_versions: ${tensorflow_versions} ----"
 echo "---- pytorch_versions: ${pytorch_versions} ----"
 echo "---- mxnet_versions: ${mxnet_versions} ----"
 
-ilit_url = "https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool.git"
-if ('ilit_url' in params && params.ilit_url != '') {
-    ilit_url = params.ilit_url
+lpot_url = "https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool.git"
+if ('lpot_url' in params && params.lpot_url != '') {
+    lpot_url = params.lpot_url
 }
 
-nigthly_test_branch = "developer"
-if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
-    nigthly_test_branch = params.nigthly_test_branch
+lpot_branch = "developer"
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 }
 
 // setting refer_build
@@ -83,8 +83,10 @@ node( 'master' ) {
     dir( WORKSPACE ) {
         deleteDir()
         sh " rm -rf ./* "
-        retry(5) {
-            checkout scm
+        dir('lpot-validation'){
+            retry(5) {
+                checkout scm
+            }
         }
     }
 
@@ -99,28 +101,28 @@ node( 'master' ) {
         )
     }
 
-    // download iLit
+    // download lpot
     retry(5) {
         checkout changelog: true, poll: true, scm: [
                 $class                           : 'GitSCM',
-                branches                         : [[name: "${nigthly_test_branch}"]],
+                branches                         : [[name: "${lpot_branch}"]],
                 browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                 doGenerateSubmoduleConfigurations: false,
                 extensions                       : [
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-ilit"],
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-lpot"],
                         [$class: 'CloneOption', timeout: 60]
                 ],
                 submoduleCfg                     : [],
                 userRemoteConfigs                : [
                         [credentialsId: "${credential}",
-                        url          : "${ilit_url}"]
+                        url          : "${lpot_url}"]
                 ]
         ]
     }
 
-    def ilit_commit = sh (
+    def lpot_commit = sh (
             script: """
-                cd ilit-ilit  &&  git rev-parse HEAD
+                cd lpot-lpot  &&  git rev-parse HEAD
             """,
             returnStdout: true
     ).trim()
@@ -201,7 +203,7 @@ node( 'master' ) {
                                     echo "---- pytorch_models_pass: ${pytorch_models_pass}"
                                     echo "---- mxnet_models_pass: ${mxnet_models_pass}"
                                 
-                                    downstreamJob = build job: "intel-iLit-validation-top-weekly", propagate: false, parameters: [
+                                    downstreamJob = build job: "intel-lpot-validation-top-weekly", propagate: false, parameters: [
                                         string(name: 'Frameworks', value:"${fw}"),
                                         string(name: "${fw}_version", value:"${fw_ver}"),
                                         string(name: 'strategy', value:"${st}"),
@@ -212,8 +214,8 @@ node( 'master' ) {
                                         string(name: 'tensorflow_oob_models', value:"${tensorflow_oob_models_pass}"),
                                         string(name: 'pytorch_models', value:"${pytorch_models_pass}"),
                                         string(name: 'mxnet_models', value:"${mxnet_models_pass}"),
-                                        string(name: 'ilit_url', value:"${ilit_url}"),
-                                        string(name: 'nigthly_test_branch', value:"${ilit_commit}"),
+                                        string(name: 'lpot_url', value:"${lpot_url}"),
+                                        string(name: 'lpot_branch', value:"${lpot_commit}"),
                                         string(name: 'test_mode', value: "weekly"),
                                         string(name: 'weekly_description', value:"${weekly_description}")
                                     ]
@@ -243,7 +245,7 @@ node( 'master' ) {
         ]) {
             sh '''#!/bin/bash -x
             sort ${summary_log_init} >> ${summary_log} 
-            bash ${WORKSPACE}/scripts/generate_ilit_report_weekly.sh 
+            bash ${WORKSPACE}/scripts/generate_lpot_report_weekly.sh 
             '''
         }
     
@@ -259,7 +261,7 @@ node( 'master' ) {
         }
 
         // send report
-        emailext subject: "iLiT Weekly",
+        emailext subject: "lpot Weekly",
             to: "${recipient_list}",
             replyTo: "${recipient_list}",
             body: '''${FILE,path="report.html"}''',

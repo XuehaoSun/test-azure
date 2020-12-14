@@ -32,7 +32,7 @@ def main():
                 if not valid_model(model):
                     continue
                 
-                model_dir_tree = [args.ilit_repo, "examples", framework, group, model.name]
+                model_dir_tree = [args.lpot_repo, "examples", framework, group, model.name]
                 model.datadir = os.path.join(*model_dir_tree)
                 while not os.path.isdir(model.datadir):
                     model_dir_tree.pop()

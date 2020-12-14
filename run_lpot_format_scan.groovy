@@ -6,12 +6,12 @@ if ('node_label' in params && params.node_label != '') {
 }
 echo "Running on node ${node_label}"
 
-ilit_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
-if ('ilit_url' in params && params.ilit_url != ''){
-    ilit_url = params.ilit_url
+lpot_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
 }
 
-echo "ilit_url is ${ilit_url}"
+echo "lpot_url is ${lpot_url}"
 
 python_version="3.6"
 if ('python_version' in params && params.python_version != ''){
@@ -19,7 +19,13 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
-echo "nigthly_test_branch: $nigthly_test_branch"
+val_branch="master"
+if ('val_branch' in params && params.val_branch != ''){
+    val_branch=params.val_branch
+}
+echo "val_branch: ${val_branch}"
+
+echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
@@ -51,23 +57,23 @@ def download() {
         dir(WORKSPACE) {
             retry(5) {
                 checkout scm
-                ilit_branch = nigthly_test_branch
+                lpot_branch = lpot_branch
                 if (MR_source_branch != "") {
-                    ilit_branch = MR_source_branch
+                    lpot_branch = MR_source_branch
                 }
                 checkout changelog: true, poll: true, scm: [
                     $class: 'GitSCM',
-                    branches: [[name: "${ilit_branch}"]],
+                    branches: [[name: "${lpot_branch}"]],
                     browser: [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions : [
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot"],
                         [$class: 'CloneOption', timeout: 60]
                     ],
                     submoduleCfg: [],
                     userRemoteConfigs: [
                         [credentialsId: "${credential}",
-                        url: "${ilit_url}"]
+                        url: "${lpot_url}"]
                     ]
                 ]
             }
@@ -82,7 +88,7 @@ def create_conda_env() {
                 sh '''#!/bin/bash
                     set -xe
                     export PATH=${HOME}/miniconda3/bin/:$PATH
-                    conda_env_name=ilit-format_scan-${python_version}
+                    conda_env_name=lpot-format_scan-${python_version}
                     if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                         echo "${conda_env} exist!"
                     else
@@ -116,7 +122,7 @@ node(node_label) {
             echo "-----------------  Running Code Scan  -----------------"
             echo "---------------------------------------------------------"
             status = sh(
-            script: "${WORKSPACE}/scripts/run_format_scan.sh --python_version=${python_version} --tool=${TOOL} --repo_dir=${WORKSPACE}/iLit",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
+            script: "${WORKSPACE}/scripts/run_format_scan.sh --python_version=${python_version} --tool=${TOOL} --repo_dir=${WORKSPACE}/lpot",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
             returnStatus:true)
             if (status != 0) {
                 throw new Exception("Found code format scan errors.")

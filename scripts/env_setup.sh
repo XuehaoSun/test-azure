@@ -88,24 +88,24 @@ function set_environment {
     echo "Checking pip list..."
     python -V
     pip list
-    c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
-    if [ ${c_ilit} != 0 ]; then
-        pip uninstall ilit -y
+    c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+    if [ ${c_lpot} != 0 ]; then
+        pip uninstall lpot -y
         pip list
     fi
 
     cd ${WORKSPACE}
     export https_proxy=http://child-prc.intel.com:913
     export http_proxy=http://child-prc.intel.com:913
-    pip install ilit*.whl
-    echo "Checking ilit..."
+    pip install lpot*.whl
+    echo "Checking lpot..."
     pip list
 
-    if [ ! -d ${WORKSPACE}/ilit-models ]; then
-        echo "\"ilit-model\" not found. Exiting..."
+    if [ ! -d ${WORKSPACE}/lpot-models ]; then
+        echo "\"lpot-model\" not found. Exiting..."
         exit 1
     fi
-    cd ${WORKSPACE}/ilit-models
+    cd ${WORKSPACE}/lpot-models
 
     export LOGLEVEL=DEBUG
 }

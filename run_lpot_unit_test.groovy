@@ -12,23 +12,23 @@ if ('conda_env' in params && params.conda_env != '') {
 }
 echo "Running ut on ${conda_env}"
 
-ilit_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
-if ('ilit_url' in params && params.ilit_url != ''){
-    ilit_url = params.ilit_url
+lpot_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
 }
-echo "ilit_url is ${ilit_url}"
+echo "lpot_url is ${lpot_url}"
 
-nigthly_test_branch = ''
+lpot_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
-if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
-    nigthly_test_branch = params.nigthly_test_branch
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 
 }else{
     MR_source_branch = params.MR_source_branch
     MR_target_branch = params.MR_target_branch
 }
-echo "nigthly_test_branch: $nigthly_test_branch"
+echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
@@ -65,6 +65,12 @@ if ('pytorch_version' in params && params.pytorch_version != '') {
     pytorch_version = params.pytorch_version
 }
 echo "pytorch_version: ${pytorch_version}"
+
+val_branch="master"
+if ('val_branch' in params && params.val_branch != ''){
+    val_branch=params.val_branch
+}
+echo "val_branch: ${val_branch}"
 
 torchvision_versions = [
     "1.6.0": "0.7.0",
@@ -144,13 +150,13 @@ def download() {
                         browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                         doGenerateSubmoduleConfigurations: false,
                         extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                                 [$class: 'CloneOption', timeout: 60],
                         ],
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
                                 [credentialsId: "${credential}",
-                                url          : "${ilit_url}"]
+                                url          : "${lpot_url}"]
                         ]
                 ]
                 checkout changelog: true, poll: true, scm: [
@@ -159,13 +165,13 @@ def download() {
                     browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models-base"],
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models-base"],
                             [$class: 'CloneOption', timeout: 60]
                     ],
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
                             [credentialsId: "${credential}",
-                             url          : "${ilit_url}"]
+                             url          : "${lpot_url}"]
                     ]
                 ]
 
@@ -173,17 +179,17 @@ def download() {
             else {
                 checkout changelog: true, poll: true, scm: [
                         $class                           : 'GitSCM',
-                        branches                         : [[name: "${nigthly_test_branch}"]],
+                        branches                         : [[name: "${lpot_branch}"]],
                         browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                         doGenerateSubmoduleConfigurations: false,
                         extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                                 [$class: 'CloneOption', timeout: 60]
                         ],
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
                                 [credentialsId: "${credential}",
-                                url          : "${ilit_url}"]
+                                url          : "${lpot_url}"]
                         ]
                 ]
             }
@@ -280,12 +286,13 @@ node(node_label){
         if ("${binary_build_job}" == "") {
             stage('Build binary') {
                 List binaryBuildParams = [
-                        string(name: "ilit_url", value: "${ilit_url}"),
-                        string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                        string(name: "lpot_url", value: "${lpot_url}"),
+                        string(name: "lpot_branch", value: "${lpot_branch}"),
                         string(name: "MR_source_branch", value: "${MR_source_branch}"),
                         string(name: "MR_target_branch", value: "${MR_target_branch}"),
+                        string(name: "val_branch", value: "${val_branch}")
                 ]
-                downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+                downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
                 
                 binary_build_job = downstreamJob.getNumber()
                 echo "binary_build_job: ${binary_build_job}"
@@ -294,7 +301,7 @@ node(node_label){
                     currentBuild.result = "FAILURE"
                     failed_build_url = downstreamJob.absoluteUrl
                     echo "failed_build_url: ${failed_build_url}"
-                    error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                    error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
                 }
             }
         }
@@ -302,13 +309,13 @@ node(node_label){
         stage('Copy binary') {
             catchError {
                 copyArtifacts(
-                        projectName: 'iLiT-release-wheel-build',
+                        projectName: 'lpot-release-wheel-build',
                         selector: specific("${binary_build_job}"),
-                        filter: 'ilit*.whl',
+                        filter: 'lpot*.whl',
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
 
-                archiveArtifacts artifacts: "ilit*.whl"
+                archiveArtifacts artifacts: "lpot*.whl"
             }
         }
         
@@ -324,33 +331,33 @@ node(node_label){
                     source activate ${conda_env}
                     # pip config set global.index-url https://pypi.douban.com/simple/
                     
-                    echo "Checking ilit..."
+                    echo "Checking lpot..."
                     python -V
                     pip list
-                    c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
-                    if [ ${c_ilit} != 0 ]; then
-                        pip uninstall ilit -y
+                    c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+                    if [ ${c_lpot} != 0 ]; then
+                        pip uninstall lpot -y
                         pip list
                     fi
                                     
-                    echo "Install iLiT binary..."
+                    echo "Install lpot binary..."
                     n=0
                     until [ "$n" -ge 5 ]
                     do
-                        pip install ilit*.whl && break
+                        pip install lpot*.whl && break
                         n=$((n+1))
                         sleep 5
                     done
                     
-                    if [ ! -d ${WORKSPACE}/ilit-models ]; then
-                        echo "\\"ilit-model\\" not found. Exiting..."
+                    if [ ! -d ${WORKSPACE}/lpot-models ]; then
+                        echo "\\"lpot-model\\" not found. Exiting..."
                         exit 1
                     fi
                     
                     echo -e "\\nInstalling ut requirements..."
-                    cd ${WORKSPACE}/ilit-models/test
+                    cd ${WORKSPACE}/lpot-models/test
                     if [ -f "requirements.txt" ]; then
-                        sed -i '/^ilit/d' requirements.txt
+                        sed -i '/^lpot/d' requirements.txt
                         sed -i '/^intel-tensorflow/d' requirements.txt
                         sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                         sed -i '/^torch/d' requirements.txt
@@ -372,8 +379,8 @@ node(node_label){
 
                     export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
 
-                    ilit_path=$(python -c 'import ilit; import os; print(os.path.dirname(ilit.__file__))')
-                    find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${ilit_path}"' --append ,g' > run.sh
+                    lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                    find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
                     ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
                     coverage erase
                     bash run.sh 2>&1 | tee ${ut_log_name}
@@ -392,7 +399,7 @@ node(node_label){
         }
 
         stage("Coverage status check") {
-            branch = nigthly_test_branch
+            branch = lpot_branch
             if (MR_source_branch != "") {
                 branch = MR_source_branch
             }
@@ -439,14 +446,14 @@ node(node_label){
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
 
-                    pip uninstall ilit -y
-                    cd ${WORKSPACE}/ilit-models-base
+                    pip uninstall lpot -y
+                    cd ${WORKSPACE}/lpot-models-base
                     python setup.py install
                     pip list
 
-                    cd ${WORKSPACE}/ilit-models-base/test
+                    cd ${WORKSPACE}/lpot-models-base/test
                     if [ -f "requirements.txt" ]; then
-                        sed -i '/^ilit/d' requirements.txt
+                        sed -i '/^lpot/d' requirements.txt
                         sed -i '/^intel-tensorflow/d' requirements.txt
                         sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                         sed -i '/^torch/d' requirements.txt
@@ -467,8 +474,8 @@ node(node_label){
                 
                     export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
 
-                    ilit_path=$(python -c 'import ilit; import os; print(os.path.dirname(ilit.__file__))')
-                    find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${ilit_path}"' --append ,g' > run.sh
+                    lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                    find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
                     ut_log_name=${WORKSPACE}/unit_test_base.log
                     coverage erase
                     bash run.sh 2>&1 | tee ${ut_log_name}
@@ -528,33 +535,33 @@ node(node_label){
                             source activate ${conda_env}
                             # pip config set global.index-url https://pypi.douban.com/simple/
                     
-                            echo "Checking ilit..."
+                            echo "Checking lpot..."
                             python -V
                             pip list
-                            c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
-                            if [ ${c_ilit} != 0 ]; then
-                                pip uninstall ilit -y
+                            c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+                            if [ ${c_lpot} != 0 ]; then
+                                pip uninstall lpot -y
                                 pip list
                             fi
                                     
-                            echo "Install iLiT binary..."
+                            echo "Install lpot binary..."
                             n=0
                             until [ "$n" -ge 5 ]
                             do
-                                pip install ilit*.whl && break
+                                pip install lpot*.whl && break
                                 n=$((n+1))
                                 sleep 5
                             done
                     
-                            if [ ! -d ${WORKSPACE}/ilit-models ]; then
-                                echo "\\"ilit-model\\" not found. Exiting..."
+                            if [ ! -d ${WORKSPACE}/lpot-models ]; then
+                                echo "\\"lpot-model\\" not found. Exiting..."
                                 exit 1
                             fi
                     
                             echo -e "\\nInstalling ut requirements..."
-                            cd ${WORKSPACE}/ilit-models/test
+                            cd ${WORKSPACE}/lpot-models/test
                             if [ -f "requirements.txt" ]; then
-                                sed -i '/^ilit/d' requirements.txt
+                                sed -i '/^lpot/d' requirements.txt
                                 sed -i '/^intel-tensorflow/d' requirements.txt
                                 sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                                 sed -i '/^torch/d' requirements.txt

@@ -12,7 +12,7 @@ if [ $# != "10" ] ; then
     --model_src_dir=<path to model tuning script>
     --dataset_location=<path to dataset>
     --input_model=<path to input model>
-    --yaml=<path to ilit yaml configuration>
+    --yaml=<path to lpot yaml configuration>
     --strategy=<tuning strategy>
     --max_trials=<max tuning trials>
     --algorithm=<algorithm for quantization>
@@ -52,14 +52,14 @@ done
 # Run auto tune
 main() {
     # Import common functions
-    source ${WORKSPACE}/ilit-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
+    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
 
     echo -e "\nSetting environment..."
     set_environment
 
     # Temporary change for helloworld_keras
     if [ "${model}" == "helloworld_keras" ]; then
-        model_src_dir="${WORKSPACE}/ilit-models/examples/helloworld"
+        model_src_dir="${WORKSPACE}/lpot-models/examples/helloworld"
     fi
     
     if [ -d ${model_src_dir} ]; then
@@ -72,7 +72,7 @@ main() {
 
     echo -e "\nInstalling model requirements..."
     if [ -f "requirements.txt" ]; then
-        sed -i '/ilit/d' requirements.txt
+        sed -i '/lpot/d' requirements.txt
         sed -i "/tensorflow==/d;/torch==/d;/mxnet==/d" requirements.txt
         if [ "${framework}" == "onnxrt" ]; then
           sed -i '/onnx/d;/onnxruntime/d' requirements.txt
@@ -169,7 +169,7 @@ function collect_pb_size {
           fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
         fi
         int8_pb_size=$(du -s -BM ${q_model} |cut -f1)
-        python ${WORKSPACE}/ilit-validation/scripts/count_quantize_op.py --fp32_model ${input_model} --int8_model ${q_model}
+        python ${WORKSPACE}/lpot-validation/scripts/count_quantize_op.py --fp32_model ${input_model} --int8_model ${q_model}
     elif [ "${framework}" == "mxnet" ];then
         fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
         int8_pb_size=$(du -s -BM ${q_model%/*} |cut -f1)
@@ -211,7 +211,7 @@ function update_yaml_config {
     fi
 
     if [ "${update_yaml_params}" != "" ]; then
-        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
+        python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
     fi
 
     echo "Tuning strategy: ${strategy}"

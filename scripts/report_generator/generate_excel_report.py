@@ -22,7 +22,7 @@ result_collector = ResultCollector({
 result_collector.read_tuning(args.tuning_log)
 result_collector.read_perf(args.summary_log)
 
-workbook = xlsxwriter.Workbook('ilit_report.xlsx')
+workbook = xlsxwriter.Workbook('lpot_report.xlsx')
 worksheet = workbook.add_worksheet()
 
 

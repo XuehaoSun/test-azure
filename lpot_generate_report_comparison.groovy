@@ -24,7 +24,7 @@ if (numberOfJobs == 1) {
 node(NODE_NAME) {
 
     stage("Clone validation repository") {
-        dir('ilit-validation') {
+        dir('lpot-validation') {
             retry(5) {
                 checkout scm
             }
@@ -53,8 +53,8 @@ node(NODE_NAME) {
             "tuneLogLast=${ref_dir}/tuning_info.log",
         ]) {
             sh """
-                chmod 775 ./ilit-validation/scripts/generate_ilit_custom_report.sh
-                ./ilit-validation/scripts/generate_ilit_custom_report.sh --ref_dir=${ref_dir} --new_dir=${new_dir}
+                chmod 775 ./lpot-validation/scripts/generate_lpot_custom_report.sh
+                ./lpot-validation/scripts/generate_lpot_custom_report.sh --ref_dir=${ref_dir} --new_dir=${new_dir}
             """
         }
     }
@@ -63,7 +63,7 @@ node(NODE_NAME) {
             if (REPORT_RECIPIENTS.size() <= 0) {
                 print("Report recipients not specified.")
             } else {
-                emailext subject: "iLiT report comparison",
+                emailext subject: "lpot report comparison",
                 to: "${REPORT_RECIPIENTS}",
                 body: '''${FILE,path="report.html"}''',
                 attachmentsPattern: "",

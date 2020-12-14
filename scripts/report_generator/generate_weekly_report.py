@@ -45,7 +45,7 @@ for result in result_collector.results:
         framework_versions.append(result.version)
     frameworks.update({ result.framework: framework_versions })
 
-workbook = xlsxwriter.Workbook("ilit_strategy_test_WWxx.xlsx")
+workbook = xlsxwriter.Workbook("lpot_strategy_test_WWxx.xlsx")
 header_format = workbook.add_format({
     "bold": 1,
     "align": "center",

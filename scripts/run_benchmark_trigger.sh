@@ -16,7 +16,7 @@ if [ $# != "10" ] ; then
     --mode=<benchmark mode>
     --batch_size=<batch_size for accuracy and throughput>
     --conda_env_name=<conda environment name>
-    --yaml=<path to ilit yaml configuration>
+    --yaml=<path to lpot yaml configuration>
     '
     exit 1
 fi
@@ -53,7 +53,7 @@ done
 main() {
 
     # Import common functions
-    source ${WORKSPACE}/ilit-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
+    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
 
     echo -e "\nSetting environment..."
     set_environment
@@ -68,7 +68,7 @@ main() {
 
     echo -e "\nInstalling model requirements..."
     if [ -f "requirements.txt" ]; then
-        sed -i '/ilit/d' requirements.txt
+        sed -i '/lpot/d' requirements.txt
         python -m pip install -r requirements.txt
         pip list
     else
@@ -232,7 +232,7 @@ function update_yaml_config {
     update_yaml_params=" --batch-size ${batch_size} --iteration ${iters} --mode ${mode}"
 
     if [ "${update_yaml_params}" != "" ]; then
-        python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
+        python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
     fi
 }
 

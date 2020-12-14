@@ -1,4 +1,4 @@
-from ilit.adaptor.tf_utils.util import read_graph, write_graph
+from lpot.adaptor.tf_utils.util import read_graph, write_graph
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--fp32_model", type=str, required=True, help="Path to fp32 model.")

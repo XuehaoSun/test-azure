@@ -1,7 +1,7 @@
 credential = "lab_tfbot"
 
 // setting node_label
-node_label = "ilit"
+node_label = ""
 if ('node_label' in params && params.node_label != '') {
     node_label = params.node_label
 }
@@ -28,17 +28,17 @@ if ('requirement_list' in params && params.requirement_list != ''){
 }
 echo "pip install list: ${requirement_list}"
 
-ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool.git"
-if ('ilit_url' in params && params.ilit_url != ''){
-    ilit_url = params.ilit_url
+lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool.git"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
 }
-echo "ilit_url is ${ilit_url}"
+echo "lpot_url is ${lpot_url}"
 
-ilit_branch="v1.0a_rc"
-if ('ilit_branch' in params && params.ilit_branch != ''){
-    ilit_branch = params.ilit_branch
+lpot_branch="v1.0a_rc"
+if ('lpot_branch' in params && params.lpot_branch != ''){
+    lpot_branch = params.lpot_branch
 }
-echo "ilit_branch is ${ilit_branch}"
+echo "lpot_branch is ${lpot_branch}"
 
 refresh_env=false
 if ('refresh_env' in params && params.refresh_env){
@@ -62,17 +62,17 @@ node(node_label){
             retry(5) {
                 checkout changelog: true, poll: true, scm: [
                         $class                           : 'GitSCM',
-                        branches                         : [[name: "${ilit_branch}"]],
+                        branches                         : [[name: "${lpot_branch}"]],
                         browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                         doGenerateSubmoduleConfigurations: false,
                         extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "iLit"],
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot"],
                                 [$class: 'CloneOption', timeout: 60]
                         ],
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
                                 [credentialsId: "${credential}",
-                                    url          : "${ilit_url}"]
+                                    url          : "${lpot_url}"]
                         ]
                 ]
             }
@@ -109,7 +109,7 @@ node(node_label){
                         pip install intel-${framework}==${framework_version}
                     elif [ ${framework} == 'pytorch' ]; then
                         pip install torch==1.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-                        cd ${WORKSPACE}/iLit/examples/pytorch/vision
+                        cd ${WORKSPACE}/lpot/examples/pytorch/vision
                         export PATH=${HOME}/gcc6.3/bin/:$PATH
                         export LD_LIBRARY_PATH=${HOME}/gcc6.3/lib64:$LD_LIBRARY_PATH
                         python setup.py install

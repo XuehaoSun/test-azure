@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 def parse_args(default_config: str) -> argparse.Namespace:
     """Parse input arguments."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ilit-repo", type=str, required=True, help="Path to iLiT repository.")
+    parser.add_argument("--lpot-repo", type=str, required=True, help="Path to lpot repository.")
     parser.add_argument("--framework", choices=["all", "mxnet", "pytorch", "tensorflow"], default="all", help="Framework.")
     parser.add_argument("--group", type=str, choices=["all", "image_recognition", "object_detection", "language_translation", "recommendation"], default="all", help="Model class.")
     parser.add_argument("--remote", action="store_true", help="If collecting checksums from data storage. Skips downloading when set.")
