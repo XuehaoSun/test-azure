@@ -1,24 +1,24 @@
 credential = 'lab_tfbot'
 
 // parameters
-node_label = "ilit"
+node_label = "lpot"
 if ('node_label' in params && params.node_label != '') {
     node_label = params.node_label
 }
 echo "Running on node ${node_label}"
 
 // setting node_label
-sub_node_label = "ilit"
+sub_node_label = "lpot"
 if ('sub_node_label' in params && params.sub_node_label != '') {
     sub_node_label = params.sub_node_label
 }
 echo "Running on node ${sub_node_label}"
 
-ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
-if ('ilit_url' in params && params.ilit_url != ''){
-    ilit_url = params.ilit_url
+lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
 }
-echo "ilit_url is ${ilit_url}"
+echo "lpot_url is ${lpot_url}"
 
 requirement_list="ruamel.yaml"
 if ('requirement_list' in params && params.requirement_list != ''){
@@ -38,11 +38,11 @@ if ('binary_build_job' in params && params.binary_build_job != ''){
 }
 echo "binary_build_job is ${binary_build_job}"
 
-ilit_branch = ''
-if ('ilit_branch' in params && params.ilit_branch != '') {
-    ilit_branch = params.ilit_branch
+lpot_branch = ''
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 }
-echo "ilit_branch: $ilit_branch"
+echo "lpot_branch: $lpot_branch"
 
 feature_list = ''
 if ('feature_list' in params && params.feature_list != '') {
@@ -72,17 +72,17 @@ def cleanup() {
 def download() {
     checkout changelog: true, poll: true, scm: [
             $class                           : 'GitSCM',
-            branches                         : [[name: "${ilit_branch}"]],
+            branches                         : [[name: "${lpot_branch}"]],
             browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
             doGenerateSubmoduleConfigurations: false,
             extensions                       : [
-                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                     [$class: 'CloneOption', timeout: 60]
             ],
             submoduleCfg                     : [],
             userRemoteConfigs                : [
                     [credentialsId: "${credential}",
-                     url          : "${ilit_url}"]
+                     url          : "${lpot_url}"]
             ]
     ]
 }
@@ -101,18 +101,18 @@ def parallel_jobs() {
             List featureParams = [
                     string(name: "sub_node_label", value: "${sub_node_label}"),
                     string(name: "binary_build_job", value: "${binary_build_job}"),
-                    string(name: "ilit_url", value: "${ilit_url}"),
-                    string(name: "ilit_branch", value: "${ilit_branch}"),
+                    string(name: "lpot_url", value: "${lpot_url}"),
+                    string(name: "lpot_branch", value: "${lpot_branch}"),
                     string(name: "feature_name", value: "${job_feature}")
             ]
 
             def downstreamJob
             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                downstreamJob = build job: "iLit-feature-test", propagate: false, parameters: featureParams
+                downstreamJob = build job: "lpot-feature-test", propagate: false, parameters: featureParams
 
                 catchError {
                     copyArtifacts(
-                            projectName: "iLit-feature-test",
+                            projectName: "lpot-feature-test",
                             selector: specific("${downstreamJob.getNumber()}"),
                             filter: '*.log',
                             fingerprintArtifacts: true,
@@ -137,33 +137,33 @@ def parallel_jobs() {
 
 def buildBinary(){
     List binaryBuildParams = [
-            string(name: "ilit_url", value: "${ilit_url}"),
-            string(name: "ilit_branch", value: "${ilit_branch}")
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_branch}")
     ]
-    def downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+    def downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
 
     binary_build_job = downstreamJob.getNumber()
     if (downstreamJob.getResult() != "SUCCESS") {
         currentBuild.result = "FAILURE"
         failed_build_url = downstreamJob.absoluteUrl
-        error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
     }
 }
 
 def generateReport(){
     dir(WORKSPACE) {
-        ilit_commit = sh (
-                script: 'cd ilit-models && git rev-parse HEAD',
+        lpot_commit = sh (
+                script: 'cd lpot-models && git rev-parse HEAD',
                 returnStdout: true
         ).trim()
         withEnv([
-                "ilit_branch=${ilit_branch}",
-                "ilit_commit=${ilit_commit}",
+                "lpot_branch=${lpot_branch}",
+                "lpot_commit=${lpot_commit}",
                 "summaryLog=${SUMMARYLOG}"
         ]) {
             sh '''
-                chmod 775 ./ilit-validation/scripts/feature_test/generate_feature_report.sh
-                ./ilit-validation/scripts/feature_test/generate_feature_report.sh
+                chmod 775 ./lpot-validation/scripts/feature_test/generate_feature_report.sh
+                ./lpot-validation/scripts/feature_test/generate_feature_report.sh
             '''
         }
     }
@@ -182,7 +182,7 @@ node( node_label ){
         SUMMARYLOG = "${WORKSPACE}/summary.log"
         writeFile file: SUMMARYLOG, text: "FEATURE;STATUS\n"
 
-        dir('ilit-validation') {
+        dir('lpot-validation') {
             checkout scm
         }
         stage("download"){
@@ -209,8 +209,8 @@ node( node_label ){
                             "summaryLog=${SUMMARYLOG}"
                     ]) {
                         sh '''
-                        chmod 775 ./ilit-validation/scripts/feature_test/collect_log_${feature_name}.sh
-                        ./ilit-validation/scripts/feature_test/collect_log_${feature_name}.sh
+                        chmod 775 ./lpot-validation/scripts/feature_test/collect_log_${feature_name}.sh
+                        ./lpot-validation/scripts/feature_test/collect_log_${feature_name}.sh
                     '''
                     }
                 }

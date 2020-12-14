@@ -13,7 +13,7 @@ function main {
   create_conda_env 2.3.0
 
   # 2. train for pre-train models
-  cd ${WORKSPACE}/ilit-models/examples/helloworld || return
+  cd ${WORKSPACE}/lpot-models/examples/helloworld || return
   python train.py
 
   # 3. test for keras models tuning
@@ -28,38 +28,38 @@ function main {
 
 function helloworld_timeout {
   # update timeout
-  yaml=${WORKSPACE}/ilit-models/examples/helloworld/tf2.x/conf.yaml
-  python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=1
+  yaml=${WORKSPACE}/lpot-models/examples/helloworld/tf2.x/conf.yaml
+  python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=1
   echo "yaml after update timeout...."
   cat ${yaml}
   helloworld_keras
-  python ${WORKSPACE}/ilit-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=200
+  python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=200
   echo "yaml after update timeout...."
   cat ${yaml}
   helloworld_keras
 }
 
 function helloworld_pb {
-  cd ${WORKSPACE}/ilit-models/examples/helloworld || return
+  cd ${WORKSPACE}/lpot-models/examples/helloworld || return
   if [ ! -d frozen_models ]; then
     echo " frozen pb not generated. Exiting..."
     return
   fi
   create_conda_env 1.15.2
-  ilit_install
-  cd ${WORKSPACE}/ilit-models/examples/helloworld/tf1.x || return
+  lpot_install
+  cd ${WORKSPACE}/lpot-models/examples/helloworld/tf1.x || return
   python test.py
 }
 
 function helloworld_keras {
-  cd ${WORKSPACE}/ilit-models/examples/helloworld || return
+  cd ${WORKSPACE}/lpot-models/examples/helloworld || return
   if [ ! -d models ]; then
     echo " keras models not generated. Exiting..."
     return
   fi
   create_conda_env 2.3.0
-  ilit_install
-  cd ${WORKSPACE}/ilit-models/examples/helloworld/tf2.x || return
+  lpot_install
+  cd ${WORKSPACE}/lpot-models/examples/helloworld/tf2.x || return
   python test.py
 }
 
@@ -79,22 +79,22 @@ function create_conda_env {
   pip install ruamel.yaml
   pip list
 
-  if [ ! -d ${WORKSPACE}/ilit-models ]; then
-      echo "\"ilit-model\" not found. Exiting..."
+  if [ ! -d ${WORKSPACE}/lpot-models ]; then
+      echo "\"lpot-model\" not found. Exiting..."
       exit 1
   fi
-  cd ${WORKSPACE}/ilit-models || return
+  cd ${WORKSPACE}/lpot-models || return
 }
 
-function ilit_install {
-  echo "Checking ilit..."
+function lpot_install {
+  echo "Checking lpot..."
   python -V
-  c_ilit=$(pip list | grep -c 'ilit') || true  # Prevent from exiting when 'ilit' not found
-  if [ ${c_ilit} != 0 ]; then
-      pip uninstall ilit -y
+  c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+  if [ ${c_lpot} != 0 ]; then
+      pip uninstall lpot -y
       pip list
   fi
-  pip install ${WORKSPACE}/ilit*.whl
+  pip install ${WORKSPACE}/lpot*.whl
   pip list
 }
 

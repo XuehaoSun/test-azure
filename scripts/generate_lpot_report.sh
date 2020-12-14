@@ -6,48 +6,177 @@
 # tuneLog=tuning_info.log
 # tuneLogLast=tuning_info.log
 # overview_log=summary_overview.log
+# coverage_summary=coverage_summary.log
 
-PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "2" ] ; then 
-    echo 'ERROR:'
-    echo "Expected 2 parameters got $#"
-    printf 'Please use following parameters:
-    --ref_dir=<path to reference build artifacts>
-    --new_dir=<path to latest build artifacts>
-    '
-    exit 1
-fi
+lines_coverage_threshold=80
+branches_coverage_threshold=75
 
-for i in "$@"
-do
-    case $i in
-        --ref_dir=*)
-            REF_DIR=`echo $i | sed "s/${PATTERN}//"`;;
-        --new_dir=*)
-            NEW_DIR=`echo $i | sed "s/${PATTERN}//"`;;
-        *)
-            echo "Parameter $i not recognized."; exit 1;;
-    esac
-done
 
 function main {
     echo "summaryLog: ${summaryLog}"
     echo "last summaryLog: ${summaryLogLast}"
     echo "tunelog: ${tuneLog}"
     echo "last tunelog: ${tuneLogLast}"
-
-    ref_build=($(cat ${REF_DIR}/build_info.txt |sed 's/,/ /g'))
-    echo "Reference build: ${ref_build[0]} #${ref_build[1]}"
-
-    new_build=($(cat ${NEW_DIR}/build_info.txt |sed 's/,/ /g'))
-    echo "New build: ${new_build[0]} #${new_build[1]}"
-
+    echo "overview log: ${overview_log}"
+    echo "coverage_summary: ${coverage_summary}"
     generate_html_head
     generate_html_body
     generate_results
     generate_html_footer
 
 }
+
+function createOverview {
+
+    jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
+    png_path="https://inteltf-jenk.sh.intel.com/static/93433cd1/images/24x24"
+
+    # unit test
+    unit_test=($(grep 'unit-test' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${unit_test[1]}" == *"FAIL"* ]];then
+        unit_test_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${unit_test[1]}" == *"SUCC"* ]];then
+        unit_test_status="<img src=${png_path}/blue.png></img>"
+    else
+        unit_test_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
+    pylint_scan=($(grep 'format-scan,pylint' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
+        pylint_scan_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${pylint_scan[2]}" == *"SUCC"* ]];then
+        pylint_scan_status="<img src=${png_path}/blue.png></img>"
+    else
+        pylint_scan_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
+    bandit_scan=($(grep 'format-scan,bandit' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${bandit_scan[2]}" == *"FAIL"* ]];then
+        bandit_scan_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
+        bandit_scan_status="<img src=${png_path}/blue.png></img>"
+    else
+        bandit_scan_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
+    helloworld_keras=($(grep 'Helloworld Keras' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${helloworld_keras[2]}" == *"FAIL"* ]];then
+        helloworld_keras_status="<img src=${png_path}/red.png></img>"
+    elif [[ "${helloworld_keras[2]}" == *"SUCC"* ]];then
+        helloworld_keras_status="<img src=${png_path}/blue.png></img>"
+    else
+        helloworld_keras_status="<img src=${png_path}/yellow.png></img>"
+    fi
+
+    if [ -f "${coverage_summary}" ]; then
+        coverage=($(grep 'coverage_status' ${overview_log} |sed 's/,/ /g'))
+        echo "Coverage: ${coverage}"
+        if [[ "${coverage[1]}" == *"FAIL"* ]];then
+            coverage_status="<img src=${png_path}/red.png></img>"
+        elif [[ "${coverage[1]}" == *"SUCC"* ]];then
+            coverage_status="<img src=${png_path}/blue.png></img>"
+        else
+            coverage_status="<img src=${png_path}/yellow.png></img>"
+        fi
+    fi
+
+
+    cat >> ${WORKSPACE}/report.html <<  eof
+
+    <h2>Overview</h2>
+    <table class="features-table" style="width: 60%;margin: 0 auto 0 0;">
+        <tr>
+            <th>Task</th>
+            <th>Job</th>
+            <th>Status</th>
+        </tr>
+        $(
+             if [ "${unit_test[2]}" != "" ];then
+                 echo "<tr><td>Unit Test</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}/artifact/\">${unit_test[0]}#${unit_test[2]}</a></td>"
+                 echo "<td>${unit_test_status}</td></tr>"
+             fi
+
+             if [ "${pylint_scan[3]}" != "" ]; then
+                 echo "<tr><td>PyLint Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[3]}\">${pylint_scan[0]}#${pylint_scan[3]}</a></td>"
+                 echo "<td>${pylint_scan_status}</td></tr>"
+             fi
+
+             if [ "${bandit_scan[3]}" != "" ]; then
+                 echo "<tr><td>Bandit Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${bandit_scan[0]}/${bandit_scan[3]}\">${bandit_scan[0]}#${bandit_scan[3]}</a></td>"
+                 echo "<td>${bandit_scan_status}</td></tr>"
+             fi
+
+             if [ "${helloworld_keras[3]}" != "" ]; then
+                 echo "<tr><td>Helloworld Keras</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${helloworld_keras[3]}\">Log link</a></td>"
+                 echo "<td>${helloworld_keras_status}</td></tr>"
+             fi
+
+             if [ ${#coverage[@]} -gt 0 ] && [ "${coverage[1]}" != "" ]; then
+                echo "<tr><td>Code Coverage Scan</td>"
+                echo "<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a></td>"
+                echo "<td>${coverage_status}</td></tr>"
+            fi
+
+        )
+    </table>
+eof
+}
+
+function createCoverageOverview {
+    lines_coverage=($(grep 'lines_coverage' ${coverage_summary} |sed 's/,/ /g'))
+    branches_coverage=($(grep 'branches_coverage' ${coverage_summary} |sed 's/,/ /g'))
+
+    echo """
+        <h2>Code Coverage</h2> 
+        <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;empty-cells: hide\">
+        <tr>
+            <th></th>
+            <th>Covered</th>
+            <th>Total</th>
+            <th>Coverage</th>
+        </tr>
+        <tr>
+            <td>Lines</td>
+            <td>${lines_coverage[1]}</td>
+            <td>${lines_coverage[2]}</td>
+    """ >> ${WORKSPACE}/report.html
+
+    awk -v lines_coverage="${lines_coverage[3]}" -v lines_coverage_threshold="${lines_coverage_threshold}" -F ';' '
+    BEGIN {
+        if(lines_coverage < lines_coverage_threshold) {
+            printf("<td style=\"background-color:#FFD2D2\">%.2f%</td>", lines_coverage);
+        } else {
+            printf("<td style=\"background-color:#90EE90\">%.2f%</td>", lines_coverage);
+        }
+    }' >> ${WORKSPACE}/report.html
+
+    echo """
+        </tr>
+        <tr>
+            <td>Branches</td>
+            <td>${branches_coverage[1]}</td>
+            <td>${branches_coverage[2]}</td>
+    """ >> ${WORKSPACE}/report.html
+
+    awk -v branches_coverage="${branches_coverage[3]}" -v branches_coverage_threshold="${branches_coverage_threshold}" -F ';' '
+    BEGIN {
+        if(branches_coverage < branches_coverage_threshold) {
+                printf("<td style=\"background-color:#FFD2D2\">%.2f%</td>", branches_coverage);
+            } else {
+                printf("<td style=\"background-color:#90EE90\">%.2f%</td>", branches_coverage);
+            }
+    }' >> ${WORKSPACE}/report.html
+
+    echo """
+        </tr>
+        </table>
+    """ >> ${WORKSPACE}/report.html
+}
+
 
 function generate_inference {
 
@@ -132,7 +261,7 @@ function generate_html_core {
     tuning_time=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $4}')
     tuning_count=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
     tuning_log=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
-    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
     echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
 
     tuning_strategy=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $3}')
@@ -142,10 +271,7 @@ function generate_html_core {
 
     echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
               -v pb_size="${pb_size}" -v last_pb_size="${last_pb_size}" \
-              -v ts="${tuning_strategy}" -v tt="${tuning_time}" -v tc="${tuning_count}" -v tl="${tuning_log}" \
-              -v ref_build_name="${ref_build[0]}" -v ref_build_number="${ref_build[1]}" \
-              -v new_build_name="${new_build[0]}" -v new_build_number="${new_build[1]}" \
-              -v jenkins_url="${JENKINS_URL}" '
+              -v ts="${tuning_strategy}" -v tt="${tuning_time}" -v tc="${tuning_count}" -v tl="${tuning_log}" '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -156,7 +282,7 @@ function generate_html_core {
                 }else if(d == "fps") {
                     printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",a,b,c);
                 }else {
-                    printf("<td>%s</td> <td><a href=%s>%.4f</a></td>\n",a,b,c);
+                    printf("<td>%s</td> <td><a href=%s>%.2f%</a></td>\n",a,b,c*100);
                 }
             }else {
                 if(b == "" || c == "N/A") {
@@ -174,29 +300,29 @@ function generate_html_core {
                 if(c == "acc") {
                     target = (a - b) / b;
                     if(target >= -0.01) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.4f</td>", target);
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f%</td>", target*100);
                     }else if(target < -0.05) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.4f</td>", target);
+                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f%</td>", target*100);
                     }else{
-                       printf("<td rowspan=3>%.4f</td>", target);
+                       printf("<td rowspan=3>%.2f%</td>", target*100);
                     }
                 }else if(c == "ms") {
                     target = a / b;
                     if(target >= 1.5) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.4f</td>", target);
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
                     }else if(target < 1) {
-                       printf("<td  rowspan=3 style=\"background-color:#FFD2D2\">%.4f</td>", target);
+                       printf("<td  rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
                     }else{
-                       printf("<td rowspan=3>%.4f</td>", target);
+                       printf("<td rowspan=3>%.2f</td>", target);
                     }
                 }else if(c == "fps") {
                     target = a / b;
                     if(target >= 2) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.4f</td>", target);
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
                     }else if(target < 1) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.4f</td>", target);
+                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
                     }else{
-                       printf("<td rowspan=3>%.4f</td>", target);
+                       printf("<td rowspan=3>%.2f</td>", target);
                     }
                 }else {
                     // Compare PB size
@@ -222,6 +348,7 @@ function generate_html_core {
                     }else {
                         status_png = "background-color:#FFD2D2";
                     }
+                    printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
                 }else {
                     target = a / b;
                     if(target >= 0.95) {
@@ -229,8 +356,8 @@ function generate_html_core {
                     }else {
                         status_png = "background-color:#FFD2D2";
                     }
+                    printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
                 }
-                printf("<td style=\"%s\" colspan=2>%.4f</td>", status_png, target);
             }else {
                 if(a == "nan" || b == "nan") {
                     printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
@@ -281,7 +408,7 @@ function generate_html_core {
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td><a href=\"%1$s/job/%2$s/%3$s\">%2$s #%3$s</a></td><td><a href=%7$s>%4$s</a></td><td><a href=%7$s>%5$s</a></td><td><a href=%7$s>%6$s</a></td>", jenkins_url, ref_build_name, ref_build_number, ts, tt, tc, tl);
+            printf("</tr>\n<tr><td>Last</td><td><a href=%4$s>%1$s</a></td><td><a href=%4$s>%2$s</a></td><td><a href=%4$s>%3$s</a></td>", ts, tt, tc, tl);
             if(last_pb_size_[1] ~/[1-9]/ && last_pb_size_[2] ~/[1-9]/) {
                 printf("<td>%.2fx</td>", last_pb_size_[1]/last_pb_size_[2]);
             }else {
@@ -296,12 +423,7 @@ function generate_html_core {
             printf("</tr>")
             
             // current vs last
-            printf("</tr>\n<tr><td>%s... #%s/%s... #%s</td><td colspan=4>Mem Peak:%s</td>",
-                substr(new_build_name,0,5),
-                substr(new_build_number,0,5),
-                substr(ref_build_name,0,5),
-                substr(ref_build_number,0,5),
-                pb_size_[3]);
+            printf("</tr>\n<tr><td>New/Last</td><td colspan=4>Mem Peak:%s</td>", pb_size_[3]);
 
             compare_result(last_value[2],current_value[2],"ms");
             compare_result(current_value[4],last_value[4],"fps");
@@ -337,18 +459,57 @@ function generate_results {
 }
 
 function generate_html_body {
+MR_TITLE=''
+Test_Info_Title=''
+Test_Info=''
+if [ "$MR_branch" != "" ];
+then
+  commit_id=$(echo ${gitlabMergeRequestLastCommit} |awk '{print substr($1,1,7)}')
 
+  MR_TITLE="[ <a href='${gitlabSourceRepoHomepage}/merge_requests/${gitlabMergeRequestIid}'>MR-${gitlabMergeRequestIid}</a> ]"
+  Test_Info_Title="<th colspan="2">Source Branch</th> <th colspan="4">Target Branch</th> <th colspan="4">Commit</th> "
+  Test_Info="<td colspan="2">${gitlabSourceBranch}</td> <td colspan="4">${gitlabTargetBranch}</td> <td colspan="4">${commit_id}"
+else
+  Test_Info_Title="<th colspan="4">Test Branch</th> <th colspan="4">Commit ID</th> "
+  Test_Info="<th colspan="4">${qtools_branch}</th> <th colspan="4">${qtools_commit}</th> "
+fi
 cat >> ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-	    <h1 align="center">iLiT Results Comparison
+	    <h1 align="center">LPOT Tuning Tests ${MR_TITLE}
         [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
+
+        <h2>Summary</h2>
+	    <table class="features-table">
+	        <tr>
+              <th>Platform</th>
+              <th>Python</th>
+              <th>TensorFlow Version</th>
+              <th>PyTorch Version</th>
+              <th>MXNet Version</th>
+              <th>Repo</th>
+              ${Test_Info_Title}
+		      </tr>
+		      <tr>
+			        <td>CLX8280</td>
+			        <td>${python_version}</td>
+              <td>${tensorflow_version}</td>
+              <td>${pytorch_version}</td>
+              <td>${mxnet_version}</td>
+			        <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">LPOT</a></td>
+              ${Test_Info}
+			    </tr>
+	    </table>
 eof
 
+createOverview
+if [ -f "${coverage_summary}" ]; then
+    createCoverageOverview
+fi
 
 cat >> ${WORKSPACE}/report.html << eof
-	    <h2>Comparison</h2>
+	    <h2>Benchmark</h2>
 		  <table class="features-table">
             <tr>
                 <th rowspan="2">Framework</th>
@@ -405,7 +566,7 @@ cat > ${WORKSPACE}/report.html << eof
 <head>
     <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">  
     <title>Daily Tests - TensorFlow - Jenkins</title> 
-    <style type="text/css">
+    <style type="text/css">    
         body
         {
 	        margin: 0;
@@ -433,9 +594,9 @@ cat > ${WORKSPACE}/report.html << eof
           border-spacing: 0;
           text-shadow: 0 1px 0 #fff;
           color: #2a2a2a;
-          background: #fafafa;
+          background: #fafafa;  
           background-image: -moz-linear-gradient(top, #fff, #eaeaea, #fff); /* Firefox 3.6 */
-          background-image: -webkit-gradient(linear,center bottom,center top,from(#fff),color-stop(0.5, #eaeaea),to(#fff));
+          background-image: -webkit-gradient(linear,center bottom,center top,from(#fff),color-stop(0.5, #eaeaea),to(#fff)); 
           font-family: Verdana,Arial,Helvetica
         }
         .features-table th,td
@@ -454,13 +615,13 @@ cat > ${WORKSPACE}/report.html << eof
         {
           box-shadow: none;
           -moz-box-shadow: none;
-          -webkit-box-shadow: none;
+          -webkit-box-shadow: none;     
         }
         .col-cell
         {
           text-align: center;
           width: 150px;
-          font: normal 1em Verdana, Arial, Helvetica;
+          font: normal 1em Verdana, Arial, Helvetica;  
         }
         .col-cell3
         {
@@ -474,7 +635,7 @@ cat > ${WORKSPACE}/report.html << eof
         }
         .col-cellh
         {
-          font: bold 1.3em 'trebuchet MS', 'Lucida Sans', Arial;
+          font: bold 1.3em 'trebuchet MS', 'Lucida Sans', Arial;  
           -moz-border-radius-topright: 10px;
           -moz-border-radius-topleft: 10px; 
           border-top-right-radius: 10px;
@@ -483,9 +644,9 @@ cat > ${WORKSPACE}/report.html << eof
         }
         .col-cellf
         {
-          font: bold 1.4em Georgia;
+          font: bold 1.4em Georgia;   
           -moz-border-radius-bottomright: 10px;
-          -moz-border-radius-bottomleft: 10px;
+          -moz-border-radius-bottomleft: 10px; 
           border-bottom-right-radius: 10px;
           border-bottom-left-radius: 10px;
           border-bottom: 1px solid #dadada !important;

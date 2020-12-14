@@ -9,7 +9,7 @@ currentBuild.description = framework + '-' + model
 
 // parameters
 // setting node_label
-sub_node_label = "ilit"
+sub_node_label = "lpot"
 if ('sub_node_label' in params && params.sub_node_label != '') {
     sub_node_label = params.sub_node_label
 }
@@ -57,11 +57,11 @@ if ('mode' in params && params.mode != '') {
 def mode_list = parseStrToList(mode)
 echo "Running ${mode}"
 
-ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
-if ('ilit_url' in params && params.ilit_url != ''){
-    ilit_url = params.ilit_url
+lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
 }
-echo "ilit_url is ${ilit_url}"
+echo "lpot_url is ${lpot_url}"
 
 requirement_list="ruamel.yaml"
 if ('requirement_list' in params && params.requirement_list != ''){
@@ -93,16 +93,16 @@ if ('test_mode' in params && params.test_mode != ''){
 }
 echo "test_mode is ${test_mode}"
 
-nigthly_test_branch = ''
+lpot_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
-if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
-    nigthly_test_branch = params.nigthly_test_branch
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 }else{
     MR_source_branch = params.MR_source_branch
     MR_target_branch = params.MR_target_branch
 }
-echo "nigthly_test_branch: $nigthly_test_branch"
+echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
@@ -149,7 +149,7 @@ def cleanup() {
     try {
         sh '''#!/bin/bash 
         set -x
-        sudo rm -rf /home/tensorflow/.ilit
+        sudo rm -rf /home/tensorflow/.lpot
         cd $WORKSPACE
         sudo rm -rf *
         # set perf BKC
@@ -284,7 +284,7 @@ def create_conda_env(){
 node( sub_node_label ) {
 
     cleanup()
-    dir('ilit-validation') {
+    dir('lpot-validation') {
         retry(5) {
             checkout scm
         }
@@ -310,31 +310,31 @@ node( sub_node_label ) {
                             browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                             doGenerateSubmoduleConfigurations: false,
                             extensions                       : [
-                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                                     [$class: 'CloneOption', timeout: 60],
                                     [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                             ],
                             submoduleCfg                     : [],
                             userRemoteConfigs                : [
                                     [credentialsId: "${credential}",
-                                    url          : "${ilit_url}"]
+                                    url          : "${lpot_url}"]
                             ]
                     ]
                 }
                 else {
                     checkout changelog: true, poll: true, scm: [
                             $class                           : 'GitSCM',
-                            branches                         : [[name: "${nigthly_test_branch}"]],
+                            branches                         : [[name: "${lpot_branch}"]],
                             browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                             doGenerateSubmoduleConfigurations: false,
                             extensions                       : [
-                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                                     [$class: 'CloneOption', timeout: 60]
                             ],
                             submoduleCfg                     : [],
                             userRemoteConfigs                : [
                                     [credentialsId: "${credential}",
-                                    url          : "${ilit_url}"]
+                                    url          : "${lpot_url}"]
                             ]
                     ]
                 }
@@ -344,12 +344,13 @@ node( sub_node_label ) {
         if ("${binary_build_job}" == "") {
             stage('Build binary') {
                 List binaryBuildParams = [
-                        string(name: "ilit_url", value: "${ilit_url}"),
-                        string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                        string(name: "lpot_url", value: "${lpot_url}"),
+                        string(name: "lpot_branch", value: "${lpot_branch}"),
                         string(name: "MR_source_branch", value: "${MR_source_branch}"),
                         string(name: "MR_target_branch", value: "${MR_target_branch}"),
+                        string(name: "val_branch", value: "${val_branch}")
                 ]
-                downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+                downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
                 
                 binary_build_job = downstreamJob.getNumber()
                 echo "binary_build_job: ${binary_build_job}"
@@ -358,7 +359,7 @@ node( sub_node_label ) {
                     currentBuild.result = "FAILURE"
                     failed_build_url = downstreamJob.absoluteUrl
                     echo "failed_build_url: ${failed_build_url}"
-                    error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                    error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
                 }
             }
         }
@@ -366,18 +367,18 @@ node( sub_node_label ) {
         stage('Copy binary') {
             catchError {
                 copyArtifacts(
-                        projectName: 'iLiT-release-wheel-build',
+                        projectName: 'lpot-release-wheel-build',
                         selector: specific("${binary_build_job}"),
-                        filter: 'ilit*.whl',
+                        filter: 'lpot*.whl',
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
 
-                archiveArtifacts artifacts: "ilit*.whl"
+                archiveArtifacts artifacts: "lpot*.whl"
             }
         }
 
         // get params for tuning and benchmark
-        def modelConf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_params_${framework}.json"))
+        def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))
         model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
         dataset_location = modelConf."${framework}"."${model}"."dataset_location"
         input_model = modelConf."${framework}"."${model}"."input_model"
@@ -397,7 +398,7 @@ node( sub_node_label ) {
                     dataset_location = "/tf_dataset/tensorflow/mini-coco-500.record"
                     withEnv(["model_src_dir=${model_src_dir}"]) {
                         sh(
-                                script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
+                                script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
                                 returnStdout: true
                         ).trim()
                     }
@@ -427,10 +428,10 @@ node( sub_node_label ) {
                 echo "-------w-------"
                 w
                 echo "-------w-------"
-                ${timeout} bash ${WORKSPACE}/ilit-validation/scripts/run_tuning_trigger.sh \
+                ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger.sh \
                     --framework=${framework} \
                     --model=${model} \
-                    --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \
+                    --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
                     --dataset_location=${dataset_location} \
                     --input_model=${input_model} \
                     --yaml=${yaml} \
@@ -443,7 +444,7 @@ node( sub_node_label ) {
         }
 
         // Set Latency mode for MR tests
-        if (nigthly_test_branch == ''&& MR_source_branch != '') {
+        if (lpot_branch == ''&& MR_source_branch != '') {
             mode_list = ["latency"]
         }
 
@@ -453,7 +454,7 @@ node( sub_node_label ) {
             "resnet50v1",
             "inception_v1",
             "wide_deep_large_ds"]
-        if (nigthly_test_branch == '' && dummy_inference_models.contains(model)) {
+        if (lpot_branch == '' && dummy_inference_models.contains(model)) {
             batch_size = modelConf."${framework}"."${model}"."batch_size"
             stage("MR Performance") {
                 precision_list.each { precision ->
@@ -470,10 +471,10 @@ node( sub_node_label ) {
                         echo "-------w-------"
                         echo "=======cache clean======="
                         
-                        sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+                        sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
         
                         echo "=======cache clean======="
-                        bash ${WORKSPACE}/ilit-validation/scripts/run_dummy_inference.sh \
+                        bash ${WORKSPACE}/lpot-validation/scripts/run_dummy_inference.sh \
                             --framework=${framework} \
                             --model=${model} \
                             --input_model=${input_model} \
@@ -510,13 +511,13 @@ node( sub_node_label ) {
                                 echo "-------w-------"
                                 echo "=======cache clean======="
                                 
-                                sudo bash ${WORKSPACE}/ilit-validation/scripts/cache_clean.sh
+                                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
                 
                                 echo "=======cache clean======="
-                                bash ${WORKSPACE}/ilit-validation/scripts/run_benchmark_trigger.sh \
+                                bash ${WORKSPACE}/lpot-validation/scripts/run_benchmark_trigger.sh \
                                     --framework=${framework} \
                                     --model=${model} \
-                                    --model_src_dir=${WORKSPACE}/ilit-models/examples/${framework}/${model_src_dir} \\
+                                    --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \\
                                     --dataset_location=${dataset_location} \
                                     --input_model=${input_model} \
                                     --precision=${precision} \

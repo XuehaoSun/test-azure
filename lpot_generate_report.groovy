@@ -13,7 +13,7 @@ def jsonParse(def json) {
 node(NODE_NAME) {
 
     stage("Clone validation repository") {
-        dir('ilit-validation') {
+        dir('lpot-validation') {
             retry(5) {
                 checkout scm
             }
@@ -63,8 +63,8 @@ node(NODE_NAME) {
     
                 pip install -U pip
     
-                pip install -r ./ilit-validation/scripts/report_generator/requirements.txt
-                python ./ilit-validation/scripts/report_generator/generate_excel_report.py \
+                pip install -r ./lpot-validation/scripts/report_generator/requirements.txt
+                python ./lpot-validation/scripts/report_generator/generate_excel_report.py \
                     --tuning-log=${WORKSPACE}/logs/tuning_info.log \
                     --summary-log=${WORKSPACE}/logs/summary.log \
                     --tensorflow-version=${tensorflow_version} \
@@ -78,10 +78,10 @@ node(NODE_NAME) {
             if (REPORT_RECIPIENTS.size() <= 0) {
                 print("Report recipients not specified.")
             } else {
-                emailext subject: "iLiT excel report",
+                emailext subject: "lpot excel report",
                 to: "${REPORT_RECIPIENTS}",
                 body: "Excel report for <a href='${JENKINS_URL}/job/${JOB_NAME}/${BUILD_NUMBER}'>${JOB_NAME} #${BUILD_NUMBER}</a> has been attached.",
-                attachmentsPattern: "ilit_report.xlsx",
+                attachmentsPattern: "lpot_report.xlsx",
                 mimeType: 'text/html'
             }
         }

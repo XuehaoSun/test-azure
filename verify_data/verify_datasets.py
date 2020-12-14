@@ -27,7 +27,7 @@ def main():
                 print(f"\n\n[ INFO ] Checking {dataset.name} dataset for {framework} {group}")
                 config = f"{framework}-{group}-{dataset.name}"
                 
-                dataset.datadir = os.path.join(args.ilit_repo, "examples", framework, group)
+                dataset.datadir = os.path.join(args.lpot_repo, "examples", framework, group)
                 if framework == "pytorch" and group == "object_detection":
                     dataset.datadir = os.path.join(dataset.datadir, "yolo_v3")
                 elif framework == "tensorflow" and group == "recommendation":

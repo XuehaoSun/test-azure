@@ -2,17 +2,17 @@ credential = 'lab_tfbot'
 
 // parameters
 // setting node_label
-sub_node_label = "ilit"
+sub_node_label = "lpot"
 if ('sub_node_label' in params && params.sub_node_label != '') {
     sub_node_label = params.sub_node_label
 }
 echo "Running on node ${sub_node_label}"
 
-ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
-if ('ilit_url' in params && params.ilit_url != ''){
-    ilit_url = params.ilit_url
+lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
 }
-echo "ilit_url is ${ilit_url}"
+echo "lpot_url is ${lpot_url}"
 
 requirement_list="ruamel.yaml"
 if ('requirement_list' in params && params.requirement_list != ''){
@@ -32,11 +32,11 @@ if ('binary_build_job' in params && params.binary_build_job != ''){
 }
 echo "binary_build_job is ${binary_build_job}"
 
-ilit_branch = ''
-if ('ilit_branch' in params && params.ilit_branch != '') {
-    ilit_branch = params.ilit_branch
+lpot_branch = ''
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 }
-echo "ilit_branch: $ilit_branch"
+echo "lpot_branch: $lpot_branch"
 
 feature_name = ''
 if ('feature_name' in params && params.feature_name != '') {
@@ -66,17 +66,17 @@ def cleanup() {
 def download() {
     checkout changelog: true, poll: true, scm: [
             $class                           : 'GitSCM',
-            branches                         : [[name: "${ilit_branch}"]],
+            branches                         : [[name: "${lpot_branch}"]],
             browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
             doGenerateSubmoduleConfigurations: false,
             extensions                       : [
-                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                     [$class: 'CloneOption', timeout: 60]
             ],
             submoduleCfg                     : [],
             userRemoteConfigs                : [
                     [credentialsId: "${credential}",
-                     url          : "${ilit_url}"]
+                     url          : "${lpot_url}"]
             ]
     ]
 }
@@ -84,7 +84,7 @@ def download() {
 node( sub_node_label ){
     try {
         cleanup()
-        dir('ilit-validation') {
+        dir('lpot-validation') {
             checkout scm
         }
         stage("download"){
@@ -95,12 +95,12 @@ node( sub_node_label ){
         if ("${binary_build_job}" == "") {
             stage('Build binary') {
                 List binaryBuildParams = [
-                        string(name: "ilit_url", value: "${ilit_url}"),
-                        string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+                        string(name: "lpot_url", value: "${lpot_url}"),
+                        string(name: "lpot_branch", value: "${lpot_branch}"),
                         string(name: "MR_source_branch", value: "${MR_source_branch}"),
                         string(name: "MR_target_branch", value: "${MR_target_branch}"),
                 ]
-                downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+                downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
                 
                 binary_build_job = downstreamJob.getNumber()
                 echo "binary_build_job: ${binary_build_job}"
@@ -109,7 +109,7 @@ node( sub_node_label ){
                     currentBuild.result = "FAILURE"
                     failed_build_url = downstreamJob.absoluteUrl
                     echo "failed_build_url: ${failed_build_url}"
-                    error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                    error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
                 }
             }
         }
@@ -123,8 +123,8 @@ node( sub_node_label ){
                     sh '''
                         #!/bin/bash
                         set -xe
-                        chmod 775 ./ilit-validation/scripts/feature_test/test_${feature_name}.sh
-                        ./ilit-validation/scripts/feature_test/test_${feature_name}.sh
+                        chmod 775 ./lpot-validation/scripts/feature_test/test_${feature_name}.sh
+                        ./lpot-validation/scripts/feature_test/test_${feature_name}.sh
                     '''
                 }
             }

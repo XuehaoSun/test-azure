@@ -3,14 +3,14 @@
 # WORKSPACE=.
 # RUN_DISPLAY_URL=.
 # BUILD_NUMBER=.
-# ilit_branch=.
-# ilit_commit=.
+# lpot_branch=.
+# lpot_commit=.
 # summaryLog=summary.log
 
 function generate_results {
     echo "summaryLog: ${summaryLog}"
-    echo "ilit_branch: ${ilit_branch}"
-    echo "ilit_commit: ${ilit_commit}"
+    echo "lpot_branch: ${lpot_branch}"
+    echo "lpot_commit: ${lpot_commit}"
     features=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
     generate_html_head
     for feature in ${features[@]}
@@ -58,7 +58,7 @@ eof
 function generate_html_head {
 
   Test_Info_Title="<th colspan="4">Test Branch</th> <th colspan="4">Commit ID</th> "
-  Test_Info="<th colspan="4">${ilit_branch}</th> <th colspan="4">${ilit_commit}</th> "
+  Test_Info="<th colspan="4">${lpot_branch}</th> <th colspan="4">${lpot_commit}</th> "
 
 cat > ${WORKSPACE}/report.html << eof
 
@@ -156,7 +156,7 @@ cat > ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-    <h1 align="center">iLiT Feature Tests
+    <h1 align="center">LPOT Feature Tests
             [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
 
     <h2>Summary</h2>
@@ -168,7 +168,7 @@ cat > ${WORKSPACE}/report.html << eof
 		      </tr>
 		      <tr>
 			        <td>CLX8280</td>
-			        <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">iLiT</a></td>
+			        <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">LPOT</a></td>
               ${Test_Info}
 			    </tr>
 	    </table>

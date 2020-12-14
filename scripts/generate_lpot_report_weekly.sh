@@ -15,7 +15,7 @@ function generate_html_body {
     cat >> ${WORKSPACE}/report.html << eof
 <body>
     <div id="main">
-	    <h1 align="center">iLiT Weekly Report</h1>
+	    <h1 align="center">LPOT Weekly Report</h1>
 
         <h2>Summary</h2>
 	    <table class="features-table">

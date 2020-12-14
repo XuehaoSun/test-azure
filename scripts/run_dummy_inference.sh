@@ -36,7 +36,7 @@ done
 
 main() {
   # Import common functions
-  source ${WORKSPACE}/ilit-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
+  source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
 
   echo -e "\nSetting environment..."
   set_environment
@@ -55,7 +55,7 @@ main() {
     input_model=${q_model}
   fi
 
-  cd ${WORKSPACE}/ilit-validation/examples/${framework}
+  cd ${WORKSPACE}/lpot-validation/examples/${framework}
   if [ ${framework} = "tensorflow" ] && [ ${model} = "resnet50v1.0" ]; then
     run_cmd="python main.py --input-graph ${input_model} --input input --output predict --benchmark"
   fi

@@ -32,7 +32,7 @@ done
 
 main() {
     export PATH=${HOME}/miniconda3/bin/:$PATH
-    source activate ilit-format_scan-${python_version}
+    source activate lpot-format_scan-${python_version}
     pip -V
     python -V
 
@@ -41,7 +41,7 @@ main() {
     pip install -U pip
     cd ${REPO_DIR}/test
     if [ -f "requirements.txt" ]; then
-        sed -i '/ilit/d' requirements.txt
+        sed -i '/lpot/d' requirements.txt
         python -m pip install --default-timeout=100 -r requirements.txt
         pip list
     else
@@ -62,7 +62,7 @@ main() {
 
 run_pylint() {
     pip install pylint
-    python -m pylint -f json --disable=R,C,W,I,E0401,E0611 --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy  --ignored-classes=TensorProto,NodeProto ilit > ${WORKSPACE}/ilit-pylint.json
+    python -m pylint -f json --disable=R,C,W,I,E0401,E0611 --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy  --ignored-classes=TensorProto,NodeProto lpot > ${WORKSPACE}/lpot-pylint.json
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "PyLint exited with non-zero exit code."; exit 1
@@ -72,7 +72,7 @@ run_pylint() {
 
 run_bandit() {
     pip install bandit
-    python -m bandit -r -lll -iii ilit > ${WORKSPACE}/ilit-bandit.log
+    python -m bandit -r -lll -iii lpot > ${WORKSPACE}/lpot-bandit.log
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "Bandit exited with non-zero exit code."; exit 1

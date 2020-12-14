@@ -12,23 +12,23 @@ if ('conda_env' in params && params.conda_env != '') {
 }
 echo "Running ut on ${conda_env}"
 
-ilit_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
-if ('ilit_url' in params && params.ilit_url != ''){
-    ilit_url = params.ilit_url
+lpot_url=""
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
 }
-echo "ilit_url is ${ilit_url}"
+echo "lpot_url is ${lpot_url}"
 
-nigthly_test_branch = ''
+lpot_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
-if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
-    nigthly_test_branch = params.nigthly_test_branch
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 
 }else{
     MR_source_branch = params.MR_source_branch
     MR_target_branch = params.MR_target_branch
 }
-echo "nigthly_test_branch: $nigthly_test_branch"
+echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
@@ -37,6 +37,12 @@ if ('binary_class' in params && params.binary_class != ''){
     binary_class = params.binary_class
 }
 echo "binary_class is ${binary_class}"
+
+val_branch="master"
+if ('val_branch' in params && params.val_branch != ''){
+    val_branch=params.val_branch
+}
+echo "val_branch: ${val_branch}"
 
 def cleanup() {
 
@@ -62,7 +68,9 @@ def cleanup() {
 def download() {
     dir(WORKSPACE) {
         retry(5) {
-            checkout scm
+            dir('lpot-validation') {
+                checkout scm
+            }
 
             if(MR_source_branch != ''){
                 checkout changelog: true, poll: true, scm: [
@@ -71,31 +79,31 @@ def download() {
                         browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                         doGenerateSubmoduleConfigurations: false,
                         extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                                 [$class: 'CloneOption', timeout: 60],
                                 [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                         ],
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
                                 [credentialsId: "${credential}",
-                                url          : "${ilit_url}"]
+                                url          : "${lpot_url}"]
                         ]
                 ]
             }
             else {
                 checkout changelog: true, poll: true, scm: [
                         $class                           : 'GitSCM',
-                        branches                         : [[name: "${nigthly_test_branch}"]],
+                        branches                         : [[name: "${lpot_branch}"]],
                         browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                         doGenerateSubmoduleConfigurations: false,
                         extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                                 [$class: 'CloneOption', timeout: 60]
                         ],
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
                                 [credentialsId: "${credential}",
-                                url          : "${ilit_url}"]
+                                url          : "${lpot_url}"]
                         ]
                 ]
             }
@@ -121,9 +129,9 @@ def do_binary_build() {
             pip install -U pip
 
             echo "Build binary..."
-            cd ilit-models
+            cd lpot-models
             python3 setup.py sdist bdist_wheel
-            cp dist/ilit*.whl ${WORKSPACE}/
+            cp dist/lpot*.whl ${WORKSPACE}/
         '''
     } else if (binary_class == 'conda') {
         sh """#!/bin/bash
@@ -154,7 +162,7 @@ node(node_label){
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'ilit*.whl', excludes: null
+            archiveArtifacts artifacts: 'lpot*.whl', excludes: null
             fingerprint: true
         }
     }

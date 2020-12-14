@@ -10,7 +10,7 @@ def jsonParse(def json) {
 credential = 'lab_tfbot'
 
 // setting test_title
-test_title = "iLiT Tests"
+test_title = "LPOT Tests"
 if ('test_title' in params && params.test_title != '') {
     test_title = params.test_title
 }
@@ -24,7 +24,7 @@ if ('node_label' in params && params.node_label != '') {
 echo "Running on node ${node_label}"
 
 // setting node_label
-sub_node_label = "ILIT"
+sub_node_label = "lpot"
 if ('node_label' in params && params.sub_node_label != '') {
     sub_node_label = params.sub_node_label
 }
@@ -107,18 +107,11 @@ if ('onnxrt_models' in params && params.onnxrt_models != '') {
 }
 echo "onnxrt_models: ${onnxrt_models}"
 
-// ilit-validation branch to get test groovy
-validation_branch = 'master'
-if ('validation_branch' in params && params.validation_branch != '') {
-    validation_branch = params.validation_branch
+lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
 }
-echo "validation_branch: $validation_branch"
-
-ilit_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
-if ('ilit_url' in params && params.ilit_url != ''){
-    ilit_url = params.ilit_url
-}
-echo "ilit_url is ${ilit_url}"
+echo "lpot_url is ${lpot_url}"
 
 RUN_PYLINT=false
 if ('RUN_PYLINT' in params && params.RUN_PYLINT){
@@ -152,11 +145,11 @@ if ('ABORT_PREVIOUS_MR' in params && params.ABORT_PREVIOUS_MR){
     ABORT_PREVIOUS_MR=params.ABORT_PREVIOUS_MR
 }
 
-nigthly_test_branch = ''
+lpot_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
-if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
-    nigthly_test_branch = params.nigthly_test_branch
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 }else{
     if ("${gitlabSourceBranch}" != '') {
         MR_source_branch = "${gitlabSourceBranch}"
@@ -166,7 +159,7 @@ if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
         gitLabConnection('gitlab.devtools.intel.com')
     }
 }
-echo "nigthly_test_branch: $nigthly_test_branch"
+echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
@@ -277,31 +270,31 @@ def download() {
                     browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                             [$class: 'CloneOption', timeout: 60],
                             [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                     ],
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
                             [credentialsId: "${credential}",
-                            url          : "${ilit_url}"]
+                            url          : "${lpot_url}"]
                     ]
             ]
         }
         else {
             checkout changelog: true, poll: true, scm: [
                     $class                           : 'GitSCM',
-                    branches                         : [[name: "${nigthly_test_branch}"]],
+                    branches                         : [[name: "${lpot_branch}"]],
                     browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ilit-models"],
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                             [$class: 'CloneOption', timeout: 60]
                     ],
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
                             [credentialsId: "${credential}",
-                            url          : "${ilit_url}"]
+                            url          : "${lpot_url}"]
                     ]
             ]
         }
@@ -332,8 +325,8 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "framework_version", value: "${framework_version}")
     ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
     ParamsPerJob += string(name: "model", value: "${job_model}")
-    ParamsPerJob += string(name: "ilit_url", value: "${ilit_url}")
-    ParamsPerJob += string(name: "nigthly_test_branch", value: "${nigthly_test_branch}")
+    ParamsPerJob += string(name: "lpot_url", value: "${lpot_url}")
+    ParamsPerJob += string(name: "lpot_branch", value: "${lpot_branch}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
     ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
@@ -386,11 +379,11 @@ def getPerfJobs() {
                 // execute build
                 echo "${job_model}, ${job_framework}"
 
-                downstreamJob = build job: "intel-iLit-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
+                downstreamJob = build job: "intel-lpot-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
 
                 catchError {
                     copyArtifacts(
-                            projectName: "intel-iLit-validation",
+                            projectName: "intel-lpot-validation",
                             selector: specific("${downstreamJob.getNumber()}"),
                             filter: '*.log',
                             fingerprintArtifacts: true,
@@ -405,11 +398,15 @@ def getPerfJobs() {
                 def failed_build_result = downstreamJob.result
                 def failed_build_url = downstreamJob.absoluteUrl
 
-                if (failed_build_result != 'SUCCESS' && test_mode != 'nightly') {
-                    sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
-                    failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
-                    currentBuild.result = "FAILURE"
-                    error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                if (failed_build_result != 'SUCCESS') {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+                        if (test_mode != 'nightly'){
+                            currentBuild.result = "FAILURE"
+                        }
+                        sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                        failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
+                        error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                    }
                 }
             }
         }
@@ -425,16 +422,17 @@ def getPerfJobs() {
 def codeScan(tool) {
     List codeScanParams = [
         string(name: "TOOL", value: "${tool}"),
-        string(name: "ilit_url", value: "${ilit_url}"),
-        string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+        string(name: "lpot_url", value: "${lpot_url}"),
+        string(name: "lpot_branch", value: "${lpot_branch}"),
         string(name: "MR_source_branch", value: "${MR_source_branch}"),
         string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        string(name: "val_branch", value: "${val_branch}")
     ]
 
-    downstreamJob = build job: "intel-iLit-format-scan", propagate: false, parameters: codeScanParams
+    downstreamJob = build job: "intel-lpot-format-scan", propagate: false, parameters: codeScanParams
 
     copyArtifacts(
-        projectName: "intel-iLit-format-scan",
+        projectName: "intel-lpot-format-scan",
         selector: specific("${downstreamJob.getNumber()}"),
         filter: '*.json,*.log',
         fingerprintArtifacts: true,
@@ -442,7 +440,7 @@ def codeScan(tool) {
         optional: true)
 
     text_comment = readFile file: "${overview_log}"
-    writeFile file: "${overview_log}", text: text_comment + "intel-iLit-format-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
+    writeFile file: "${overview_log}", text: text_comment + "intel-lpot-format-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
 
     // Archive in Jenkins
     archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
@@ -524,8 +522,8 @@ def collectLog() {
             withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
                 sh '''#!/bin/bash -x
                     cd $WORKSPACE
-                    chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
-                    ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
+                    chmod 775 lpot-validation/scripts/collect_logs_lpot.sh
+                    lpot-validation/scripts/collect_logs_lpot.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
                 '''
             }
             // helloworld keras with specific log collection in tuning mode
@@ -542,8 +540,8 @@ def collectLog() {
                     withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
                         sh '''#!/bin/bash -x
                             cd $WORKSPACE
-                            chmod 775 ilit-validation/scripts/collect_logs_ilit.sh
-                            ilit-validation/scripts/collect_logs_ilit.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
+                            chmod 775 lpot-validation/scripts/collect_logs_lpot.sh
+                            lpot-validation/scripts/collect_logs_lpot.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
                         '''
                     }
                 }
@@ -582,8 +580,8 @@ def collectUTLog(job_num) {
 def unitTest() {
     List unitTestParams = [
             string(name: "binary_build_job", value: "${binary_build_job}"),
-            string(name: "ilit_url", value: "${ilit_url}"),
-            string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_branch}"),
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
             string(name: "python_version", value: "${python_version}"),
@@ -594,10 +592,10 @@ def unitTest() {
             string(name: "onnxruntime_version", value: "${onnxruntime_version}"),
             string(name: "val_branch", value: "${val_branch}")
     ]
-    downstreamJob = build job: "iLit-unit-test", propagate: false, parameters: unitTestParams
+    downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: unitTestParams
 
     copyArtifacts(
-            projectName: "iLit-unit-test",
+            projectName: "lpot-unit-test",
             selector: specific("${downstreamJob.getNumber()}"),
             filter: '*.log, *.txt, **/coverage_results/**/*',
             fingerprintArtifacts: true,
@@ -607,13 +605,13 @@ def unitTest() {
         collectUTLog(downstreamJob.number)
     }else {
         text_commnet = readFile file: "${overview_log}"
-        writeFile file: "${overview_log}", text: text_commnet + "iLit-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
+        writeFile file: "${overview_log}", text: text_commnet + "lpot-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
     }
 
     // Archive in Jenkins
     archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
     if (COBERTURA) {
-        step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false,
+        step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStablpoty: false,
             coberturaReportFile: '**/coverage.xml', failUnhealthy: false, failUnstable: false,
             maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
     }
@@ -629,7 +627,7 @@ def unitTest() {
     writeFile file: "${overview_log}", text: overview + coverage_status + "\n"
 
     // Coverage decrease is not allowed in MRs
-    if (nigthly_test_branch == "" && coverage_status.split(",")[1] != "SUCCESS") {
+    if (lpot_branch == "" && coverage_status.split(",")[1] != "SUCCESS") {
         currentBuild.result = "FAILURE"
     }
 
@@ -641,12 +639,13 @@ def unitTest() {
 
 def buildBinary(){
     List binaryBuildParams = [
-            string(name: "ilit_url", value: "${ilit_url}"),
-            string(name: "nigthly_test_branch", value: "${nigthly_test_branch}"),
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_branch}"),
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "val_branch", value: "${val_branch}")
     ]
-    downstreamJob = build job: "iLiT-release-wheel-build", propagate: false, parameters: binaryBuildParams
+    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
     
     binary_build_job = downstreamJob.getNumber()
     echo "binary_build_job: ${binary_build_job}"
@@ -655,7 +654,7 @@ def buildBinary(){
         currentBuild.result = "FAILURE"
         failed_build_url = downstreamJob.absoluteUrl
         echo "failed_build_url: ${failed_build_url}"
-        error("---- iLiT wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
     }
 }
 
@@ -663,7 +662,7 @@ def generateReport() {
     if(refer_build != 'x0') {
         def refer_job_name
         if(test_mode == "extension"){
-            refer_job_name="intel-iLit-validation-top-nightly"
+            refer_job_name="intel-lpot-validation-top-nightly"
         }else{
             refer_job_name=currentBuild.projectName
         }
@@ -677,7 +676,7 @@ def generateReport() {
 
     dir(WORKSPACE) {
         qtools_commit = sh (
-            script: 'cd ilit-models && git rev-parse HEAD',
+            script: 'cd lpot-models && git rev-parse HEAD',
             returnStdout: true
         ).trim()
         def Jenkins_job_status = currentBuild.result
@@ -686,7 +685,7 @@ def generateReport() {
             Jenkins_job_status = "CHECK"
         }
         withEnv([
-            "qtools_branch=${nigthly_test_branch}",
+            "qtools_branch=${lpot_branch}",
             "qtools_commit=${qtools_commit}",
             "summaryLog=${SUMMARYTXT}",
             "summaryLogLast=${summaryLogLast}",
@@ -699,11 +698,11 @@ def generateReport() {
         ]) {
             sh '''
                 if [[ ${qtools_branch} == '' ]]; then
-                    chmod 775 ./ilit-validation/scripts/generate_ilit_report_mr.sh
-                    ./ilit-validation/scripts/generate_ilit_report_mr.sh
+                    chmod 775 ./lpot-validation/scripts/generate_lpot_report_mr.sh
+                    ./lpot-validation/scripts/generate_lpot_report_mr.sh
                 else
-                    chmod 775 ./ilit-validation/scripts/generate_ilit_report.sh
-                    ./ilit-validation/scripts/generate_ilit_report.sh
+                    chmod 775 ./lpot-validation/scripts/generate_lpot_report.sh
+                    ./lpot-validation/scripts/generate_lpot_report.sh
                 fi
             '''
         }
@@ -718,13 +717,13 @@ def generateExcelReport() {
         sh '''#!/bin/bash
             set -xe
 
-            if [ ! -d "${WORKSPACE}/.ilit-report-generator" ]; then
-                python3 -m venv ${WORKSPACE}/.ilit-report-generator
+            if [ ! -d "${WORKSPACE}/.lpot-report-generator" ]; then
+                python3 -m venv ${WORKSPACE}/.lpot-report-generator
             fi
-            source ${WORKSPACE}/.ilit-report-generator/bin/activate
+            source ${WORKSPACE}/.lpot-report-generator/bin/activate
 
-            python -m pip install --index-url https://pypi.douban.com/simple -r ./ilit-validation/scripts/report_generator/requirements.txt
-            python ./ilit-validation/scripts/report_generator/generate_excel_report.py \
+            python -m pip install --index-url https://pypi.douban.com/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
+            python ./lpot-validation/scripts/report_generator/generate_excel_report.py \
                 --tuning-log="${tuneLog}" \
                 --summary-log="${summaryLog}" \
                 --tensorflow-version="${tensorflow_version}" \
@@ -752,7 +751,7 @@ def sendReport() {
                 to: "${recipient_list}",
                 replyTo: "${recipient_list}",
                 body: '''${FILE,path="report.html"}''',
-                attachmentsPattern: "ilit_report.xlsx",
+                attachmentsPattern: "lpot_report.xlsx",
                 mimeType: 'text/html'
 
     }
@@ -760,8 +759,8 @@ def sendReport() {
 
 def collectModelList(framework) {
     add_models_list=[]
-    dir("$WORKSPACE/ilit-models"){
-        def modelconf =  jsonParse(readFile("$WORKSPACE/ilit-validation/config/model_list.json"))
+    dir("$WORKSPACE/lpot-models"){
+        def modelconf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_list.json"))
 
         withEnv(["MR_target_branch=${MR_target_branch}", "framework=${framework}"]) {
             sh (
@@ -845,7 +844,7 @@ node( node_label ) {
 
     try {
         cleanup()
-        dir('ilit-validation') {
+        dir('lpot-validation') {
             retry(5) {
                 checkout scm
             }

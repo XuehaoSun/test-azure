@@ -190,7 +190,7 @@ class eval_classifier_optimized_graph:
         default='mkl'
     )
     arg_parser.add_argument('--benchmark', dest='benchmark', action='store_true', help='run benchmark')
-    arg_parser.add_argument('--tune', dest='tune', action='store_true', help='use ilit to tune.')
+    arg_parser.add_argument('--tune', dest='tune', action='store_true', help='use lpot to tune.')
 
     self.args = arg_parser.parse_args()
 
@@ -198,7 +198,7 @@ class eval_classifier_optimized_graph:
     self.validate_args()
 
   def run(self):
-      """ This is iLiT function include tuning and benchmark option """
+      """ This is lpot function include tuning and benchmark option """
 
       if self.args.tune:
           q_model = self.auto_tune()
@@ -224,21 +224,21 @@ class eval_classifier_optimized_graph:
           self.eval_inference(infer_graph)
 
   def auto_tune(self):
-    """This is iLiT tuning part to generate a quantized pb
+    """This is lpot tuning part to generate a quantized pb
 
     Returns:
         graph: it will return a quantized pb
     """
-    import ilit
+    import lpot
     fp32_graph = load_graph(self.args.input_graph)
-    tuner = ilit.Tuner(self.args.config)
+    tuner = lpot.Tuner(self.args.config)
 
     dataset = Dataset(self.args.data_location, 'validation',
                             self.args.image_size, self.args.image_size,
                             1, self.args.num_cores,
                             self.args.resize_method,  
                             [self.args.r_mean,self.args.g_mean,self.args.b_mean], self.args.label_adjust)
-    dataloader = ilit.data.DataLoader('tensorflow', dataset, batch_size=self.args.batch_size)
+    dataloader = lpot.data.DataLoader('tensorflow', dataset, batch_size=self.args.batch_size)
     q_model = tuner.tune(
                         fp32_graph,
                         q_dataloader=dataloader,
