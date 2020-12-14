@@ -41,6 +41,25 @@ mxnet_versions = "lpot"
 if ('mxnet_versions' in params && params.mxnet_versions != '') {
     mxnet_versions = params.mxnet_versions
 }
+
+tune_only=false
+if (params.tune_only != null){
+    tune_only=params.tune_only
+}
+echo "tune_only = ${tune_only}"
+
+PARALLEL=true
+if (params.PARALLEL != null){
+    PARALLEL=params.PARALLEL
+}
+echo "PARALLEL = ${PARALLEL}"
+
+RUN_UT=true
+if (params.RUN_UT != null){
+    RUN_UT=params.RUN_UT
+}
+echo "RUN_UT = ${RUN_UT}"
+
 echo "---- frameworks: ${frameworks} ----"
 echo "---- tensorflow_versions: ${tensorflow_versions} ----"
 echo "---- pytorch_versions: ${pytorch_versions} ----"
@@ -63,6 +82,12 @@ if ('refer_build' in params && params.refer_build != '') {
 }
 echo "Running ${refer_build}"
 
+tuning_timeout="10800"
+if ('tuning_timeout' in params && params.tuning_timeout != ''){
+    tuning_timeout=params.tuning_timeout
+}
+echo "tuning_timeout: ${tuning_timeout}"
+
 py_list = pythons.split(",")
 st_list = strategies.split(",")
 fw_list = frameworks.split(",")
@@ -76,9 +101,7 @@ def pytorch_models_pass = ""
 def mxnet_models_pass = ""
 def weekly_description = ""
 
-// start
-node( 'master' ) {
-    
+def main() {
     // clean up
     dir( WORKSPACE ) {
         deleteDir()
@@ -97,7 +120,8 @@ node( 'master' ) {
             selector: specific("${refer_build}"),
             filter: 'summary.log',
             fingerprintArtifacts: true,
-            target: "reference"
+            target: "reference",
+            optional: true
         )
     }
 
@@ -158,85 +182,22 @@ node( 'master' ) {
                 fw_ver_list.each { fw_ver ->
 
                     st_list.each { st ->
-
-                        build_jobs["${py}-${fw}-${fw_ver}-${st}"] = {
-                            stage("${py}-${fw}-${fw_ver}-${st}") {
-                            
-                                echo "---- Runing ${fw}-${fw_ver} with py-${py} and strategy-${st} ----"
-
-                                def downstreamJob
-                                catchError {
-
-                                    // get the reference build number
-                                    if(refer_build != 'x0') {
-                                        refer_number = sh (
-                                                script: """
-                                                    cat ${WORKSPACE}/reference/summary.log |grep "${py};${fw};${fw_ver};${st}" |cut -d ';' -f7 |sed 's/[^0-9]//g'
-                                                """,
-                                                returnStdout: true
-                                        ).trim()
-                                    }
-
-                                    // set models
-                                    tensorflow_models_pass = tensorflow_models
-                                    tensorflow_oob_models_pass = tensorflow_oob_models
-                                    pytorch_models_pass = pytorch_models
-                                    mxnet_models_pass = mxnet_models
-                                    weekly_description = "${py}-${fw}-${fw_ver}-${st}"
-                                    if(py == '3.6' && st == 'basic') {
-                                        if (fw == 'tensorflow' && fw_ver == '2.2.0') {
-                                            tensorflow_models_pass = all_tensorflow_models
-                                            tensorflow_oob_models_pass = all_tensorflow_oob_models
-                                            weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
-                                        }
-                                        if (fw == 'pytorch' && fw_ver == '1.5.0+cpu') {
-                                            pytorch_models_pass = all_pytorch_models
-                                            weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
-                                        }
-                                        if (fw == 'mxnet' && fw_ver == '1.7.0') {
-                                            mxnet_models_pass = all_mxnet_models
-                                            weekly_description = "${py}-${fw}-${fw_ver}-${st}-all_models"
-                                        }
-                                    }
-
-                                    echo "---- tensorflow_models_pass: ${tensorflow_models_pass}"
-                                    echo "---- pytorch_models_pass: ${pytorch_models_pass}"
-                                    echo "---- mxnet_models_pass: ${mxnet_models_pass}"
-                                
-                                    downstreamJob = build job: "intel-lpot-validation-top-weekly", propagate: false, parameters: [
-                                        string(name: 'Frameworks', value:"${fw}"),
-                                        string(name: "${fw}_version", value:"${fw_ver}"),
-                                        string(name: 'strategy', value:"${st}"),
-                                        string(name: 'python_version', value:"${py}"),
-                                        string(name: 'sub_node_label', value:"${node_label}"),
-                                        string(name: 'refer_build', value:"${refer_number}"),
-                                        string(name: 'tensorflow_models', value:"${tensorflow_models_pass}"),
-                                        string(name: 'tensorflow_oob_models', value:"${tensorflow_oob_models_pass}"),
-                                        string(name: 'pytorch_models', value:"${pytorch_models_pass}"),
-                                        string(name: 'mxnet_models', value:"${mxnet_models_pass}"),
-                                        string(name: 'lpot_url', value:"${lpot_url}"),
-                                        string(name: 'lpot_branch', value:"${lpot_commit}"),
-                                        string(name: 'test_mode', value: "weekly"),
-                                        string(name: 'weekly_description', value:"${weekly_description}")
-                                    ]
-
-                                } // catchError
-
-                                build_number = downstreamJob.number
-                                build_result = downstreamJob.result
-                                build_url = downstreamJob.absoluteUrl
-                    
-                                context_text = readFile file: summary_log_init
-                                writeFile file: summary_log_init, text: context_text + "${py};${fw};${fw_ver};${st};${build_result};${build_url}artifact/report.html;${build_number}" + "\n"
-                            } // stage
-                        } // jobs
+                        if (PARALLEL) {
+                            build_jobs["${py}-${fw}-${fw_ver}-${st}"] = {
+                                getJob(py, fw, fw_ver, st, ilit_commit)
+                            } // jobs
+                        } else {
+                            getJob(py, fw, fw_ver, st, ilit_commit)
+                        }
                     } // framework_version
                 } // framework
             } // strategy
         } // python
 
-        // parallel build_env
-        parallel build_jobs
+        // Execute test suites
+        if (PARALLEL) {
+            parallel build_jobs
+        }
 
         // generate report
         withEnv([
@@ -245,10 +206,10 @@ node( 'master' ) {
         ]) {
             sh '''#!/bin/bash -x
             sort ${summary_log_init} >> ${summary_log} 
-            bash ${WORKSPACE}/scripts/generate_lpot_report_weekly.sh 
+            bash ${WORKSPACE}/scripts/generate_ilit_report_weekly.sh 
             '''
         }
-    
+
     } catch (e) {
         // If there was an exception thrown, the build failed
         currentBuild.result = "FAILURE"
@@ -257,11 +218,11 @@ node( 'master' ) {
     } finally {
         // save logs
         dir( WORKSPACE ) {
-            archiveArtifacts artifacts: "summary.log, report.html"
+            archiveArtifacts artifacts: "summary.log, report.html, logs/**/*"
         }
 
         // send report
-        emailext subject: "lpot Weekly",
+        emailext subject: "iLiT Weekly",
             to: "${recipient_list}",
             replyTo: "${recipient_list}",
             body: '''${FILE,path="report.html"}''',
@@ -270,3 +231,91 @@ node( 'master' ) {
 
     }
 } // node
+
+def getJob(python_version, framework, framework_version, strategy, ilit_commit) {
+    stage("${python_version}-${framework}-${framework_version}-${strategy}") {
+        echo "---- Runing ${framework}-${framework_version} with python-${python_version} and strategy-${strategy} ----"
+
+        def downstreamJob
+        catchError {
+
+            // get the reference build number
+            if(refer_build != 'x0') {
+                refer_number = sh (
+                        script: """
+                            cat ${WORKSPACE}/reference/summary.log |grep "${python_version};${framework};${framework_version};${strategy}" |cut -d ';' -f7 |sed 's/[^0-9]//g'
+                        """,
+                        returnStdout: true
+                ).trim()
+            }
+
+            // set models
+            tensorflow_models_pass = tensorflow_models
+            tensorflow_oob_models_pass = tensorflow_oob_models
+            pytorch_models_pass = pytorch_models
+            mxnet_models_pass = mxnet_models
+            weekly_description = "${python_version}-${framework}-${framework_version}-${strategy}"
+            if(python_version == '3.6' && strategy == 'basic') {
+                if (framework == 'tensorflow' && framework_version == '2.2.0') {
+                    tensorflow_models_pass = all_tensorflow_models
+                    tensorflow_oob_models_pass = all_tensorflow_oob_models
+                    weekly_description = "${python_version}-${framework}-${framework_version}-${strategy}-all_models"
+                }
+                if (framework == 'pytorch' && framework_version == '1.5.0+cpu') {
+                    pytorch_models_pass = all_pytorch_models
+                    weekly_description = "${python_version}-${framework}-${framework_version}-${strategy}-all_models"
+                }
+                if (framework == 'mxnet' && framework_version == '1.7.0') {
+                    mxnet_models_pass = all_mxnet_models
+                    weekly_description = "${python_version}-${framework}-${framework_version}-${strategy}-all_models"
+                }
+            }
+
+            echo "---- tensorflow_models_pass: ${tensorflow_models_pass}"
+            echo "---- pytorch_models_pass: ${pytorch_models_pass}"
+            echo "---- mxnet_models_pass: ${mxnet_models_pass}"
+
+            downstreamJob = build job: "intel-lpot-validation-top-weekly", propagate: false, parameters: [
+                string(name: 'Frameworks', value:"${framework}"),
+                string(name: "${framework}_version", value:"${framework_version}"),
+                string(name: 'strategy', value:"${strategy}"),
+                string(name: 'python_version', value:"${python_version}"),
+                string(name: 'sub_node_label', value:"${node_label}"),
+                string(name: 'refer_build', value:"${refer_number}"),
+                string(name: 'tensorflow_models', value:"${tensorflow_models_pass}"),
+                string(name: 'tensorflow_oob_models', value:"${tensorflow_oob_models_pass}"),
+                string(name: 'pytorch_models', value:"${pytorch_models_pass}"),
+                string(name: 'mxnet_models', value:"${mxnet_models_pass}"),
+                string(name: 'lpot_url', value:"${lpot_url}"),
+                string(name: 'lpot_branch', value:"${lpot_commit}"),
+                string(name: 'test_mode', value: "weekly"),
+                string(name: 'weekly_description', value:"${weekly_description}"),
+                booleanParam(name: "tune_only", value: tune_only),
+                booleanParam(name: "RUN_UT", value: RUN_UT),
+                string(name: 'tuning_timeout', value: "${tuning_timeout}")
+            ]
+
+        } // catchError
+
+        build_number = downstreamJob.number
+        build_result = downstreamJob.result
+        build_url = downstreamJob.absoluteUrl
+
+        context_text = readFile file: summary_log_init
+        writeFile file: summary_log_init, text: context_text + "${python_version};${framework};${framework_version};${strategy};${build_result};${build_url}artifact/report.html;${build_number}" + "\n"
+
+        catchError {
+            copyArtifacts(
+                    projectName: "intel-iLit-validation-top-weekly",
+                    selector: specific("${build_number}"),
+                    filter: 'tuning_info.log',
+                    fingerprintArtifacts: true,
+                    target: "logs/${build_number}",
+                    optional: true)
+        }
+    } // stage
+}
+
+node() {
+    main()
+}
