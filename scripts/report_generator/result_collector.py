@@ -101,8 +101,8 @@ class ResultCollector(JsonSerializer):
 
         url = data[5]
 
-        if data[6] != "" and data[7] != "":
+        try:
             model_size_ratio = float(data[6]) / int(data[7])
-        else:
+        except:
             model_size_ratio = "NaN"
         return result, strategy, time, trials, model_size_ratio, url
