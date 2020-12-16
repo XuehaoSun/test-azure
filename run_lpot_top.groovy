@@ -722,7 +722,7 @@ def generateExcelReport() {
             fi
             source ${WORKSPACE}/.lpot-report-generator/bin/activate
 
-            python -m pip install --index-url https://pypi.douban.com/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
+            python -m pip install --default-timeout=1000 --index-url https://pypi.douban.com/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
             python ./lpot-validation/scripts/report_generator/generate_excel_report.py \
                 --tuning-log="${tuneLog}" \
                 --summary-log="${summaryLog}" \
