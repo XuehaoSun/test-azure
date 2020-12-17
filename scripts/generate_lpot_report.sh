@@ -29,54 +29,53 @@ function main {
 function createOverview {
 
     jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
-    png_path="https://inteltf-jenk.sh.intel.com/static/93433cd1/images/24x24"
 
     # unit test
     unit_test=($(grep 'unit-test' ${overview_log} |sed 's/,/ /g'))
     if [[ "${unit_test[1]}" == *"FAIL"* ]];then
-        unit_test_status="<img src=${png_path}/red.png></img>"
+        unit_test_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${unit_test[1]}" == *"SUCC"* ]];then
-        unit_test_status="<img src=${png_path}/blue.png></img>"
+        unit_test_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        unit_test_status="<img src=${png_path}/yellow.png></img>"
+        unit_test_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     pylint_scan=($(grep 'format-scan,pylint' ${overview_log} |sed 's/,/ /g'))
     if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
-        pylint_scan_status="<img src=${png_path}/red.png></img>"
+        pylint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${pylint_scan[2]}" == *"SUCC"* ]];then
-        pylint_scan_status="<img src=${png_path}/blue.png></img>"
+        pylint_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        pylint_scan_status="<img src=${png_path}/yellow.png></img>"
+        pylint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     bandit_scan=($(grep 'format-scan,bandit' ${overview_log} |sed 's/,/ /g'))
     if [[ "${bandit_scan[2]}" == *"FAIL"* ]];then
-        bandit_scan_status="<img src=${png_path}/red.png></img>"
+        bandit_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
-        bandit_scan_status="<img src=${png_path}/blue.png></img>"
+        bandit_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        bandit_scan_status="<img src=${png_path}/yellow.png></img>"
+        bandit_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     helloworld_keras=($(grep 'Helloworld Keras' ${overview_log} |sed 's/,/ /g'))
     if [[ "${helloworld_keras[2]}" == *"FAIL"* ]];then
-        helloworld_keras_status="<img src=${png_path}/red.png></img>"
+        helloworld_keras_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${helloworld_keras[2]}" == *"SUCC"* ]];then
-        helloworld_keras_status="<img src=${png_path}/blue.png></img>"
+        helloworld_keras_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        helloworld_keras_status="<img src=${png_path}/yellow.png></img>"
+        helloworld_keras_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     if [ -f "${coverage_summary}" ]; then
         coverage=($(grep 'coverage_status' ${overview_log} |sed 's/,/ /g'))
         echo "Coverage: ${coverage}"
         if [[ "${coverage[1]}" == *"FAIL"* ]];then
-            coverage_status="<img src=${png_path}/red.png></img>"
+            coverage_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
         elif [[ "${coverage[1]}" == *"SUCC"* ]];then
-            coverage_status="<img src=${png_path}/blue.png></img>"
+            coverage_status="<td style=\"background-color:#90EE90\">Pass</td>"
         else
-            coverage_status="<img src=${png_path}/yellow.png></img>"
+            coverage_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
         fi
     fi
 
