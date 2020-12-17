@@ -399,197 +399,201 @@ node(node_label){
         }
 
         stage("Coverage status check") {
-            branch = lpot_branch
-            if (MR_source_branch != "") {
-                branch = MR_source_branch
-            }
-            println("Getting coverage on branch \"" + branch + "\"")
-            // Get coverage summary
-            sh '''#!/bin/bash
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                source activate ${conda_env}
-                python ${WORKSPACE}/scripts/get_coverage_summary.py \
-                    --cov-xml=${WORKSPACE}/coverage_results/coverage.xml \
-                    --summary-file=${WORKSPACE}/coverage_summary.log
-            '''
-            lines_coverage = Float.parseFloat(sh(
-                script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
-                returnStdout: true
-                ).trim())
-            println("Lines coverage: " + lines_coverage)
-
-            branches_coverage = Float.parseFloat(sh(
-                script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
-                returnStdout: true
-                ).trim())
-            println("Branches coverage: " + branches_coverage)
-
-            if (MR_source_branch == "") {
-                try {
-                    if (lines_coverage < lines_coverage_threshold) {
-                        println("Lines coverage below threshold!")
-                        error("Lines coverage below threshold!")
-                    }
-                    if (branches_coverage < branches_coverage_threshold) {
-                        println("Branches coverage below threshold!")
-                        error("Branches coverage below threshold!")
-                    }
-                    echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
-                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
-                } catch(e) {
-                    echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
-                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
+            timeout(30) {
+                branch = lpot_branch
+                if (MR_source_branch != "") {
+                    branch = MR_source_branch
                 }
-            } else {
-                println("Getting base coverage on branch \"" + MR_target_branch + "\"")
+                println("Getting coverage on branch \"" + branch + "\"")
+                // Get coverage summary
                 sh '''#!/bin/bash
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
-
-                    pip uninstall lpot -y
-                    cd ${WORKSPACE}/lpot-models-base
-                    python setup.py install
-                    pip list
-
-                    cd ${WORKSPACE}/lpot-models-base/test
-                    if [ -f "requirements.txt" ]; then
-                        sed -i '/^lpot/d' requirements.txt
-                        sed -i '/^intel-tensorflow/d' requirements.txt
-                        sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                        sed -i '/^torch/d' requirements.txt
-                        sed -i '/^mxnet-mkl/d' requirements.txt
-
-                        n=0
-                        until [ "$n" -ge 5 ]
-                        do
-                        python -m pip install -r requirements.txt && break
-                        n=$((n+1))
-                        sleep 5
-                        done
-
-                        pip list
-                    else
-                        echo "Not found requirements.txt file."
-                    fi
-                
-                    export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
-
-                    lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
-                    find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
-                    ut_log_name=${WORKSPACE}/unit_test_base.log
-                    coverage erase
-                    bash run.sh 2>&1 | tee ${ut_log_name}
-                    coverage report -m
-                    coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml
-
                     python ${WORKSPACE}/scripts/get_coverage_summary.py \
-                        --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
-                        --summary-file=${WORKSPACE}/coverage_summary_base.log
-
+                        --cov-xml=${WORKSPACE}/coverage_results/coverage.xml \
+                        --summary-file=${WORKSPACE}/coverage_summary.log
                 '''
-                lines_coverage_base = Float.parseFloat(sh(
-                    script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
+                lines_coverage = Float.parseFloat(sh(
+                    script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
                     returnStdout: true
                     ).trim())
-                branches_coverage_base = Float.parseFloat(sh(
-                    script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
+                println("Lines coverage: " + lines_coverage)
+
+                branches_coverage = Float.parseFloat(sh(
+                    script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
                     returnStdout: true
                     ).trim())
-                try {
-                    if (lines_coverage < lines_coverage_base) {
-                        error("Lines coverage decreased!")
-                    }
+                println("Branches coverage: " + branches_coverage)
 
-                    if (branches_coverage < branches_coverage_base) {
-                        error("Branches coverage decreased!")
+                if (MR_source_branch == "") {
+                    try {
+                        if (lines_coverage < lines_coverage_threshold) {
+                            println("Lines coverage below threshold!")
+                            error("Lines coverage below threshold!")
+                        }
+                        if (branches_coverage < branches_coverage_threshold) {
+                            println("Branches coverage below threshold!")
+                            error("Branches coverage below threshold!")
+                        }
+                        echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
+                        writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
+                    } catch(e) {
+                        echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
+                        writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
                     }
+                } else {
+                    println("Getting base coverage on branch \"" + MR_target_branch + "\"")
+                    sh '''#!/bin/bash
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        source activate ${conda_env}
 
-                    echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
-                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
-                } catch(e) {
-                    echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
-                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
+                        pip uninstall lpot -y
+                        cd ${WORKSPACE}/lpot-models-base
+                        python setup.py install
+                        pip list
+
+                        cd ${WORKSPACE}/lpot-models-base/test
+                        if [ -f "requirements.txt" ]; then
+                            sed -i '/^lpot/d' requirements.txt
+                            sed -i '/^intel-tensorflow/d' requirements.txt
+                            sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                            sed -i '/^torch/d' requirements.txt
+                            sed -i '/^mxnet-mkl/d' requirements.txt
+
+                            n=0
+                            until [ "$n" -ge 5 ]
+                            do
+                            python -m pip install -r requirements.txt && break
+                            n=$((n+1))
+                            sleep 5
+                            done
+
+                            pip list
+                        else
+                            echo "Not found requirements.txt file."
+                        fi
+                    
+                        export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
+
+                        lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                        find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
+                        ut_log_name=${WORKSPACE}/unit_test_base.log
+                        coverage erase
+                        bash run.sh 2>&1 | tee ${ut_log_name}
+                        coverage report -m
+                        coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml
+
+                        python ${WORKSPACE}/scripts/get_coverage_summary.py \
+                            --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
+                            --summary-file=${WORKSPACE}/coverage_summary_base.log
+
+                    '''
+                    lines_coverage_base = Float.parseFloat(sh(
+                        script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
+                        returnStdout: true
+                        ).trim())
+                    branches_coverage_base = Float.parseFloat(sh(
+                        script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
+                        returnStdout: true
+                        ).trim())
+                    try {
+                        if (lines_coverage < lines_coverage_base) {
+                            error("Lines coverage decreased!")
+                        }
+
+                        if (branches_coverage < branches_coverage_base) {
+                            error("Branches coverage decreased!")
+                        }
+
+                        echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
+                        writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
+                    } catch(e) {
+                        echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
+                        writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
+                    }
                 }
             }
         }
 
         if (MR_source_branch != ''){
             stage("unit test extension") {
-                origin_tf_version=tensorflow_version
-                def ex_tfs = ["1.15.2","1.15UP1"]
-                ex_tfs.each { tf_version ->
-                    // if the tf version has been ran, then return
-                    if (tf_version == origin_tf_version){
-                        return
-                    }
+                timeout(60) {
+                    origin_tf_version=tensorflow_version
+                    def ex_tfs = ["1.15.2","1.15UP1"]
+                    ex_tfs.each { tf_version ->
+                        // if the tf version has been ran, then return
+                        if (tf_version == origin_tf_version){
+                            return
+                        }
 
-                    tensorflow_version=tf_version
-                    // build specific conda env for extension ut test
-                    echo "+--------------For TF ${tensorflow_version} unit extension test -------------+"
-                    build_conda_env()
-                    // start ut test
-                    withEnv(["tensorflow_version=${tensorflow_version}"]){
-                        timeout(30) {
-                            ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
-                            source activate ${conda_env}
-                            # pip config set global.index-url https://pypi.douban.com/simple/
-                    
-                            echo "Checking lpot..."
-                            python -V
-                            pip list
-                            c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
-                            if [ ${c_lpot} != 0 ]; then
-                                pip uninstall lpot -y
+                        tensorflow_version=tf_version
+                        // build specific conda env for extension ut test
+                        echo "+--------------For TF ${tensorflow_version} unit extension test -------------+"
+                        build_conda_env()
+                        // start ut test
+                        withEnv(["tensorflow_version=${tensorflow_version}"]){
+                            timeout(30) {
+                                ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env}
+                                # pip config set global.index-url https://pypi.douban.com/simple/
+                        
+                                echo "Checking lpot..."
+                                python -V
                                 pip list
-                            fi
-                                    
-                            echo "Install lpot binary..."
-                            n=0
-                            until [ "$n" -ge 5 ]
-                            do
-                                pip install lpot*.whl && break
-                                n=$((n+1))
-                                sleep 5
-                            done
-                    
-                            if [ ! -d ${WORKSPACE}/lpot-models ]; then
-                                echo "\\"lpot-model\\" not found. Exiting..."
-                                exit 1
-                            fi
-                    
-                            echo -e "\\nInstalling ut requirements..."
-                            cd ${WORKSPACE}/lpot-models/test
-                            if [ -f "requirements.txt" ]; then
-                                sed -i '/^lpot/d' requirements.txt
-                                sed -i '/^intel-tensorflow/d' requirements.txt
-                                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                                sed -i '/^torch/d' requirements.txt
-                                sed -i '/^mxnet-mkl/d' requirements.txt
-        
+                                c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+                                if [ ${c_lpot} != 0 ]; then
+                                    pip uninstall lpot -y
+                                    pip list
+                                fi
+                                        
+                                echo "Install lpot binary..."
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
-                                    python -m pip install -r requirements.txt && break
+                                    pip install lpot*.whl && break
                                     n=$((n+1))
                                     sleep 5
                                 done
-        
-                                pip list
-                            else
-                                echo "Not found requirements.txt file."
-                            fi
+                        
+                                if [ ! -d ${WORKSPACE}/lpot-models ]; then
+                                    echo "\\"lpot-model\\" not found. Exiting..."
+                                    exit 1
+                                fi
+                        
+                                echo -e "\\nInstalling ut requirements..."
+                                cd ${WORKSPACE}/lpot-models/test
+                                if [ -f "requirements.txt" ]; then
+                                    sed -i '/^lpot/d' requirements.txt
+                                    sed -i '/^intel-tensorflow/d' requirements.txt
+                                    sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                                    sed -i '/^torch/d' requirements.txt
+                                    sed -i '/^mxnet-mkl/d' requirements.txt
+            
+                                    n=0
+                                    until [ "$n" -ge 5 ]
+                                    do
+                                        python -m pip install -r requirements.txt && break
+                                        n=$((n+1))
+                                        sleep 5
+                                    done
+            
+                                    pip list
+                                else
+                                    echo "Not found requirements.txt file."
+                                fi
 
-                            find . -name "test*.py" | sed 's,.\\/,python ,g' > run.sh
-                            ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
-                            bash run.sh 2>&1 | tee ${ut_log_name}
-                            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
-                                exit 1
-                            fi
-                        ''')
-                            if (ut_status != 0) {
-                                currentBuild.result = 'FAILURE'
-                                error("Unit test extension failed!")
+                                find . -name "test*.py" | sed 's,.\\/,python ,g' > run.sh
+                                ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
+                                bash run.sh 2>&1 | tee ${ut_log_name}
+                                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                                    exit 1
+                                fi
+                            ''')
+                                if (ut_status != 0) {
+                                    currentBuild.result = 'FAILURE'
+                                    error("Unit test extension failed!")
+                                }
                             }
                         }
                     }
