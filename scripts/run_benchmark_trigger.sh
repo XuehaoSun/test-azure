@@ -3,9 +3,9 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "10" ] ; then
+if [ $# != "11" ] ; then
     echo 'ERROR:'
-    echo "Expected 9 parameters got $#"
+    echo "Expected 11 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
@@ -17,6 +17,7 @@ if [ $# != "10" ] ; then
     --batch_size=<batch_size for accuracy and throughput>
     --conda_env_name=<conda environment name>
     --yaml=<path to lpot yaml configuration>
+    --profiling=<profiling or not for oob models>
     '
     exit 1
 fi
@@ -44,6 +45,8 @@ do
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         --yaml=*)
             yaml=`echo $i | sed "s/${PATTERN}//"`;;
+        --profiling=*)
+            profiling=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -212,6 +215,11 @@ function run_benchmark {
   echo "BENCHMARK RUNCMD: $run_cmd "
   logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
 
+  if [ "${profiling}" == "true" ]; then
+    # enable timeline for oob model
+    export RUN_PROFILING=1
+  fi
+
   for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
   do
     numactl -m 0 -C "$j-$((j + ncores_per_instance -1))" \
@@ -219,6 +227,16 @@ function run_benchmark {
   done
 
   wait
+
+  if [ "${profiling}" == "true" ] && [ "${precision}" == "fp32" ]; then
+    # copy profiling to /tmp
+    save_path=/tmp/timeline_json/${framework}-${model}/
+    echo "HOSTNAME IS ${HOSTNAME}"
+    echo "!!! ${model} timeline save path is ${save_path} !!!"
+    rm -rf "${save_path}"
+    mkdir -p "${save_path}"
+    cp -r "${model_src_dir}/timeline_json/"* "${save_path}"
+  fi
 
 }
 

@@ -230,6 +230,12 @@ if (params.pipeline_failFast != null){
 }
 echo "pipeline_failFast = ${pipeline_failFast}"
 
+RUN_PROFILING=false
+if (params.RUN_PROFILING != null){
+    RUN_PROFILING=params.RUN_PROFILING
+}
+echo "RUN_PROFILING = ${RUN_PROFILING}"
+
 binary_build_job = "lastSuccessfulBuild"
 
 try{ echo "COBERTURA=${COBERTURA}"; } catch (Exception e) { COBERTURA=false; echo "COBERTURA=${COBERTURA}" }
@@ -337,6 +343,7 @@ def BuildParams(job_framework, job_model, python_version, strategy){
     ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
     ParamsPerJob += string(name: "max_trials", value: "${max_trials}")
     ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
+    ParamsPerJob += booleanParam(name: "RUN_PROFILING", value: RUN_PROFILING)
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
 
     return ParamsPerJob

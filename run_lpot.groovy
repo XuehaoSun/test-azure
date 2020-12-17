@@ -125,6 +125,12 @@ if (params.tune_only != null){
 }
 echo "tune_only = ${tune_only}"
 
+RUN_PROFILING=false
+if (params.RUN_PROFILING != null){
+    RUN_PROFILING=params.RUN_PROFILING
+}
+echo "RUN_PROFILING = ${RUN_PROFILING}"
+
 val_branch="master"
 if ('val_branch' in params && params.val_branch != ''){
     val_branch=params.val_branch
@@ -524,7 +530,8 @@ node( sub_node_label ) {
                                     --mode=${mode} \
                                     --batch_size=${batch_size} \
                                     --conda_env_name=${framework}-${framework_version}-${python_version}\
-                                    --yaml=${yaml}
+                                    --yaml=${yaml} \
+                                    --profiling=${RUN_PROFILING}
                                 """
                             }
                         }
