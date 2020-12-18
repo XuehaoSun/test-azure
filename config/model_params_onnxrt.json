@@ -14,7 +14,7 @@
       "input_model": "/home/tensorflow/suyue/onnx/bert.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 8
     }
   }
 }
