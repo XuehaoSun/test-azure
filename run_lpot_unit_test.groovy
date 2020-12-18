@@ -116,7 +116,7 @@ if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
 println("onnxruntime_version: " + onnxruntime_version)
 
 lines_coverage_threshold = 80
-branches_coverage_threshold = 60
+branches_coverage_threshold = 75
 
 
 def cleanup() {
