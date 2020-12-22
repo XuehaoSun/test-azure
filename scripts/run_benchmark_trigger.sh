@@ -69,15 +69,6 @@ main() {
         exit 1
     fi
 
-    echo -e "\nInstalling model requirements..."
-    if [ -f "requirements.txt" ]; then
-        sed -i '/lpot/d' requirements.txt
-        python -m pip install -r requirements.txt
-        pip list
-    else
-        echo "Not found requirements.txt file."
-    fi
-
     echo -e "\nSet a modified yaml..."
     echo "${yaml}"
     cp "${yaml}" "benchmark.yaml"

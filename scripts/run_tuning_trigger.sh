@@ -73,7 +73,7 @@ main() {
     echo -e "\nInstalling model requirements..."
     if [ -f "requirements.txt" ]; then
         sed -i '/lpot/d' requirements.txt
-        sed -i "/tensorflow==/d;/torch==/d;/mxnet==/d" requirements.txt
+        sed -i "/tensorflow==/d;/torch==/d;/mxnet-mkl==/d" requirements.txt
         if [ "${framework}" == "onnxrt" ]; then
           sed -i '/onnx/d;/onnxruntime/d' requirements.txt
         fi
