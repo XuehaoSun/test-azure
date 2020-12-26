@@ -58,6 +58,9 @@ function set_PT_env {
     elif [[ ${model} = 'dlrm' ]]; then
       export PATH=${HOME}/anaconda3/bin/:$PATH
       source activate ${conda_env_name}
+    elif [[ ${model} = *'_ipex' ]]; then
+      export PATH=${HOME}/miniconda3/bin/:$PATH
+      source activate pt-ipex-3.6
     else
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate ${conda_env_name}
