@@ -71,18 +71,20 @@ main() {
     fi
 
     echo -e "\nInstalling model requirements..."
-    if [ -f "requirements.txt" ]; then
-        sed -i '/lpot/d' requirements.txt
-        sed -i "/tensorflow==/d;/torch==/d;/mxnet-mkl==/d" requirements.txt
-        if [ "${framework}" == "onnxrt" ]; then
-          sed -i '/onnx/d;/onnxruntime/d' requirements.txt
-        fi
-        python -m pip install -r requirements.txt
-        pip list
-    else
-        echo "Not found requirements.txt file."
+    # ipex model shouldn't re-install dependencies.
+    if [[ "${model}" != *"_ipex" ]]; then
+      if [ -f "requirements.txt" ]; then
+          sed -i '/lpot/d' requirements.txt
+          sed -i "/tensorflow==/d;/torch==/d;/mxnet==/d" requirements.txt
+          if [ "${framework}" == "onnxrt" ]; then
+            sed -i '/onnx/d;/onnxruntime/d' requirements.txt
+          fi
+          python -m pip install -r requirements.txt
+          pip list
+      else
+          echo "Not found requirements.txt file."
+      fi
     fi
-
 
     echo -e "\nGetting git information..."
     echo "$(git remote -v)"

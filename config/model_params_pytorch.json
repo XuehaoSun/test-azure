@@ -16,6 +16,14 @@
       "strategy": "basic",
       "batch_size": 100
     },
+    "resnet50_ipex": {
+      "model_src_dir": "image_recognition/imagenet/cpu/ptq",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
+      "input_model": "",
+      "yaml": "conf_ipex.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
     "resnet50_gpu": {
       "model_src_dir": "image_recognition/imagenet/gpu",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",

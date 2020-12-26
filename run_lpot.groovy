@@ -148,6 +148,10 @@ if(framework == 'pytorch'){
     if(model == 'dlrm'){
         sub_node_label='dlrm'
     }
+    if(label[-1] == 'ipex'){
+        sub_node_label='py-ipex'
+        new_conda_env=false
+    }
 }
 
 def cleanup() {
