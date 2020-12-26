@@ -304,6 +304,14 @@
       "strategy": "basic",
       "batch_size": -1
     },
+    "bert": {
+      "model_src_dir": "nlp/bert",
+      "dataset_location": "/tf_dataset/tensorflow/bert/data",
+      "input_model": "/tf_dataset/tensorflow/bert/model",
+      "yaml": "bert.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
     "aipg-vdcnn": {
       "model_src_dir": "oob_models",
       "dataset_location": "",
