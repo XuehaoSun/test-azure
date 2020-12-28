@@ -4,3 +4,7 @@ branch = True
 [report]
 omit =
  */**/fake*
+exclude_lines =
+ pragma: no cover
+ raise NotImplementedError
+ raise TypeError
