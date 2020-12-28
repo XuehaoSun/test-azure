@@ -37,7 +37,7 @@ main() {
     python -V
 
     # Install test requirements
-    pip config set global.index-url https://pypi.douban.com/simple/
+    # pip config set global.index-url https://pypi.douban.com/simple/
     pip install -U pip
     cd ${REPO_DIR}/test
     if [ -f "requirements.txt" ]; then
