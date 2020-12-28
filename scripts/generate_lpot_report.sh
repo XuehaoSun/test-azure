@@ -93,31 +93,31 @@ function createOverview {
              if [ "${unit_test[2]}" != "" ];then
                  echo "<tr><td>Unit Test</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}/artifact/\">${unit_test[0]}#${unit_test[2]}</a></td>"
-                 echo "<td>${unit_test_status}</td></tr>"
+                 echo "${unit_test_status}</tr>"
              fi
 
              if [ "${pylint_scan[3]}" != "" ]; then
                  echo "<tr><td>PyLint Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[3]}\">${pylint_scan[0]}#${pylint_scan[3]}</a></td>"
-                 echo "<td>${pylint_scan_status}</td></tr>"
+                 echo "${pylint_scan_status}</tr>"
              fi
 
              if [ "${bandit_scan[3]}" != "" ]; then
                  echo "<tr><td>Bandit Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${bandit_scan[0]}/${bandit_scan[3]}\">${bandit_scan[0]}#${bandit_scan[3]}</a></td>"
-                 echo "<td>${bandit_scan_status}</td></tr>"
+                 echo "${bandit_scan_status}</tr>"
              fi
 
              if [ "${helloworld_keras[3]}" != "" ]; then
                  echo "<tr><td>Helloworld Keras</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${helloworld_keras[3]}\">Log link</a></td>"
-                 echo "<td>${helloworld_keras_status}</td></tr>"
+                 echo "${helloworld_keras_status}</tr>"
              fi
 
              if [ ${#coverage[@]} -gt 0 ] && [ "${coverage[1]}" != "" ]; then
                 echo "<tr><td>Code Coverage Scan</td>"
                 echo "<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a></td>"
-                echo "<td>${coverage_status}</td></tr>"
+                echo "${coverage_status}</tr>"
             fi
 
         )
