@@ -38,6 +38,12 @@ if ('binary_class' in params && params.binary_class != ''){
 }
 echo "binary_class is ${binary_class}"
 
+conda_version = "v1.1"
+if ('conda_version' in params && params.conda_version != ''){
+    conda_version = params.conda_version
+}
+echo "conda_version is ${conda_version}"
+
 val_branch="master"
 if ('val_branch' in params && params.val_branch != ''){
     val_branch=params.val_branch
@@ -128,15 +134,41 @@ def do_binary_build() {
             # Upgrade pip
             pip install -U pip
 
-            echo "Build binary..."
+            echo "Build Pypi binary..."
             cd lpot-models
             python3 setup.py sdist bdist_wheel
             cp dist/lpot*.whl ${WORKSPACE}/
         '''
     } else if (binary_class == 'conda') {
-        sh """#!/bin/bash
-            echo "TODO"
-        """
+        sh '''#!/bin/bash
+            set -xe
+            echo "Create conda env..."
+            export PATH=${HOME}/miniconda3/bin/:$PATH
+            if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
+                echo "${conda_env} exist!"
+            else
+                conda create python=3.6.9 -y -n ${conda_env}
+            fi
+
+            source activate ${conda_env}
+
+            # Upgrade pip
+            pip install -U pip
+
+            echo "Build Pypi binary..."
+            cd lpot-models
+            python3 setup.py sdist bdist_wheel
+            cp dist/lpot*.whl ${WORKSPACE}/
+            
+            echo "Build Conda binary..."
+            cd ${WORKSPACE}/lpot-validation/conda_build/${conda_version}
+            export LPOT_WHL=${WORKSPACE}/lpot*.whl
+            pip install pyyaml six 
+            conda install patchelf conda-build conda-verify -y
+            conda config --add channels conda-forge 
+            conda build meta.yaml
+            cp /home/tensorflow/miniconda3/envs/${conda_env}/conda-bld/noarch/lpot-*-py_0.tar.bz2 ${WORKSPACE}/
+        '''
 
     } else {
         echo "DO NOT support ${binary_class} build!!!"
@@ -162,7 +194,7 @@ node(node_label){
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'lpot*.whl', excludes: null
+            archiveArtifacts artifacts: 'lpot*.whl, lpot-*-py_0.tar.bz2', excludes: null
             fingerprint: true
         }
     }
