@@ -1,0 +1,382 @@
+credential = "lab_tfbot"
+
+node_label = "clx8280"
+if ('node_label' in params && params.node_label != '') {
+    node_label = params.node_label
+}
+echo "Running on node ${node_label}"
+
+conda_env = "HOSTNAME"
+if ('conda_env' in params && params.conda_env != '') {
+    conda_env = params.conda_env
+}
+echo "Running ut on ${conda_env}"
+
+lpot_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
+}
+echo "lpot_url is ${lpot_url}"
+
+lpot_branch = ''
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
+
+}
+echo "lpot_branch: $lpot_branch"
+
+binary_build_job=""
+if ('binary_build_job' in params && params.binary_build_job != ''){
+    binary_build_job = params.binary_build_job
+}
+echo "binary_build_job is ${binary_build_job}"
+
+python_version = "3.6"
+if ('python_version' in params && params.python_version != '') {
+    python_version = params.python_version
+}
+echo "Python version: ${python_version}"
+
+// setting tensorflow_version
+tensorflow_version = '1.15.2'
+if ('tensorflow_version' in params && params.tensorflow_version != '') {
+    tensorflow_version = params.tensorflow_version
+}
+echo "tensorflow_version: ${tensorflow_version}"
+
+// setting mxnet_version
+mxnet_version = '1.6.0'
+if ('mxnet_version' in params && params.mxnet_version != '') {
+    mxnet_version = params.mxnet_version
+}
+echo "mxnet_version: ${mxnet_version}"
+
+// setting pytorch_version
+pytorch_version = '1.5.0+cpu'
+if ('pytorch_version' in params && params.pytorch_version != '') {
+    pytorch_version = params.pytorch_version
+}
+echo "pytorch_version: ${pytorch_version}"
+
+val_branch="master"
+if ('val_branch' in params && params.val_branch != ''){
+    val_branch=params.val_branch
+}
+echo "val_branch: ${val_branch}"
+
+test_case_list=""
+if ('test_case_list' in params && params.test_case_list != ''){
+    test_case_list=params.test_case_list
+}
+echo "test_case_list: ${test_case_list}"
+
+test_trials=100
+if ('test_trials' in params && params.test_trials != ''){
+    test_trials=params.test_trials
+}
+echo "test_trials: ${test_trials}"
+
+torchvision_versions = [
+        "1.6.0": "0.7.0",
+        "1.5.1": "0.6.1",
+        "1.5.0": "0.6.0",
+        "1.4.0": "0.5.0",
+        "1.3.1": "0.4.2",
+        "1.3.0": "0.4.1",
+        "1.2.0": "0.4.0",
+        "1.1.0": "0.3.0",
+]
+
+pytorch_version_base = pytorch_version.split('\\+')[0]
+try {
+    pytorch_version_postfix = pytorch_version.split('\\+')[1]
+} catch(e) {
+    pytorch_version_postfix = ""
+}
+
+torchvision_version = torchvision_versions[pytorch_version_base]
+
+if (!torchvision_version) {
+    error("Could not found torchvision for pytorch " + pytorch_version)
+}
+
+if (pytorch_version_postfix != "") {
+    torchvision_version = torchvision_version + "+" + pytorch_version_postfix
+}
+println("torchvision_version: " + torchvision_version)
+
+
+// setting onnx and onnxruntime version
+onnx_version = '1.7.0'
+if ('onnx_version' in params && params.onnx_version != '') {
+    onnx_version = params.onnx_version
+}
+echo "onnx_version: ${onnx_version}"
+
+onnxruntime_version = '1.5.2'
+if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
+    onnxruntime_version = params.onnxruntime_version
+}
+println("onnxruntime_version: " + onnxruntime_version)
+
+
+def cleanup() {
+
+    try {
+        sh '''#!/bin/bash -x
+        cd $WORKSPACE
+        sudo rm -rf *
+        '''
+    } catch(e) {
+        echo "==============================================="
+        echo "ERROR: Exception caught in cleanup()           "
+        echo "ERROR: ${e}"
+        echo "==============================================="
+
+        echo ' '
+        echo "Error while doing cleanup"
+    }
+
+}
+
+def download() {
+    dir(WORKSPACE) {
+        retry(5) {
+            checkout scm
+
+            checkout changelog: true, poll: true, scm: [
+                        $class                           : 'GitSCM',
+                        branches                         : [[name: "${lpot_branch}"]],
+                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions                       : [
+                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                [$class: 'CloneOption', timeout: 60]
+                        ],
+                        submoduleCfg                     : [],
+                        userRemoteConfigs                : [
+                                [credentialsId: "${credential}",
+                                 url          : "${lpot_url}"]
+                        ]
+                ]
+        }
+    }
+}
+
+def build_conda_env() {
+    withEnv([
+            "torchvision_version=${torchvision_version}",
+            "tensorflow_version=${tensorflow_version}",
+            "onnx_version=${onnx_version}",
+            "onnxruntime_version=${onnxruntime_version}"]) {
+        retry(5) {
+            sh'''#!/bin/bash
+                set -xe
+                echo "Create new conda env for UT..."
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                # pip config set global.index-url https://pypi.douban.com/simple/
+
+                if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
+                    conda remove --name ${conda_env} --all -y
+                fi
+                
+                conda_dir=$(dirname $(dirname $(which conda)))
+                if [ -d ${conda_dir}/envs/${conda_env} ]; then
+                    rm -rf ${conda_dir}/envs/${conda_env}
+                fi
+
+                conda create python=${python_version} -y -n ${conda_env}
+
+                source activate ${conda_env}
+
+                # Upgrade pip
+                pip install -U pip
+
+                # Install TF
+                if [ ${tensorflow_version} == '1.15UP1' ]; then
+                    if [ ${python_version} == '3.6' ]; then
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl                
+                    elif [ ${python_version} == '3.7' ]; then
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
+                    elif [ ${python_version} == '3.5' ]; then
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp35-cp35m-manylinux2010_x86_64.whl
+                    else
+                        echo "!!! TF 1.15UP1 do not support ${python_version}"
+                    fi
+                elif [ ${tensorflow_version} == '1.15UP2' ]; then
+                    if [ ${python_version} == '3.6' ]; then
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp36-cp36m-manylinux2010_x86_64.whl                
+                    elif [ ${python_version} == '3.7' ]; then
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp37-cp37m-manylinux2010_x86_64.whl
+                    elif [ ${python_version} == '3.5' ]; then
+                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp35-cp35m-manylinux2010_x86_64.whl 
+                    else
+                        echo "!!! TF 1.15UP2 do not support ${python_version}"
+                    fi
+                else
+                    pip install intel-tensorflow==${tensorflow_version}
+                fi
+
+                # Install PyTorch
+                pip install torch==${pytorch_version} -f https://download.pytorch.org/whl/torch_stable.html
+                pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
+
+                # Install MXNet
+                if [ ${mxnet_version} == '1.6.0' ]; then
+                    pip install mxnet-mkl==${mxnet_version}
+                elif [ ${mxnet_version} == '1.7.0' ]; then
+                    pip install mxnet==${mxnet_version}.post1
+                else
+                    pip install mxnet==${mxnet_version}
+                fi
+
+                # Install ONNX
+                pip install onnx==${onnx_version}
+                # if onnxrt==nightly then use requirements to install
+                if [ ${framework_version} != "nightly" ]; then
+                    pip install onnxruntime==${framework_version}
+                fi
+            '''
+        }
+    }
+}
+
+def binary_install() {
+    sh'''#!/bin/bash
+        export PATH=${HOME}/miniconda3/bin/:$PATH
+        source activate ${conda_env}
+
+        echo "Checking lpot..."
+        python -V
+        pip list
+        c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+        if [ ${c_lpot} != 0 ]; then
+            pip uninstall lpot -y
+            pip list
+        fi
+                
+        echo "Install lpot binary..."
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+            pip install lpot*.whl && break
+            n=$((n+1))
+            sleep 5
+        done
+
+        if [ ! -d ${WORKSPACE}/lpot-models ]; then
+            echo "\\"lpot-model\\" not found. Exiting..."
+            exit 1
+        fi
+
+        echo -e "\\nInstalling ut requirements..."
+        cd ${WORKSPACE}/lpot-models/test
+        if [ -f "requirements.txt" ]; then
+            sed -i '/^lpot/d' requirements.txt
+            sed -i '/^intel-tensorflow/d' requirements.txt
+            sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+            sed -i '/^torch/d' requirements.txt
+            sed -i '/^mxnet-mkl/d' requirements.txt
+
+            n=0
+            until [ "$n" -ge 5 ]
+            do
+                python -m pip install -r requirements.txt && break
+                n=$((n+1))
+                sleep 5
+            done
+
+            pip list
+        else
+            echo "Not found requirements.txt file."
+        fi
+    '''
+}
+
+node(node_label){
+    try {
+        cleanup()
+        stage('download') {
+            download()
+        }
+
+        if ("${binary_build_job}" == "") {
+            stage('Build binary') {
+                List binaryBuildParams = [
+                        string(name: "lpot_url", value: "${lpot_url}"),
+                        string(name: "lpot_branch", value: "${lpot_branch}"),
+                        string(name: "val_branch", value: "${val_branch}")
+                ]
+                downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
+
+                binary_build_job = downstreamJob.getNumber()
+                echo "binary_build_job: ${binary_build_job}"
+                echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+                if (downstreamJob.getResult() != "SUCCESS") {
+                    currentBuild.result = "FAILURE"
+                    failed_build_url = downstreamJob.absoluteUrl
+                    echo "failed_build_url: ${failed_build_url}"
+                    error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                }
+            }
+        }
+
+        stage('Copy binary') {
+            catchError {
+                copyArtifacts(
+                        projectName: 'lpot-release-wheel-build',
+                        selector: specific("${binary_build_job}"),
+                        filter: 'lpot*.whl',
+                        fingerprintArtifacts: true,
+                        target: "${WORKSPACE}")
+
+                archiveArtifacts artifacts: "lpot*.whl"
+            }
+        }
+
+        stage('env_build') {
+            build_conda_env()
+            binary_install()
+        }
+
+        stage("ut stress test") {
+            ut_cases = test_case_list.split(',')
+            run_ut_scripts = "${WORKSPACE}/lpot-models/test/run.sh"
+            writeFile file: run_ut_scripts, text: ""
+            ut_cases.each{ ut_case ->
+                run_ut_context = readFile file: run_ut_scripts
+                writeFile file: run_ut_scripts, text: run_ut_context + "python " + ut_case + "\n"
+            }
+            withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}"]){
+                sh'''#!/bin/bash
+                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    source activate ${conda_env}
+                    cd ${WORKSPACE}/lpot-models/test
+                    cat ${run_ut_scripts}
+                    ut_log_name=${WORKSPACE}/unit_test_${test_trials}.log
+                    for((j=0;$j<${test_trials};j=$(($j + 1))));
+                    do
+                      echo "------ Start of test around ${j} -------" >> ${ut_log_name}
+                      bash ${run_ut_scripts} 2>&1 | tee -a ${ut_log_name}
+                      echo "\n" >> ${ut_log_name}
+                    done
+                    
+                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                        exit 1
+                    fi
+                '''
+            }
+        }
+
+    } catch (e) {
+        // If there was an exception thrown, the build failed
+        currentBuild.result = "FAILURE"
+        throw e
+    } finally {
+        // archive artifacts
+        stage("Artifacts") {
+            archiveArtifacts artifacts: '*.log', excludes: null
+            fingerprint: true
+        }
+    }
+}
