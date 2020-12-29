@@ -104,7 +104,6 @@ def weekly_description = ""
 def main() {
     // clean up
     dir( WORKSPACE ) {
-        deleteDir()
         sh " rm -rf ./* "
         dir('lpot-validation'){
             retry(5) {
@@ -206,7 +205,7 @@ def main() {
         ]) {
             sh '''#!/bin/bash -x
             sort ${summary_log_init} >> ${summary_log} 
-            bash ${WORKSPACE}/scripts/generate_lpot_report_weekly.sh 
+            bash ${WORKSPACE}/lpot-validation/scripts/generate_lpot_report_weekly.sh 
             '''
         }
 
