@@ -266,9 +266,8 @@ def build_conda_env() {
 
                         # Install ONNX
                         pip install onnx==${onnx_version}
-                        if [ ${onnxruntime_version} == "nightly" ]; then
-                            pip install -i https://test.pypi.org/simple/ ort-nightly
-                        else
+                        # if onnxrt==nightly then use requirements to install
+                        if [ ${onnxruntime_version} != "nightly" ]; then
                             pip install onnxruntime==${onnxruntime_version}
                         fi
                     '''
@@ -362,7 +361,7 @@ node(node_label){
                         sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                         sed -i '/^torch/d' requirements.txt
                         sed -i '/^mxnet-mkl/d' requirements.txt
-                        sed -i '/^onnx/d' requirements.txt
+                        sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
 
                         n=0
                         until [ "$n" -ge 5 ]
@@ -459,6 +458,7 @@ node(node_label){
                             sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                             sed -i '/^torch/d' requirements.txt
                             sed -i '/^mxnet-mkl/d' requirements.txt
+                            sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
 
                             n=0
                             until [ "$n" -ge 5 ]
