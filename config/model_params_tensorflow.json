@@ -60,7 +60,7 @@
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_inception_v1.pb",
-      "yaml": "inceptionv1.yaml",
+      "yaml": "inception_v1.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
@@ -68,7 +68,7 @@
       "model_src_dir": "image_recognition/slim",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/tensorflow/slim/inception_v1.ckpt",
-      "yaml": "../inceptionv1.yaml",
+      "yaml": "../inception_v1.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
@@ -76,7 +76,7 @@
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_inception_v2.pb",
-      "yaml": "inceptionv2.yaml",
+      "yaml": "inception_v2.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
@@ -84,7 +84,7 @@
       "model_src_dir": "image_recognition/slim",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/tensorflow/slim/inception_v2.ckpt",
-      "yaml": "../inceptionv2.yaml",
+      "yaml": "../inception_v2.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
@@ -92,7 +92,7 @@
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/pre-trained-models/inceptionv3/fp32/freezed_inceptionv3.pb",
-      "yaml": "inceptionv3.yaml",
+      "yaml": "inception_v3.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
@@ -100,7 +100,7 @@
       "model_src_dir": "image_recognition/slim",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/tensorflow/slim/inception_v3.ckpt",
-      "yaml": "inceptionv3.yaml",
+      "yaml": "inception_v3.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
@@ -108,7 +108,7 @@
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_inception_v4.pb",
-      "yaml": "inceptionv4.yaml",
+      "yaml": "inception_v4.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
@@ -116,7 +116,7 @@
       "model_src_dir": "image_recognition/slim",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/tensorflow/slim/inception_v4.ckpt",
-      "yaml": "../inceptionv4.yaml",
+      "yaml": "../inception_v4.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
@@ -124,7 +124,7 @@
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_inception_resnet_v2.pb",
-      "yaml": "irv2.yaml",
+      "yaml": "inception_resnet_v2.yaml",
       "strategy": "basic",
       "batch_size": 100
     },
