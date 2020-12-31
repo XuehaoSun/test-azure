@@ -359,11 +359,10 @@ node(node_label){
                       echo "------ Start of test around ${j} -------" >> ${ut_log_name}
                       bash ${run_ut_scripts} 2>&1 | tee -a ${ut_log_name}
                       echo "\n" >> ${ut_log_name}
-                    done
-                    
-                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                      if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                         exit 1
-                    fi
+                      fi
+                    done
                 '''
             }
         }
