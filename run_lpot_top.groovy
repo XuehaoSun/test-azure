@@ -363,9 +363,9 @@ def getPerfJobs() {
             job_models = parseStrToList(tensorflow_models)
             job_models = job_models.plus(tf_oob_models)
             // Temporary change for helloworld_keras
-            if (MR_source_branch != '') {
-                job_models << "helloworld_keras"
-            }
+//            if (MR_source_branch != '') {
+//                job_models << "helloworld_keras"
+//            }
         }else if (job_framework == 'pytorch'){
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
@@ -492,9 +492,9 @@ def collectLog() {
             job_models = parseStrToList(tensorflow_models)
             job_models = job_models.plus(tf_oob_models)
             // Temporary change for helloworld_keras
-            if (MR_source_branch != '') {
-                job_models << "helloworld_keras"
-            }
+//            if (MR_source_branch != '') {
+//                job_models << "helloworld_keras"
+//            }
         }else if (job_framework == 'pytorch'){
             job_models = parseStrToList(pytorch_models)
         }else if (job_framework == 'mxnet'){
