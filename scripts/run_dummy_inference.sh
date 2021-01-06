@@ -27,6 +27,10 @@ for i in "$@"; do
   --conda_env_name=*)
     conda_env_name=$(echo $i | sed "s/${PATTERN}//")
     ;;
+  --os=*)
+    os=`echo $i | sed "s/${PATTERN}//"`;;
+  --cpu=*)
+    cpu=`echo $i | sed "s/${PATTERN}//"`;;
   *)
     echo "Parameter $i not recognized."
     exit 1
@@ -112,12 +116,12 @@ function run_benchmark {
 
   export OMP_NUM_THREADS=${ncores_per_instance}
   echo "RUN_CMD: ${run_cmd}"
-  logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
+  logFile=${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}
 
   for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
   do
     numactl -m 0 -C "$j-$((j + ncores_per_instance -1))" \
-    ${run_cmd} 2>&1|tee ${logFile}_${ncores_per_socket}_${ncores_per_instance}_${j}.log &
+    ${run_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
   done
 
   wait

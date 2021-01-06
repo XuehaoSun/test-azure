@@ -3,9 +3,9 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "11" ] ; then
+if [ $# != "13" ] ; then
     echo 'ERROR:'
-    echo "Expected 11 parameters got $#"
+    echo "Expected 13 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
@@ -18,6 +18,8 @@ if [ $# != "11" ] ; then
     --conda_env_name=<conda environment name>
     --yaml=<path to lpot yaml configuration>
     --profiling=<profiling or not for oob models>
+    --cpu=<CPU name>
+    --os=<OS name>
     '
     exit 1
 fi
@@ -47,6 +49,10 @@ do
             yaml=`echo $i | sed "s/${PATTERN}//"`;;
         --profiling=*)
             profiling=`echo $i | sed "s/${PATTERN}//"`;;
+        --os=*)
+            os=`echo $i | sed "s/${PATTERN}//"`;;
+        --cpu=*)
+            cpu=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -138,7 +144,7 @@ function run_accuracy {
         exit 1
   fi
 
-  logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}.log
+  logFile=${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log
   echo "RUNCMD: $run_cmd " >& ${logFile}
   eval "${run_cmd}" >> ${logFile}
 }
@@ -204,7 +210,7 @@ function run_benchmark {
   fi
 
   echo "BENCHMARK RUNCMD: $run_cmd "
-  logFile=${WORKSPACE}/${framework}_${model}_${precision}_${mode}
+  logFile=${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}
 
   if [ "${profiling}" == "true" ]; then
     # enable timeline for oob model
@@ -214,7 +220,7 @@ function run_benchmark {
   for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
   do
     numactl -m 0 -C "$j-$((j + ncores_per_instance -1))" \
-    ${run_cmd} 2>&1|tee ${logFile}_${ncores_per_socket}_${ncores_per_instance}_${j}.log &
+    ${run_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
   done
 
   wait

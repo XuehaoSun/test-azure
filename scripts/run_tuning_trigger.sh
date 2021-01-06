@@ -183,8 +183,8 @@ function collect_pb_size {
         int8_pb_size="0M"
     fi
 
-    echo "The input PB size is: ${fp32_pb_size}"
-    echo "The output PB size is: ${int8_pb_size}"
+    echo "The input model size is: ${fp32_pb_size}"
+    echo "The output model size is: ${int8_pb_size}"
 }
 
 function update_yaml_config {
