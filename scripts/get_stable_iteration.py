@@ -33,7 +33,7 @@ def main():
     parser.add_argument("--s-to-ms", action="store_true")
     args = parser.parse_args()
 
-    logs_pattern = os.path.join(args.logs_dir, f"{args.framework}_{args.model}_{args.datatype}_{args.mode}*")
+    logs_pattern = os.path.join(args.logs_dir, f"{args.framework}-{args.model}-{args.datatype}-{args.mode}*")
 
     files = glob.glob(logs_pattern)
     files.sort()
