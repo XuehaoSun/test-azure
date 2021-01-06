@@ -304,6 +304,14 @@
       "strategy": "basic",
       "batch_size": -1
     },
+    "transformer_lt": {
+      "model_src_dir": "nlp/transformer_lt",
+      "dataset_location": "/tf_dataset/tensorflow/transformer-lt-official-fp32-inference/transformer_lt_official_fp32_pretrained_model/data",
+      "input_model": "/tf_dataset/tensorflow/transformer-lt-official-fp32-inference/transformer_lt_official_fp32_pretrained_model/graph/fp32_graphdef.pb",
+      "yaml": "transformer_lt.yaml",
+      "strategy": "basic",
+      "batch_size": 64
+    },
     "bert": {
       "model_src_dir": "nlp/bert",
       "dataset_location": "/tf_dataset/tensorflow/bert/data",
