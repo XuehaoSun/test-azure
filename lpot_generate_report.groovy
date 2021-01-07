@@ -32,7 +32,6 @@ node(NODE_NAME) {
             tensorflow_version = fw_versions."tensorflow"
             mxnet_version = fw_versions."mxnet"
             pytorch_version = fw_versions."pytorch"
-            onnxruntime_version = fw_versions."onnxruntime"
         } catch (Exception e) {
             print("Could not load framework versions.")
         }
@@ -43,7 +42,6 @@ node(NODE_NAME) {
             "tensorflow_version=${tensorflow_version}",
             "mxnet_version=${mxnet_version}",
             "pytorch_version=${pytorch_version}",
-            "onnxruntime_version=${onnxruntime_version}"
         ]) {
             sh '''#!/bin/bash
                 set -xe
@@ -71,8 +69,7 @@ node(NODE_NAME) {
                     --summary-log=${WORKSPACE}/logs/summary.log \
                     --tensorflow-version=${tensorflow_version} \
                     --mxnet-version=${mxnet_version} \
-                    --pytorch-version=${pytorch_version} \
-                    --onnxruntime-version=${onnxruntime_version}
+                    --pytorch-version=${pytorch_version}
             '''
         }
     }

@@ -154,20 +154,6 @@ if(framework == 'pytorch'){
     }
 }
 
-cpu="unknown"
-if ('cpu' in params && params.cpu != ''){
-    cpu=params.cpu
-}
-echo "cpu: ${cpu}"
-
-os="unknown"
-if ('os' in params && params.os != ''){
-    os=params.os
-}
-echo "os: ${os}"
-
-
-
 def cleanup() {
 
     try {
@@ -306,11 +292,6 @@ def create_conda_env(){
 }
 
 node( sub_node_label ) {
-    // Get CPU name from env variable if not defined
-    if (['unknown','any', '*'].contains(cpu)) {
-        cpu = env.CPU_NAME
-        echo "Detected cpu: ${cpu}"
-    }
 
     cleanup()
     dir('lpot-validation') {
@@ -468,7 +449,7 @@ node( sub_node_label ) {
                     --max_trials=${max_trials} \
                     --algorithm=${algorithm} \
                     --conda_env_name=${framework}-${framework_version}-${python_version} \
-                    2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
+                    2>&1 | tee ${framework}-${model}-tune.log
             """
         }
 
@@ -510,8 +491,6 @@ node( sub_node_label ) {
                             --precision=${precision} \
                             --mode=${mode} \
                             --batch_size=${batch_size} \
-                            --os=${os} \
-                            --cpu=${cpu} \
                             --conda_env_name=${framework}-${framework_version}-${python_version}
                         """
                     }
@@ -556,8 +535,6 @@ node( sub_node_label ) {
                                     --batch_size=${batch_size} \
                                     --conda_env_name=${framework}-${framework_version}-${python_version}\
                                     --yaml=${yaml} \
-                                    --os=${os} \
-                                    --cpu=${cpu} \
                                     --profiling=${RUN_PROFILING}
                                 """
                             }
@@ -569,21 +546,15 @@ node( sub_node_label ) {
 
         stage("Check status"){
             dir("${WORKSPACE}"){
-                withEnv([
-                    "framework=${framework}",
-                    "model=${model}",
-                    "os=${os}",
-                    "cpu=${cpu}"]) {
-                    sh '''#!/bin/bash -x
-                        control_phrase="Found a quantized model which meet accuracy goal."
-                        if [ "${model}" == "helloworld_keras" ]; then
-                            control_phrase="Inference is done."
-                        fi
-                        if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | wc -l) == 0 ];then
-                            exit 1
-                        fi
-                    '''
-                }
+                sh '''#!/bin/bash -x
+                    control_phrase="Found a quantized model which meet accuracy goal."
+                    if [ "${model}" == "helloworld_keras" ]; then
+                        control_phrase="Inference is done."
+                    fi
+                    if [ $(grep "${control_phrase}" ${framework}-${model}-tune.log | wc -l) == 0 ];then
+                        exit 1
+                    fi
+                '''
             }
         }
 

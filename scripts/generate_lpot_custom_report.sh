@@ -51,7 +51,7 @@ function main {
 
 function generate_inference {
 
-    awk -v framework="${framework}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
+    awk -v framework="${framework}" -v model="${model}" -F ';' '
         BEGINE {
             fp32_ms_bs = "nan";
             fp32_ms_value = "nan";
@@ -73,48 +73,48 @@ function generate_inference {
             int8_acc_value = "nan";
             int8_acc_url = "nan";
         }{
-            if($1 == os && $2 == platform && $3 == framework && $5 == model) {
+            if($1 == framework && $4 == model) {
                 // FP32
-                if($4 == "FP32") {
+                if($3 == "FP32") {
                     // Latency
-                    if($7 == "Latency") {
-                        fp32_ms_bs = $8;
-                        fp32_ms_value = $9;
-                        fp32_ms_url = $10;
+                    if($6 == "Latency") {
+                        fp32_ms_bs = $7;
+                        fp32_ms_value = $8;
+                        fp32_ms_url = $9;
                     }
                     // Throughput
-                    if($7 == "Throughput") {
-                        fp32_fps_bs = $8;
-                        fp32_fps_value = $9;
-                        fp32_fps_url = $10;
+                    if($6 == "Throughput") {
+                        fp32_fps_bs = $7;
+                        fp32_fps_value = $8;
+                        fp32_fps_url = $9;
                     }
                     // Accuracy
-                    if($7 == "Accuracy") {
-                        fp32_acc_bs = $8;
-                        fp32_acc_value = $9;
-                        fp32_acc_url = $10;
+                    if($6 == "Accuracy") {
+                        fp32_acc_bs = $7;
+                        fp32_acc_value = $8;
+                        fp32_acc_url = $9;
                     }
                 }
                 
                 // INT8
-                if($4 == "INT8") {
+                if($3 == "INT8") {
                     // Latency
-                    if($7 == "Latency") {
-                        int8_ms_bs = $8;
-                        int8_ms_value = $9;
-                        int8_ms_url = $10;
+                    if($6 == "Latency") {
+                        int8_ms_bs = $7;
+                        int8_ms_value = $8;
+                        int8_ms_url = $9;
                     }
                     // Throughput
-                    if($7 == "Throughput") {
-                        int8_fps_bs = $8;
-                        int8_fps_value = $9;
-                        int8_fps_url = $10;
+                    if($6 == "Throughput") {
+                        int8_fps_bs = $7;
+                        int8_fps_value = $8;
+                        int8_fps_url = $9;
                     }
                     // Accuracy
-                    if($7 == "Accuracy") {
-                        int8_acc_bs = $8;
-                        int8_acc_value = $9;
-                        int8_acc_url = $10;
+                    if($6 == "Accuracy") {
+                        int8_acc_bs = $7;
+                        int8_acc_value = $8;
+                        int8_acc_url = $9;
                     }
                 }
             }
@@ -128,17 +128,17 @@ function generate_inference {
 
 function generate_html_core {
     
-    tuning_strategy=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
-    tuning_time=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
-    tuning_count=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $7}')
-    tuning_log=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $8}')
-    echo "<tr><td rowspan=3>${platform}</td><td rowspan=3>${os}</td><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
+    tuning_strategy=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $3}')
+    tuning_time=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
+    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
     echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
 
-    tuning_strategy=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
-    tuning_time=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
-    tuning_count=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $7}')
-    tuning_log=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
+    tuning_strategy=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $3}')
+    tuning_time=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $4}')
+    tuning_count=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
+    tuning_log=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
 
     echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
               -v pb_size="${pb_size}" -v last_pb_size="${last_pb_size}" \
@@ -316,29 +316,22 @@ function generate_html_core {
 }
 
 function generate_results {
-    oses=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
+
+    frameworks=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
     
-    for os in ${oses[@]}
+    for framework in ${frameworks[@]}
     do
-        platforms=$(sed '1d' ${summaryLog} |grep "^${os}" |cut -d';' -f2 | awk '!a[$0]++')
-        for platform in ${platforms[@]}
+        models=$(sed '1d' ${summaryLog} |grep "^${framework}" |cut -d';' -f4 | awk '!a[$0]++')
+        for model in ${models[@]}
         do
-            frameworks=$(sed '1d' ${summaryLog} |grep "^${os};${platform}" |cut -d';' -f3 | awk '!a[$0]++')
-            for framework in ${frameworks[@]}
-            do
-                models=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework}" |cut -d';' -f5 | awk '!a[$0]++')
-                for model in ${models[@]}
-                do
-                    current_values=$(generate_inference ${summaryLog})
-                    last_values=$(generate_inference ${summaryLogLast})
+            current_values=$(generate_inference ${summaryLog})
+            last_values=$(generate_inference ${summaryLogLast})
 
-                    # PB Size
-                    pb_size=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
-                    last_pb_size=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
+            # PB Size
+            pb_size=$(grep "^${framework};${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $7,$8,$9)}')
+            last_pb_size=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $7,$8,$9)}')
 
-                    generate_html_core
-                done
-            done
+            generate_html_core
         done
     done
 }
@@ -349,17 +342,15 @@ cat >> ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-        <h1 align="center">LPOT Results Comparison
+	    <h1 align="center">LPOT Results Comparison
         [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
 eof
 
 
 cat >> ${WORKSPACE}/report.html << eof
-        <h2>Comparison</h2>
-          <table class="features-table">
+	    <h2>Comparison</h2>
+		  <table class="features-table">
             <tr>
-                <th rowspan="2">Platform</th>
-                <th rowspan="2">System</th>
                 <th rowspan="2">Framework</th>
                 <th rowspan="2">Model</th>
                 <th rowspan="2">VS</th>
@@ -367,11 +358,11 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
                 <th rowspan="2">Models Size<br>FP32/INT8</th>
-                      <th colspan="6">INT8</th>
-                      <th colspan="6">FP32</th>
-                      <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
-                </tr>
-                <tr>
+			          <th colspan="6">INT8</th>
+			          <th colspan="6">FP32</th>
+			          <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
+		        </tr>
+		        <tr>
                 <th>bs</th>
                 <th>ms</th>
                 <th>bs</th>
@@ -387,19 +378,19 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th class="col-cell col-cell1">Latency<br><font size="2px">FP32/INT8>=1.5</font></th>
                 <th class="col-cell col-cell1">Throughput<br><font size="2px">INT8/FP32>=2</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
-                </tr>
+		        </tr>
 eof
 }
 
 function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
-            <tr>
-                <td colspan="18"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
-                <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
-            </tr>
-        </table>
-    </div>
+		    <tr>
+			    <td colspan="18"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+			    <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
+		    </tr>
+	    </table>
+	</div>
 </body>
 </html>
 eof
@@ -417,22 +408,22 @@ cat > ${WORKSPACE}/report.html << eof
     <style type="text/css">
         body
         {
-            margin: 0;
-            padding: 0;
-            background: white no-repeat left top;
+	        margin: 0;
+	        padding: 0;
+	        background: white no-repeat left top;
             min-width: 1920px;
         }
         #main
         {
-            // width: 100%;
-            margin: 20px auto 10px auto;
-            background: white;
-            -moz-border-radius: 8px;
-            -webkit-border-radius: 8px;
-            padding: 0 30px 30px 30px;
-            border: 1px solid #adaa9f;
-            -moz-box-shadow: 0 2px 2px #9c9c9c;
-            -webkit-box-shadow: 0 2px 2px #9c9c9c;
+	        // width: 100%;
+	        margin: 20px auto 10px auto;
+	        background: white;
+	        -moz-border-radius: 8px;
+	        -webkit-border-radius: 8px;
+	        padding: 0 30px 30px 30px;
+	        border: 1px solid #adaa9f;
+	        -moz-box-shadow: 0 2px 2px #9c9c9c;
+	        -webkit-box-shadow: 0 2px 2px #9c9c9c;
         }
         .features-table
         {

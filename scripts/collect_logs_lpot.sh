@@ -3,39 +3,32 @@ for var in "$@"
 do 
     case $var in
         --framework=*)
-            framework=$(echo $var |cut -f2 -d=);;
+            framework=$(echo $var |cut -f2 -d=)
+        ;;
         --model=*)
-            model=$(echo $var |cut -f2 -d=);;
+            model=$(echo $var |cut -f2 -d=)
+        ;;
         --precision=*)
-            precision=$(echo $var |cut -f2 -d=);;
+            precision=$(echo $var |cut -f2 -d=)
+        ;;
         --mode=*)
-            mode=$(echo $var |cut -f2 -d=);;
-        --cpu=*)
-            cpu=$(echo $var |cut -f2 -d=);;
-        --os=*)
-            os=$(echo $var |cut -f2 -d=);;
+            mode=$(echo $var |cut -f2 -d=)
+        ;;
         --mr=*)
-            mr=$(echo $var |cut -f2 -d=);;
+            mr=$(echo $var |cut -f2 -d=)
+        ;;
         *)
             echo "Error: No such parameter: ${var}"
-            exit 1;;
+            exit 1
+        ;;
     esac
 done
 
 echo "---- $framework, $model ----"
 
-unknown_platforms=("unknown" "*" "any")
-
-
-
+tuning_file="${framework}/${model}/${framework}-${model}-tune.log"
 
 if [ "${mode}" == "tuning" ]; then
-  if [[ " ${unknown_platforms[@]} " =~ " ${cpu} " ]]; then
-      cpu=$(ls ${framework}/${model}/${framework}-${model}-${os}-*-tune.log | tail -n 1 | cut -d '-' -f 4)
-  fi
-  echo "Platform: ${cpu}"
-
-  tuning_file="${framework}/${model}/${framework}-${model}-${os}-${cpu}-tune.log"
   # Temporary change for helloworld_keras
   if [ "${model}" == "helloworld_keras" ]; then
     if [ ! -f ${tuning_file} ]; then
@@ -52,38 +45,36 @@ if [ "${mode}" == "tuning" ]; then
     echo -e "Helloworld Keras,${status},${BUILD_URL}artifact/$tuning_file\n" | tee -a ${WORKSPACE}/summary_overview.log
     exit 0
   fi
-  strategy=$(grep 'Tuning strategy:' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | tr -d '\r\n')
+  strategy=$(grep 'Tuning strategy:' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}')
   tune_count=$(grep -F 'Tune result is: [' ${tuning_file} | wc -l)
-  tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}' | tr -d '\r\n' | sed 's/.$//g')
-  fp32_pb_size=$(grep 'The input model size is:' ${tuning_file} |sed 's/[^0-9]//g')
-  int8_pb_size=$(grep 'The output model size is:' ${tuning_file} |sed 's/[^0-9]//g')
+  tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}'| sed 's/.$//g')
+  fp32_pb_size=$(grep 'The input PB size is:' ${tuning_file} |sed 's/[^0-9]//g')
+  int8_pb_size=$(grep 'The output PB size is:' ${tuning_file} |sed 's/[^0-9]//g')
   total_mem_size=$(grep 'Total resident size' ${tuning_file} |sed 's/[^0-9]//g')
   max_mem_size=$(grep 'Maximum resident set size' ${tuning_file} |sed 's/[^0-9]//g')
-  mem_percentage="N/A"
-  if [ ! -z ${total_mem_size} ] && [ ! -z ${max_mem_size} ]; then
-    mem_percentage=$(echo |awk -v total=${total_mem_size} -v max=${max_mem_size} '{printf("%.0f%", max / total * 100)}')
-  fi
-  echo "${os};${cpu};${framework};${model};${strategy};${tune_time};${tune_count};${BUILD_URL}artifact/$tuning_file;${fp32_pb_size};${int8_pb_size};${mem_percentage}" | tee -a ${WORKSPACE}/tuning_info.log
+  mem_percentage=$(echo |awk -v total=${total_mem_size} -v max=${max_mem_size} '{printf("%.0f%", max / total * 100)}')
+  echo "${framework};${model};${strategy};${tune_time};${tune_count};${BUILD_URL}artifact/$tuning_file;${fp32_pb_size};${int8_pb_size};${mem_percentage}" | tee -a ${WORKSPACE}/tuning_info.log
 
   if [ "${mr}" != "" ]; then
     # Read result from tuning log
-    accuracy=$(grep -F 'Best tune result is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}' | tr -d '\r\n')
-    echo "${os};${cpu};${framework};INT8;${model};Inference;Accuracy;;${accuracy};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
-    accuracy_fp32=$(grep -F 'FP32 baseline is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}' | tr -d '\r\n')
-    echo "${os};${cpu};${framework};FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
+    accuracy=$(grep -F 'Best tune result is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
+    echo "${framework};CLX8280;INT8;${model};Inference;Accuracy;;${accuracy};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
+    accuracy_fp32=$(grep -F 'FP32 baseline is: [' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | sed 's/[][]//g' | awk -F ', ' '{print $1}')
+    echo "${framework};CLX8280;FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
       
     # Read latency result
     if [ "${framework}" != 'pytorch' ]; then
+
       benchmark_mode="latency"
-      log_file="${framework}/${model}/${framework}-${model}-int8-${benchmark_mode}-${os}-${cpu}"
+      log_file="${framework}/${model}/${framework}_${model}_int8_${benchmark_mode}"
       bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
       latency=$(python ${WORKSPACE}/lpot-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "int8" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
-      echo "${os};${cpu};${framework};INT8;${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+      echo "${framework};CLX8280;INT8;${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
 
-      log_file="${framework}/${model}/${framework}-${model}-fp32-${benchmark_mode}-${os}-${cpu}"
+      log_file="${framework}/${model}/${framework}_${model}_fp32_${benchmark_mode}"
       bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
       latency_fp32=$(python ${WORKSPACE}/lpot-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "fp32" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
-      echo "${os};${cpu};${framework};FP32;${model};Inference;Latency;${bs};${latency_fp32};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+      echo "${framework};CLX8280;FP32;${model};Inference;Latency;${bs};${latency_fp32};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
       # for test
       yum -y install bc
       if [ $(echo "$latency > $latency_fp32"|bc) -eq 1 ];then
@@ -101,35 +92,29 @@ else
   PRECISION='INT8'
 fi
 
-if [[ " ${unknown_platforms[@]} " =~ " ${cpu} " ]]; then
-    cpu=$(ls ${framework}/${model}/${framework}-${model}-${precision}-${mode}-${os}-* | tail -n 1 | cut -d '-' -f 6 | cut -d '.' -f 1 )
-fi
-echo "Platform: ${cpu}"
-
-log_file="${framework}/${model}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}"
+log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}"
 
 if [ "${mode}" == "throughput" ]; then
-  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| head -1 |sed 's/[^0-9]//g' | tr -d '\r\n')
+  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| head -1 |sed 's/[^0-9]//g')
   throughput=$(grep "Throughput: " ${log_file}*  | sed -e s";.*: ;;" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
-  echo "${os};${cpu};${framework};${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+  echo "${framework};CLX8280;${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
 fi
 
 if [ "${mode}" == "latency" ]; then
-    bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| head -1 | sed 's/[^0-9]//g' | tr -d '\r\n')
-    latency=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
-    echo "${os};${cpu};${framework};${PRECISION};${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| head -1 | sed 's/[^0-9]//g')
+  latency=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
+  echo "${framework};CLX8280;${PRECISION};${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
 fi
 
 if [ "${mode}" == "accuracy" ]; then
-  log_file="${framework}/${model}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log"
-  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}' | head -1 | sed 's/[^0-9]//g' | tr -d '\r\n')
-  echo ${bs}
+  log_file="${framework}/${model}/${framework}_${model}_${precision}_${mode}.log"
+  bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| head -1 |sed 's/[^0-9]//g')
   if [ "${bs}" == "" ]; then
     bs=$(for param in $(grep 'batch_size=' ${log_file}); do if [[ ${param} =~ "batch_size" ]]; then echo ${param} | cut -f 2 -d =; break; fi ; done)
   fi
-  accuracy=$(grep 'Accuracy: ' ${log_file} | awk -F ' ' '{print $2}' | tr -d '\r\n')
+  accuracy=$(grep 'Accuracy: ' ${log_file} | awk -F ' ' '{print $2}')
   if [ "${accuracy}" == "" ]; then
-    accuracy=$(grep 'Accuracy is' ${log_file} | awk -F ' ' '{print $3}' | tr -d '\r\n')
+    accuracy=$(grep 'Accuracy is' ${log_file} | awk -F ' ' '{print $3}')
   fi
-  echo "${os};${cpu};${framework};${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/${log_file}" | tee -a ${WORKSPACE}/summary.log
+  echo "$framework;CLX8280;${PRECISION};$model;Inference;Accuracy;${bs};${accuracy};${BUILD_URL}artifact/${log_file}" | tee -a ${WORKSPACE}/summary.log
 fi

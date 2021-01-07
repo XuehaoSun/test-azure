@@ -68,8 +68,6 @@ class ResultCollector(JsonSerializer):
 
     def parse_perf_result(self, raw_data):
         result = Result()
-        result.os = raw_data.get("os")
-        result.platform = raw_data.get("platform")
         result.framework = raw_data.get("framework")
         result.version = self.additional_data.get(f"{result.framework}_version", "")
         result.platform = raw_data.get("platform")
@@ -86,28 +84,25 @@ class ResultCollector(JsonSerializer):
         """Parse tuning entry."""
         data = line.strip().split(";")
         result = Result()
-        result.os = data[0]
-        result.platform = data[1]
-
-        result.framework = data[2]
+        result.framework = data[0]
         result.version = self.additional_data.get(f"{result.framework}_version", "")
-        result.model = data[3]
+        result.model = data[1]
 
-        strategy = data[4]
+        strategy = data[2]
         try:
-            time = int(data[5])
+            time = int(data[3])
         except:
             time = ""
         
         try:
-            trials = int(data[6])
+            trials = int(data[4])
         except:
             trials = ""
 
-        url = data[7]
+        url = data[5]
 
         try:
-            model_size_ratio = float(data[8]) / int(data[9])
+            model_size_ratio = float(data[6]) / int(data[7])
         except:
             model_size_ratio = "NaN"
         return result, strategy, time, trials, model_size_ratio, url

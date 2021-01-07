@@ -56,9 +56,9 @@ class Result(JsonSerializer):
     def platform(self, value: str) -> None:
         """Set platform name."""
         self._platform = value
-        if all(getattr(self, attr) for attr in ["_os", "_platform", "_framework", "_model", "_version"]):
+        if all(getattr(self, attr) for attr in ["_framework", "_model"]):
             self._config_hash = hashlib.sha256(
-                "_".join([self.os, self.platform, self._framework, self._model, self._version]).encode('utf-8')
+                "_".join([self._framework, self._model]).encode('utf-8')
                 ).hexdigest()
 
     @property
@@ -70,10 +70,6 @@ class Result(JsonSerializer):
     def os(self, value: str) -> None:
         """Set OS name."""
         self._os = value
-        if all(getattr(self, attr) for attr in ["_os", "_platform", "_framework", "_model", "_version"]):
-            self._config_hash = hashlib.sha256(
-                "_".join([self.os, self.platform, self._framework, self._model, self._version]).encode('utf-8')
-                ).hexdigest()
 
     @property
     def python(self) -> Optional[str]:
@@ -94,9 +90,9 @@ class Result(JsonSerializer):
     def framework(self, value: str) -> None:
         """Set framework name."""
         self._framework = value.lower()
-        if all(getattr(self, attr) for attr in ["_os", "_platform", "_framework", "_model", "_version"]):
+        if all(getattr(self, attr) for attr in ["_framework", "_model", "_version"]):
             self._config_hash = hashlib.sha256(
-                "_".join([self.os, self.platform, self._framework, self._model, self._version]).encode('utf-8')
+                "_".join([self._framework, self._model, self._version]).encode('utf-8')
                 ).hexdigest()
 
     @property
@@ -108,9 +104,9 @@ class Result(JsonSerializer):
     def version(self, value: str) -> None:
         """Set framework version."""
         self._version = value.lower()
-        if all(getattr(self, attr) for attr in ["_os", "_platform", "_framework", "_model", "_version"]):
+        if all(getattr(self, attr) for attr in ["_framework", "_model", "_version"]):
             self._config_hash = hashlib.sha256(
-                "_".join([self.os, self.platform, self._framework, self._model, self._version]).encode('utf-8')
+                "_".join([self._framework, self._model, self._version]).encode('utf-8')
                 ).hexdigest()
     
     @property
@@ -122,9 +118,9 @@ class Result(JsonSerializer):
     def model(self, value: str) -> None:
         """Set result model."""
         self._model = value.lower()
-        if all(getattr(self, attr) for attr in ["_os", "_platform", "_framework", "_model", "_version"]):
+        if all(getattr(self, attr) for attr in ["_framework", "_model", "_version"]):
             self._config_hash = hashlib.sha256(
-                "_".join([self.os, self.platform, self._framework, self._model, self._version]).encode('utf-8')
+                "_".join([self._framework, self._model, self._version]).encode('utf-8')
                 ).hexdigest()
 
     @property

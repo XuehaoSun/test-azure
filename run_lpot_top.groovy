@@ -8,8 +8,6 @@ def jsonParse(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
 }
 credential = 'lab_tfbot'
-windows_job = "intel-lpot-validation-windows"
-linux_job = "intel-lpot-validation"
 
 // setting test_title
 test_title = "LPOT Tests"
@@ -32,7 +30,7 @@ if ('node_label' in params && params.sub_node_label != '') {
 }
 echo "Running on node ${node_label}"
 
-// chose test frameworks tensorflow,mxnet,pytorch,onnxrt
+// chose test frameworks tensorflow,mxnet,pytorch
 Frameworks = ""
 if ('Frameworks' in params && params.Frameworks != '') {
     Frameworks = params.Frameworks
@@ -146,49 +144,6 @@ if ('ABORT_PREVIOUS_MR' in params && params.ABORT_PREVIOUS_MR){
     echo "ABORT_PREVIOUS_MR is true"
     ABORT_PREVIOUS_MR=params.ABORT_PREVIOUS_MR
 }
-
-// Platforms specification pattern: "os1:cpu_name1,cpuname_2;os2:cpu_name1,cpuname_3"
-PLATFORMS = "linux:*"
-if ('PLATFORMS' in params && params.PLATFORMS != ''){
-    PLATFORMS = params.PLATFORMS
-}
-echo "PLATFORMS: ${PLATFORMS}"
-
-// parameters to support windows measurement
-// chose windows test frameworks tensorflow,mxnet,pytorch,onnxrt
-Frameworks_windows = "onnxrt"
-if ('Frameworks_windows' in params && params.Frameworks_windows != '') {
-    Frameworks_windows = params.Frameworks_windows
-}
-echo "Frameworks_windows: ${Frameworks_windows}"
-
-// setting tensorflow_models_windows
-tensorflow_models_windows = ""
-if ('tensorflow_models_windows' in params && params.tensorflow_models_windows != '') {
-    tensorflow_models_windows = params.tensorflow_models_windows
-}
-echo "tensorflow_models_windows: ${tensorflow_models_windows}"
-
-// setting mxnet_models_windows
-mxnet_models_windows = ""
-if ('mxnet_models_windows' in params && params.mxnet_models_windows != '') {
-    mxnet_models_windows = params.mxnet_models_windows
-}
-echo "mxnet_models_windows: ${mxnet_models_windows}"
-
-// setting pytorch_models_windows
-pytorch_models_windows = ""
-if ('pytorch_models_windows' in params && params.pytorch_models_windows != '') {
-    pytorch_models_windows = params.pytorch_models_windows
-}
-echo "pytorch_models_windows: ${pytorch_models_windows}"
-
-// setting onnxrt_models_windows
-onnxrt_models_windows = ""
-if ('onnxrt_models_windows' in params && params.onnxrt_models_windows != '') {
-    onnxrt_models_windows = params.onnxrt_models_windows
-}
-echo "onnxrt_models_windows: ${onnxrt_models_windows}"
 
 lpot_branch = ''
 MR_source_branch = ''
@@ -352,7 +307,7 @@ def download() {
     }
 }
 
-def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
+def BuildParams(job_framework, job_model, python_version, strategy){
 
     framework_version = ''
     if (job_framework == 'tensorflow'){
@@ -364,22 +319,14 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     }else if (job_framework == 'onnxrt'){
         framework_version = "${onnxruntime_version}"
     }
-    println("llsu-----> ${cpu} : ${os} : ${job_framework} : ${framework_version}")
+    println("llsu-----> ${job_framework} : ${framework_version}")
 
     pass_mode=mode
     println("llsu-----> ${pass_mode}")
 
-
-    def subnode_label = sub_node_label + " && " + os;
-
-    if (!['any', '*'].contains(cpu)) {
-        subnode_label += " && " + cpu
-    }
-
-
     List ParamsPerJob = []
 
-    ParamsPerJob += string(name: "sub_node_label", value: "${subnode_label}")
+    ParamsPerJob += string(name: "sub_node_label", value: "${sub_node_label}")
     ParamsPerJob += string(name: "framework", value: "${job_framework}")
     ParamsPerJob += string(name: "framework_version", value: "${framework_version}")
     ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
@@ -398,106 +345,80 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
     ParamsPerJob += booleanParam(name: "RUN_PROFILING", value: RUN_PROFILING)
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
-    ParamsPerJob += string(name: "cpu", value: "${cpu}")
-    ParamsPerJob += string(name: "os", value: "${os}")
 
     return ParamsPerJob
 }
 
 def getPerfJobs() {
+
     def jobs = [:]
-    PLATFORMS.split(";").each { systemConfig ->
-        def system = systemConfig.split(":")[0]
-        platforms = systemConfig.split(":")[1].split(",")
-        platforms.each { platform ->
-            def cpu = platform
-            // Get frameworks list and sub jenkins job
-            job_frameworks = Frameworks.split(',')
-            def sub_jenkins_job = linux_job
-            if (system == "windows") {
-                job_frameworks = Frameworks_windows.split(',')
-                sub_jenkins_job = windows_job
-            }
-            job_frameworks.each { job_framework ->
-                // Get models list
-                def job_models = []
-                if (job_framework == 'tensorflow'){
-                    //job_models=eval("${job_framework}_models")
-                    tf_oob_models = parseStrToList(tensorflow_oob_models)
-                    job_models = parseStrToList(tensorflow_models)
-                    if (system == "windows") {
-                        tf_oob_models = parseStrToList(tensorflow_oob_models_windows)
-                        job_models = parseStrToList(tensorflow_models_windows)
-                    }
-                    job_models = job_models.plus(tf_oob_models)
-                    // Temporary change for helloworld_keras
-                    //if (MR_source_branch != '') {
-                    //    job_models << "helloworld_keras"
-                    //}
 
-                }else if (job_framework == 'pytorch'){
-                    job_models = parseStrToList(pytorch_models)
-                    if (system == "windows") {
-                        job_models = parseStrToList(pytorch_models_windows)
-                    }
-                }else if (job_framework == 'mxnet'){
-                    job_models = parseStrToList(mxnet_models)
-                    if (system == "windows") {
-                        job_models = parseStrToList(mxnet_models_windows)
-                    }
-                }else if (job_framework == 'onnxrt'){
-                    job_models = parseStrToList(onnxrt_models)
-                    if (system == "windows") {
-                        job_models = parseStrToList(onnxrt_models_windows)
-                    }
+    job_frameworks = Frameworks.split(',')
+
+    job_frameworks.each { job_framework ->
+        def job_models = []
+        if (job_framework == 'tensorflow'){
+            //job_models=eval("${job_framework}_models")
+            tf_oob_models = parseStrToList(tensorflow_oob_models)
+            job_models = parseStrToList(tensorflow_models)
+            job_models = job_models.plus(tf_oob_models)
+            // Temporary change for helloworld_keras
+//            if (MR_source_branch != '') {
+//                job_models << "helloworld_keras"
+//            }
+        }else if (job_framework == 'pytorch'){
+            job_models = parseStrToList(pytorch_models)
+        }else if (job_framework == 'mxnet'){
+            job_models = parseStrToList(mxnet_models)
+        }else if (job_framework == 'onnxrt'){
+            job_models = parseStrToList(onnxrt_models)
+        }
+        if (MR_source_branch != ''){
+            add_models_list = collectModelList(job_framework)
+            job_models = job_models.plus(add_models_list)
+            job_models.unique()
+        }
+        echo "${job_models}"
+        echo "llsu-----> ${job_framework}"
+        job_models.each { job_model ->
+            jobs["${job_framework}_${job_model}"] = {
+            
+                // execute build
+                echo "${job_model}, ${job_framework}"
+
+                downstreamJob = build job: "intel-lpot-validation", propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy)
+
+                catchError {
+                    copyArtifacts(
+                            projectName: "intel-lpot-validation",
+                            selector: specific("${downstreamJob.getNumber()}"),
+                            filter: '*.log',
+                            fingerprintArtifacts: true,
+                            target: "${job_framework}/${job_model}",
+                            optional: true)
+
+                    // Archive in Jenkins
+                    archiveArtifacts artifacts: "${job_framework}/${job_model}/**", allowEmptyArchive: true
                 }
-                if (MR_source_branch != '' && system == "linux"){
-                    add_models_list = collectModelList(job_framework)
-                    job_models = job_models.plus(add_models_list)
-                    job_models.unique()
-                }
-                echo "${job_models}"
-                echo "llsu-----> ${job_framework}"
-                job_models.each { job_model ->
-                    jobs["${cpu}_${system}_${job_framework}_${job_model}"] = {
 
-                        // execute build
-                        println("${cpu}, ${system}, ${job_framework}, ${job_model}")
+                downstreamJobStatus = downstreamJob.result
+                def failed_build_result = downstreamJob.result
+                def failed_build_url = downstreamJob.absoluteUrl
 
-                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy, cpu, system)
-
-                        catchError {
-                            copyArtifacts(
-                                    projectName: sub_jenkins_job,
-                                    selector: specific("${downstreamJob.getNumber()}"),
-                                    filter: '*.log, tuning_config.yaml',
-                                    fingerprintArtifacts: true,
-                                    target: "${job_framework}/${job_model}",
-                                    optional: true)
-
-                            // Archive in Jenkins
-                            archiveArtifacts artifacts: "${job_framework}/${job_model}/**", allowEmptyArchive: true
+                if (failed_build_result != 'SUCCESS') {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+                        if (test_mode != 'nightly'){
+                            currentBuild.result = "FAILURE"
                         }
-
-                        downstreamJobStatus = downstreamJob.result
-                        def failed_build_result = downstreamJob.result
-                        def failed_build_url = downstreamJob.absoluteUrl
-
-                        if (failed_build_result != 'SUCCESS') {
-                            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-                                if (test_mode != 'nightly'){
-                                    currentBuild.result = "FAILURE"
-                                }
-                                sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
-                                failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
-                                error("---- ${cpu}_${system}_${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
-                            }
-                        }
+                        sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                        failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
+                        error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                     }
                 }
             }
         }
     }
+    
     if (MR_source_branch != ''|| pipeline_failFast) {
         echo "enable failFast"
         jobs.failFast = true
@@ -562,120 +483,73 @@ def collectLog() {
     }
     echo "Global mode list: ${mode_list}"
 
-    PLATFORMS.split(";").each { systemConfig ->
-        def system = systemConfig.split(":")[0]
-        platforms = systemConfig.split(":")[1].split(",")
-        platforms.each { platform ->
-            def cpu = platform
-            // Get frameworks list
-            job_frameworks = Frameworks.split(',')
-            if (system == "windows") {
-                job_frameworks = Frameworks_windows.split(',')
+
+    job_frameworks = Frameworks.split(',')
+    job_frameworks.each { job_framework ->
+        job_models = []
+        if (job_framework == 'tensorflow'){
+            tf_oob_models = parseStrToList(tensorflow_oob_models)
+            job_models = parseStrToList(tensorflow_models)
+            job_models = job_models.plus(tf_oob_models)
+            // Temporary change for helloworld_keras
+//            if (MR_source_branch != '') {
+//                job_models << "helloworld_keras"
+//            }
+        }else if (job_framework == 'pytorch'){
+            job_models = parseStrToList(pytorch_models)
+        }else if (job_framework == 'mxnet'){
+            job_models = parseStrToList(mxnet_models)
+        }else if (job_framework == 'onnxrt'){
+            job_models = parseStrToList(onnxrt_models)
+        }
+
+        if (MR_source_branch != ''){
+            add_models_list = collectModelList(job_framework)
+            job_models = job_models.plus(add_models_list)
+            job_models.unique()
+        }
+
+        job_models.each { job_model ->
+            echo "-------- ${job_framework} - ${job_model} --------"
+
+            tf_oob_models = parseStrToList(tensorflow_oob_models)
+            // reset mode_list for each model
+            if ( MR_source_branch != '' ) {
+                mode_list = ["latency"]
+            } else {
+                mode_list = parseStrToList(mode)
             }
 
-            job_frameworks.each { job_framework ->
-                job_models = []
-                if (job_framework == 'tensorflow'){
-                    tf_oob_models = parseStrToList(tensorflow_oob_models)
-                    job_models = parseStrToList(tensorflow_models)
-                    if (system == "windows") {
-                        tf_oob_models = parseStrToList(tensorflow_oob_models_windows)
-                        job_models = parseStrToList(tensorflow_models_windows)
-                    }
-                    job_models = job_models.plus(tf_oob_models)
-                    // Temporary change for helloworld_keras
-                    //if (MR_source_branch != '') {
-                    //    job_models << "helloworld_keras"
-                    //}
-                }else if (job_framework == 'pytorch'){
-                    job_models = parseStrToList(pytorch_models)
-                     if (system == "windows") {
-                        job_models = parseStrToList(pytorch_models_windows)
-                    }
-                }else if (job_framework == 'mxnet'){
-                    job_models = parseStrToList(mxnet_models)
-                    if (system == "windows") {
-                        job_models = parseStrToList(mxnet_models_windows)
-                    }
-                }else if (job_framework == 'onnxrt'){
-                    job_models = parseStrToList(onnxrt_models)
-                    if (system == "windows") {
-                        job_models = parseStrToList(onnxrt_models_windows)
-                    }
-                }
+            if ( job_model in tf_oob_models || job_model == 'style_transfer') {
+                echo "Found OOB model or \"style_transfer\" model. Setting \"latency\" mode."
+                mode_list = ["latency"]
+            }
+            println("mode_list---->" + mode_list)
+            // Generate tuning info log
+            withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
+                sh '''#!/bin/bash -x
+                    cd $WORKSPACE
+                    chmod 775 lpot-validation/scripts/collect_logs_lpot.sh
+                    lpot-validation/scripts/collect_logs_lpot.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
+                '''
+            }
+            // helloworld keras with specific log collection in tuning mode
+            if (job_model == "helloworld_keras") {
+                return
+            }
 
-                if (MR_source_branch != ''){
-                    add_models_list = collectModelList(job_framework)
-                    job_models = job_models.plus(add_models_list)
-                    job_models.unique()
-                }
-
-                job_models.each { job_model ->
-                    echo "-------- ${cpu} - ${system} - ${job_framework} - ${job_model} --------"
-
-                    tf_oob_models = parseStrToList(tensorflow_oob_models)
-                    // reset mode_list for each model
-                    if ( MR_source_branch != '' ) {
-                        mode_list = ["latency"]
-                    } else {
-                        mode_list = parseStrToList(mode)
-                    }
-
-                    if ( job_model in tf_oob_models || job_model == 'style_transfer') {
-                        echo "Found OOB model or \"style_transfer\" model. Setting \"latency\" mode."
-                        mode_list = ["latency"]
-                    }
-                    println("mode_list---->" + mode_list)
-                    // Generate tuning info log
-                    withEnv([
-                        "current_model=$job_model",
-                        "current_framework=$job_framework",
-                        "MR=$MR_source_branch",
-                        "cpu=${cpu}",
-                        "os=${system}"]) {
+            if (MR_source_branch != '' && dummy_inference_models.contains(job_model)) {
+                return
+            }
+            precision_list.each { precision ->
+                mode_list.each { mode ->
+                    echo "Getting results for ${job_framework} - ${job_model} - ${precision} - ${mode}"
+                    withEnv(["current_model=$job_model", "current_framework=$job_framework", "precision=$precision", "mode=$mode"]) {
                         sh '''#!/bin/bash -x
                             cd $WORKSPACE
                             chmod 775 lpot-validation/scripts/collect_logs_lpot.sh
-                            lpot-validation/scripts/collect_logs_lpot.sh \
-                                --model=${current_model} \
-                                --framework=${current_framework} \
-                                --mode=tuning \
-                                --cpu=${cpu} \
-                                --os=${os} \
-                                --mr=${MR}
+                            lpot-validation/scripts/collect_logs_lpot.sh --model=${current_model} --framework=${current_framework} --precision=${precision} --mode=${mode}              
                         '''
-                    }
-                    // helloworld keras with specific log collection in tuning mode
-                    if (job_model == "helloworld_keras") {
-                        return
-                    }
-
-                    if (MR_source_branch != '' && dummy_inference_models.contains(job_model)) {
-                        return
-                    }
-                    precision_list.each { precision ->
-                        mode_list.each { mode ->
-                            echo "Getting results for ${job_framework} - ${job_model} - ${precision} - ${mode}"
-                            withEnv([
-                                "current_model=$job_model",
-                                "current_framework=$job_framework",
-                                "precision=$precision",
-                                "mode=$mode",
-                                "cpu=${cpu}",
-                                "os=${system}"]) {
-                                sh '''#!/bin/bash -x
-                                    cd $WORKSPACE
-                                    chmod 775 lpot-validation/scripts/collect_logs_lpot.sh
-                                    lpot-validation/scripts/collect_logs_lpot.sh \
-                                        --model=${current_model} \
-                                        --framework=${current_framework} \
-                                        --precision=${precision} \
-                                        --mode=${mode} \
-                                        --cpu=${cpu} \
-                                        --os=${os}
-                                '''
-                            }
-                        }
                     }
                 }
             }
@@ -848,39 +722,20 @@ def generateExcelReport() {
         "tuneLog=${TUNETXT}",
     ]) {
         sh '''#!/bin/bash
-            set -x
+            set -xe
 
             if [ ! -d "${WORKSPACE}/.lpot-report-generator" ]; then
                 python3 -m venv ${WORKSPACE}/.lpot-report-generator
             fi
-
             source ${WORKSPACE}/.lpot-report-generator/bin/activate
 
-            set +e
-            python -m pip install --index-url https://pypi.douban.com/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
-            exit_code=$?
-            set -e
-
-            if [ $exit_code -ne 0 ]; then
-                for requirement in `cat ./lpot-validation/scripts/report_generator/requirements.txt`
-                do
-                    requirement_whl=$(find ${HOME}/whls  -iname "${requirement}*.whl")
-                    if [ ! -z ${requirement_whl} ]; then
-                        python -m pip install ${requirement_whl}
-                    else
-                        echo "Could not found whl file for ${requirement}"
-                        exit 1
-                    fi
-                done
-            fi
-
+            python -m pip install --default-timeout=1000 --index-url https://pypi.douban.com/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
             python ./lpot-validation/scripts/report_generator/generate_excel_report.py \
                 --tuning-log="${tuneLog}" \
                 --summary-log="${summaryLog}" \
                 --tensorflow-version="${tensorflow_version}" \
                 --mxnet-version="${mxnet_version}" \
-                --pytorch-version="${pytorch_version}" \
-                --onnxruntime-version="${onnxruntime_version}"
+                --pytorch-version="${pytorch_version}"
         '''
     }
 }
@@ -1005,11 +860,11 @@ node( node_label ) {
         // Setup logs path
         echo "WORKSPACE IS ${WORKSPACE}"
         SUMMARYTXT = "${WORKSPACE}/summary.log"
-        writeFile file: SUMMARYTXT, text: "OS;Platform;Framework;Precision;Model;Mode;Type;BS;Value;Url\n"
+        writeFile file: SUMMARYTXT, text: "Framework;Platform;Precision;Model;Mode;Type;BS;Value;Url\n"
         summaryLogLast = "${WORKSPACE}/reference/summary.log"
 
         TUNETXT = "${WORKSPACE}/tuning_info.log"
-        writeFile file: TUNETXT, text: "OS;Platform;Framework;Model;Strategy;Tune_time\n"
+        writeFile file: TUNETXT, text: "Framework;Model;Strategy;Tune_time\n"
         tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
 
         coverage_summary = "${WORKSPACE}/unittest/coverage_summary.log"
@@ -1023,8 +878,7 @@ node( node_label ) {
         def fw_versions = [
             "tensorflow": tensorflow_version,
             "pytorch": pytorch_version,
-            "mxnet": mxnet_version,
-            "onnxruntime": onnxruntime_version,
+            "mxnet": mxnet_version
         ]
 
         writeJSON file: "fw_versions.json", json: fw_versions, pretty: 4
