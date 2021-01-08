@@ -119,6 +119,17 @@ if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
 }
 println("onnxruntime_version: " + onnxruntime_version)
 
+RUN_COVERAGE=false
+if (params.RUN_COVERAGE != null){
+    RUN_COVERAGE=params.RUN_COVERAGE
+}
+echo "RUN_COVERAGE = ${RUN_COVERAGE}"
+
+UT_STRESS_TEST=true
+if (params.UT_STRESS_TEST != null){
+    UT_STRESS_TEST=params.UT_STRESS_TEST
+}
+echo "UT_STRESS_TEST = ${UT_STRESS_TEST}"
 
 def cleanup() {
 
@@ -281,7 +292,7 @@ def binary_install() {
             n=0
             until [ "$n" -ge 5 ]
             do
-                python -m pip install -r requirements.txt && break
+                python -m pip install -r requirements.txt && pip install coverage && break
                 n=$((n+1))
                 sleep 5
             done
@@ -347,8 +358,9 @@ node(node_label){
                 run_ut_context = readFile file: run_ut_scripts
                 writeFile file: run_ut_scripts, text: run_ut_context + "python " + ut_case + "\n"
             }
-            withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}"]){
-                sh'''#!/bin/bash
+            if (UT_STRESS_TEST){
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}"]){
+                    sh'''#!/bin/bash
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
                     cd ${WORKSPACE}/lpot-models/test
@@ -364,6 +376,26 @@ node(node_label){
                       fi
                     done
                 '''
+                }
+            }
+
+            if (RUN_COVERAGE){
+                withEnv(["run_ut_scripts=${run_ut_scripts}"]){
+                    sh'''#!/bin/bash
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        source activate ${conda_env}
+                        export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
+                        cd ${WORKSPACE}/lpot-models/test
+                        lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                        sed -i 's,python ,coverage run --source='"${lpot_path}"' --append ,g' ${run_ut_scripts}
+                        cat ${run_ut_scripts}
+                        coverage erase
+                        bash ${run_ut_scripts}
+                        coverage report -m
+                        coverage html -d ${WORKSPACE}/coverage_results/htmlcov
+                        coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml
+                    '''
+                }
             }
         }
 
@@ -374,7 +406,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log', excludes: null
+            archiveArtifacts artifacts: '*.log, coverage_status.txt, **/coverage_results/**/*', excludes: null
             fingerprint: true
         }
     }
