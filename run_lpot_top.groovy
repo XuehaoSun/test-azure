@@ -928,7 +928,9 @@ node( node_label ) {
     } finally {
         stage("Collect Logs") {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                collectLog()
+                if (Frameworks != ''){
+                    collectLog()
+                }
             }
         }
 
