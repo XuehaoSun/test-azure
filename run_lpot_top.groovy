@@ -905,10 +905,11 @@ node( node_label ) {
                 codeScan("bandit")
             }
         }
-        
-        def perf_jobs = getPerfJobs()
-        job_list = job_list + perf_jobs
 
+        if ( Frameworks != ''){
+            def perf_jobs = getPerfJobs()
+            job_list = job_list + perf_jobs
+        }
         if (MR_source_branch != ''|| pipeline_failFast) {
             echo "enable failFast"
             job_list.failFast = true
