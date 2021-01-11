@@ -17,6 +17,9 @@ do
         --mr=*)
             mr=$(echo $var |cut -f2 -d=)
         ;;
+        --perf_steps=*)
+            mr=$(echo $var |cut -f2 -d=)
+        ;;
         *)
             echo "Error: No such parameter: ${var}"
             exit 1
@@ -63,7 +66,7 @@ if [ "${mode}" == "tuning" ]; then
     echo "${framework};CLX8280;FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
       
     # Read latency result
-    if [ "${framework}" != 'pytorch' ]; then
+    if [ "${perf_steps}" != "" ]; then
 
       benchmark_mode="latency"
       log_file="${framework}/${model}/${framework}_${model}_int8_${benchmark_mode}"
@@ -80,6 +83,7 @@ if [ "${mode}" == "tuning" ]; then
       if [ $(echo "$latency > $latency_fp32"|bc) -eq 1 ];then
         echo "int8/fp32 performance regression" > ${WORKSPACE}/perf_regression.log
       fi
+
     fi
   fi
   exit 0

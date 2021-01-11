@@ -466,7 +466,7 @@ def collectLog() {
     echo "------------  running collectLog  -------------"
     echo "---------------------------------------------------------"
 
-    def dummy_inference_models = [
+    def steps_print_models = [
         "resnet50v1.5",
         "resnet50v1",
         "inception_v1",
@@ -525,12 +525,16 @@ def collectLog() {
                 mode_list = ["latency"]
             }
             println("mode_list---->" + mode_list)
+            def perf_steps=''
+            if (MR_source_branch != '' && steps_print_models.contains(job_model)){
+                perf_steps=true
+            }
             // Generate tuning info log
-            withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch"]) {
+            withEnv(["current_model=$job_model","current_framework=$job_framework","MR=$MR_source_branch","perf_steps=$perf_steps"]) {
                 sh '''#!/bin/bash -x
                     cd $WORKSPACE
                     chmod 775 lpot-validation/scripts/collect_logs_lpot.sh
-                    lpot-validation/scripts/collect_logs_lpot.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR}             
+                    lpot-validation/scripts/collect_logs_lpot.sh --model=${current_model} --framework=${current_framework} --mode=tuning --mr=${MR} --perf_steps=$perf_steps             
                 '''
             }
             // helloworld keras with specific log collection in tuning mode
@@ -538,7 +542,7 @@ def collectLog() {
                 return
             }
 
-            if (MR_source_branch != '' && dummy_inference_models.contains(job_model)) {
+            if (MR_source_branch != '' && steps_print_models.contains(job_model)) {
                 return
             }
             precision_list.each { precision ->
