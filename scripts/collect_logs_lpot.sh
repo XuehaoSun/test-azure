@@ -18,7 +18,7 @@ do
             mr=$(echo $var |cut -f2 -d=)
         ;;
         --perf_steps=*)
-            mr=$(echo $var |cut -f2 -d=)
+            perf_steps=$(echo $var |cut -f2 -d=)
         ;;
         *)
             echo "Error: No such parameter: ${var}"
