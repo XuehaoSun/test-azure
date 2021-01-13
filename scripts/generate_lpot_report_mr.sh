@@ -29,33 +29,40 @@ function createOverview {
 
     jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
 
-    # unit test
-    unit_test_1_15_2=($(grep 'TF1.15.2' ${overview_log} |sed 's/,/ /g'))
-    if [[ "${unit_test_1_15_2[1]}" == *"FAIL"* ]];then
-        unit_test_1_15_2_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${unit_test_1_15_2[1]}" == *"SUCC"* ]];then
-        unit_test_1_15_2_status="<td style=\"background-color:#90EE90\">Pass</td>"
-    else
-        unit_test_1_15_2_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
-    fi
+    echo """
+      <h2>Overview</h2>
+      <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;empty-cells: hide\">
+        <tr>
+            <th>Task</th>
+            <th>Job</th>
+            <th>Status</th>
+        </tr>
+    """ >> ${WORKSPACE}/report.html
 
-    unit_test_1_15UP=($(grep 'TF1.15UP' ${overview_log} |sed 's/,/ /g'))
-    if [[ "${unit_test_1_15UP[1]}" == *"FAIL"* ]];then
-        unit_test_1_15UP_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${unit_test_1_15UP[1]}" == *"SUCC"* ]];then
-        unit_test_1_15UP_status="<td style=\"background-color:#90EE90\">Pass</td>"
-    else
-        unit_test_1_15UP_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
-    fi
+    uts=$(sed '1d' ${overview_log} | grep "^unit_test" | cut -d',' -f1 | awk '!a[$0]++')
 
-    unit_test_2_x=($(grep 'TF2.' ${overview_log} |sed 's/,/ /g'))
-    if [[ "${unit_test_2_x[1]}" == *"FAIL"* ]];then
-        unit_test_2_x_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${unit_test_2_x[1]}" == *"SUCC"* ]];then
-        unit_test_2_x_status="<td style=\"background-color:#90EE90\">Pass</td>"
-    else
-        unit_test_2_x_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
-    fi
+    for ut in ${uts[@]}
+    do
+      ut_info_list=($(grep "${ut}" ${overview_log} |sed 's/,/ /g'))
+      ut_name="${ut_info_list[0]}"
+      ut_status="${ut_info_list[1]}"
+      ut_link="${ut_info_list[2]}"
+      if [[ "${ut_status}" == *"FAIL"* ]];then
+        unit_test_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+      elif [[ "${ut_status}" == *"SUCC"* ]];then
+        unit_test_status="<td style=\"background-color:#90EE90\">Pass</td>"
+      else
+        unit_test_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+      fi
+
+      echo """
+      <tr>
+      <td>${ut_name}</td>
+      <td style=\"text-align:left\"><a href=\"${ut_link}\">ut_link</a></td>
+      ${unit_test_status}
+      </tr>
+      """ >> ${WORKSPACE}/report.html
+    done
 
     pylint_scan=($(grep 'format-scan,pylint' ${overview_log} |sed 's/,/ /g'))
     if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
@@ -98,32 +105,7 @@ function createOverview {
 
     cat >> ${WORKSPACE}/report.html <<  eof
 
-    <h2>Overview</h2>
-    <table class="features-table" style="width: 60%;margin: 0 auto 0 0;">
-        <tr>
-            <th>Task</th>
-            <th>Job</th>
-            <th>Status</th>
-        </tr>
         $(
-             if [ "${unit_test_1_15_2[2]}" != "" ];then
-                 echo "<tr><td>Unit test TF1.15.2</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${unit_test_1_15_2[2]}\">${unit_test_1_15_2[0]}</a></td>"
-                 echo "${unit_test_1_15_2_status}</tr>"
-             fi
-
-             if [ "${unit_test_1_15UP[2]}" != "" ];then
-                 echo "<tr><td>Unit test TF1.15UP1</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${unit_test_1_15UP[2]}\">${unit_test_1_15UP[0]}</a></td>"
-                 echo "${unit_test_1_15UP_status}</tr>"
-             fi
-
-             if [ "${unit_test_2_x[2]}" != "" ];then
-                 echo "<tr><td>Unit test TF2.x</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${unit_test_2_x[2]}\">${unit_test_2_x[0]}</a></td>"
-                 echo "${unit_test_2_x_status}</tr>"
-             fi
-
              if [ "${pylint_scan[3]}" != "" ]; then
                  echo "<tr><td>PyLint Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[3]}\">${pylint_scan[0]}#${pylint_scan[3]}</a></td>"
