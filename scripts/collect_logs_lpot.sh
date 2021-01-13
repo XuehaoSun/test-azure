@@ -16,6 +16,8 @@ do
             os=$(echo $var |cut -f2 -d=);;
         --mr=*)
             mr=$(echo $var |cut -f2 -d=);;
+        --perf_steps=*)
+            perf_steps=$(echo $var |cut -f2 -d=);;
         *)
             echo "Error: No such parameter: ${var}"
             exit 1;;
@@ -73,24 +75,16 @@ if [ "${mode}" == "tuning" ]; then
     echo "${os};${cpu};${framework};FP32;${model};Inference;Accuracy;;${accuracy_fp32};${BUILD_URL}artifact/$tuning_file" | tee -a ${WORKSPACE}/summary.log
       
     # Read latency result
-    if [ "${framework}" != 'pytorch' ]; then
+    if [ "${perf_steps}" != "" ]; then
       benchmark_mode="latency"
       log_file="${framework}/${model}/${framework}-${model}-int8-${benchmark_mode}-${os}-${cpu}"
       bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
-      if [ "${framework}" == "onnxrt" ]; then
-        latency=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
-      else
-        latency=$(python ${WORKSPACE}/lpot-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "int8" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
-      fi
+      latency=$(python ${WORKSPACE}/lpot-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "int8" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
       echo "${os};${cpu};${framework};INT8;${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
 
       log_file="${framework}/${model}/${framework}-${model}-fp32-${benchmark_mode}-${os}-${cpu}"
       bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| sed 's/[^0-9]//g')
-      if [ "${framework}" == "onnxrt" ]; then
-        latency_fp32=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
-      else
-        latency_fp32=$(python ${WORKSPACE}/lpot-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "fp32" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
-      fi
+      latency_fp32=$(python ${WORKSPACE}/lpot-validation/scripts/get_stable_iteration.py --framework "${framework}" --model "${model}" --datatype "fp32" --mode "${benchmark_mode}" --logs-dir "${framework}/${model}" --start_skip 200 --end_skip 200 --s-to-ms)
       echo "${os};${cpu};${framework};FP32;${model};Inference;Latency;${bs};${latency_fp32};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
       # for test
       yum -y install bc
