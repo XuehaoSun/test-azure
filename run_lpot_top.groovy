@@ -169,7 +169,7 @@ echo "PLATFORMS: ${PLATFORMS}"
 
 // parameters to support windows measurement
 // chose windows test frameworks tensorflow,mxnet,pytorch,onnxrt
-Frameworks_windows = "onnxrt"
+Frameworks_windows = ""
 if ('Frameworks_windows' in params && params.Frameworks_windows != '') {
     Frameworks_windows = params.Frameworks_windows
 }
@@ -441,10 +441,6 @@ def getPerfJobs() {
                         job_models = parseStrToList(tensorflow_models_windows)
                     }
                     job_models = job_models.plus(tf_oob_models)
-                    // Temporary change for helloworld_keras
-                    //if (MR_source_branch != '') {
-                    //    job_models << "helloworld_keras"
-                    //}
 
                 }else if (job_framework == 'pytorch'){
                     job_models = parseStrToList(pytorch_models)
@@ -556,7 +552,7 @@ def collectLog() {
     echo "------------  running collectLog  -------------"
     echo "---------------------------------------------------------"
 
-    def dummy_inference_models = [
+    def steps_print_models = [
         "resnet50v1.5",
         "resnet50v1",
         "inception_v1",
@@ -637,11 +633,16 @@ def collectLog() {
                         mode_list = ["latency"]
                     }
                     println("mode_list---->" + mode_list)
+                    def perf_steps=''
+                    if (MR_source_branch != '' && steps_print_models.contains(job_model)){
+                        perf_steps=true
+                    }
                     // Generate tuning info log
                     withEnv([
                         "current_model=$job_model",
                         "current_framework=$job_framework",
                         "MR=$MR_source_branch",
+                        "perf_steps=$perf_steps",
                         "cpu=${cpu}",
                         "os=${system}"]) {
                         sh '''#!/bin/bash -x
@@ -653,7 +654,8 @@ def collectLog() {
                                 --mode=tuning \
                                 --cpu=${cpu} \
                                 --os=${os} \
-                                --mr=${MR}
+                                --mr=${MR} \
+                                --perf_steps=$perf_steps
                         '''
                     }
                     // helloworld keras with specific log collection in tuning mode
@@ -661,7 +663,7 @@ def collectLog() {
                         return
                     }
 
-                    if (MR_source_branch != '' && dummy_inference_models.contains(job_model)) {
+                    if (MR_source_branch != '' && steps_print_models.contains(job_model)) {
                         return
                     }
                     precision_list.each { precision ->
@@ -1085,9 +1087,11 @@ node( node_label ) {
                 codeScan("bandit")
             }
         }
-        
-        def perf_jobs = getPerfJobs()
-        job_list = job_list + perf_jobs
+
+        if ( Frameworks != '' || Frameworks_windows != '' ){
+            def perf_jobs = getPerfJobs()
+            job_list = job_list + perf_jobs
+        }
 
         if (MR_source_branch != ''|| pipeline_failFast) {
             echo "enable failFast"
@@ -1107,7 +1111,7 @@ node( node_label ) {
     } finally {
         stage("Collect Logs") {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                if (Frameworks != ''){
+                if ( Frameworks != '' || Frameworks_windows != '' ){
                     collectLog()
                 }
                 if (RUN_UT){
