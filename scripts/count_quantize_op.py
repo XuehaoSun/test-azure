@@ -1,5 +1,7 @@
-from lpot.adaptor.tf_utils.util import read_graph, write_graph
 import argparse
+
+from lpot.adaptor.tf_utils.util import read_graph, write_graph
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--fp32_model", type=str, required=True, help="Path to fp32 model.")
 parser.add_argument("--int8_model", type=str, required=True, help="Path to int8 model.")
@@ -28,9 +30,7 @@ def get_op_type(model):
     print("ConcatV2: {0}".format(ConcatV2_count))
 
 
-def main():
-    fp32_model = args.fp32_model
-    int8_model = args.int8_model
+def count_quantize_op(fp32_model, int8_model):
     if fp32_model.rsplit('.', 1)[-1] == 'pb':
         print('----input model op count----')
         get_op_type(fp32_model)
@@ -40,4 +40,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    count_quantize_op(fp32_model=args.fp32_model, int8_model=args.int8_model)

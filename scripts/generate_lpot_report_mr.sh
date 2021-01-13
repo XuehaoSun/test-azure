@@ -190,7 +190,7 @@ function createCoverageOverview {
 
 function generate_inference {
 
-    awk -v framework="${framework}" -v model="${model}" -F ';' '
+    awk -v framework="${framework}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
         BEGINE {
             fp32_ms_bs = nan;
             fp32_ms_value = nan;
@@ -212,60 +212,60 @@ function generate_inference {
             int8_acc_value = nan;
             int8_acc_url = nan;
         }{
-            if($1 == framework && $4 == model) {
+            if($1 == os && $2 == platform && $3 == framework && $5 == model) {
                 // FP32
-                if($3 == "FP32") {
+                if($4 == "FP32") {
                     // Latency
-                    if($6 == "Latency") {
-                        if( $8 ~/[0-9]/) {
-                            fp32_ms_bs = $7;
-                            fp32_ms_value = $8;
+                    if($7 == "Latency") {
+                        if( $9 ~/[0-9]/) {
+                            fp32_ms_bs = $8;
+                            fp32_ms_value = $9;
                         }
-                        fp32_ms_url = $9;
+                        fp32_ms_url = $10;
                     }
                     // Throughput
-                    if($6 == "Throughput") {
-                        if($8 ~/[0-9]/) {
-                            fp32_fps_bs = $7;
-                            fp32_fps_value = $8;
+                    if($7 == "Throughput") {
+                        if($9 ~/[0-9]/) {
+                            fp32_fps_bs = $8;
+                            fp32_fps_value = $9;
                         }
-                        fp32_fps_url = $9;
+                        fp32_fps_url = $10;
                     }
                     // Accuracy
-                    if($6 == "Accuracy") {
-                        if($8 ~/[0-9]/) {
-                            fp32_acc_bs = $7;
-                            fp32_acc_value = $8;
+                    if($7 == "Accuracy") {
+                        if($9 ~/[0-9]/) {
+                            fp32_acc_bs = $8;
+                            fp32_acc_value = $9;
                         }
-                        fp32_acc_url = $9;
+                        fp32_acc_url = $10;
                     }
                 }
 
                 // INT8
-                if($3 == "INT8") {
+                if($4 == "INT8") {
                     // Latency
-                    if($6 == "Latency") {
-                        if($8 ~/[0-9]/) {
-                            int8_ms_bs = $7;
-                            int8_ms_value = $8;
+                    if($7 == "Latency") {
+                        if($9 ~/[0-9]/) {
+                            int8_ms_bs = $8;
+                            int8_ms_value = $9;
                         }
-                        int8_ms_url = $9;
+                        int8_ms_url = $10;
                     }
                     // Throughput
-                    if($6 == "Throughput") {
-                        if($8 ~/[0-9]/) {
-                            int8_fps_bs = $7;
-                            int8_fps_value = $8;
+                    if($7 == "Throughput") {
+                        if($9 ~/[0-9]/) {
+                            int8_fps_bs = $8;
+                            int8_fps_value = $9;
                         }
-                        int8_fps_url = $9;
+                        int8_fps_url = $10;
                     }
                     // Accuracy
-                    if($6 == "Accuracy") {
-                        if($8 ~/[0-9]/) {
-                            int8_acc_bs = $7;
-                            int8_acc_value = $8;
+                    if($7 == "Accuracy") {
+                        if($9 ~/[0-9]/) {
+                            int8_acc_bs = $8;
+                            int8_acc_value = $9;
                         }
-                        int8_acc_url = $9;
+                        int8_acc_url = $10;
                     }
                 }
             }
@@ -279,17 +279,17 @@ function generate_inference {
 
 function generate_html_core {
 
-    tuning_strategy=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $3}')
-    tuning_time=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $4}')
-    tuning_count=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
-    tuning_log=$(grep "^${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
-    echo "<tr><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
+    tuning_strategy=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
+    tuning_time=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
+    tuning_count=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $7}')
+    tuning_log=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $8}')
+    echo "<tr><td rowspan=3>${platform}</td><td rowspan=3>${os}</td><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td>New</td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
     echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
 
-    tuning_strategy=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $3}')
-    tuning_time=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $4}')
-    tuning_count=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
-    tuning_log=$(grep "^${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
+    tuning_strategy=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
+    tuning_time=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
+    tuning_count=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $7}')
+    tuning_log=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
 
     echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tc="${tuning_count}" -v tl=${tuning_log} -F ';' '
 
@@ -320,9 +320,9 @@ function generate_html_core {
                 if(c == "acc") {
                     target = (a - b) / b;
                     if(target >= -0.01) {
-                       printf("<td rowspan=3 style='background-color:#90EE90'>%.2f%</td>", target*100);
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f%</td>", target*100);
                     }else if(target < -0.05) {
-                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.2f%</td>", target*100);
+                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f%</td>", target*100);
                        job_status = "fail"
                     }else{
                        printf("<td rowspan=3>%.2f%</td>", target*100);
@@ -330,9 +330,9 @@ function generate_html_core {
                 }else if(c == "ms") {
                     target = a / b;
                     if(target >= 1.5) {
-                       printf("<td rowspan=3 style='background-color:#90EE90'>%.2f</td>", target);
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
                     }else if(target < 1) {
-                       printf("<td  rowspan=3 style='background-color:#FFD2D2'>%.2f</td>", target);
+                       printf("<td  rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
                        job_status = "fail"
                     }else{
                        printf("<td rowspan=3>%.2f</td>", target);
@@ -341,9 +341,9 @@ function generate_html_core {
                 else {
                     target = a / b;
                     if(target >= 2) {
-                       printf("<td rowspan=3 style='background-color:#90EE90'>%.2f</td>", target);
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
                     }else if(target < 1) {
-                       printf("<td rowspan=3 style='background-color:#FFD2D2'>%.2f</td>", target);
+                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
                        job_status = "fail"
                     }else{
                        printf("<td rowspan=3>%.2f</td>", target);
@@ -458,18 +458,24 @@ function generate_html_core {
 }
 
 function generate_results {
-
-    frameworks=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
-
-    for framework in ${frameworks[@]}
+    oses=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
+    for os in ${oses[@]}
     do
-        models=$(sed '1d' ${summaryLog} |grep "^${framework}" |cut -d';' -f4 | awk '!a[$0]++')
-        for model in ${models[@]}
+        platforms=$(sed '1d' ${summaryLog} |grep "^${os}" |cut -d';' -f2 | awk '!a[$0]++')
+        for platform in ${platforms[@]}
         do
-            current_values=$(generate_inference ${summaryLog})
-            last_values=$(generate_inference ${summaryLogLast})
+            frameworks=$(sed '1d' ${summaryLog} |grep "^${os};${platform}" |cut -d';' -f3 | awk '!a[$0]++')
+            for framework in ${frameworks[@]}
+            do
+                models=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework}" |cut -d';' -f5 | awk '!a[$0]++')
+                for model in ${models[@]}
+                do
+                    current_values=$(generate_inference ${summaryLog})
+                    last_values=$(generate_inference ${summaryLogLast})
 
-            generate_html_core
+                    generate_html_core
+                done
+            done
         done
     done
 }
@@ -493,28 +499,26 @@ cat >> ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-	    <h1 align="center">LPOT Tuning Tests ${MR_TITLE}
+        <h1 align="center">LPOT Tuning Tests ${MR_TITLE}
         [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
       <h1 align="center">Test Status: ${Jenkins_job_status}</h1>
         <h2>Summary</h2>
-	    <table class="features-table">
-	        <tr>
-              <th>Platform</th>
+        <table class="features-table">
+            <tr>
               <th>TensorFlow Version</th>
               <th>PyTorch Version</th>
               <th>MXNet Version</th>
               <th>Repo</th>
               ${Test_Info_Title}
-		      </tr>
-		      <tr>
-			        <td>CLX8280</td>
+              </tr>
+              <tr>
                     <td>${tensorflow_version}</td>
                     <td>${pytorch_version}</td>
                     <td>${mxnet_version}</td>
-			        <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">LPOT</a></td>
+                    <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">LPOT</a></td>
               ${Test_Info}
-			    </tr>
-	    </table>
+                </tr>
+        </table>
 eof
 
 createOverview
@@ -522,19 +526,21 @@ createCoverageOverview
 
 cat >> ${WORKSPACE}/report.html << eof
         <h2>Benchmark</h2>
-		  <table class="features-table">
+          <table class="features-table">
             <tr>
+                <th rowspan="2">Platform</th>
+                <th rowspan="2">System</th>
                 <th rowspan="2">Framework</th>
                 <th rowspan="2">Model</th>
                 <th rowspan="2">VS</th>
                 <th rowspan="2">Tuning<br>Strategy</th>
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
-			          <th colspan="4">INT8</th>
-			          <th colspan="4">FP32</th>
-			          <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
-		        </tr>
-		        <tr>
+                      <th colspan="4">INT8</th>
+                      <th colspan="4">FP32</th>
+                      <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
+                </tr>
+                <tr>
 
                 <th>bs</th>
                 <th>ms</th>
@@ -548,19 +554,19 @@ cat >> ${WORKSPACE}/report.html << eof
 
                 <th class="col-cell col-cell1">Latency<br><font size="2px">FP32/INT8>=1.5</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
-		        </tr>
+                </tr>
 eof
 }
 
 function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
-		    <tr>
-			    <td colspan="14"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
-			    <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
-		    </tr>
-	    </table>
-	</div>
+            <tr>
+                <td colspan="14"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+                <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>
 eof
@@ -578,21 +584,21 @@ cat > ${WORKSPACE}/report.html << eof
     <style type="text/css">
         body
         {
-	        margin: 0;
-	        padding: 0;
-	        background: white no-repeat left top;
+            margin: 0;
+            padding: 0;
+            background: white no-repeat left top;
         }
         #main
         {
-	        // width: 100%;
-	        margin: 20px auto 10px auto;
-	        background: white;
-	        -moz-border-radius: 8px;
-	        -webkit-border-radius: 8px;
-	        padding: 0 30px 30px 30px;
-	        border: 1px solid #adaa9f;
-	        -moz-box-shadow: 0 2px 2px #9c9c9c;
-	        -webkit-box-shadow: 0 2px 2px #9c9c9c;
+            // width: 100%;
+            margin: 20px auto 10px auto;
+            background: white;
+            -moz-border-radius: 8px;
+            -webkit-border-radius: 8px;
+            padding: 0 30px 30px 30px;
+            border: 1px solid #adaa9f;
+            -moz-box-shadow: 0 2px 2px #9c9c9c;
+            -webkit-box-shadow: 0 2px 2px #9c9c9c;
         }
         .features-table
         {

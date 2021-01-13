@@ -150,23 +150,6 @@ def download() {
             checkout scm
 
             if(MR_source_branch != '') {
-
-                checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : [[name: "${MR_target_branch}"]],
-                        browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions                       : [
-                                [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models-base"],
-                                [$class: 'CloneOption', timeout: 60]
-                        ],
-                        submoduleCfg                     : [],
-                        userRemoteConfigs                : [
-                                [credentialsId: "${credential}",
-                                 url          : "${lpot_url}"]
-                        ]
-                ]
-
                 checkout changelog: true, poll: true, scm: [
                         $class                           : 'GitSCM',
                         branches                         : [[name: "${MR_source_branch}"]],
@@ -175,13 +158,27 @@ def download() {
                         extensions                       : [
                                 [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                                 [$class: 'CloneOption', timeout: 60],
-                                [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                         ],
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
                                 [credentialsId: "${credential}",
                                 url          : "${lpot_url}"]
                         ]
+                ]
+                checkout changelog: true, poll: true, scm: [
+                    $class                           : 'GitSCM',
+                    branches                         : [[name: "${MR_target_branch}"]],
+                    browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions                       : [
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models-base"],
+                            [$class: 'CloneOption', timeout: 60]
+                    ],
+                    submoduleCfg                     : [],
+                    userRemoteConfigs                : [
+                            [credentialsId: "${credential}",
+                             url          : "${lpot_url}"]
+                    ]
                 ]
 
             }
