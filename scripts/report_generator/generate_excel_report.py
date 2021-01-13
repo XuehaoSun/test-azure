@@ -12,12 +12,14 @@ parser.add_argument("--summary-log", type=str, required=True)
 parser.add_argument("--tensorflow-version", type=str, default="")
 parser.add_argument("--mxnet-version", type=str, default="")
 parser.add_argument("--pytorch-version", type=str, default="")
+parser.add_argument("--onnxruntime-version", type=str, default="")
 args = parser.parse_args()
 
 result_collector = ResultCollector({
     "tensorflow_version": args.tensorflow_version,
     "mxnet_version": args.mxnet_version,
-    "pytorch_version": args.pytorch_version
+    "pytorch_version": args.pytorch_version,
+    "onnxrt_version": args.onnxruntime_version
 })
 result_collector.read_tuning(args.tuning_log)
 result_collector.read_perf(args.summary_log)
@@ -44,6 +46,8 @@ def write_header():
     worksheet.merge_range("K1:M1", "Performance", header_format)
 
     header = [
+        {"header": "Platform"},
+        {"header": "System"},
         {"header": "Framework"},
         {"header": "version"},
         {"header": "model"},
@@ -59,7 +63,7 @@ def write_header():
         {"header": "Realtime Latency Ratio[FP32/INT8]"}
     ]
 
-    worksheet.add_table(1, 0, len(result_collector.results) + 1, 12, {"header_row": True, "columns": header})
+    worksheet.add_table(1, 0, len(result_collector.results) + 1, len(header)-1, {"header_row": True, "columns": header})
 
 
 def write_row(row, result):
@@ -85,8 +89,9 @@ def write_row(row, result):
     model_size_format = workbook.add_format({'num_format': '0.00x'})
     accuracy_format = workbook.add_format({'num_format': '0.00%'})
     latency_format = workbook.add_format({'num_format': '0.00x'})
-
     data = {
+        "platform": result.platform,
+        "os": result.os,
         "framework": result.framework,
         "version": result.version,
         "model": result.model,
