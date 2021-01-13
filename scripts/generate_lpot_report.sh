@@ -30,15 +30,40 @@ function createOverview {
 
     jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
 
-    # unit test
-    unit_test=($(grep 'unit-test' ${overview_log} |sed 's/,/ /g'))
-    if [[ "${unit_test[1]}" == *"FAIL"* ]];then
+    echo """
+      <h2>Overview</h2>
+      <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;empty-cells: hide\">
+        <tr>
+            <th>Task</th>
+            <th>Job</th>
+            <th>Status</th>
+        </tr>
+    """ >> ${WORKSPACE}/report.html
+
+    uts=$(sed '1d' ${overview_log} | grep "^unit_test" | cut -d',' -f1 | awk '!a[$0]++')
+
+    for ut in ${uts[@]}
+    do
+      ut_info_list=($(grep "${ut}" ${overview_log} |sed 's/,/ /g'))
+      ut_name="${ut_info_list[0]}"
+      ut_status="${ut_info_list[1]}"
+      ut_link="${ut_info_list[2]}"
+      if [[ "${ut_status}" == *"FAIL"* ]];then
         unit_test_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${unit_test[1]}" == *"SUCC"* ]];then
+      elif [[ "${ut_status}" == *"SUCC"* ]];then
         unit_test_status="<td style=\"background-color:#90EE90\">Pass</td>"
-    else
+      else
         unit_test_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
-    fi
+      fi
+
+      echo """
+      <tr>
+      <td>${ut_name}</td>
+      <td style=\"text-align:left\"><a href=\"${ut_link}\">ut_link</a></td>
+      ${unit_test_status}
+      </tr>
+      """ >> ${WORKSPACE}/report.html
+    done
 
     pylint_scan=($(grep 'format-scan,pylint' ${overview_log} |sed 's/,/ /g'))
     if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
@@ -79,23 +104,8 @@ function createOverview {
         fi
     fi
 
-
     cat >> ${WORKSPACE}/report.html <<  eof
-
-    <h2>Overview</h2>
-    <table class="features-table" style="width: 60%;margin: 0 auto 0 0;">
-        <tr>
-            <th>Task</th>
-            <th>Job</th>
-            <th>Status</th>
-        </tr>
         $(
-             if [ "${unit_test[2]}" != "" ];then
-                 echo "<tr><td>Unit Test</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${unit_test[0]}/${unit_test[2]}/artifact/\">${unit_test[0]}#${unit_test[2]}</a></td>"
-                 echo "${unit_test_status}</tr>"
-             fi
-
              if [ "${pylint_scan[3]}" != "" ]; then
                  echo "<tr><td>PyLint Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[3]}\">${pylint_scan[0]}#${pylint_scan[3]}</a></td>"
@@ -164,10 +174,10 @@ function createCoverageOverview {
     awk -v branches_coverage="${branches_coverage[3]}" -v branches_coverage_threshold="${branches_coverage_threshold}" -F ';' '
     BEGIN {
         if(branches_coverage < branches_coverage_threshold) {
-                printf("<td style=\"background-color:#FFD2D2\">%.2f%</td>", branches_coverage);
-            } else {
-                printf("<td style=\"background-color:#90EE90\">%.2f%</td>", branches_coverage);
-            }
+            printf("<td style=\"background-color:#FFD2D2\">%.2f%</td>", branches_coverage);
+        } else {
+            printf("<td style=\"background-color:#90EE90\">%.2f%</td>", branches_coverage);
+        }
     }' >> ${WORKSPACE}/report.html
 
     echo """

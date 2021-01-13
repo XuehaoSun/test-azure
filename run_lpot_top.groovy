@@ -133,6 +133,19 @@ if (params.RUN_UT != null){
 }
 echo "RUN_UT = ${RUN_UT}"
 
+// set ut extension test
+ut_extension_tensorflows='1.15.2,1.15UP2'
+if ('ut_extension_tensorflows' in params && params.ut_extension_tensorflows != '') {
+    ut_extension_tensorflows = params.ut_extension_tensorflows
+}
+echo "ut_extension_tensorflows: ${ut_extension_tensorflows}"
+
+RUN_COVERAGE=true
+if (params.RUN_COVERAGE != null){
+    RUN_COVERAGE=params.RUN_COVERAGE
+}
+echo "RUN_COVERAGE = ${RUN_COVERAGE}"
+
 EXCEL_REPORT=false
 if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
     echo "EXCEL_REPORT is true"
@@ -236,9 +249,7 @@ if (params.RUN_PROFILING != null){
 }
 echo "RUN_PROFILING = ${RUN_PROFILING}"
 
-binary_build_job = "lastSuccessfulBuild"
-
-try{ echo "COBERTURA=${COBERTURA}"; } catch (Exception e) { COBERTURA=false; echo "COBERTURA=${COBERTURA}" }
+binary_build_job = ""
 
 val_branch="master"
 if ('val_branch' in params && params.val_branch != ''){
@@ -564,13 +575,16 @@ def collectLog() {
 
 }
 
-def collectUTLog(job_num) {
+def collectUTLog() {
+
     echo "------------  running collectUTLog  -------------"
     dir("$WORKSPACE/unittest"){
-        def ex_tfs = ["1.15.2","1.15UP1","${tensorflow_version}"]
-        ex_tfs.unique()
-        ex_tfs.each { tf_version ->
-            withEnv(["tf_version=${tf_version}", "job_num=${job_num}"]){
+        def ut_tfs = ["${tensorflow_version}"]
+        ut_ext_tfs = parseStrToList(ut_extension_tensorflows)
+        ut_tfs = ut_tfs.plus(ut_ext_tfs)
+        ut_tfs.unique()
+        ut_tfs.each { tf_version ->
+            withEnv(["tf_version=${tf_version}"]){
                 sh ''' #!/bin/bash
                    overview_log="${WORKSPACE}/summary_overview.log"
                    if [ $(ls -l | grep -c ${tf_version}) != 0 ]; then
@@ -580,7 +594,7 @@ def collectUTLog(job_num) {
                      else
                        ut_status='SUCCESS'
                      fi
-                     echo "unit_test_TF${tf_version},${ut_status},${BUILD_URL}artifact/unittest/unit_test_${tf_version}.log" | tee -a ${overview_log}
+                     echo "unit_test_with_TF${tf_version},${ut_status},${BUILD_URL}artifact/unittest/unit_test_${tf_version}.log" | tee -a ${overview_log}
                    fi
                 '''
             }
@@ -588,64 +602,85 @@ def collectUTLog(job_num) {
     }
 }
 
-def unitTest() {
-    List unitTestParams = [
-            string(name: "binary_build_job", value: "${binary_build_job}"),
-            string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}"),
-            string(name: "MR_source_branch", value: "${MR_source_branch}"),
-            string(name: "MR_target_branch", value: "${MR_target_branch}"),
-            string(name: "python_version", value: "${python_version}"),
-            string(name: "tensorflow_version", value: "${tensorflow_version}"),
-            string(name: "mxnet_version", value: "${mxnet_version}"),
-            string(name: "pytorch_version", value: "${pytorch_version}"),
-            string(name: "onnx_version", value: "${onnx_version}"),
-            string(name: "onnxruntime_version", value: "${onnxruntime_version}"),
-            string(name: "val_branch", value: "${val_branch}")
-    ]
-    downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: unitTestParams
+def UTBuildParams(tf_version, run_coverage){
 
-    copyArtifacts(
-            projectName: "lpot-unit-test",
-            selector: specific("${downstreamJob.getNumber()}"),
-            filter: '*.log, *.txt, **/coverage_results/**/*',
-            fingerprintArtifacts: true,
-            target: "unittest")
-    // collect log for MR UT test
-    if (MR_source_branch != ''){
-        collectUTLog(downstreamJob.number)
-    }else {
-        text_commnet = readFile file: "${overview_log}"
-        writeFile file: "${overview_log}", text: text_commnet + "lpot-unit-test," + downstreamJob.result + "," + downstreamJob.number + "\n"
+    List ParamsPerJob = []
+
+    ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
+    ParamsPerJob += string(name: "lpot_url", value: "${lpot_url}")
+    ParamsPerJob += string(name: "lpot_branch", value: "${lpot_branch}")
+    ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
+    ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
+    ParamsPerJob += string(name: "python_version", value: "${python_version}")
+    ParamsPerJob += string(name: "tensorflow_version", value: "${tf_version}")
+    ParamsPerJob += string(name: "mxnet_version", value: "${mxnet_version}")
+    ParamsPerJob += string(name: "pytorch_version", value: "${pytorch_version}")
+    ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
+    ParamsPerJob += string(name: "onnxruntime_version", value: "${onnxruntime_version}")
+    ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
+    ParamsPerJob += booleanParam(name: "run_coverage", value: run_coverage)
+
+    return ParamsPerJob
+}
+
+def unitTestJobs() {
+
+    def ut_jobs = [:]
+    def ut_extension_tfs = ut_extension_tensorflows.split(',')
+
+    ut_jobs["main_ut"] = {
+        downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(tensorflow_version, RUN_COVERAGE)
+        catchError {
+            copyArtifacts(
+                    projectName: "lpot-unit-test",
+                    selector: specific("${downstreamJob.getNumber()}"),
+                    filter: '*.log, *.txt, **/coverage_results/**/*',
+                    fingerprintArtifacts: true,
+                    target: "unittest")
+
+            archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+        }
+
+        // Update timestamps of the test reports
+        sh '''
+            cd ${WORKSPACE}/unittest
+            touch *.xml
+        '''
+
+        if (downstreamJob.result != 'SUCCESS'){
+            currentBuild.result = "FAILURE"
+        }
+
+        overview = readFile file: "${overview_log}"
+        coverage_status = readFile file: "unittest/coverage_status.txt"
+        writeFile file: "${overview_log}", text: overview + coverage_status + "\n"
+
+        // Coverage decrease is not allowed in MRs
+        if (lpot_branch == "" && coverage_status.split(",")[1] != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+        }
+    }
+    ut_extension_tfs.each{ ut_extension_tf ->
+        ut_jobs["${ut_extension_tf}_extension_ut"] = {
+            downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(ut_extension_tf, false)
+            catchError {
+                copyArtifacts(
+                        projectName: "lpot-unit-test",
+                        selector: specific("${downstreamJob.getNumber()}"),
+                        filter: '*.log, *.txt',
+                        fingerprintArtifacts: true,
+                        target: "unittest")
+
+                archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+            }
+
+            if (downstreamJob.result != 'SUCCESS'){
+                currentBuild.result = "FAILURE"
+            }
+        }
     }
 
-    // Archive in Jenkins
-    archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
-    if (COBERTURA) {
-        step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStablpoty: false,
-            coberturaReportFile: '**/coverage.xml', failUnhealthy: false, failUnstable: false,
-            maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
-    }
-    
-    // Update timestamps of the test reports
-    sh '''
-        cd ${WORKSPACE}/unittest
-        touch *.xml
-    '''
-
-    overview = readFile file: "${overview_log}"
-    coverage_status = readFile file: "unittest/coverage_status.txt"
-    writeFile file: "${overview_log}", text: overview + coverage_status + "\n"
-
-    // Coverage decrease is not allowed in MRs
-    if (lpot_branch == "" && coverage_status.split(",")[1] != "SUCCESS") {
-        currentBuild.result = "FAILURE"
-    }
-
-    if (downstreamJob.result != 'SUCCESS') {
-        currentBuild.result = "FAILURE"
-        error("Unit tests failed.")
-    }
+    return ut_jobs
 }
 
 def buildBinary(){
@@ -895,9 +930,8 @@ node( node_label ) {
 
         def job_list = [:]
         if (RUN_UT) {
-            job_list["Unit Test"] = {
-                unitTest()
-            }
+            def ut_jobs = unitTestJobs()
+            job_list = job_list + ut_jobs
         }
         if (RUN_PYLINT) {
             job_list["Pylint Scan"] = {
@@ -934,6 +968,9 @@ node( node_label ) {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 if (Frameworks != ''){
                     collectLog()
+                }
+                if (RUN_UT){
+                    collectUTLog()
                 }
             }
         }
