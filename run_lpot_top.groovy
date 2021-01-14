@@ -221,7 +221,9 @@ echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
-echo "gitlabMergeRequestLastCommit: $gitlabMergeRequestLastCommit"
+if ("${gitlabSourceBranch}" != '') {
+    echo "gitlabMergeRequestLastCommit: $gitlabMergeRequestLastCommit"
+}
 
 // setting refer_build
 refer_build = "x0"
