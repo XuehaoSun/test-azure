@@ -221,7 +221,7 @@ echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
-if ("${gitlabSourceBranch}" != '') {
+if ( MR_source_branch != '') {
     echo "gitlabMergeRequestLastCommit: $gitlabMergeRequestLastCommit"
 }
 
