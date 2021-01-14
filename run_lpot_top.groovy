@@ -154,11 +154,11 @@ if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
     EXCEL_REPORT=params.EXCEL_REPORT
 }
 
-ABORT_PREVIOUS_MR = false
-if ('ABORT_PREVIOUS_MR' in params && params.ABORT_PREVIOUS_MR){
-    echo "ABORT_PREVIOUS_MR is true"
-    ABORT_PREVIOUS_MR=params.ABORT_PREVIOUS_MR
+ABORT_DUPLICATE_MR = false
+if ('ABORT_DUPLICATE_MR' in params && params.ABORT_DUPLICATE_MR){
+    ABORT_DUPLICATE_MR=params.ABORT_DUPLICATE_MR
 }
+echo "ABORT_DUPLICATE_MR is ${ABORT_DUPLICATE_MR}"
 
 // Platforms specification pattern: "os1:cpu_name1,cpuname_2;os2:cpu_name1,cpuname_3"
 PLATFORMS = "linux:*"
@@ -220,6 +220,8 @@ if ('lpot_branch' in params && params.lpot_branch != '') {
 echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
+
+echo "gitlabMergeRequestLastCommit: $gitlabMergeRequestLastCommit"
 
 // setting refer_build
 refer_build = "x0"
@@ -1012,20 +1014,26 @@ def cancelPreviousBuilds() {
 
   for (def build : currentJob.builds) {
     def buildBranch = build.getEnvironment()['gitlabSourceBranch']
-    if (build.isBuilding() && (build.number.toInteger() < currentBuildNumber) && (buildBranch == gitlabSourceBranch)) {
-      echo "Older build ${build.number} Source Branch is ${buildBranch}"
-      echo "Older build still queued. Sending kill signal to build number: ${build.number}"
-      build.doTerm()
-      addGitLabMRComment comment: "Previous pipeline has been canceled: [Job-${build.number}](${build.url})"
+    def buildCommit = build.getEnvironment()['gitlabMergeRequestLastCommit']
+
+    if (build.isBuilding() && (build.number.toInteger() < currentBuildNumber)) {
+        if (buildCommit == gitlabMergeRequestLastCommit) {
+            currentBuild.result = "ABORTED"
+            addGitLabMRComment comment: "Executed test on the same commit. Aborting latest build.: [Job-${BUILD_NUMBER}](${BUILD_URL})"
+            error('Executed test on the same commit. Aborting current build.')
+        } else if (buildBranch == gitlabSourceBranch) {
+            echo "Older build ${build.number} Source Branch is ${buildBranch}"
+            echo "Older build still queued. Sending kill signal to build number: ${build.number}"
+            build.doTerm()
+            addGitLabMRComment comment: "Previous pipeline has been canceled: [Job-${build.number}](${build.url})"
+        }
     }
   }
 }
 
-if (ABORT_PREVIOUS_MR && "${MR_source_branch}" != '') {
+if (ABORT_DUPLICATE_MR && "${MR_source_branch}" != '') {
     stage("Cancel previous builds") {
-        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-            cancelPreviousBuilds()
-        }
+        cancelPreviousBuilds()
     }
 }
 
