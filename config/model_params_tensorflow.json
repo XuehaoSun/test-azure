@@ -248,6 +248,14 @@
       "strategy": "basic",
       "batch_size": 100
     },
+    "mobilenetv3": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/tensorflow/mobilenet/mobilenet_v3.pb",
+      "yaml": "mobilenet_v3.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
     "ssd_resnet50_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
