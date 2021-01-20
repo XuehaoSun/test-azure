@@ -111,6 +111,14 @@ if [[ " ${unknown_platforms[@]} " =~ " ${cpu} " ]]; then
         fi
     fi
 fi
+
+if [ ${platform} == "Unknown" ]; then
+    if [ $(ls ${WORKSPACE}/tuning_info.log | wc -l) == 1 ]; then
+        if [ $(cat ${WORKSPACE}/tuning_info.log | grep "^${os};.*;${framework};${model};" | wc -l) == 1 ]; then
+            platform=$(cat ${WORKSPACE}/tuning_info.log | grep "^${os};.*;${framework};${model};" | cut -d ";" -f 2)
+        fi
+    fi
+fi
 echo "Platform: ${platform}"
 
 log_file="${framework}/${model}/${framework}-${model}-${precision}-${mode}-${os}-${platform}"
