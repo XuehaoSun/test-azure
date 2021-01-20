@@ -258,7 +258,7 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
                     "max_trials": max_trials
                 }})
             else:
-                prev_max_trials = exit_policy.get("max_trials", None)
+                prev_max_trials = prev_exit_policy.get("max_trials", None)
                 prev_exit_policy.update({"max_trials": max_trials})
                 print(f"Changed {prev_max_trials} to {max_trials}")
         except Exception as e:
