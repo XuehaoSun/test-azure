@@ -2,7 +2,7 @@
   "onnxrt": {
     "resnet50_v1_5": {
       "model_src_dir": "image_recognition/resnet50",
-      "dataset_location": "/tf_dataset/onnx/img",
+      "dataset_location": "/tf_dataset/onnx/img/val",
       "input_model": "/tf_dataset/onnx/resnet50_export.onnx",
       "yaml": "resnet50_v1_5.yaml",
       "strategy": "basic",
