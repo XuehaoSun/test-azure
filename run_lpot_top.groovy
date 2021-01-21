@@ -137,7 +137,7 @@ echo "RUN_UT = ${RUN_UT}"
 
 // set ut extension test
 ut_extension_tensorflows='1.15.2,1.15UP2'
-if ('ut_extension_tensorflows' in params && params.ut_extension_tensorflows != '') {
+if ('ut_extension_tensorflows' in params) {
     ut_extension_tensorflows = params.ut_extension_tensorflows
 }
 echo "ut_extension_tensorflows: ${ut_extension_tensorflows}"
@@ -778,13 +778,15 @@ def unitTestJobs() {
             currentBuild.result = "FAILURE"
         }
 
-        overview = readFile file: "${overview_log}"
-        coverage_status = readFile file: "unittest/coverage_status.txt"
-        writeFile file: "${overview_log}", text: overview + coverage_status + "\n"
+        if (RUN_COVERAGE){
+            overview = readFile file: "${overview_log}"
+            coverage_status = readFile file: "unittest/coverage_status.txt"
+            writeFile file: "${overview_log}", text: overview + coverage_status + "\n"
 
-        // Coverage decrease is not allowed in MRs
-        if (lpot_branch == "" && coverage_status.split(",")[1] != "SUCCESS") {
-            currentBuild.result = "FAILURE"
+            // Coverage decrease is not allowed in MRs
+            if (lpot_branch == "" && coverage_status.split(",")[1] != "SUCCESS") {
+                currentBuild.result = "FAILURE"
+            }
         }
     }
     ut_extension_tfs.each{ ut_extension_tf ->

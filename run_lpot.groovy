@@ -154,6 +154,15 @@ if(framework == 'pytorch'){
     }
 }
 
+conda_env_name=''
+env_name_list=framework_version.split('=')
+if (env_name_list[0] == 'customized'){
+    conda_env_name="${framework}-customized-${python_version}"
+}else {
+    conda_env_name="${framework}-${framework_version}-${python_version}"
+}
+println("conda_env_name = " + conda_env_name)
+
 cpu="unknown"
 if ('cpu' in params && params.cpu != ''){
     cpu=params.cpu
@@ -165,7 +174,6 @@ if ('os' in params && params.os != ''){
     os=params.os
 }
 echo "os: ${os}"
-
 
 
 def cleanup() {
@@ -202,107 +210,19 @@ def parseStrToList(srtingElements, delimiter=',') {
 }
 
 def create_conda_env(){
-    withEnv(["framework=${framework}","framework_version=${framework_version}","onnx_version=${onnx_version}","python_version=${python_version}",
-             "requirement_list=${requirement_list}"]) {
-        retry(5){
-
-            sh '''#!/bin/bash
+    retry(5){
+            sh """#!/bin/bash
                 set -xe
-
-                if [ ${model} = 'dlrm' ]; then
-                    export PATH=${HOME}/anaconda3/bin/:$PATH
-                else
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                fi
-
-                pip config set global.index-url https://pypi.douban.com/simple/
-                conda_env_name=${framework}-${framework_version}-${python_version}
-                if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
-                    conda remove --name ${conda_env_name} --all -y
-                fi
-
-                conda_dir=$(dirname $(dirname $(which conda)))
-                if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
-                    rm -rf ${conda_dir}/envs/${conda_env_name}
-                fi
-
-                conda create python=${python_version} -y -n ${conda_env_name}
-
-                source activate ${conda_env_name}
-
-                # Upgrade pip
-                pip install -U pip
-                export https_proxy=http://child-prc.intel.com:913
-                export http_proxy=http://child-prc.intel.com:913
-
-                if [ ${framework} == 'tensorflow' ]; then     
-                    if [ ${framework_version} == '1.15UP1' ]; then
-                        if [ ${python_version} == '3.6' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl                
-                        elif [ ${python_version} == '3.7' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
-                        elif [ ${python_version} == '3.5' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp35-cp35m-manylinux2010_x86_64.whl
-                        else
-                            echo "!!! TF 1.15UP1 do not support ${python_version}"
-                        fi
-                    elif [ ${framework_version} == '1.15UP2' ]; then
-                        if [ ${python_version} == '3.6' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp36-cp36m-manylinux2010_x86_64.whl                
-                        elif [ ${python_version} == '3.7' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp37-cp37m-manylinux2010_x86_64.whl
-                        elif [ ${python_version} == '3.5' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp35-cp35m-manylinux2010_x86_64.whl 
-                        else
-                            echo "!!! TF 1.15UP2 do not support ${python_version}"
-                        fi
-                    else
-                        pip install intel-${framework}==${framework_version}
-                    fi
-                elif [ ${framework} == 'pytorch' ]; then
-                    if [ ${model} == 'dlrm' ]; then
-                        torch_whl_path=/home/torch/lpot/pytorch/pypi
-                    else
-                        torch_whl_path=/tf_dataset/pytorch/pypi    
-                    fi
-                    if [ ${model} == 'resnest50' ] || [ ${model} == 'blendcnn' ]; then
-                        framework_version='1.6.0+cpu'
-                    fi
-                    torch_whl=${torch_whl_path}/${python_version}/torch-${framework_version}-*.whl
-                    if [ -f ${torch_whl} ]; then   
-                        pip install ${torch_whl}
-                    else
-                        pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
-                    fi
-                elif [ ${framework} == 'mxnet' ]; then 
-                    if [ ${framework_version} == '1.6.0' ]; then
-                        pip install ${framework}-mkl==${framework_version}
-                    elif [ ${framework_version} == '1.7.0' ]; then
-                        pip install ${framework}==${framework_version}.post1
-                    else
-                        pip install ${framework}==${framework_version}
-                    fi
-                elif [ ${framework} == 'onnxrt' ]; then
-                    pip install onnx==${onnx_version}
-                    # if onnxrt==nightly then use requirements to install
-                    if [ ${framework_version} != "nightly" ]; then
-                        pip install onnxruntime==${framework_version}
-                    fi
-                fi
-            
-                wait
-
-                if [[ ${requirement_list} != '' ]]; then
-                    pip install ${requirement_list}
-                fi
-            
-                echo "pip list all the components------------->"
-                pip list
-                sleep 2
-                echo "------------------------------------------"
-            '''
+                bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
+                    --model=${model} \
+                    --framework=${framework} \
+                    --framework_version=${framework_version} \
+                    --python_version=${python_version} \
+                    --onnx_version=${onnx_version} \
+                    --requirement_list=${requirement_list} \
+                    --conda_env_name=${conda_env_name}
+            """
         }
-    }
 }
 
 node( sub_node_label ) {
@@ -467,9 +387,29 @@ node( sub_node_label ) {
                     --strategy=${strategy} \
                     --max_trials=${max_trials} \
                     --algorithm=${algorithm} \
-                    --conda_env_name=${framework}-${framework_version}-${python_version} \
+                    --conda_env_name=${conda_env_name} \
                     2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
             """
+        }
+
+        stage("Check tuning status"){
+            dir("${WORKSPACE}"){
+                withEnv([
+                        "framework=${framework}",
+                        "model=${model}",
+                        "os=${os}",
+                        "cpu=${cpu}"]) {
+                    sh '''#!/bin/bash -x
+                        control_phrase="Found a quantized model which meet accuracy goal."
+                        if [ "${model}" == "helloworld_keras" ]; then
+                            control_phrase="Inference is done."
+                        fi
+                        if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | wc -l) == 0 ];then
+                            exit 1
+                        fi
+                    '''
+                }
+            }
         }
 
         // Set Latency mode for MR tests
@@ -511,7 +451,7 @@ node( sub_node_label ) {
                             --batch_size=${batch_size} \
                             --os=${os} \
                             --cpu=${cpu} \
-                            --conda_env_name=${framework}-${framework_version}-${python_version}
+                            --conda_env_name=${conda_env_name}
                         """
                     }
                 }
@@ -553,7 +493,7 @@ node( sub_node_label ) {
                                     --precision=${precision} \
                                     --mode=${mode} \
                                     --batch_size=${batch_size} \
-                                    --conda_env_name=${framework}-${framework_version}-${python_version}\
+                                    --conda_env_name=${conda_env_name} \
                                     --yaml=${yaml} \
                                     --os=${os} \
                                     --cpu=${cpu} \
@@ -562,26 +502,6 @@ node( sub_node_label ) {
                             }
                         }
                     }
-                }
-            }
-        }
-
-        stage("Check status"){
-            dir("${WORKSPACE}"){
-                withEnv([
-                    "framework=${framework}",
-                    "model=${model}",
-                    "os=${os}",
-                    "cpu=${cpu}"]) {
-                    sh '''#!/bin/bash -x
-                        control_phrase="Found a quantized model which meet accuracy goal."
-                        if [ "${model}" == "helloworld_keras" ]; then
-                            control_phrase="Inference is done."
-                        fi
-                        if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | wc -l) == 0 ];then
-                            exit 1
-                        fi
-                    '''
                 }
             }
         }
