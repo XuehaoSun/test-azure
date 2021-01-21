@@ -481,8 +481,7 @@ node( sub_node_label ) {
         def dummy_inference_models = [
             "resnet50v1.5",
             "resnet50v1",
-            "inception_v1",
-            "wide_deep_large_ds"]
+            "inception_v1"]
         if (lpot_branch == '' && dummy_inference_models.contains(model)) {
             batch_size = modelConf."${framework}"."${model}"."batch_size"
             stage("MR Performance") {

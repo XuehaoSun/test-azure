@@ -559,8 +559,7 @@ def collectLog() {
     def steps_print_models = [
         "resnet50v1.5",
         "resnet50v1",
-        "inception_v1",
-        "wide_deep_large_ds"
+        "inception_v1"
     ]
 
     precision_list = ["fp32", "int8"]
