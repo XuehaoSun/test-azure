@@ -153,7 +153,10 @@ def cleanup() {
 def download() {
     dir(WORKSPACE) {
         retry(5) {
-            checkout scm
+
+            dir('lpot-validation') {
+                checkout scm
+            }
 
             checkout changelog: true, poll: true, scm: [
                         $class                           : 'GitSCM',
@@ -179,74 +182,21 @@ def build_conda_env() {
             "torchvision_version=${torchvision_version}",
             "tensorflow_version=${tensorflow_version}",
             "onnx_version=${onnx_version}",
-            "onnxruntime_version=${onnxruntime_version}"]) {
+            "onnxruntime_version=${onnxruntime_version}",
+            "conda_env_name=${conda_env}",
+            "python_version=${python_version}"]) {
         retry(5) {
             sh'''#!/bin/bash
                 set -xe
                 echo "Create new conda env for UT..."
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                # pip config set global.index-url https://pypi.douban.com/simple/
-
-                if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                    conda remove --name ${conda_env} --all -y
-                fi
-                
-                conda_dir=$(dirname $(dirname $(which conda)))
-                if [ -d ${conda_dir}/envs/${conda_env} ]; then
-                    rm -rf ${conda_dir}/envs/${conda_env}
-                fi
-
-                conda create python=${python_version} -y -n ${conda_env}
-
-                source activate ${conda_env}
-
-                # Upgrade pip
-                pip install -U pip
-
-                # Install TF
-                if [ ${tensorflow_version} == '1.15UP1' ]; then
-                    if [ ${python_version} == '3.6' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl                
-                    elif [ ${python_version} == '3.7' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
-                    elif [ ${python_version} == '3.5' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp35-cp35m-manylinux2010_x86_64.whl
-                    else
-                        echo "!!! TF 1.15UP1 do not support ${python_version}"
-                    fi
-                elif [ ${tensorflow_version} == '1.15UP2' ]; then
-                    if [ ${python_version} == '3.6' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp36-cp36m-manylinux2010_x86_64.whl                
-                    elif [ ${python_version} == '3.7' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp37-cp37m-manylinux2010_x86_64.whl
-                    elif [ ${python_version} == '3.5' ]; then
-                        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp35-cp35m-manylinux2010_x86_64.whl 
-                    else
-                        echo "!!! TF 1.15UP2 do not support ${python_version}"
-                    fi
-                else
-                    pip install intel-tensorflow==${tensorflow_version}
-                fi
-
-                # Install PyTorch
-                pip install torch==${pytorch_version} -f https://download.pytorch.org/whl/torch_stable.html
-                pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
-
-                # Install MXNet
-                if [ ${mxnet_version} == '1.6.0' ]; then
-                    pip install mxnet-mkl==${mxnet_version}
-                elif [ ${mxnet_version} == '1.7.0' ]; then
-                    pip install mxnet==${mxnet_version}.post1
-                else
-                    pip install mxnet==${mxnet_version}
-                fi
-
-                # Install ONNX
-                pip install onnx==${onnx_version}
-                # if onnxrt==nightly then use requirements to install
-                if [ ${framework_version} != "nightly" ]; then
-                    pip install onnxruntime==${framework_version}
-                fi
+                bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
+                    --conda_env_name=${conda_env_name} \
+                    --python_version=${python_version} \
+                    --torchvision_version=${torchvision_version} \
+                    --tensorflow_version=${tensorflow_version} \
+                    --onnxruntime_version=${onnxruntime_version} \
+                    --onnx_version=${onnx_version} \
+                    --run_ut=true
             '''
         }
     }
