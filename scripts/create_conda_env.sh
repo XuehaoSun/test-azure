@@ -86,6 +86,9 @@ if [[ ${run_ut} != '' ]]; then
         else
             echo "!!! TF 1.15UP2 do not support ${python_version}"
         fi
+    elif [[ "${tensorflow_version}" == "customized"* ]]; then
+            download_link=$(echo "${tensorflow_version}" | awk -F '=' '{print $2}')
+            pip install "${download_link}"
     else
         pip install intel-tensorflow==${tensorflow_version}
     fi
