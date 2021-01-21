@@ -40,9 +40,6 @@
     },
     "language_translation": [
       "bert_base_MRPC"
-    ],
-    "recommendation": [
-      "dlrm"
     ]
   },
   "onnxrt": {
