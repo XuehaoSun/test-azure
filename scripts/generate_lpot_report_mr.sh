@@ -103,6 +103,15 @@ function createOverview {
         fi
     fi
 
+    copyright_check=($(grep 'copyright-check' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${copyright_check[1]}" == *"FAIL"* ]];then
+        copyright_check_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${copyright_check[1]}" == *"SUCC"* ]];then
+        copyright_check_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        copyright_check_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
+
     cat >> ${WORKSPACE}/report.html <<  eof
 
         $(
@@ -130,6 +139,11 @@ function createOverview {
                 echo "${coverage_status}</tr>"
             fi
 
+            if [ "${copyright_check[2]}" != "" ]; then
+                 echo "<tr><td>Copyright Check</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${copyright_check[0]}/${copyright_check[2]}\">${copyright_check[0]}#${copyright_check[2]}/artifact/copyright_issue_summary.log</a></td>"
+                 echo "${copyright_check_status}</tr>"
+            fi
         )
     </table>
 eof
