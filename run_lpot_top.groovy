@@ -137,7 +137,7 @@ echo "RUN_UT = ${RUN_UT}"
 
 // set ut extension test
 ut_extension_tensorflows='1.15.2,1.15UP2'
-if ('ut_extension_tensorflows' in params) {
+if (params.ut_extension_tensorflows != null) {
     ut_extension_tensorflows = params.ut_extension_tensorflows
 }
 echo "ut_extension_tensorflows: ${ut_extension_tensorflows}"
