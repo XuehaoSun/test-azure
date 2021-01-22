@@ -1,4 +1,5 @@
 #!/bin/bash
+set -xe
 
 PATTERN='[-a-zA-Z0-9_]*='
 for i in "$@"
