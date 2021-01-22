@@ -828,22 +828,24 @@ def unitTestJobs() {
             }
         }
     }
-    ut_extension_tfs.each{ ut_extension_tf ->
-        ut_jobs["${ut_extension_tf}_extension_ut"] = {
-            downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(ut_extension_tf, false)
-            catchError {
-                copyArtifacts(
-                        projectName: "lpot-unit-test",
-                        selector: specific("${downstreamJob.getNumber()}"),
-                        filter: '*.log, *.txt',
-                        fingerprintArtifacts: true,
-                        target: "unittest")
+    if (ut_extension_tfs != ''){
+        ut_extension_tfs.each{ ut_extension_tf ->
+            ut_jobs["${ut_extension_tf}_extension_ut"] = {
+                downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(ut_extension_tf, false)
+                catchError {
+                    copyArtifacts(
+                            projectName: "lpot-unit-test",
+                            selector: specific("${downstreamJob.getNumber()}"),
+                            filter: '*.log, *.txt',
+                            fingerprintArtifacts: true,
+                            target: "unittest")
 
-                archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
-            }
+                    archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+                }
 
-            if (downstreamJob.result != 'SUCCESS'){
-                currentBuild.result = "FAILURE"
+                if (downstreamJob.result != 'SUCCESS'){
+                    currentBuild.result = "FAILURE"
+                }
             }
         }
     }
