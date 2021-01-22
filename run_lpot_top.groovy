@@ -148,6 +148,12 @@ if (params.RUN_COVERAGE != null){
 }
 echo "RUN_COVERAGE = ${RUN_COVERAGE}"
 
+CHECK_COPYRIGHT=false
+if (params.CHECK_COPYRIGHT != null){
+    CHECK_COPYRIGHT=params.CHECK_COPYRIGHT
+}
+echo "CHECK_COPYRIGHT = ${CHECK_COPYRIGHT}"
+
 EXCEL_REPORT=false
 if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
     echo "EXCEL_REPORT is true"
@@ -523,7 +529,8 @@ def codeScan(tool) {
         string(name: "lpot_branch", value: "${lpot_branch}"),
         string(name: "MR_source_branch", value: "${MR_source_branch}"),
         string(name: "MR_target_branch", value: "${MR_target_branch}"),
-        string(name: "val_branch", value: "${val_branch}")
+        string(name: "val_branch", value: "${val_branch}"),
+        string(name: "python_version", value: "${python_version}")
     ]
 
     downstreamJob = build job: "intel-lpot-format-scan", propagate: false, parameters: codeScanParams
@@ -546,6 +553,38 @@ def codeScan(tool) {
         currentBuild.result = "FAILURE"
         if (MR_source_branch != '') {
             error("${tool} scan failed!")
+        }
+    }
+}
+
+def copyrightCheck() {
+    List copyrightCheckParams = [
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "val_branch", value: "${val_branch}")
+    ]
+
+    downstreamJob = build job: "intel-lpot-copyright-check", propagate: false, parameters: copyrightCheckParams
+
+    copyArtifacts(
+            projectName: "intel-lpot-copyright-check",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.log',
+            fingerprintArtifacts: true,
+            target: "copyrightCheck",
+            optional: true)
+
+    text_comment = readFile file: "${overview_log}"
+    writeFile file: "${overview_log}", text: text_comment + "intel-lpot-copyright-check," + downstreamJob.result + "," + downstreamJob.number + "\n"
+
+    // Archive in Jenkins
+    archiveArtifacts artifacts: "copyrightCheck/**", allowEmptyArchive: true
+
+    if (downstreamJob.result != 'SUCCESS') {
+        currentBuild.result = "FAILURE"
+        if (MR_source_branch != '') {
+            error("Copyright check failed!")
         }
     }
 }
@@ -1096,6 +1135,11 @@ node( node_label ) {
         if (RUN_BANDIT) {
             job_list["Bandit Scan"] = {
                 codeScan("bandit")
+            }
+        }
+        if (CHECK_COPYRIGHT && MR_source_branch != '') {
+            job_list["Copyright Check"] = {
+                copyrightCheck()
             }
         }
 

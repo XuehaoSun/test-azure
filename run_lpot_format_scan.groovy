@@ -90,7 +90,7 @@ def create_conda_env() {
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     conda_env_name=lpot-format_scan-${python_version}
                     if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
-                        echo "${conda_env} exist!"
+                        echo "${conda_env_name} exist!"
                     else
                         conda create python=${python_version} -y -n ${conda_env_name}
                     fi
