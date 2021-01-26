@@ -76,11 +76,11 @@ if ('test_trials' in params && params.test_trials != ''){
 }
 echo "test_trials: ${test_trials}"
 
-LOGLEVEL='DEFAULT'
-if ('LOGLEVEL' in params && params.LOGLEVEL != ''){
-    LOGLEVEL=params.LOGLEVEL
+log_level='DEFAULT'
+if ('log_level' in params && params.log_level != ''){
+    log_level=params.log_level
 }
-echo "LOGLEVEL: ${LOGLEVEL}"
+echo "log_level: ${log_level}"
 
 torchvision_versions = [
         "1.6.0": "0.7.0",
@@ -316,8 +316,11 @@ node(node_label){
             }
             if (UT_STRESS_TEST){
                 println("UT_STRESS_TEST...")
-                withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}", "LOGLEVEL=${LOGLEVEL}"]){
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}", "log_level=${log_level}"]){
                     sh'''#!/bin/bash
+                    if [ ${log_level}" != "DEFAULT" ]; then
+                      export LOGLEVEL=${log_level}
+                    fi
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
                     cd ${WORKSPACE}/lpot-models/test
