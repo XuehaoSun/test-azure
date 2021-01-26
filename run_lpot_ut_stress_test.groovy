@@ -318,7 +318,7 @@ node(node_label){
                 println("UT_STRESS_TEST...")
                 withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}", "log_level=${log_level}"]){
                     sh'''#!/bin/bash
-                    if [ ${log_level}" != "DEFAULT" ]; then
+                    if [ "${log_level}" != "DEFAULT" ]; then
                       export LOGLEVEL=${log_level}
                     fi
                     export PATH=${HOME}/miniconda3/bin/:$PATH
