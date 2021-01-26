@@ -792,7 +792,7 @@ def UTBuildParams(tf_version, run_coverage){
 def unitTestJobs() {
 
     def ut_jobs = [:]
-    def ut_extension_tfs = ut_extension_tensorflows.split(',')
+    def ut_extension_tfs = parseStrToList(ut_extension_tensorflows)
 
     ut_jobs["main_ut"] = {
         downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(tensorflow_version, RUN_COVERAGE)
@@ -828,7 +828,7 @@ def unitTestJobs() {
             }
         }
     }
-    if (ut_extension_tfs != ''){
+    if (ut_extension_tensorflows != ''){
         ut_extension_tfs.each{ ut_extension_tf ->
             ut_jobs["${ut_extension_tf}_extension_ut"] = {
                 downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(ut_extension_tf, false)
