@@ -315,6 +315,7 @@ node(node_label){
                 writeFile file: run_ut_scripts, text: run_ut_context + "python " + ut_case + "\n"
             }
             if (UT_STRESS_TEST){
+                println("UT_STRESS_TEST...")
                 withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}", "LOGLEVEL=${LOGLEVEL}"]){
                     sh'''#!/bin/bash
                     if [ ${LOGLEVEL}" != "DEFAULT" ]; then
@@ -339,6 +340,7 @@ node(node_label){
             }
 
             if (RUN_COVERAGE){
+                println("RUN_COVERAGE...")
                 withEnv(["run_ut_scripts=${run_ut_scripts}"]){
                     sh'''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
