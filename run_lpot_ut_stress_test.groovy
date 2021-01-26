@@ -318,9 +318,6 @@ node(node_label){
                 println("UT_STRESS_TEST...")
                 withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}", "LOGLEVEL=${LOGLEVEL}"]){
                     sh'''#!/bin/bash
-                    if [ ${LOGLEVEL}" != "DEFAULT" ]; then
-                      export LOGLEVEL=${LOGLEVEL}
-                    fi
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
                     cd ${WORKSPACE}/lpot-models/test
