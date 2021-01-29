@@ -117,6 +117,11 @@ main() {
       parameters="${parameters} --int8=true"
     fi
 
+    # remove duplicate install for pytorch resnest
+    if [ ${framework} == "pytorch" ] && [ ${model} == "resnest50" ]; then
+      sed -i '/python setup.py install/d' run_benchmark.sh
+    fi
+
     echo -e "\nStart run function..."
     case ${mode} in
       accuracy)
