@@ -170,6 +170,9 @@ def main() {
                 // set framework version
                 if( fw == "tensorflow" ) {
                     fw_ver_list = tf_list
+                    if (py == '3.8'){
+                        fw_ver_list = ['2.2.0', '2.3.0']
+                    }
                 }else if( fw == "pytorch" ) {
                     fw_ver_list = pt_list
                 }else if( fw == "mxnet" ) {
