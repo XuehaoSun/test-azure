@@ -27,6 +27,12 @@ echo "val_branch: ${val_branch}"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
+supported_extensions = "py,sh,yaml"
+if ('supported_extensions' in params && params.supported_extensions != '') {
+    supported_extensions = params.supported_extensions
+}
+echo "supported_extensions: ${supported_extensions}"
+
 def cleanup() {
     stage("Cleanup") {
         try {
@@ -83,16 +89,26 @@ node(node_label) {
             echo "---------------------------------------------------------"
             echo "-----------------  Running License Check  -----------------"
             echo "---------------------------------------------------------"
+
+            def extensions = supported_extensions.join(" ")
+
             dir("$WORKSPACE/LPOT") {
-                withEnv(["MR_target_branch=${MR_target_branch}"]) {
+                withEnv(["MR_target_branch=${MR_target_branch}", "extensions=${supported_extensions}"]) {
                     sh '''#!/bin/bash
                     set -xe
+                    supported_extensions=($(echo "${extensions}" | tr "," " "))
+
                     git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) ./lpot > ${WORKSPACE}/diff.log
                     files=$(cat $WORKSPACE/diff.log | awk '!a[$0]++')
                     for file in ${files}
                     do
-                        if [ $(grep -c "Copyright (c) 2021 Intel Corporation" ${file}) = 0 ]; then
-                            echo ${file} >> ${WORKSPACE}/copyright_issue_summary.log
+                        if [[ " ${supported_extensions[@]} " =~ " ${file##*.} " ]]; then
+                            echo "Checking license in ${file}"
+                            if [ $(grep -c "Copyright (c) 2021 Intel Corporation" ${file}) = 0 ]; then
+                                echo ${file} >> ${WORKSPACE}/copyright_issue_summary.log
+                            fi
+                        else
+                            echo "Skipping ${file}"
                         fi
                     done 
                 '''
