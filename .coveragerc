@@ -4,7 +4,7 @@ branch = True
 [report]
 omit =
  */**/fake*
- */lpot/ux*
+ */lpot/ux/*
 exclude_lines =
  pragma: no cover
  raise NotImplementedError
