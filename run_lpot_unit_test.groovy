@@ -337,16 +337,17 @@ node(node_label){
                         echo "Not found requirements.txt file."
                     fi
 
-                    export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
+                    export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
+                    cat ${COVERAGE_RCFILE}
 
                     lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
                     find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
                     ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
                     coverage erase
                     bash run.sh 2>&1 | tee ${ut_log_name}
-                    coverage report -m
-                    coverage html -d ${WORKSPACE}/coverage_results/htmlcov
-                    coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml
+                    coverage report -m --rcfile=${COVERAGE_RCFILE}
+                    coverage html -d ${WORKSPACE}/coverage_results/htmlcov --rcfile=${COVERAGE_RCFILE}
+                    coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml --rcfile=${COVERAGE_RCFILE}
                     if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                         exit 1
                     fi
@@ -432,15 +433,16 @@ node(node_label){
                             echo "Not found requirements.txt file."
                         fi
                     
-                        export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
+                        export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
+                        cat ${COVERAGE_RCFILE}
 
                         lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
                         find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
                         ut_log_name=${WORKSPACE}/unit_test_base.log
                         coverage erase
                         bash run.sh 2>&1 | tee ${ut_log_name}
-                        coverage report -m
-                        coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml
+                        coverage report -m --rcfile=${COVERAGE_RCFILE}
+                        coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml --rcfile=${COVERAGE_RCFILE}
 
                         python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
                             --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
