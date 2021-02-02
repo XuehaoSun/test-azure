@@ -264,10 +264,26 @@
       "strategy": "basic",
       "batch_size": 1
     },
+    "ssd_resnet50_v1_ckpt": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "input_model": "/tf_dataset/pre-train-model-oob/object_detection/ssd_resnet50_v1",
+      "yaml": "ssd_resnet50_v1.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
     "ssd_mobilenet_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/ssd_mobilenet_v1/frozen_inference_graph.pb",
+      "yaml": "ssd_mobilenet_v1.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "ssd_mobilenet_v1_ckpt": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "input_model": "/tf_dataset/pre-train-model-oob/object_detection/ssd_mobilenet_v1",
       "yaml": "ssd_mobilenet_v1.yaml",
       "strategy": "basic",
       "batch_size": 1
@@ -292,6 +308,14 @@
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/mask_rcnn_inception_v2/frozen_inference_graph.pb",
+      "yaml": "mask_rcnn_inception_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "mask_rcnn_inception_v2_ckpt": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "input_model": "/tf_dataset/pre-train-model-oob/object_detection/mask_rcnn_inception_v2",
       "yaml": "mask_rcnn_inception_v2.yaml",
       "strategy": "basic",
       "batch_size": 1
