@@ -341,8 +341,11 @@ node(node_label){
 
             if (RUN_COVERAGE){
                 println("RUN_COVERAGE...")
-                withEnv(["run_ut_scripts=${run_ut_scripts}"]){
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "log_level=${log_level}"]){
                     sh'''#!/bin/bash
+                        if [ "${log_level}" != "DEFAULT" ]; then
+                            export LOGLEVEL=${log_level}
+                        fi
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
                         export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
