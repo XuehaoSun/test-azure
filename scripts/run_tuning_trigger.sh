@@ -121,6 +121,8 @@ main() {
         q_model="${q_model}/${topology}"
     elif [ ${framework} == "onnxrt" ]; then
         q_model="${q_model}.onnx"
+    elif [ ${framework} == "pytorch" ]; then
+        q_model=""
     fi
 
     # run_tuning.sh
