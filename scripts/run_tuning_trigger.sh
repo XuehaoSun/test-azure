@@ -127,8 +127,11 @@ main() {
 
     # run_tuning.sh
     starttime=`date +'%Y-%m-%d %H:%M:%S'`
-
-    parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model} --output_model=${q_model}"
+    parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
+    # pytorch need to use default output_model path
+    if [ ${framework} != "pytorch" ]; then
+      parameters="${parameters} --output_model=${q_model}"
+    fi
 
     # new config with yaml
     if [ "${framework}" == "tensorflow" ]; then
