@@ -161,6 +161,7 @@ def do_binary_build() {
             cp dist/lpot*.whl ${WORKSPACE}/
             
             echo "Build Conda binary..."
+            conda clean -a
             cd ${WORKSPACE}/lpot-validation/conda_build/${conda_version}
             export LPOT_WHL=${WORKSPACE}/lpot*.whl
             pip install pyyaml six 
