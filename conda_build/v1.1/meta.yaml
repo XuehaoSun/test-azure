@@ -26,7 +26,7 @@ requirements:
     - hyperopt
     - pandas==1.1.5
     - pycocotools
-    - scikit-image==0.17.2
+    - opencv-python
     - Flask
     - Flask-Cors
     - Flask-SocketIO
