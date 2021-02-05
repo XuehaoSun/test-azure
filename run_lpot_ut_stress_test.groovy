@@ -348,7 +348,7 @@ node(node_label){
                         fi
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
-                        export COVERAGE_RCFILE=${WORKSPACE}/.coveragerc
+                        export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                         cd ${WORKSPACE}/lpot-models/test
                         lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
                         sed -i 's,python ,coverage run --source='"${lpot_path}"' --append ,g' ${run_ut_scripts}
