@@ -9,6 +9,8 @@ build:
   number: {{buildnumber}}
   noarch: python
   script: pip install --no-deps {{LPOT_WHL}}
+  entry_points:
+    - lpot_ux = lpot.ux.lpot_ux:main
 requirements:
   build:
     - python
@@ -25,6 +27,13 @@ requirements:
     - pandas==1.1.5
     - pycocotools
     - scikit-image==0.17.2
+    - Flask
+    - Flask-Cors
+    - Flask-SocketIO
+    - gevent
+    - gevent-websocket
+    - psutil
+    - ruamel.yaml
 test:
   imports:
     - lpot
