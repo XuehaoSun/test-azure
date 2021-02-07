@@ -210,7 +210,7 @@ def parseStrToList(srtingElements, delimiter=',') {
 }
 
 def create_conda_env(){
-    retry(5){
+    retry(10){
             sh """#!/bin/bash
                 bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
                     --model=${model} \
