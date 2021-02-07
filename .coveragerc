@@ -5,6 +5,7 @@ branch = True
 omit =
  */**/fake*
  */lpot/ux/*
+ */lpot/model/nets_factory.py
 exclude_lines =
  pragma: no cover
  raise NotImplementedError
