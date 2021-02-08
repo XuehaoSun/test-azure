@@ -207,6 +207,46 @@
       "yaml": "blendcnn.yaml",
       "strategy": "basic",
       "batch_size": 32
+    },
+    "gpt_WikiText": {
+      "model_src_dir": "language_translation",
+      "dataset_location": "/tf_dataset/pytorch/huggingface/language_translation_pt/wikitext-2-raw/",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/gpt_output",
+      "yaml": "openai-gpt.yaml",
+      "strategy": "basic",
+      "batch_size": 64
+    },
+    "ctrl_WikiText": {
+      "model_src_dir": "language_translation",
+      "dataset_location": "/tf_dataset/pytorch/huggingface/language_translation_pt/wikitext-2-raw/",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/ctrl_output",
+      "yaml": "ctrl.yaml",
+      "strategy": "basic",
+      "batch_size": 64
+    },
+    "xlnet_base_cased_MRPC": {
+      "model_src_dir": "language_translation",
+      "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/xlnet_output",
+      "yaml": "xlnet-base-cased.yaml",
+      "strategy": "basic",
+      "batch_size": 64
+    },
+    "roberta_base_MRPC": {
+      "model_src_dir": "language_translation",
+      "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/roberta_output",
+      "yaml": "roberta-base.yaml",
+      "strategy": "basic",
+      "batch_size": 64
+    },
+    "camembert_base_MRPC": {
+      "model_src_dir": "language_translation",
+      "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/camembert_output",
+      "yaml": "camembert-base.yaml",
+      "strategy": "basic",
+      "batch_size": 64
     }
   }
 }
