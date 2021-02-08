@@ -176,7 +176,7 @@ function collect_pb_size {
           fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
         fi
         int8_pb_size=$(du -s -BM ${q_model} |cut -f1)
-        python ${WORKSPACE}/lpot-validation/scripts/count_quantize_op.py --fp32_model ${input_model} --int8_model ${q_model}
+        # python ${WORKSPACE}/lpot-validation/scripts/count_quantize_op.py --fp32_model ${input_model} --int8_model ${q_model}
     elif [ "${framework}" == "mxnet" ];then
         fp32_pb_size=$(du -s -BM ${input_model} |cut -f1)
         int8_pb_size=$(du -s -BM ${q_model%/*} |cut -f1)
