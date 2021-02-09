@@ -52,7 +52,7 @@ function set_MXNet_env {
 function set_PT_env {
     export OMP_NUM_THREADS=28
 
-    if [[ ${model} = 'bert'* ]]; then
+    if [[ ${model} = 'bert'* ]] || [[ ${model} = *'WikiText' ]] || [[ ${model} = *'MRPC' ]]; then
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate pytorch-bert-1.6
     elif [[ ${model} = 'dlrm' ]]; then
