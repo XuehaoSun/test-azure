@@ -141,7 +141,7 @@ def algorithm=''
 def new_conda_env=true
 if(framework == 'pytorch'){
     label=model.split('_')
-    if(label[0] == 'bert'){
+    if(label[0] == 'bert' || label[-1] == 'MRPC' || label[-1] == 'WikiText'){
         sub_node_label='py-bert'
         new_conda_env=false
     }
