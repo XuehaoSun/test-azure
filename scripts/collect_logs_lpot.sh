@@ -1,4 +1,6 @@
 #!/bin/bash
+
+cpu="unknown"
 for var in "$@"
 do 
     case $var in
@@ -34,6 +36,8 @@ if [ "${mode}" == "tuning" ]; then
         if [ $(ls ${framework}/${model}/${framework}-${model}-${os}-*-tune.log | wc -l) != 0 ]; then
             platform=$(ls ${framework}/${model}/${framework}-${model}-${os}-*-tune.log | tail -n 1 | awk -F '-' '{print $(NF-1)}')  # Get one before last element as model name can contain dash
         fi
+    else
+        platform=${cpu}
     fi
     echo "Platform: ${platform}"
 
@@ -110,6 +114,8 @@ if [[ " ${unknown_platforms[@]} " =~ " ${cpu} " ]]; then
             platform=$(ls ${framework}/${model}/${framework}-${model}-${precision}-${mode}-${os}-* | tail -n 1 | awk -F '-' '{print $(NF)}' | cut -d '.' -f 1)
         fi
     fi
+else
+    platform=${cpu}
 fi
 
 if [ ${platform} == "Unknown" ]; then
