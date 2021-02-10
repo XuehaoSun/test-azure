@@ -361,7 +361,7 @@ def create_conda_env() {
                     ) ELSE (
                         CALL pip install onnxruntime==%framework_version%
                     )
-                    IF %model% == "bert_base_MRPC" (
+                    IF "%model%" == "bert_base_MRPC" (
                         CALL pip install torch
                         CALL pip install torchvision
                     )
