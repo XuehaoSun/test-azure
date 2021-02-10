@@ -94,8 +94,9 @@ def main():
     print(parameters)
     total_memory = psutil.virtual_memory().total
 
-    
     cmd = get_executable("tuning")
+    if args.framework == "onnxrt" and args.model == "bert_base_MRPC":
+        cmd = ["python", "bert_base.py"]
     cmd.extend(parameters)
     print("Executing command: '" + " ".join(cmd) + "' in '" + args.model_src_dir + "' directory.")
 
@@ -189,13 +190,50 @@ def get_tuning_parameters(framework: str, topology: str, q_model :str, os: str):
 
 
 def get_windows_parameters(framework: str, topology: str, q_model: str):
-    if topology == "resnet50_v1_5":
-        return [
-            args.input_model,
-            args.yaml,
-            q_model
-        ]
-    raise NotImplementedError
+    parameters_map = {
+        "tensorflow": {
+            "resnet50v1.0": [
+                "--input-graph", f"{args.input_model}",
+                "--output-graph", f"{q_model}",
+                "--config", f"{args.yaml}",
+                "--tune"
+
+            ],
+            "inception_v3": [
+                 "--input-graph", f"{args.input_model}",
+                "--output-graph", f"{q_model}",
+                "--config", f"{args.yaml}",
+                "--tune"
+            ],
+            "mobilenetv1": [
+                 "--input-graph", f"{args.input_model}",
+                "--output-graph", f"{q_model}",
+                "--config", f"{args.yaml}",
+                "--tune"
+            ]
+        },
+        "onnxrt": {
+            "resnet50_v1_5": [
+                "--model_path", f"{args.input_model}",
+                "--config", f"{args.yaml}",
+                "--output_model", f"{q_model}",
+                "--tune"
+            ],
+            "bert_base_MRPC": [
+                "--model_path", f"{args.input_model}"
+                "--data_dir", f"{args.dataset_location}",
+                "--task_name", "mrpc",
+                "--input_dir", "bert-base-uncased",
+                "--config" f"{args.yaml}",
+                "--output_model", f"{q_model}"
+                "--tune"
+            ]
+        }
+    }
+    parameters = parameters_map.get(framework, {}).get(topology, None)
+    if parameters is None:
+        raise NotImplementedError
+    return parameters
 
 
 def get_linux_parameters(framework: str, topology: str, q_model: str):

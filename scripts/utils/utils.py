@@ -142,7 +142,7 @@ def get_executable(mode: str):
             "benchmark": ["run_benchmark.sh"],
         },
         "Windows": {
-            "tuning": ["run_tuning.bat"],
+            "tuning": ["python", "main.py"],
             "benchmark": ["python", "main.py"],
         }
     }
