@@ -2,10 +2,11 @@ import argparse
 
 from lpot.adaptor.tf_utils.util import read_graph, write_graph
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--fp32_model", type=str, required=True, help="Path to fp32 model.")
-parser.add_argument("--int8_model", type=str, required=True, help="Path to int8 model.")
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fp32_model", type=str, required=True, help="Path to fp32 model.")
+    parser.add_argument("--int8_model", type=str, required=True, help="Path to int8 model.")
+    return parser.parse_args()
 
 
 def get_op_type(model):
@@ -40,4 +41,5 @@ def count_quantize_op(fp32_model, int8_model):
 
 
 if __name__ == "__main__":
+    args = parse_args()
     count_quantize_op(fp32_model=args.fp32_model, int8_model=args.int8_model)

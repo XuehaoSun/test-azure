@@ -259,6 +259,10 @@ def create_virtual_env() {
                     ) ELSE (
                         CALL pip install onnxruntime==%framework_version%
                     )
+                    IF %model% == "bert_base_MRPC" (
+                        CALL pip install torch
+                        CALL pip install torchvision
+                    )
                 )
 
                 IF %ERRORLEVEL% NEQ 0 (
@@ -356,6 +360,10 @@ def create_conda_env() {
                         CALL pip install -i https://test.pypi.org/simple ort-nightly
                     ) ELSE (
                         CALL pip install onnxruntime==%framework_version%
+                    )
+                    IF "%model%" == "bert_base_MRPC" (
+                        CALL pip install torch
+                        CALL pip install torchvision
                     )
                 )
 
