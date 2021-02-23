@@ -59,7 +59,7 @@ if [ "${mode}" == "tuning" ]; then
         exit 0
     fi
     strategy=$(grep 'Tuning strategy:' ${tuning_file} | tail -1 | awk -F ': ' '{print $2}' | tr -d '\r\n')
-    tune_count=$(grep -F 'Tune result is: [' ${tuning_file} | wc -l)
+    tune_count=$(grep -F 'Best tune result is:' ${tuning_file} | wc -l)
     tune_time=$(grep 'Tuning time spend:' ${tuning_file} | awk -F ' ' '{print $4}' | tr -d '\r\n' | sed 's/.$//g')
     fp32_pb_size=$(grep 'The input model size is:' ${tuning_file} |sed 's/[^0-9]//g')
     int8_pb_size=$(grep 'The output model size is:' ${tuning_file} |sed 's/[^0-9]//g')
