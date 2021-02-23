@@ -15,6 +15,14 @@
       "yaml": "bert.yaml",
       "strategy": "basic",
       "batch_size": 8
+    },
+    "mobilenet_v2": {
+      "model_src_dir": "image_recognition/mobilenet_v2",
+      "dataset_location": "/tf_dataset/onnx/img/val",
+      "input_model": "/tf_dataset/onnx/mobilenet_v2.onnx",
+      "yaml": "mobilenet_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 100
     }
   }
 }
