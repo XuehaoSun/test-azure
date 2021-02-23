@@ -65,7 +65,7 @@ main() {
     if [ -d ${model_src_dir} ]; then
         cd ${model_src_dir}
         echo -e "\nWorking in $(pwd)..."
-        if [ ${model_src_dir} == "${WORKSPACE}/lpot-models/examples/pytorch/language_translation" ]; then
+        if [ "${model_src_dir}" == "${WORKSPACE}/lpot-models/examples/pytorch/language_translation" ]; then
           python setup.py install
         fi
     else
