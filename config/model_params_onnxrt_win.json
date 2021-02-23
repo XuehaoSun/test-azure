@@ -2,7 +2,7 @@
     "onnxrt": {
         "resnet50_v1_5": {
             "model_src_dir": "image_recognition/resnet50",
-            "dataset_location": "imagenet/img_256_resize",
+            "dataset_location": "imagenet/img_256_resize/val",
             "input_model": "models/onnx/resnet50_export.onnx",
             "yaml": "resnet50_v1_5.yaml",
             "strategy": "basic",
@@ -18,7 +18,7 @@
         },
         "mobilenet_v2": {
             "model_src_dir": "image_recognition/mobilenet_v2",
-            "dataset_location": "imagenet/img_256_resize",
+            "dataset_location": "imagenet/img_256_resize/val",
             "input_model": "models/onnx/mobilenet_v2.onnx",
             "yaml": "mobilenet_v2.yaml",
             "strategy": "basic",
