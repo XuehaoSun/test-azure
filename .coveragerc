@@ -12,3 +12,4 @@ exclude_lines =
  raise TypeError
  if self.device == "gpu":
  if device == "gpu":
+ except ImportError:
