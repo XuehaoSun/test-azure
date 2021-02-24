@@ -86,16 +86,16 @@ if ('test_mode' in params && params.test_mode != ''){
 }
 echo "test_mode is ${test_mode}"
 
-nigthly_test_branch = ''
+lpot_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
-if ('nigthly_test_branch' in params && params.nigthly_test_branch != '') {
-    nigthly_test_branch = params.nigthly_test_branch
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 }else{
     MR_source_branch = params.MR_source_branch
     MR_target_branch = params.MR_target_branch
 }
-echo "nigthly_test_branch: $nigthly_test_branch"
+echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
@@ -443,7 +443,7 @@ node( sub_node_label ) {
                 else {
                     checkout changelog: true, poll: true, scm: [
                             $class                           : 'GitSCM',
-                            branches                         : [[name: "${nigthly_test_branch}"]],
+                            branches                         : [[name: "${lpot_branch}"]],
                             browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                             doGenerateSubmoduleConfigurations: false,
                             extensions                       : [
@@ -619,7 +619,7 @@ node( sub_node_label ) {
 
         stage("Performance") {
             // Set Latency mode for MR tests
-            if ((nigthly_test_branch == ''&& MR_source_branch != '') || model_src_dir == 'oob_models' || model == 'style_transfer') {
+            if ((lpot_branch == ''&& MR_source_branch != '') || model_src_dir == 'oob_models' || model == 'style_transfer') {
                 mode_list = ["latency"]
                 echo "Mode list: ${mode_list}"
             }
