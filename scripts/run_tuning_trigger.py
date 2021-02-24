@@ -219,6 +219,12 @@ def get_windows_parameters(framework: str, topology: str, q_model: str):
                 "--output_model", f"{q_model}",
                 "--tune"
             ],
+            "mobilenet_v2": [
+                "--model_path", f"{args.input_model}",
+                "--config", f"{args.yaml}",
+                "--output_model", f"{q_model}",
+                "--tune"
+            ],
             "bert_base_MRPC": [
                 "--model_path", f"{args.input_model}",
                 "--data_dir", f"{args.dataset_location}",
