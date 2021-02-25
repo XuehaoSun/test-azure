@@ -185,13 +185,7 @@ def update_yaml(yaml, framework, dataset_location = None, strategy = None, max_t
         print("Saving config")
         with open(yaml, "w") as config:
             for line in lines:
-                # TMP change to run perf tests
-                # Increase accuracy threshold
-                if "relative: " in line:
-                    config.write(re.sub(r'relative:\s+(\d.\d+)', "relative: 0.03", line))
-                else:
-                    config.write(re.sub(r'root:.*/path/to/(calibration|evaluation)/dataset/?', f"root: {dataset_location}", line))
-                # ------------------------
+                config.write(re.sub(r'root:.*/path/to/(calibration|evaluation)/dataset/?', f"root: {dataset_location}", line))
 
 
     update_yaml_config(
