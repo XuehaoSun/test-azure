@@ -89,45 +89,63 @@ def download() {
 
 def parallel_jobs() {
     def jobs = [:]
+    PLATFORMS.split(";").each { systemConfig ->
+        def system = systemConfig.split(":")[0]
+        platforms = systemConfig.split(":")[1].split(",")
+        platforms.each { platform ->
+            def cpu = platform
+            if (system == "windows") {
+                throw Exception("Windows is not yet supported in feature tests.")
+            }
 
-    job_features = feature_list.split(',')
+            job_features = feature_list.split(',')
 
-    job_features.each { job_feature ->
+            job_features.each { job_feature ->
 
-        jobs["${job_feature}"] = {
+                jobs["${job_feature}"] = {
 
-            echo "---test --- feature --- ${job_feature}"
+                    echo "---test --- feature --- ${job_feature} --- ${system} --- ${cpu}"
+                    def subnode_label = sub_node_label + " && " + system;
 
-            List featureParams = [
-                    string(name: "sub_node_label", value: "${sub_node_label}"),
-                    string(name: "binary_build_job", value: "${binary_build_job}"),
-                    string(name: "lpot_url", value: "${lpot_url}"),
-                    string(name: "lpot_branch", value: "${lpot_branch}"),
-                    string(name: "feature_name", value: "${job_feature}")
-            ]
+                    if (!['any', '*'].contains(cpu)) {
+                        subnode_label += " && " + cpu
+                    }
 
-            def downstreamJob
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                downstreamJob = build job: "lpot-feature-test", propagate: false, parameters: featureParams
+                    List featureParams = [
+                            string(name: "sub_node_label", value: "${subnode_label}"),
+                            string(name: "binary_build_job", value: "${binary_build_job}"),
+                            string(name: "lpot_url", value: "${lpot_url}"),
+                            string(name: "lpot_branch", value: "${lpot_branch}"),
+                            string(name: "feature_name", value: "${job_feature}"),
+                            string(name: "val_branch", value: "${val_branch}"),
+                            string(name: "cpu", value: "${cpu}"),
+                            string(name: "os", value: "${system}")
+                    ]
 
-                catchError {
-                    copyArtifacts(
-                            projectName: "lpot-feature-test",
-                            selector: specific("${downstreamJob.getNumber()}"),
-                            filter: '*.log',
-                            fingerprintArtifacts: true,
-                            target: "${job_feature}")
+                    def downstreamJob
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        downstreamJob = build job: "lpot-feature-test", propagate: false, parameters: featureParams
 
-                    // Archive in Jenkins
-                    archiveArtifacts artifacts: "${job_feature}/**"
-                }
+                        catchError {
+                            copyArtifacts(
+                                    projectName: "lpot-feature-test",
+                                    selector: specific("${downstreamJob.getNumber()}"),
+                                    filter: '*.log',
+                                    fingerprintArtifacts: true,
+                                    target: "${job_feature}")
 
-                def failed_build_result = downstreamJob.result
-                def failed_build_url = downstreamJob.absoluteUrl
+                            // Archive in Jenkins
+                            archiveArtifacts artifacts: "${job_feature}/**"
+                        }
 
-                if (downstreamJob && failed_build_result != 'SUCCESS') {
-                    currentBuild.result = "FAILURE"
-                    throw new Exception("Downstream Job failed.")
+                        def failed_build_result = downstreamJob.result
+                        def failed_build_url = downstreamJob.absoluteUrl
+
+                        if (downstreamJob && failed_build_result != 'SUCCESS') {
+                            currentBuild.result = "FAILURE"
+                            throw new Exception("Downstream Job failed.")
+                        }
+                    }
                 }
             }
         }
@@ -209,8 +227,8 @@ node( node_label ){
                             "summaryLog=${SUMMARYLOG}"
                     ]) {
                         sh '''
-                        chmod 775 ./lpot-validation/scripts/feature_test/collect_log_${feature_name}.sh
-                        ./lpot-validation/scripts/feature_test/collect_log_${feature_name}.sh
+                        chmod 775 ./lpot-validation/scripts/feature_test/collect_log/collect_log_${feature_name}.sh
+                        ./lpot-validation/scripts/feature_test/collect_log/collect_log_${feature_name}.sh
                     '''
                     }
                 }

@@ -1,3 +1,8 @@
+@NonCPS
+def jsonParse(def json) {
+    new groovy.json.JsonSlurperClassic().parseText(json)
+}
+
 credential = 'lab_tfbot'
 
 // parameters
@@ -44,8 +49,27 @@ if ('feature_name' in params && params.feature_name != '') {
 }
 echo "feature_name: ${feature_name}"
 
-def cleanup() {
+// Platforms specification pattern: "os1:cpu_name1,cpuname_2;os2:cpu_name1,cpuname_3"
+PLATFORMS = "linux:*"
+if ('PLATFORMS' in params && params.PLATFORMS != ''){
+    PLATFORMS = params.PLATFORMS
+}
+echo "PLATFORMS: ${PLATFORMS}"
 
+cpu="unknown"
+if ('cpu' in params && params.cpu != ''){
+    cpu=params.cpu
+}
+echo "cpu: ${cpu}"
+
+os="unknown"
+if ('os' in params && params.os != ''){
+    os=params.os
+}
+echo "os: ${os}"
+
+
+def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
@@ -113,18 +137,43 @@ node( sub_node_label ){
                 }
             }
         }
+
+        stage('Copy binary') {
+            catchError {
+                copyArtifacts(
+                        projectName: 'lpot-release-wheel-build',
+                        selector: specific("${binary_build_job}"),
+                        filter: 'lpot*.whl',
+                        fingerprintArtifacts: true,
+                        target: "${WORKSPACE}")
+
+                archiveArtifacts artifacts: "lpot*.whl"
+            }
+        }
         
         stage("feature test"){
             dir(WORKSPACE){
+                def featuresConfig =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/features.json"))
+                def featureConf = [:]
+                try {
+                    featureConf = featuresConfig."${feature_name}"
+                } catch (e) {
+                    println("Not found additional parameters for \"${feature_name}\" feature.")
+                }
+                def args = ""
+                for (param in featureConf) {
+                    args += "--${param.key}=${param.value}"
+                }
                 withEnv([
                         "feature_name=${feature_name}",
-                        "python_version=${python_version}"
+                        "python_version=${python_version}",
+                        "args=${args}"
                 ]) {
                     sh '''
                         #!/bin/bash
                         set -xe
-                        chmod 775 ./lpot-validation/scripts/feature_test/test_${feature_name}.sh
-                        ./lpot-validation/scripts/feature_test/test_${feature_name}.sh
+                        chmod 775 ./lpot-validation/scripts/feature_test/test/test_${feature_name}.sh
+                        ./lpot-validation/scripts/feature_test/test/test_${feature_name}.sh ${args}
                     '''
                 }
             }
