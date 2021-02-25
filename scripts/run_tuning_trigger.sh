@@ -207,7 +207,7 @@ function update_yaml_config {
       if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert" ]; then
         sed -i "/\/path\/to\/eval.tf_record/s|root:.*|root: $dataset_location/eval.tf_record|g" ${yaml}
         sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
-        sed -i "/\/path\/to\/vocab.txt/s|label_file:.*|label_file: $dataset_location/vocab.txt|g" ${yaml}
+        sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
       fi
     fi
 
