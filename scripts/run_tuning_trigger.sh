@@ -138,7 +138,7 @@ main() {
 
     # new config with yaml
     if [ "${framework}" == "tensorflow" ]; then
-      if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]]; then
+      if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]] || [[ "${model_src_dir}" == *"nlp/bert"* ]]; then
         parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
       fi
     fi
@@ -204,6 +204,11 @@ function update_yaml_config {
     if [ "${framework}" != "pytorch" ]; then
       sed -i "/\/path\/to\/calibration\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
       sed -i "/\/path\/to\/evaluation\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
+      if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert" ]; then
+        sed -i "/\/path\/to\/eval.tf_record/s|root:.*|root: $dataset_location/eval.tf_record|g" ${yaml}
+        sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
+        sed -i "/\/path\/to\/vocab.txt/s|label_file:.*|label_file: $dataset_location/vocab.txt|g" ${yaml}
+      fi
     fi
 
     update_yaml_params=""
