@@ -350,7 +350,7 @@
       "input_model": "/tf_dataset/tensorflow/bert/bert_fp32.pb",
       "yaml": "bert.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 64
     },
     "aipg-vdcnn": {
       "model_src_dir": "oob_models",
