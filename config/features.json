@@ -1,0 +1,5 @@
+{
+    "pytorch_prune": {
+        "dataset_location": "/tf_dataset/pytorch/ImageNet/raw"
+    }
+}
