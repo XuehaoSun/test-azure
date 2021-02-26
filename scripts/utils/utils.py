@@ -290,6 +290,16 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
                     print(f"Changed performance batch size from {prev_iteration} to {iteration}")
                 except Exception as e:
                     print(f"[ WARNING ] {e}")
+
+            if batch_size and mode == 'latency':
+                try:
+                    dataloader = yaml_config.get("evaluation", {}).get("performance", {}).get("dataloader", {})
+                    prev_batch_size = dataloader.get("batch_size", None)
+                    dataloader.update({"batch_size": batch_size})
+                    print(f"Changed accuracy batch size from {prev_batch_size} to {batch_size}")
+                except Exception as e:
+                    print(f"[ WARNING ] {e}")
+
         except Exception as e:
             print(f"[ WARNING ] {e}")
 
