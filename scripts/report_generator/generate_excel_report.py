@@ -73,15 +73,17 @@ def write_row(row, result):
 
     int8_acc = result.accuracy.int8.get("value", None)
     fp32_acc = result.accuracy.fp32.get("value", None)
-    acc_ratio = "N/A"
-    if int8_acc and fp32_acc:
+    try:
         acc_ratio = (float(int8_acc) - float(fp32_acc)) / float(fp32_acc)
+    except:
+        acc_ratio = "N/A"
 
     int8_latency = result.performance.latency.get("int8", {}).get("value", "")
     fp32_latency = result.performance.latency.get("fp32", {}).get("value", "")
-    latency_ratio = "N/A"
-    if int8_latency and fp32_latency:
+    try:
         latency_ratio = float(fp32_latency) / float(int8_latency)
+    except:
+        latency_ratio = "N/A"
 
     default_format = workbook.add_format()
     default_format.set_text_wrap()
