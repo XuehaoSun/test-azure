@@ -6,7 +6,7 @@ if ('node_label' in params && params.node_label != '') {
 }
 echo "Running on node ${node_label}"
 
-lpot_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
+lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -25,7 +25,7 @@ if ('lpot_branch' in params && params.lpot_branch != ''){
 }
 echo "lpot_branch: ${lpot_branch}"
 
-val_branch="developer"
+val_branch="master"
 if ('val_branch' in params && params.val_branch != ''){
     val_branch=params.val_branch
 }
@@ -119,13 +119,14 @@ node(node_label) {
                             conda create python=${python_version} -y -n ${conda_env_name}
                             source activate ${conda_env_name}
                             
-                            echo "pip list before requirements.txt install..."
+                            python -V
+                            echo "-----pip list before requirements.txt install..."
                             pip list
                             pip install -r requirements.txt
-                            echo "pip list after requirements.txt install..."
+                            echo "-----pip list after requirements.txt install..."
                             pip list
                             python setup.py install 2>&1 | tee source_install_${python_version}.log
-                            echo "pip list after setup.py install..."
+                            echo "-----pip list after setup.py install..."
                             pip list 
                         '''
                         }
