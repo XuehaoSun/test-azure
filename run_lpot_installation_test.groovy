@@ -31,6 +31,12 @@ if ('val_branch' in params && params.val_branch != ''){
 }
 echo "val_branch: ${val_branch}"
 
+source_install=true
+if (params.source_install != null){
+    source_install=params.source_install
+}
+echo "source_install = ${source_install}"
+
 def parseStrToList(srtingElements, delimiter=',') {
     if (srtingElements == ''){
         return []
