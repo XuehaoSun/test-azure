@@ -118,7 +118,8 @@ node(node_label) {
                         
                             conda create python=${python_version} -y -n ${conda_env_name}
                             source activate ${conda_env_name}
-                            
+                            # Upgrade pip
+                            # pip install -U pip
                             python -V
                             echo "-----pip list before requirements.txt install..."
                             pip list
