@@ -9,7 +9,7 @@
 function main {
   # 1. create conda env
   export PATH=${HOME}/miniconda3/bin/:$PATH
-  pip config set global.index-url https://pypi.douban.com/simple/
+  # pip config set global.index-url https://pypi.douban.com/simple/
   create_conda_env 2.3.0
 
   # 2. train for pre-train models

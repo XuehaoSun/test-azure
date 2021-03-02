@@ -119,7 +119,7 @@ if [[ ${run_ut} != '' ]]; then
 else
 # for model validation
     echo -e "\nUpdate conda env... "
-    pip config set global.index-url https://pypi.douban.com/simple/
+    # pip config set global.index-url https://pypi.douban.com/simple/
     update_conda_env
 
     if [ ${framework} == 'tensorflow' ]; then

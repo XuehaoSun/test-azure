@@ -24,7 +24,7 @@ done
 
 function main {
     export PATH=${HOME}/miniconda3/bin/:$PATH
-    pip config set global.index-url https://pypi.douban.com/simple/
+    # pip config set global.index-url https://pypi.douban.com/simple/
 
     create_conda_env
     lpot_install
