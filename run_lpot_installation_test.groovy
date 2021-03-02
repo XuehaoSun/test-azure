@@ -135,6 +135,7 @@ node(node_label) {
                                 test_status="failed"
                             else
                                 test_status="pass" 
+                            fi 
                             echo "test ${test_status} on ${detail_python} \n" >> ${WORKSPACE}/source_code_build_test.log
                         '''
                         }
