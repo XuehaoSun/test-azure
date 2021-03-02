@@ -126,9 +126,16 @@ node(node_label) {
                             pip install -r requirements.txt
                             echo "-----pip list after requirements.txt install..."
                             pip list
-                            python setup.py install 2>&1 | tee source_install_${python_version}.log
+                            python setup.py install 2>&1 | tee ${WORKSPACE}/source_install_${python_version}.log
                             echo "-----pip list after setup.py install..."
                             pip list 
+                            lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                            detail_python=$(python -V)
+                            if [ lpot_path == '' ]; then
+                                test_status="failed"
+                            else
+                                test_status="pass" 
+                            echo "test ${test_status} on ${detail_python} \n" >> ${WORKSPACE}/source_code_build_test.log
                         '''
                         }
 
