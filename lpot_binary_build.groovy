@@ -167,7 +167,6 @@ def do_binary_build() {
             
             echo "Build Conda binary..."
             conda clean -a -y
-            cd ${WORKSPACE}/lpot-validation/conda_build/${conda_version}
             export LPOT_WHL=${WORKSPACE}/lpot*.whl
             pip install pyyaml six 
             conda install patchelf conda-build conda-verify -y
