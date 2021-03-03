@@ -70,8 +70,8 @@ if [ "${mode}" == "tuning" ]; then
     start_seconds=$(date --date="$pure_tune_1_start" +%s)
     pure_tune_1_end=$(grep 'Converted graph file is saved to:' ${tuning_file} | head -1 | awk -F ' \\[' '{print $1}')
     end_seconds=$(date --date="$pure_tune_1_end" +%s)
-    pure_tune_1_time=$((end_seconds-start_seconds))
-    echo "$model: $pure_tune_1_time" >> ${WORKSPACE}/pure_tuning_time.log
+    pure_quantize_time=$((end_seconds-start_seconds))
+    echo "$model: $pure_quantize_time" >> ${WORKSPACE}/pure_tuning_time.log
     if [ ! -z ${total_mem_size} ] && [ ! -z ${max_mem_size} ]; then
         mem_percentage=$(echo |awk -v total=${total_mem_size} -v max=${max_mem_size} '{printf("%.0f%", max / total * 100)}')
     fi
