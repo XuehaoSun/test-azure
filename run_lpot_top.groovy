@@ -312,6 +312,12 @@ if ('val_branch' in params && params.val_branch != ''){
 }
 echo "val_branch: ${val_branch}"
 
+dataset_prefix=""
+if ('dataset_prefix' in params && params.dataset_prefix != ''){
+    dataset_prefix=params.dataset_prefix
+}
+echo "dataset_prefix: ${dataset_prefix}"
+
 def cleanup() {
 
     try {
@@ -421,7 +427,7 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
     ParamsPerJob += string(name: "cpu", value: "${cpu}")
     ParamsPerJob += string(name: "os", value: "${os}")
-
+    ParamsPerJob += string(name: "dataset_prefix", value: "${dataset_prefix}")
     return ParamsPerJob
 }
 
