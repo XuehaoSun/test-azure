@@ -142,14 +142,14 @@ def new_conda_env=true
 if(framework == 'pytorch'){
     label=model.split('_')
     if(label[0] == 'bert' || label[-1] == 'MRPC' || label[-1] == 'WikiText'){
-        sub_node_label='py-bert'
+        sub_node_label=sub_node_label + " && " + 'py-bert'
         new_conda_env=false
     }
     if(model == 'dlrm'){
         sub_node_label='dlrm'
     }
     if(label[-1] == 'ipex'){
-        sub_node_label='py-ipex'
+        sub_node_label=sub_node_label + " && " + 'py-ipex'
         new_conda_env=false
     }
 }
@@ -175,13 +175,17 @@ if ('os' in params && params.os != ''){
 }
 echo "os: ${os}"
 
+dataset_prefix=""
+if ('dataset_prefix' in params && params.dataset_prefix != ''){
+    dataset_prefix=params.dataset_prefix
+}
+echo "dataset_prefix: ${dataset_prefix}"
 
 def cleanup() {
 
     try {
         sh '''#!/bin/bash 
         set -x
-        sudo rm -rf /home/tensorflow/.lpot
         cd $WORKSPACE
         sudo rm -rf *
         # set perf BKC
@@ -380,8 +384,8 @@ node( sub_node_label ) {
                     --framework=${framework} \
                     --model=${model} \
                     --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
-                    --dataset_location=${dataset_location} \
-                    --input_model=${input_model} \
+                    --dataset_location=${dataset_prefix}${dataset_location} \
+                    --input_model=${dataset_prefix}${input_model} \
                     --yaml=${yaml} \
                     --strategy=${strategy} \
                     --max_trials=${max_trials} \
@@ -444,7 +448,7 @@ node( sub_node_label ) {
                         bash ${WORKSPACE}/lpot-validation/scripts/run_dummy_inference.sh \
                             --framework=${framework} \
                             --model=${model} \
-                            --input_model=${input_model} \
+                            --input_model=${dataset_prefix}${input_model} \
                             --precision=${precision} \
                             --mode=${mode} \
                             --batch_size=${batch_size} \
@@ -487,8 +491,8 @@ node( sub_node_label ) {
                                     --framework=${framework} \
                                     --model=${model} \
                                     --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \\
-                                    --dataset_location=${dataset_location} \
-                                    --input_model=${input_model} \
+                                    --dataset_location=${dataset_prefix}${dataset_location} \
+                                    --input_model=${dataset_prefix}${input_model} \
                                     --precision=${precision} \
                                     --mode=${mode} \
                                     --batch_size=${batch_size} \

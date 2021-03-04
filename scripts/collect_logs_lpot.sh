@@ -66,11 +66,7 @@ if [ "${mode}" == "tuning" ]; then
     total_mem_size=$(grep 'Total resident size' ${tuning_file} |sed 's/[^0-9]//g')
     max_mem_size=$(grep 'Maximum resident set size' ${tuning_file} |sed 's/[^0-9]//g')
     mem_percentage="N/A"
-    pure_tune_1_start=$(grep 'FP32 baseline is:' ${tuning_file} | head -1 | awk -F ' \\[' '{print $1}')
-    start_seconds=$(date --date="$pure_tune_1_start" +%s)
-    pure_tune_1_end=$(grep 'Converted graph file is saved to:' ${tuning_file} | head -1 | awk -F ' \\[' '{print $1}')
-    end_seconds=$(date --date="$pure_tune_1_end" +%s)
-    pure_quantize_time=$((end_seconds-start_seconds))
+    pure_quantize_time=$(grep 'Pass quantize model elapsed time: ' ${tuning_file} | head -1 | awk -F ': ' '{printf("%.1f\n",$2/1000)}')
     echo "$model: $pure_quantize_time" >> ${WORKSPACE}/pure_tuning_time.log
     if [ ! -z ${total_mem_size} ] && [ ! -z ${max_mem_size} ]; then
         mem_percentage=$(echo |awk -v total=${total_mem_size} -v max=${max_mem_size} '{printf("%.0f%", max / total * 100)}')
@@ -135,13 +131,11 @@ echo "Platform: ${platform}"
 
 log_file="${framework}/${model}/${framework}-${model}-${precision}-${mode}-${os}-${platform}"
 
-if [ "${mode}" == "throughput" ]; then
-    bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| head -1 |sed 's/[^0-9]//g' | tr -d '\r\n')
-    throughput=$(grep "Throughput: " ${log_file}*  | sed -e s";.*: ;;" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
-    echo "${os};${platform};${framework};${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
-fi
-
 if [ "${mode}" == "latency" ]; then
+    bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| head -1 |sed 's/[^0-9]//g' | tr -d '\r\n')
+    throughput=$(grep "Throughput: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; images/sec;;" | awk 'BEGIN{sum=0}{sum+=$1}END{print sum}')
+    echo "${os};${platform};${framework};${PRECISION};${model};Inference;Throughput;${bs};${throughput};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
+
     bs=$(grep 'Batch size =' $(ls ${log_file}* | head -1) | awk -F '=' '{print $2}'| head -1 | sed 's/[^0-9]//g' | tr -d '\r\n')
     latency=$(grep "Latency: " ${log_file}*  | sed -e s"/.*: //" | sed -e s"; ms;;" | awk 'BEGIN{sum=0}{sum+=$1}END{printf("%.3f\n",sum/NR)}')
     echo "${os};${platform};${framework};${PRECISION};${model};Inference;Latency;${bs};${latency};${BUILD_URL}artifact/$(ls ${log_file}* | head -1)" | tee -a ${WORKSPACE}/summary.log
