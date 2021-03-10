@@ -102,7 +102,7 @@ if [[ ${run_ut} != '' ]]; then
     if [ ${mxnet_version} == '1.6.0' ]; then
         pip install mxnet-mkl==${mxnet_version}
     elif [ ${mxnet_version} == '1.7.0' ]; then
-        pip install mxnet==${mxnet_version}.post1
+        pip install mxnet==${mxnet_version}.post2
     else
         pip install mxnet==${mxnet_version}
     fi
