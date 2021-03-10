@@ -168,7 +168,7 @@ else
         if [ ${framework_version} == '1.6.0' ]; then
             pip install ${framework}-mkl==${framework_version}
         elif [ ${framework_version} == '1.7.0' ]; then
-            pip install ${framework}==${framework_version}.post1
+            pip install ${framework}==${framework_version}.post2
         else
             pip install ${framework}==${framework_version}
         fi
