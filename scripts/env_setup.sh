@@ -58,6 +58,8 @@ function set_PT_env {
     elif [[ ${model} = 'dlrm' ]]; then
       export PATH=${HOME}/anaconda3/bin/:$PATH
       source activate ${conda_env_name}
+      export https_proxy=http://child-prc.intel.com:913
+      export http_proxy=http://child-prc.intel.com:913
     elif [[ ${model} = *'_ipex' ]]; then
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate pt-ipex-3.6
@@ -98,8 +100,6 @@ function set_environment {
     fi
 
     cd ${WORKSPACE}
-    # export https_proxy=http://child-prc.intel.com:913
-    # export http_proxy=http://child-prc.intel.com:913
     pip install lpot*.whl
     echo "Checking lpot..."
     pip list
