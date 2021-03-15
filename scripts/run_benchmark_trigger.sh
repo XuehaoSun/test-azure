@@ -272,13 +272,12 @@ function config_new_yaml {
     fi
   fi
 
-  if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" == *"image_recognition"* ]]; then
+  if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" != *"language_translation"* ]]; then
       update_yaml_config
       echo -e "\nPrint_updated_yaml... "
       cat ${yaml}
       parameters="--config=${yaml} --input_model=${input_model}"
   fi
-
 }
 
 main

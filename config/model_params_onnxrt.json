@@ -8,6 +8,38 @@
       "strategy": "basic",
       "batch_size": 100
     },
+    "mobilenet_v2": {
+      "model_src_dir": "image_recognition/mobilenet_v2",
+      "dataset_location": "/tf_dataset/onnx/img/val",
+      "input_model": "/tf_dataset/onnx/mobilenet_v2.onnx",
+      "yaml": "mobilenet_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "vgg16": {
+      "model_src_dir": "image_recognition/vgg16",
+      "dataset_location": "/tf_dataset/onnx/img/val",
+      "input_model": "/tf_dataset/onnx/vgg16.onnx",
+      "yaml": "vgg16.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
+    "ssd_mobilenet_v1": {
+      "model_src_dir": "object_detection/ssd_mobilenet_v1",
+      "dataset_location": "/tf_dataset/dataset/coco_dataset/raw-data",
+      "input_model": "/home/tensorflow/suyue/onnx/ssd_mobilenet_v1_frozen.onnx",
+      "yaml": "ssd_mobilenet_v1.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "ssd_mobilenet_v2": {
+      "model_src_dir": "object_detection/ssd_mobilenet_v2",
+      "dataset_location": "/tf_dataset/dataset/coco_dataset/raw-data",
+      "input_model": "/home/tensorflow/suyue/onnx/ssd_mobilenet_v2_frozen.onnx",
+      "yaml": "ssd_mobilenet_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
     "bert_base_MRPC": {
       "model_src_dir": "language_translation/bert",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
@@ -16,13 +48,29 @@
       "strategy": "basic",
       "batch_size": 8
     },
-    "mobilenet_v2": {
-      "model_src_dir": "image_recognition/mobilenet_v2",
-      "dataset_location": "/tf_dataset/onnx/img/val",
-      "input_model": "/tf_dataset/onnx/mobilenet_v2.onnx",
-      "yaml": "mobilenet_v2.yaml",
+    "distilbert_base_MRPC": {
+      "model_src_dir": "language_translation/distilbert",
+      "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
+      "input_model": "/home/tensorflow/suyue/onnx/distilbert-base-uncased.onnx",
+      "yaml": "distilbert.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 8
+    },
+    "mobilebert_MRPC": {
+      "model_src_dir": "language_translation/mobilebert",
+      "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
+      "input_model": "/home/tensorflow/suyue/onnx/mobilebert-uncased.onnx",
+      "yaml": "mobilebert.yaml",
+      "strategy": "basic",
+      "batch_size": 8
+    },
+    "roberta_base_MRPC": {
+      "model_src_dir": "language_translation/roberta",
+      "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
+      "input_model": "/home/tensorflow/suyue/onnx/roberta-base.onnx",
+      "yaml": "roberta.yaml",
+      "strategy": "basic",
+      "batch_size": 8
     }
   }
 }
