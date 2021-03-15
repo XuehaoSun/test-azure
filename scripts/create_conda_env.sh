@@ -155,9 +155,6 @@ else
         else
             torch_whl_path=/tf_dataset/pytorch/pypi
         fi
-        if [ ${model} == 'resnest50' ] || [ ${model} == 'blendcnn' ]; then
-            framework_version='1.6.0+cpu'
-        fi
         torch_whl=${torch_whl_path}/${python_version}/torch-${framework_version}-*.whl
         if [ -f ${torch_whl} ]; then
             pip install ${torch_whl}
