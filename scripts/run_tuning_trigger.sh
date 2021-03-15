@@ -142,10 +142,13 @@ main() {
         parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
       fi
     fi
-    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" == *"image_recognition"* ]]; then
+    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" != *"language_translation"* ]]; then
       parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
     fi
 
+    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" == *"language_translation"* ]]; then
+      ln -s ${input_model} ${model_src_dir}/
+    fi
     update_yaml_config
     echo -e "\nPrint_updated_yaml... "
     cat ${yaml}
