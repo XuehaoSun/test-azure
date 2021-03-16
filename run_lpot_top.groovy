@@ -318,6 +318,12 @@ if ('dataset_prefix' in params && params.dataset_prefix != ''){
 }
 echo "dataset_prefix: ${dataset_prefix}"
 
+tuning_precision="default"
+if ('tuning_precision' in params && params.tuning_precision != ''){
+    tuning_precision=params.tuning_precision
+}
+echo "tuning_precision: ${tuning_precision}"
+
 def cleanup() {
 
     try {
@@ -865,7 +871,8 @@ def buildBinary(){
             string(name: "lpot_branch", value: "${lpot_branch}"),
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
-            string(name: "val_branch", value: "${val_branch}")
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "tuning_precision", value: "${tuning_precision}")
     ]
     downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
     
