@@ -195,7 +195,7 @@
     "dlrm": {
       "model_src_dir": "recommendation",
       "dataset_location": "/mnt/local_disk3/dataset/dlrm/terabyte_input",
-      "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/terabyte_mlperf.pt",
+      "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/tb00_40M.pt",
       "yaml": "conf.yaml",
       "strategy": "basic",
       "batch_size": 100
