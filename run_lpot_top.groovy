@@ -488,7 +488,7 @@ def getPerfJobs() {
                 echo "${job_models}"
                 echo "llsu-----> ${job_framework}"
                 job_models.each { job_model ->
-                    jobs["${cpu}_${system}_${job_framework}_${job_model}"] = {
+                    jobs["${job_model}_${job_framework}_${system}_${cpu}"] = {
 
                         // execute build
                         println("${cpu}, ${system}, ${job_framework}, ${job_model}")
