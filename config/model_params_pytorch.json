@@ -198,7 +198,7 @@
       "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/terabyte_mlperf.pt",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 100
     },
     "blendcnn": {
       "model_src_dir": "distill-bert",
