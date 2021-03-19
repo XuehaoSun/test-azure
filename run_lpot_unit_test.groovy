@@ -342,7 +342,7 @@ node(node_label){
                     cat ${COVERAGE_RCFILE}
 
                     lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
-                    find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
+                    find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
                     ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
                     coverage erase
                     bash run.sh 2>&1 | tee ${ut_log_name}
@@ -438,7 +438,7 @@ node(node_label){
                         cat ${COVERAGE_RCFILE}
 
                         lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
-                        find . -name "test*.py" | sed 's,.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
+                        find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
                         ut_log_name=${WORKSPACE}/unit_test_base.log
                         coverage erase
                         bash run.sh 2>&1 | tee ${ut_log_name}
@@ -533,7 +533,7 @@ node(node_label){
                                 echo "Not found requirements.txt file."
                             fi
 
-                            find . -name "test*.py" | sed 's,.\\/,python ,g' > run.sh
+                            find . -name "test*.py" | sed 's,\\.\\/,python ,g' > run.sh
                             ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
                             bash run.sh 2>&1 | tee ${ut_log_name}
                             if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
