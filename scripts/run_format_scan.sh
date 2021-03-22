@@ -62,7 +62,7 @@ main() {
 
 run_pylint() {
     pip install pylint
-    python -m pylint -f json --disable=R,C,W,I,E0401,E0611 --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy  --ignored-classes=TensorProto,NodeProto lpot > ${WORKSPACE}/lpot-pylint.json
+    python -m pylint -f json --disable=R,C,W --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy  --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow lpot > ${WORKSPACE}/lpot-pylint.json
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "PyLint exited with non-zero exit code."; exit 1
