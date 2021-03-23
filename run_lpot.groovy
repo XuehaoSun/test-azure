@@ -41,21 +41,21 @@ model = 'resnet50'
 if ('model' in params && params.model != '') {
     model = params.model
 }
-echo "Running ${model}"
+echo "Model: ${model}"
 
 precision = 'int8,fp32'
 if ('precision' in params && params.precision != '') {
     precision = params.precision
 }
-def precision_list = parseStrToList(precision)
-echo "Running ${precision}"
+precision_list = parseStrToList(precision)
+echo "Precision: ${precision}"
 
 mode = 'accuracy,latency'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
-def mode_list = parseStrToList(mode)
-echo "Running ${mode}"
+mode_list = parseStrToList(mode)
+echo "Mode: ${mode}"
 
 lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
 if ('lpot_url' in params && params.lpot_url != ''){
@@ -175,12 +175,42 @@ if ('os' in params && params.os != ''){
 }
 echo "os: ${os}"
 
+refer_build = "x0"
+if ('refer_build' in params && params.refer_build != '') {
+    refer_build = params.refer_build
+}
+echo "Refer build is ${refer_build}"
+
+steps_print_models = [
+    "resnet50v1.5",
+    "resnet50v1",
+    "inception_v1",
+    "wide_deep_large_ds"
+]
+
 dataset_prefix=""
 if ('dataset_prefix' in params && params.dataset_prefix != ''){
     dataset_prefix=params.dataset_prefix
 }
 echo "dataset_prefix: ${dataset_prefix}"
 
+upstreamBuild = ""
+upstreamJobName = ""
+upstreamUrl = ""
+
+MAX_RERUNS = 3
+
+@NonCPS
+def getUpstreamInfo() {
+    def upstream_job = currentBuild.rawBuild.getCause(hudson.model.Cause$UpstreamCause)
+    if (!upstream_job) {
+        return
+    }
+    println("Found upstream job. Updating info...")
+    upstreamJobName = upstream_job.upstreamProject
+    upstreamBuild = upstream_job.upstreamBuild
+    upstreamUrl = upstream_job.upstreamUrl
+}
 def cleanup() {
 
     try {
@@ -218,15 +248,286 @@ def create_conda_env(){
     retry(20){
             sh """#!/bin/bash
                 bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
-                    --model=${model} \
-                    --framework=${framework} \
-                    --framework_version=${framework_version} \
-                    --python_version=${python_version} \
-                    --onnx_version=${onnx_version} \
-                    --requirement_list=${requirement_list} \
-                    --conda_env_name=${conda_env_name}
+                    --model="${model}" \
+                    --framework="${framework}" \
+                    --framework_version="${framework_version}" \
+                    --python_version="${python_version}" \
+                    --onnx_version="${onnx_version}" \
+                    --requirement_list="${requirement_list}" \
+                    --conda_env_name="${conda_env_name}"
             """
         }
+}
+
+def runPerfTestMR(mode, precision, output_path="${WORKSPACE}") {
+    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))
+    def input_model = modelConf."${framework}"."${model}"."input_model"
+    def batch_size = modelConf."${framework}"."${model}"."batch_size"
+    if (mode == 'latency') {
+        batch_size = 1
+    }
+    sh """#!/bin/bash -x
+    echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
+    
+    echo "-------w-------"
+    w
+    echo "-------w-------"
+    echo "=======cache clean======="
+    
+    sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+
+    echo "=======cache clean======="
+    bash ${WORKSPACE}/lpot-validation/scripts/run_dummy_inference.sh \
+        --framework=${framework} \
+        --model=${model} \
+        --input_model=${input_model} \
+        --precision=${precision} \
+        --mode=${mode} \
+        --batch_size=${batch_size} \
+        --os=${os} \
+        --cpu=${cpu} \
+        --conda_env_name=${conda_env_name} \
+        --output_path=${output_path}
+    """
+}
+
+def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
+    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))
+    def model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
+    def dataset_location = modelConf."${framework}"."${model}"."dataset_location"
+    def input_model = modelConf."${framework}"."${model}"."input_model"
+    def yaml = modelConf."${framework}"."${model}"."yaml"
+    def batch_size = modelConf."${framework}"."${model}"."batch_size"
+
+    sh """#!/bin/bash -x
+    echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
+    
+    echo "-------w-------"
+    w
+    echo "-------w-------"
+    echo "=======cache clean======="
+    
+    sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+
+    echo "=======cache clean======="
+    bash ${WORKSPACE}/lpot-validation/scripts/run_benchmark_trigger.sh \
+        --framework=${framework} \
+        --model=${model} \
+        --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \\
+        --dataset_location=${dataset_location} \
+        --input_model=${input_model} \
+        --precision=${precision} \
+        --mode=${mode} \
+        --batch_size=${batch_size} \
+        --conda_env_name=${conda_env_name} \
+        --yaml=${yaml} \
+        --os=${os} \
+        --cpu=${cpu} \
+        --profiling=${RUN_PROFILING} \
+        --output_path=${output_path}
+    """
+}
+
+def getReferenceData() {
+    stage("Get reference data") {
+        if(refer_build != 'x0') {
+
+            def refer_job_name = "${JOB_NAME}"
+
+            if (test_mode == "extension") {
+                refer_job_name="intel-lpot-validation-top-nightly"
+            } else {
+                if (upstreamJobName) {
+                    refer_job_name = upstreamJobName
+                }
+            }
+            println("Copying artifacts from ${refer_job_name} job")
+            copyArtifacts(
+                projectName: refer_job_name,
+                selector: specific("${refer_build}"),
+                filter: 'summary.log,',
+                fingerprintArtifacts: true,
+                target: "reference")
+
+            sh"""#!/bin/bash
+                set -x
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                if [[ ${framework} = 'pytorch' ]] && [[ ${model} = 'dlrm' ]]; then
+                    export PATH=${HOME}/anaconda3/bin/:$PATH
+                fi
+                source activate ${conda_env_name}
+
+                python ${WORKSPACE}/lpot-validation/scripts/parse_summary.py \
+                    --summary-file=${WORKSPACE}/reference/summary.log \
+                    --output-name=${WORKSPACE}/reference_data.json
+                """
+        }
+    }
+}
+
+def findPerfDrops(result_json, os="", platform="", precision="", mode="") {
+    def cmd = "python ${WORKSPACE}/lpot-validation/scripts/compare_results.py \
+                --new_result=\"${result_json}\" \
+                --reference_data=\"${WORKSPACE}/reference_data.json\" \
+                --framework=\"${framework}\" \
+                --model=\"${model}\" \
+                --os=\"${os}\" \
+                --platform=\"${platform}\""
+    if ("${precision}" != "") {
+        cmd += " --precision=${precision}"
+    }
+
+    if ("${mode}" != "") {
+        cmd += " --mode=${mode}"
+    }
+
+    def drops = sh(returnStdout: true, script: """#!/bin/bash
+        set -x
+        export PATH=${HOME}/miniconda3/bin/:$PATH
+        if [[ ${framework} = 'pytorch' ]] && [[ ${model} = 'dlrm' ]]; then
+            export PATH=${HOME}/anaconda3/bin/:$PATH
+        fi
+        source activate ${conda_env_name}
+
+        ${cmd}
+        """)
+    println(drops)
+    if (drops != "") {
+        return drops.split(";")
+    }
+    println("Drops not found.")
+    return []
+}
+
+def checkReferenceData() {
+    stage("Check reference data") {
+        def drops = findPerfDrops(
+            "${WORKSPACE}/${framework}-${model}-${os}-${cpu}.json",
+            "${os}",
+            "${cpu}"
+        )
+        println("Drops: ${drops}")
+        println("Drops.size(): ${drops.size()}")
+        for (idx = 0; idx < drops.size(); idx++) {
+            def drop = drops[idx]
+            println("Retrying detected drop: ${drop}")
+            def mode = drop.trim().split(",")[0]
+            def precision = drop.trim().split(",")[1]
+            println("Detected drop on ${mode} mode with ${precision} precision.")
+            rerun_num = 0
+            while (rerun_num < MAX_RERUNS) {
+                rerun_num += 1
+                def rerun_path = "${WORKSPACE}/rerun_${mode}_${precision}_${rerun_num}"
+
+                // Execute perf test
+                if (lpot_branch == '' && dummy_inference_models.contains(model)) {
+                    runPerfTestMR(mode, precision, "${rerun_path}")
+                } else {
+                    runPerfTest(mode, precision, "${rerun_path}")
+                }
+
+                // Copy tuning log to rerun path
+                sh """
+                    mkdir -p ${rerun_path}
+                    cp ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log ${rerun_path}/
+                """
+
+                // Collect logs
+                cmd = "python ${WORKSPACE}/lpot-validation/scripts/collect_logs_lpot.py \
+                        --framework=\"${framework}\" \
+                        --framework_version=\"${framework_version}\" \
+                        --python_version=\"${python_version}\" \
+                        --model=\"${model}\" \
+                        --logs_dir=\"${rerun_path}\" \
+                        --output_dir=\"${rerun_path}\""
+
+                sh """#!/bin/bash
+                    set -x
+                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    if [[ ${framework} = 'pytorch' ]] && [[ ${model} = 'dlrm' ]]; then
+                        export PATH=${HOME}/anaconda3/bin/:$PATH
+                    fi
+                    source activate ${conda_env_name}
+                    ${cmd}
+                """
+
+                // Check drop
+                drops = findPerfDrops(
+                    "${rerun_path}/${framework}-${model}-${os}-${cpu}.json",
+                    "${os}",
+                    "${cpu}",
+                    "${precision}",
+                    "${mode}",
+                )
+                if (drops.size() == 0) {
+                    println("Found stable performance for ${mode} ${precision} in ${rerun_path}")  // Need to replace rerun logs to new one and re-collect result
+                    sh """
+                        # Remove previous summary
+                        rm ${WORKSPACE}/${framework}-${model}-${os}-${cpu}.json
+                        rm ${WORKSPACE}/summary.log
+
+                        # Remove old logs
+                        rm ${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}*
+
+                        # Copy logs without drop
+                        cp ${rerun_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}* ${WORKSPACE}/
+                    """
+                    collectLogs()
+                    return
+                }
+            }
+        }
+    }
+}
+
+def collectLogs() {
+    stage("Collect logs") {
+        println("Updating logs prefix..")
+        logs_prefix_url = ""
+        if (upstreamUrl != "") {
+            logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/${framework}/${model}/"
+        }
+
+        println("Collecting logs...")
+
+        cmd = "python ${WORKSPACE}/lpot-validation/scripts/collect_logs_lpot.py \
+        --framework=\"${framework}\" \
+        --framework_version=\"${framework_version}\" \
+        --python_version=\"${python_version}\" \
+        --model=\"${model}\" \
+        --logs_dir=\"${WORKSPACE}\" \
+        --output_dir=\"${WORKSPACE}\" \
+        --logs_prefix_url=\"${logs_prefix_url}\" \
+        --job_url=\"${BUILD_URL}/consoleText\""
+
+        if (MR_source_branch != "") {
+            cmd += " --mr"
+            if (steps_print_models.contains(model)) {
+                cmd += " --perf_steps"
+            }
+        }
+
+        required = "["
+        precision_list.each { precision ->
+            mode_list.each { mode ->
+                required += "{\'precision\': \'${precision}\', \'mode\': \'${mode}\'},"
+                }
+        }
+        required = required.substring(0, required.length() - 1) + "]"
+        cmd += " --required=\"${required}\""
+
+        sh """#!/bin/bash
+            set -x
+            export PATH=${HOME}/miniconda3/bin/:$PATH
+            if [[ ${framework} = 'pytorch' ]] && [[ ${model} = 'dlrm' ]]; then
+                export PATH=${HOME}/anaconda3/bin/:$PATH
+            fi
+            source activate ${conda_env_name}
+            ${cmd}
+        """
+
+        println("Logs collected.")
+    }
 }
 
 node( sub_node_label ) {
@@ -236,6 +537,11 @@ node( sub_node_label ) {
         echo "Detected cpu: ${cpu}"
     }
 
+    getUpstreamInfo()
+    println("upstreamBuild = ${upstreamBuild}")
+    println("upstreamJobName = ${upstreamJobName}")
+    println("upstreamUrl = ${upstreamUrl}")
+
     cleanup()
     dir('lpot-validation') {
         retry(5) {
@@ -244,280 +550,231 @@ node( sub_node_label ) {
     }
 
     try {
+        try {
+            stage("Build"){
+                if (new_conda_env){
+                    create_conda_env()
+                }else{
+                    println("Test need a special local conda env, DO NOT create again!!!")
+                }
 
-        stage("Build"){
-            if (new_conda_env){
-                create_conda_env()
-            }else{
-                println("Test need a special local conda env, DO NOT create again!!!")
             }
 
-        }
-
-        stage("Download") {
-            retry(5) {
-                if(MR_source_branch != ''){
-                    checkout changelog: true, poll: true, scm: [
-                            $class                           : 'GitSCM',
-                            branches                         : [[name: "${MR_source_branch}"]],
-                            browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                            doGenerateSubmoduleConfigurations: false,
-                            extensions                       : [
-                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                                    [$class: 'CloneOption', timeout: 60],
-                                    [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
-                            ],
-                            submoduleCfg                     : [],
-                            userRemoteConfigs                : [
-                                    [credentialsId: "${credential}",
-                                    url          : "${lpot_url}"]
-                            ]
-                    ]
-                }
-                else {
-                    checkout changelog: true, poll: true, scm: [
-                            $class                           : 'GitSCM',
-                            branches                         : [[name: "${lpot_branch}"]],
-                            browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                            doGenerateSubmoduleConfigurations: false,
-                            extensions                       : [
-                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                                    [$class: 'CloneOption', timeout: 60]
-                            ],
-                            submoduleCfg                     : [],
-                            userRemoteConfigs                : [
-                                    [credentialsId: "${credential}",
-                                    url          : "${lpot_url}"]
-                            ]
-                    ]
-                }
-            }
-        }
-
-        if ("${binary_build_job}" == "") {
-            stage('Build binary') {
-                List binaryBuildParams = [
-                        string(name: "lpot_url", value: "${lpot_url}"),
-                        string(name: "lpot_branch", value: "${lpot_branch}"),
-                        string(name: "MR_source_branch", value: "${MR_source_branch}"),
-                        string(name: "MR_target_branch", value: "${MR_target_branch}"),
-                        string(name: "val_branch", value: "${val_branch}")
-                ]
-                downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
-                
-                binary_build_job = downstreamJob.getNumber()
-                echo "binary_build_job: ${binary_build_job}"
-                echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
-                if (downstreamJob.getResult() != "SUCCESS") {
-                    currentBuild.result = "FAILURE"
-                    failed_build_url = downstreamJob.absoluteUrl
-                    echo "failed_build_url: ${failed_build_url}"
-                    error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
-                }
-            }
-        }
-
-        stage('Copy binary') {
-            catchError {
-                copyArtifacts(
-                        projectName: 'lpot-release-wheel-build',
-                        selector: specific("${binary_build_job}"),
-                        filter: 'lpot*.whl',
-                        fingerprintArtifacts: true,
-                        target: "${WORKSPACE}")
-
-                archiveArtifacts artifacts: "lpot*.whl"
-            }
-        }
-
-        // get params for tuning and benchmark
-        def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))
-        model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
-        dataset_location = modelConf."${framework}"."${model}"."dataset_location"
-        input_model = modelConf."${framework}"."${model}"."input_model"
-        yaml = modelConf."${framework}"."${model}"."yaml"
-
-        //mr test will cover different strategies, the other test mode will use the passed strategy
-        if ( MR_source_branch != '' ){
-            if (framework == "tensorflow"){
-                strategy = "basic"
-                if (model_src_dir == "image_recognition"){
-                    dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
-                    println("MR test tensorflow model_src_dir is image_recognition.")
-                    println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
-                }
-                if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
-                    // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
-                    dataset_location = "/tf_dataset/tensorflow/mini-coco-500.record"
-                    withEnv(["model_src_dir=${model_src_dir}"]) {
-                        sh(
-                                script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
-                                returnStdout: true
-                        ).trim()
+            stage("Download") {
+                retry(5) {
+                    if(MR_source_branch != ''){
+                        checkout changelog: true, poll: true, scm: [
+                                $class                           : 'GitSCM',
+                                branches                         : [[name: "${MR_source_branch}"]],
+                                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                                doGenerateSubmoduleConfigurations: false,
+                                extensions                       : [
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                        [$class: 'CloneOption', timeout: 60],
+                                        [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+                                ],
+                                submoduleCfg                     : [],
+                                userRemoteConfigs                : [
+                                        [credentialsId: "${credential}",
+                                        url          : "${lpot_url}"]
+                                ]
+                        ]
                     }
-                }
-                if (model == "inception_v1"){
-                    // set kl test for inception_v1
-                    algorithm='kl'
-                }
-            }else if(framework == "pytorch" && model == "resnet18"){
-                strategy = "bayesian"
-            }else if(framework == "mxnet" && model == "resnet50v1"){
-                strategy = "mse"
-            }else{
-                strategy = "basic"
-            }
-        }
-
-        if ( MR_source_branch != '' ){
-            timeout="timeout 5400"
-        }
-        echo "Tuning timeout ${timeout}"
-        stage("Tuning") {
-
-            sh """#!/bin/bash -x
-                echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
-                
-                echo "-------w-------"
-                w
-                echo "-------w-------"
-                ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger.sh \
-                    --framework=${framework} \
-                    --model=${model} \
-                    --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
-                    --dataset_location=${dataset_prefix}${dataset_location} \
-                    --input_model=${dataset_prefix}${input_model} \
-                    --yaml=${yaml} \
-                    --strategy=${strategy} \
-                    --max_trials=${max_trials} \
-                    --algorithm=${algorithm} \
-                    --conda_env_name=${conda_env_name} \
-                    2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
-            """
-        }
-
-        stage("Check tuning status"){
-            dir("${WORKSPACE}"){
-                withEnv([
-                        "framework=${framework}",
-                        "model=${model}",
-                        "os=${os}",
-                        "cpu=${cpu}"]) {
-                    sh '''#!/bin/bash -x
-                        control_phrase="Found a quantized model which meet accuracy goal."
-                        if [ "${model}" == "helloworld_keras" ]; then
-                            control_phrase="Inference is done."
-                        fi
-                        if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | wc -l) == 0 ];then
-                            exit 1
-                        fi
-                    '''
-                }
-            }
-        }
-
-        // Set Latency mode for MR tests
-        if (lpot_branch == ''&& MR_source_branch != '') {
-            mode_list = ["latency"]
-        }
-
-        // MR test dummy inference
-        def dummy_inference_models = [
-            "resnet50v1.5",
-            "resnet50v1",
-            "inception_v1"]
-        if (lpot_branch == '' && dummy_inference_models.contains(model)) {
-            batch_size = modelConf."${framework}"."${model}"."batch_size"
-            stage("MR Performance") {
-                precision_list.each { precision ->
-                    echo "precision is ${precision}"
-                    mode_list.each { mode ->
-                        if (mode == 'latency') {
-                            batch_size = 1
-                        } 
-                        sh """#!/bin/bash -x
-                        echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
-                        
-                        echo "-------w-------"
-                        w
-                        echo "-------w-------"
-                        echo "=======cache clean======="
-                        
-                        sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-        
-                        echo "=======cache clean======="
-                        bash ${WORKSPACE}/lpot-validation/scripts/run_dummy_inference.sh \
-                            --framework=${framework} \
-                            --model=${model} \
-                            --input_model=${dataset_prefix}${input_model} \
-                            --precision=${precision} \
-                            --mode=${mode} \
-                            --batch_size=${batch_size} \
-                            --os=${os} \
-                            --cpu=${cpu} \
-                            --conda_env_name=${conda_env_name}
-                        """
+                    else {
+                        checkout changelog: true, poll: true, scm: [
+                                $class                           : 'GitSCM',
+                                branches                         : [[name: "${lpot_branch}"]],
+                                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                                doGenerateSubmoduleConfigurations: false,
+                                extensions                       : [
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                        [$class: 'CloneOption', timeout: 60]
+                                ],
+                                submoduleCfg                     : [],
+                                userRemoteConfigs                : [
+                                        [credentialsId: "${credential}",
+                                        url          : "${lpot_url}"]
+                                ]
+                        ]
                     }
                 }
             }
-        } else {
-            // Nightly tests and OOB MR tests 
-            if (!tune_only && model != "helloworld_keras") {
-                println("==========nightly benchmark========")
-                batch_size = modelConf."${framework}"."${model}"."batch_size"
-                timeout(360) {
-                    stage("Performance") {
-                        precision_list.each { precision ->
-                            echo "precision is ${precision}"
-                            // oob only support dummy data
-                            if (model_src_dir == 'oob_models' || model == 'style_transfer') {
-                                mode_list = ['latency']
-                                echo "mode list is ${mode_list}"
-                            }
 
-                            mode_list.each { mode ->
-                                echo "mode is ${mode}"
-                                sh """#!/bin/bash -x
-                                echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
-                                
-                                echo "-------w-------"
-                                w
-                                echo "-------w-------"
-                                echo "=======cache clean======="
-                                
-                                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-                
-                                echo "=======cache clean======="
-                                bash ${WORKSPACE}/lpot-validation/scripts/run_benchmark_trigger.sh \
-                                    --framework=${framework} \
-                                    --model=${model} \
-                                    --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \\
-                                    --dataset_location=${dataset_prefix}${dataset_location} \
-                                    --input_model=${dataset_prefix}${input_model} \
-                                    --precision=${precision} \
-                                    --mode=${mode} \
-                                    --batch_size=${batch_size} \
-                                    --conda_env_name=${conda_env_name} \
-                                    --yaml=${yaml} \
-                                    --os=${os} \
-                                    --cpu=${cpu} \
-                                    --profiling=${RUN_PROFILING}
-                                """
+            if ("${binary_build_job}" == "") {
+                stage('Build binary') {
+                    List binaryBuildParams = [
+                            string(name: "lpot_url", value: "${lpot_url}"),
+                            string(name: "lpot_branch", value: "${lpot_branch}"),
+                            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+                            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+                            string(name: "val_branch", value: "${val_branch}")
+                    ]
+                    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
+
+                    binary_build_job = downstreamJob.getNumber()
+                    echo "binary_build_job: ${binary_build_job}"
+                    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+                    if (downstreamJob.getResult() != "SUCCESS") {
+                        currentBuild.result = "FAILURE"
+                        failed_build_url = downstreamJob.absoluteUrl
+                        echo "failed_build_url: ${failed_build_url}"
+                        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                    }
+                }
+            }
+
+            stage('Copy binary') {
+                catchError {
+                    copyArtifacts(
+                            projectName: 'lpot-release-wheel-build',
+                            selector: specific("${binary_build_job}"),
+                            filter: 'lpot*.whl',
+                            fingerprintArtifacts: true,
+                            target: "${WORKSPACE}")
+
+                    archiveArtifacts artifacts: "lpot*.whl"
+                }
+            }
+
+            getReferenceData()
+
+            // get params for tuning and benchmark
+            def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))
+            model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
+            dataset_location = modelConf."${framework}"."${model}"."dataset_location"
+            input_model = modelConf."${framework}"."${model}"."input_model"
+            yaml = modelConf."${framework}"."${model}"."yaml"
+
+            //mr test will cover different strategies, the other test mode will use the passed strategy
+            if ( MR_source_branch != '' ){
+                if (framework == "tensorflow"){
+                    strategy = "basic"
+                    if (model_src_dir == "image_recognition"){
+                        dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
+                        println("MR test tensorflow model_src_dir is image_recognition.")
+                        println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
+                    }
+                    if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
+                        // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
+                        dataset_location = "/tf_dataset/tensorflow/mini-coco-500.record"
+                        withEnv(["model_src_dir=${model_src_dir}"]) {
+                            sh(
+                                    script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
+                                    returnStdout: true
+                            ).trim()
+                        }
+                    }
+                    if (model == "inception_v1"){
+                        // set kl test for inception_v1
+                        algorithm='kl'
+                    }
+                }else if(framework == "pytorch" && model == "resnet18"){
+                    strategy = "bayesian"
+                }else if(framework == "mxnet" && model == "resnet50v1"){
+                    strategy = "mse"
+                }else{
+                    strategy = "basic"
+                }
+            }
+
+            if ( MR_source_branch != '' ){
+                timeout="timeout 5400"
+            }
+            echo "Tuning timeout ${timeout}"
+            stage("Tuning") {
+
+                sh """#!/bin/bash -x
+                    echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
+                    
+                    echo "-------w-------"
+                    w
+                    echo "-------w-------"
+                    ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger.sh \
+                        --framework=${framework} \
+                        --model=${model} \
+                        --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
+                        --dataset_location=${dataset_prefix}${dataset_location} \
+                        --input_model=${dataset_prefix}${input_model} \
+                        --yaml=${yaml} \
+                        --strategy=${strategy} \
+                        --max_trials=${max_trials} \
+                        --algorithm=${algorithm} \
+                        --conda_env_name=${conda_env_name} \
+                        2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
+                """
+            }
+
+            stage("Check tuning status") {
+                dir("${WORKSPACE}"){
+                    withEnv([
+                            "framework=${framework}",
+                            "model=${model}",
+                            "os=${os}",
+                            "cpu=${cpu}"]) {
+                        sh '''#!/bin/bash -x
+                            control_phrase="Found a quantized model which meet accuracy goal."
+                            if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | wc -l) == 0 ];then
+                                exit 1
+                            fi
+                        '''
+                    }
+                }
+            }
+            // Set Latency mode for MR tests
+            if (lpot_branch == '' && MR_source_branch != '') {
+                mode_list = ["latency"]
+            }
+
+            // MR test dummy inference
+            def dummy_inference_models = [
+                "resnet50v1.5",
+                "resnet50v1",
+                "inception_v1"]
+            if (lpot_branch == '' && dummy_inference_models.contains(model)) {
+                stage("MR Performance") {
+                    precision_list.each { precision ->
+                        echo "precision is ${precision}"
+                        mode_list.each { mode ->
+                            runPerfTestMR(mode, precision)
+                        }
+                    }
+                }
+            } else {
+                // Nightly tests and OOB MR tests
+                if (!tune_only) {
+                    println("==========nightly benchmark========")
+                    timeout(360) {
+                        stage("Performance") {
+                            precision_list.each { precision ->
+                                echo "precision is ${precision}"
+                                // oob only support dummy data
+                                if (model_src_dir == 'oob_models' || model == 'style_transfer') {
+                                    mode_list = ['latency']
+                                    echo "mode list is ${mode_list}"
+                                }
+                                mode_list.each { mode ->
+                                    runPerfTest(mode, precision)
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
+        } catch(e) {
+            currentBuild.result = "FAILURE"
+            throw e
+        } finally {
+            collectLogs()
+            checkReferenceData()
+        }
     } catch(e) {
         currentBuild.result = "FAILURE"
         throw e
     } finally {
-
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "${framework}*.log", excludes: null
+            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,summary.log,tuning_info.log,reference_data.json", excludes: null
             fingerprint: true
         }
     }

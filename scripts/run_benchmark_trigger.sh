@@ -3,7 +3,7 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "13" ] ; then
+if [ $# -lt 13 ] || [ $# -gt 14 ]; then
     echo 'ERROR:'
     echo "Expected 13 parameters got $#"
     printf 'Please use following parameters:
@@ -20,9 +20,12 @@ if [ $# != "13" ] ; then
     --profiling=<profiling or not for oob models>
     --cpu=<CPU name>
     --os=<OS name>
+    --output_path=<path for output logs> [OPTIONAL]
     '
     exit 1
 fi
+
+output_path=${WORKSPACE}
 
 for i in "$@"
 do
@@ -53,10 +56,17 @@ do
             os=`echo $i | sed "s/${PATTERN}//"`;;
         --cpu=*)
             cpu=`echo $i | sed "s/${PATTERN}//"`;;
+        --output_path=*)
+            output_path=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
 done
+
+
+if [ ! -d ${output_path} ]; then
+    mkdir -p ${output_path}
+fi
 
 # Run Benchmark
 main() {
@@ -107,120 +117,120 @@ main() {
 
     # pytorch int8 still use fp32 input_model
     if [ ${precision} == "int8" ] && [ ${framework} != "pytorch" ]; then
-      input_model=${q_model}
+        input_model=${q_model}
     fi
     # set parameters for benchmark
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
 
     # add flag for pytorch int8
     if [ ${framework} == "pytorch" ] && [ ${precision} == "int8" ]; then
-      parameters="${parameters} --int8=true"
+        parameters="${parameters} --int8=true"
     fi
 
     # remove duplicate install for pytorch resnest
     if [ ${framework} == "pytorch" ] && [ ${model} == "resnest50" ]; then
-      sed -i '/python setup.py install/d' run_benchmark.sh
+        sed -i '/python setup.py install/d' run_benchmark.sh
     fi
 
     echo -e "\nStart run function..."
     case ${mode} in
-      accuracy)
-        run_accuracy;;
-      throughput)
-        run_benchmark;;
-      latency)
-        run_benchmark;;
+        accuracy)
+            run_accuracy;;
+        throughput)
+            run_benchmark;;
+        latency)
+            run_benchmark;;
       *)
-        echo "MODE ${mode} not recognized."; exit 1;;
+          echo "MODE ${mode} not recognized."; exit 1;;
     esac
 }
 
 function run_accuracy {
-  parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
+    parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
 
-  # general yaml for new config format
-  iters=-1
-  config_new_yaml
+    # general yaml for new config format
+    iters=-1
+    config_new_yaml
 
-  if [ -f "run_benchmark.sh" ]; then
+    if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
-  else
+    else
         echo "Not found run_benchmark file."
         exit 1
-  fi
+    fi
 
-  logFile=${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log
+  logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log
   echo "RUNCMD: $run_cmd " >& ${logFile}
   eval "${run_cmd}" >> ${logFile}
 }
 
 function run_benchmark {
-  # define a low iteration list to save time
-  # if latency ~ 500 ms , then set iter = 200. if latency ~ 1000 ms, then set iter = 100
-  latency_high_500=("arttrack-coco-multi" "arttrack-mpii-single" "east_resnet_v1_50" \
-  "DeepLab" "mask_rcnn_resnet50_atrous_coco")
+    # define a low iteration list to save time
+    # if latency ~ 500 ms , then set iter = 200. if latency ~ 1000 ms, then set iter = 100
+    latency_high_500=("arttrack-coco-multi" "arttrack-mpii-single" "east_resnet_v1_50" \
+    "DeepLab" "mask_rcnn_resnet50_atrous_coco")
 
-  latency_high_1000=("efficientnet-b7_auto_aug" "i3d-flow" "i3d-rgb" "VNet" "icnet-camvid-ava-0001" \
-  "icnet-camvid-ava-sparse-30-0001" "icnet-camvid-ava-sparse-60-0001" "dilation" \
-  "faster_rcnn_inception_resnet_v2_atrous_coco" "faster_rcnn_nas_coco" "faster_rcnn_nas_lowproposals_coco" \
-  "gmcnn-places2" "mask_rcnn_inception_resnet_v2_atrous_coco" "Transformer-LT" "mask_rcnn_resnet101_atrous_coco" \
-  "person-vehicle-bike-detection-crossroad-yolov3-1024" "unet-3d-isensee_2017" "unet-3d-origin")
+    latency_high_1000=("efficientnet-b7_auto_aug" "i3d-flow" "i3d-rgb" "VNet" "icnet-camvid-ava-0001" \
+    "icnet-camvid-ava-sparse-30-0001" "icnet-camvid-ava-sparse-60-0001" "dilation" \
+    "faster_rcnn_inception_resnet_v2_atrous_coco" "faster_rcnn_nas_coco" "faster_rcnn_nas_lowproposals_coco" \
+    "gmcnn-places2" "mask_rcnn_inception_resnet_v2_atrous_coco" "Transformer-LT" "mask_rcnn_resnet101_atrous_coco" \
+    "person-vehicle-bike-detection-crossroad-yolov3-1024" "unet-3d-isensee_2017" "unet-3d-origin")
 
-  # get cpu information for multi-instance
-  ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
+    # get cpu information for multi-instance
+    ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
 
-  if [[ ${mode} == "latency" ]] && [[ ${model} != "dlrm" ]]; then
-      ncores_per_instance=4
-      batch_size=1
-      iters=500
-      if [ "${model}" == "wide_deep_large_ds" ]; then
-        batch_size=100
-      fi
-      
-      # walk around for pytorch yolov3 model, failed in load 194 iteration.
-      if [ "${model}" == "yolo_v3" ] && [ "${framework}" == "pytorch" ]; then
-        iters=150
-      fi 
-      # custom iteration
-      if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
-        iters=200
-      elif [[ "${latency_high_1000[@]}" =~ "${model}" ]]; then
+    if [[ ${mode} == "latency" ]] && [[ ${model} != "dlrm" ]]; then
+        ncores_per_instance=4
+        batch_size=1
+        iters=500
+        if [ "${model}" == "wide_deep_large_ds" ]; then
+            batch_size=100
+        fi
+
+        # walk around for pytorch yolov3 model, failed in load 194 iteration.
+        if [ "${model}" == "yolo_v3" ] && [ "${framework}" == "pytorch" ]; then
+            iters=150
+        fi
+        # custom iteration
+        if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
+            iters=200
+        elif [[ "${latency_high_1000[@]}" =~ "${model}" ]]; then
+            iters=100
+        fi
+    else
+        ncores_per_instance=${ncores_per_socket}
         iters=100
-      fi
-  else
-      ncores_per_instance=${ncores_per_socket}
-      iters=100
-  fi
-
-  export OMP_NUM_THREADS=${ncores_per_instance}
-
-  parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
-
-  # Disable fp32 optimization for oob models on TF1.15UP1
-  if [ "${topology}" == "RetinaNet50" ] || [ "${topology}" == "ssd_resnet50_v1_fpn_coco" ]; then
-    tensorflow_version=$(pip list| grep intel-tensorflow | awk -F ' ' '{print $2}')
-    if [ "${precision}" == "fp32" ] && [ "${tensorflow_version}" == "1.15.0up1" ]; then
-      sed -i "/models_need_disable_optimize/a ${topology}" ${model_src_dir}/run_benchmark.sh
     fi
-  fi
 
-  # general yaml for new config format
-  config_new_yaml
+    export OMP_NUM_THREADS=${ncores_per_instance}
 
-  if [ -f "run_benchmark.sh" ]; then
+    parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
+
+    # Disable fp32 optimization for oob models on TF1.15UP1
+    if [ "${topology}" == "RetinaNet50" ] || [ "${topology}" == "ssd_resnet50_v1_fpn_coco" ]; then
+        tensorflow_version=$(pip list| grep intel-tensorflow | awk -F ' ' '{print $2}')
+        if [ "${precision}" == "fp32" ] && [ "${tensorflow_version}" == "1.15.0up1" ]; then
+            sed -i "/models_need_disable_optimize/a ${topology}" ${model_src_dir}/run_benchmark.sh
+        fi
+    fi
+
+    # general yaml for new config format
+    config_new_yaml
+
+    if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
-  else
+    else
         echo "Not found run_benchmark file."
         exit 1
-  fi
+    fi
 
-  echo "BENCHMARK RUNCMD: $run_cmd "
-  logFile=${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}
+    echo "BENCHMARK RUNCMD: $run_cmd "
+    logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}
 
-  if [ "${profiling}" == "true" ]; then
-    # enable timeline for oob model
-    export RUN_PROFILING=1
-  fi
+    if [ "${profiling}" == "true" ]; then
+        # enable timeline for oob model
+        export RUN_PROFILING=1
+    fi
 
   for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
   do
@@ -232,17 +242,17 @@ function run_benchmark {
     ${run_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
   done
 
-  wait
+    wait
 
-  if [ "${profiling}" == "true" ] && [ "${precision}" == "fp32" ]; then
-    # copy profiling to /tmp
-    save_path=/tmp/timeline_json/${framework}-${model}/
-    echo "HOSTNAME IS ${HOSTNAME}"
-    echo "!!! ${model} timeline save path is ${save_path} !!!"
-    rm -rf "${save_path}"
-    mkdir -p "${save_path}"
-    cp -r "${model_src_dir}/timeline_json/"* "${save_path}"
-  fi
+    if [ "${profiling}" == "true" ] && [ "${precision}" == "fp32" ]; then
+        # copy profiling to /tmp
+        save_path=/tmp/timeline_json/${framework}-${model}/
+        echo "HOSTNAME IS ${HOSTNAME}"
+        echo "!!! ${model} timeline save path is ${save_path} !!!"
+        rm -rf "${save_path}"
+        mkdir -p "${save_path}"
+        cp -r "${model_src_dir}/timeline_json/"* "${save_path}"
+    fi
 
 }
 
@@ -263,21 +273,21 @@ function update_yaml_config {
 # general yaml for new config format
 function config_new_yaml {
 
-  if [ "${framework}" == "tensorflow" ]; then
-    if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]] || [[ "${model_src_dir}" == *"nlp/bert"* ]]; then
-      update_yaml_config
-      echo -e "\nPrint_updated_yaml... "
-      cat ${yaml}
-      parameters="--config=${yaml} --input_model=${input_model}"
+    if [ "${framework}" == "tensorflow" ]; then
+        if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]] || [[ "${model_src_dir}" == *"nlp/bert"* ]]; then
+            update_yaml_config
+            echo -e "\nPrint_updated_yaml... "
+            cat ${yaml}
+            parameters="--config=${yaml} --input_model=${input_model}"
+        fi
     fi
-  fi
 
-  if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" != *"language_translation"* ]]; then
-      update_yaml_config
-      echo -e "\nPrint_updated_yaml... "
-      cat ${yaml}
-      parameters="--config=${yaml} --input_model=${input_model}"
-  fi
+    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" != *"language_translation"* ]]; then
+        update_yaml_config
+        echo -e "\nPrint_updated_yaml... "
+        cat ${yaml}
+        parameters="--config=${yaml} --input_model=${input_model}"
+    fi
 }
 
 main

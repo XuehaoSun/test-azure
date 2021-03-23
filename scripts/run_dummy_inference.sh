@@ -4,6 +4,7 @@ set -x
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
+output_path=${WORKSPACE}
 
 for i in "$@"; do
   case $i in
@@ -31,6 +32,8 @@ for i in "$@"; do
     os=`echo $i | sed "s/${PATTERN}//"`;;
   --cpu=*)
     cpu=`echo $i | sed "s/${PATTERN}//"`;;
+  --output_path=*)
+    output_path=`echo $i | sed "s/${PATTERN}//"`;;
   *)
     echo "Parameter $i not recognized."
     exit 1
@@ -116,7 +119,7 @@ function run_benchmark {
 
   export OMP_NUM_THREADS=${ncores_per_instance}
   echo "RUN_CMD: ${run_cmd}"
-  logFile=${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}
+  logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}
 
   for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
   do

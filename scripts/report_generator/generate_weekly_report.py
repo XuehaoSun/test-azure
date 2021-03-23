@@ -12,11 +12,12 @@ from result_collector import ResultCollector
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--logs-dir", type=str, required=False, default=".")
-parser.add_argument("--tuning-log-name", type=str, required=True)
+parser.add_argument("--tuning-log-name", type=str, default="tuning_info.log")
 parser.add_argument("--commit", type=str, default="")
 parser.add_argument("--tensorflow-version", type=str, default="")
 parser.add_argument("--mxnet-version", type=str, default="")
 parser.add_argument("--pytorch-version", type=str, default="")
+parser.add_argument("--WW", type=str, default="xx")
 args = parser.parse_args()
 
 strategies = [
@@ -45,7 +46,8 @@ for result in result_collector.results:
         framework_versions.append(result.version)
     frameworks.update({ result.framework: framework_versions })
 
-workbook = xlsxwriter.Workbook("lpot_strategy_test_WWxx.xlsx")
+report_path = os.path.join(args.logs_dir, f"lpot_strategy_test_WW{args.WW}.xlsx")
+workbook = xlsxwriter.Workbook(report_path)
 header_format = workbook.add_format({
     "bold": 1,
     "align": "center",
