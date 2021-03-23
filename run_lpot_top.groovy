@@ -434,6 +434,8 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "cpu", value: "${cpu}")
     ParamsPerJob += string(name: "os", value: "${os}")
     ParamsPerJob += string(name: "dataset_prefix", value: "${dataset_prefix}")
+    ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
+
     return ParamsPerJob
 }
 
@@ -499,7 +501,7 @@ def getPerfJobs() {
                             copyArtifacts(
                                     projectName: sub_jenkins_job,
                                     selector: specific("${downstreamJob.getNumber()}"),
-                                    filter: '*.log, tuning_config.yaml',
+                                    filter: "*.log, tuning_config.yaml, ${job_framework}*.json",
                                     fingerprintArtifacts: true,
                                     target: "${job_framework}/${job_model}",
                                     optional: true)
@@ -1181,9 +1183,9 @@ node( node_label ) {
     } finally {
         stage("Collect Logs") {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                if ( Frameworks != '' || Frameworks_windows != '' ){
-                    collectLog()
-                }
+               if ( Frameworks != '' || Frameworks_windows != '' ){
+                   collectLog()
+               }
                 if (RUN_UT){
                     collectUTLog()
                 }
