@@ -256,6 +256,14 @@
       "strategy": "basic",
       "batch_size": 100
     },
+    "nasnet_mobile": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_nasnet_mobile.pb",
+      "yaml": "nasnet_mobile.yaml",
+      "strategy": "basic",
+      "batch_size": 100
+    },
     "ssd_resnet50_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
@@ -317,6 +325,14 @@
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/mask_rcnn_inception_v2",
       "yaml": "mask_rcnn_inception_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 1
+    },
+    "ssd_resnet34": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/dataset/coco_dataset/raw-data",
+      "input_model": "/tf_dataset/pre-trained-models/ssd_resnet34/fp32/resnet34_tf.22.1.pb",
+      "yaml": "ssd_resnet34.yaml",
       "strategy": "basic",
       "batch_size": 1
     },
