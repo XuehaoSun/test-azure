@@ -452,14 +452,14 @@ def checkReferenceData() {
                 """
 
                 // Check drop
-                drops = findPerfDrops(
+                def mode_drops = findPerfDrops(
                     "${rerun_path}/${framework}-${model}-${os}-${cpu}.json",
                     "${os}",
                     "${cpu}",
                     "${precision}",
                     "${mode}",
                 )
-                if (drops.size() == 0) {
+                if (mode_drops.size() == 0) {
                     println("Found stable performance for ${mode} ${precision} in ${rerun_path}")  // Need to replace rerun logs to new one and re-collect result
                     sh """
                         # Remove previous summary
@@ -473,7 +473,7 @@ def checkReferenceData() {
                         cp ${rerun_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}* ${WORKSPACE}/
                     """
                     collectLogs()
-                    return
+                    break
                 }
             }
         }
