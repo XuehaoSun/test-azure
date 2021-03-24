@@ -165,7 +165,10 @@ main() {
 
     collect_pb_size || true
 
-    # copy tuning result to /tmp
+    # copy tuning result to /tmp, dlrm is too big and space consuming
+    if [ "${model}" == "dlrm" ];then
+        rm -rf /tmp/pytorch-dlrm-tune*
+    fi
     save_path=/tmp/${framework}-${model}-tune-$(date +%s)
     echo "HOSTNAME IS ${HOSTNAME}"
     echo "!!!tune model save path is ${save_path} !!!"
