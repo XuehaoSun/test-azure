@@ -35,10 +35,18 @@ main() {
     source activate lpot-format_scan-${python_version}
     pip -V
     python -V
+    pip install -U pip
+
+    # Install LPOT requirements
+    cd ${REPO_DIR}
+    if [ -f "requirements.txt" ]; then
+        python -m pip install --default-timeout=100 -r requirements.txt
+        pip list
+    else
+        echo "Not found requirements.txt file."
+    fi
 
     # Install test requirements
-    # pip config set global.index-url https://pypi.douban.com/simple/
-    pip install -U pip
     cd ${REPO_DIR}/test
     if [ -f "requirements.txt" ]; then
         sed -i '/lpot/d' requirements.txt
