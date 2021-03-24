@@ -1,5 +1,8 @@
 {
     "pytorch_prune": {
         "dataset_location": "/tf_dataset/pytorch/ImageNet/raw"
+    },
+    "helloworld_examples": {
+        "dataset_location": "/tf_dataset/dataset/TF_mini_imagenet"
     }
 }

@@ -66,7 +66,7 @@ cat > ${WORKSPACE}/report.html << eof
 <html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-    <title>Daily Tests - TensorFlow - Jenkins</title>
+    <title>LPOT - Feature tests</title>
     <style type="text/css">
         body
         {
