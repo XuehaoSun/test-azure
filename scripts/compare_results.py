@@ -4,6 +4,7 @@ import operator
 import os
 import platform
 
+drops = []
 
 def parse_args():
     parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -43,6 +44,8 @@ def main():
 
     compare_result(new_result, reference_result)
     check_threshold(new_result, args.precision, args.mode)
+    if drops:
+        print(";".join(drops))
 
 
 def compare_result(result, reference):
@@ -73,7 +76,7 @@ def find_benchmark_result(result, mode, precision):
 
 
 def check_threshold(result, precision, mode):
-    """Check if diffs are below threshold. If not print mode and precision to rerun."""
+    """Check if diffs are below threshold. If not add mode and precision to rerun."""
     for benchmark in result.get("benchmarks", []):
         op = operator.gt
         modifier = 1  # Lower is better
@@ -90,7 +93,7 @@ def check_threshold(result, precision, mode):
         if diff and op(
             diff, (args.threshold * modifier)
         ):
-            print(f"{benchmark.get('mode')},{benchmark.get('precision')}")
+            drops.append(f"{benchmark.get('mode')},{benchmark.get('precision')}")
 
 
 def get_result(file_path):
