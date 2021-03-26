@@ -27,10 +27,6 @@ print(args)
 os_name = platform.system()
 cpu_name = os.environ.get("CPU_NAME", "unknown")
 
-# Mock os and cpu
-os_name = "linux"
-cpu_name = "clx8280"
-
 result = Result()
 result.framework = args.framework
 result.version = args.framework_version
