@@ -24,8 +24,8 @@ args = parser.parse_args()
 
 print(args)
 
-os_name = platform.system()
-cpu_name = os.environ.get("CPU_NAME", "unknown")
+os_name = str(platform.system()).lower()
+cpu_name = os.environ.get("CPU_NAME", "unknown").lower()
 
 result = Result()
 result.framework = args.framework
