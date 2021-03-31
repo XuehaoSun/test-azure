@@ -166,6 +166,12 @@ if ('ABORT_DUPLICATE_MR' in params && params.ABORT_DUPLICATE_MR){
 }
 echo "ABORT_DUPLICATE_MR is ${ABORT_DUPLICATE_MR}"
 
+FEATURE_TESTS=false
+if (params.FEATURE_TESTS != null){
+    FEATURE_TESTS=params.FEATURE_TESTS
+}
+echo "FEATURE_TESTS = ${FEATURE_TESTS}"
+
 // Platforms specification pattern: "os1:cpu_name1,cpuname_2;os2:cpu_name1,cpuname_3"
 PLATFORMS = "linux:*"
 if ('PLATFORMS' in params && params.PLATFORMS != ''){
@@ -323,6 +329,14 @@ if ('tuning_precision' in params && params.tuning_precision != ''){
     tuning_precision=params.tuning_precision
 }
 echo "tuning_precision: ${tuning_precision}"
+
+
+feature_list = ""
+if ("feature_list" in params && params.feature_list != "") {
+    feature_list = params.feature_list
+}
+echo "feature_list: ${feature_list}"
+
 
 def cleanup() {
 
@@ -599,6 +613,36 @@ def copyrightCheck() {
         currentBuild.result = "FAILURE"
         if (MR_source_branch != '') {
             error("Copyright check failed!")
+        }
+    }
+}
+
+def featureTests() {
+    List featureTestsParams = [
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "feature_list", value: "${feature_list}")
+    ]
+
+    downstreamJob = build job: "lpot-feature-test-top", propagate: false, parameters: featureTestsParams
+
+    copyArtifacts(
+            projectName: "lpot-feature-test-top",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.log',
+            fingerprintArtifacts: true,
+            target: "featureTests",
+            optional: true)
+
+    // Archive in Jenkins
+    archiveArtifacts artifacts: "featureTests/**", allowEmptyArchive: true
+
+    if (downstreamJob.result != 'SUCCESS') {
+        currentBuild.result = "FAILURE"
+        if (MR_source_branch != '') {
+            error("Feature tests check failed!")
         }
     }
 }
@@ -925,7 +969,8 @@ def generateReport() {
             "overview_log=${overview_log}",
             "coverage_summary=${coverage_summary}",
             "coverage_summary_base=${coverage_summary_base}",
-            "Jenkins_job_status=${Jenkins_job_status}"
+            "Jenkins_job_status=${Jenkins_job_status}",
+            "feature_tests_summary=${WORKSPACE}/featureTests/summary.log"
         ]) {
             sh '''
                 if [[ ${qtools_branch} == '' ]]; then
@@ -1157,6 +1202,12 @@ node( node_label ) {
         if (CHECK_COPYRIGHT && MR_source_branch != '') {
             job_list["Copyright Check"] = {
                 copyrightCheck()
+            }
+        }
+
+        if (FEATURE_TESTS && feature_list != '') {
+            job_list["Feature tests"] = {
+                featureTests()
             }
         }
 
