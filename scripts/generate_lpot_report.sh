@@ -11,6 +11,10 @@
 lines_coverage_threshold=80
 branches_coverage_threshold=75
 
+pass_status="<td style=\"background-color:#90EE90\">Pass</td>"
+fail_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+verify_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+
 
 function main {
     echo "summaryLog: ${summaryLog}"
@@ -19,6 +23,7 @@ function main {
     echo "last tunelog: ${tuneLogLast}"
     echo "overview log: ${overview_log}"
     echo "coverage_summary: ${coverage_summary}"
+    echo "feature_tests_summary: ${feature_tests_summary}"
     generate_html_head
     generate_html_body
     generate_results
@@ -27,6 +32,11 @@ function main {
 }
 
 function createOverview {
+    echo "Generating overview."
+    if [ -f "${overview_log}" ] || [ $(wc -l ${overview_log} | awk '{ print $1 }') -le 1 ]; then
+        return 0
+    fi
+    
 
     jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
 
@@ -49,11 +59,11 @@ function createOverview {
       ut_status="${ut_info_list[1]}"
       ut_link="${ut_info_list[2]}"
       if [[ "${ut_status}" == *"FAIL"* ]];then
-        unit_test_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+        unit_test_status=${fail_status}
       elif [[ "${ut_status}" == *"SUCC"* ]];then
-        unit_test_status="<td style=\"background-color:#90EE90\">Pass</td>"
+        unit_test_status=${pass_status}
       else
-        unit_test_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+        unit_test_status=${verify_status}
       fi
 
       echo """
@@ -67,40 +77,40 @@ function createOverview {
 
     pylint_scan=($(grep 'format-scan,pylint' ${overview_log} |sed 's/,/ /g'))
     if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
-        pylint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+        pylint_scan_status=${fail_status}
     elif [[ "${pylint_scan[2]}" == *"SUCC"* ]];then
-        pylint_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
+        pylint_scan_status=${pass_status}
     else
-        pylint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+        pylint_scan_status=${verify_status}
     fi
 
     bandit_scan=($(grep 'format-scan,bandit' ${overview_log} |sed 's/,/ /g'))
     if [[ "${bandit_scan[2]}" == *"FAIL"* ]];then
-        bandit_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+        bandit_scan_status=${fail_status}
     elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
-        bandit_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
+        bandit_scan_status=${pass_status}
     else
-        bandit_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+        bandit_scan_status=${verify_status}
     fi
 
     helloworld_keras=($(grep 'Helloworld Keras' ${overview_log} |sed 's/,/ /g'))
     if [[ "${helloworld_keras[2]}" == *"FAIL"* ]];then
-        helloworld_keras_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+        helloworld_keras_status=${fail_status}
     elif [[ "${helloworld_keras[2]}" == *"SUCC"* ]];then
-        helloworld_keras_status="<td style=\"background-color:#90EE90\">Pass</td>"
+        helloworld_keras_status=${pass_status}
     else
-        helloworld_keras_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+        helloworld_keras_status=${verify_status}
     fi
 
     if [ -f "${coverage_summary}" ]; then
         coverage=($(grep 'coverage_status' ${overview_log} |sed 's/,/ /g'))
         echo "Coverage: ${coverage}"
         if [[ "${coverage[1]}" == *"FAIL"* ]];then
-            coverage_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+            coverage_status=${fail_status}
         elif [[ "${coverage[1]}" == *"SUCC"* ]];then
-            coverage_status="<td style=\"background-color:#90EE90\">Pass</td>"
+            coverage_status=${pass_status}
         else
-            coverage_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+            coverage_status=${verify_status}
         fi
     fi
 
@@ -136,6 +146,10 @@ eof
 }
 
 function createCoverageOverview {
+    echo "Generating coverage overview."
+    if [ ! -f "${coverage_summary}" ] || [ $(wc -l ${coverage_summary} | awk '{ print $1 }') -le 1 ]; then
+        return 0
+    fi
     lines_coverage=($(grep 'lines_coverage' ${coverage_summary} |sed 's/,/ /g'))
     branches_coverage=($(grep 'branches_coverage' ${coverage_summary} |sed 's/,/ /g'))
 
@@ -186,9 +200,50 @@ function createCoverageOverview {
     """ >> ${WORKSPACE}/report.html
 }
 
+function createFeatureTestsOverview {
+    echo "Generating feature tests overview."
+    if [ ! -f ${feature_tests_summary} ]; then
+        return 0
+    fi
+
+    echo """
+        <h2>Feature Test</h2>
+        <table class=\"features-table\" style=\"width: auto;margin: 0 auto 0 0;\">
+        <tr>
+            <th style=\"padding: 5px 40px;\">Task</th>
+            <th style=\"padding: 5px 20px;\">Status</th>
+        </tr>
+    """ >> ${WORKSPACE}/report.html
+
+    features=$(sed '1d' ${feature_tests_summary} | cut -d';' -f1 | awk '!a[$0]++')
+
+    for feature in ${features[@]}
+    do
+        feature_result=($(grep ${feature} ${feature_tests_summary} |sed 's/;/ /g'))
+        feature_url=${feature_result[2]}
+
+        if [[ "${feature_result[1]}" == "fail" ]];then
+            feature_status=${fail_status}
+        elif [[ "${feature_result[1]}" == "pass" ]];then
+            feature_status=${pass_status}
+        else
+            feature_status=${verify_status}
+        fi
+
+        if [ "${feature_result[1]}" != "" ]; then
+            echo """
+            <tr>
+            <td style=\"text-align:left;padding: 0 40px;\"><a href=\"${feature_url}\">${feature}</a></td>
+            ${feature_status}
+            </tr>
+            """ >> ${WORKSPACE}/report.html
+        fi
+    done
+    echo "</table>" >> ${WORKSPACE}/report.html
+}
+
 
 function generate_inference {
-
     awk -v framework="${framework}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
         BEGINE {
             fp32_ms_bs = "nan";
@@ -518,10 +573,10 @@ cat >> ${WORKSPACE}/report.html << eof
 eof
 
 createOverview
-if [ -f "${coverage_summary}" ]; then
-    createCoverageOverview
-fi
+createCoverageOverview
+createFeatureTestsOverview
 
+echo "Generating benchmarks table"
 cat >> ${WORKSPACE}/report.html << eof
 	    <h2>Benchmark</h2>
 		  <table class="features-table">
