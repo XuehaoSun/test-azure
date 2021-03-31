@@ -33,12 +33,11 @@ function main {
     do
         tf_example${i} 2>&1 | tee ${WORKSPACE}/tf_example${i}.log
     done
-
 }
 
 function tf_example1 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d frozen_models ]; then
+    if [ ! -d models ]; then
         echo " frozen pb not generated. Exiting..."
         exit 1
     fi
@@ -58,7 +57,7 @@ function tf_example1 {
 
 function tf_example2 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d frozen_models ]; then
+    if [ ! -d models ]; then
         echo " frozen pb not generated. Exiting..."
         exit 1
     fi
@@ -75,7 +74,7 @@ function tf_example2 {
 
 function tf_example3 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d frozen_models ]; then
+    if [ ! -d models ]; then
         echo " frozen pb not generated. Exiting..."
         exit 1
     fi
@@ -91,12 +90,18 @@ function tf_example3 {
     tar -xvf inception_v1_2016_08_28.tar.gz
     sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
 
+    # Set env variables to speedup test
+    export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
+    export KMP_BLOCKTIME=1
+    export KMP_SETTINGS=1
+    export TF_NUM_INTEROP_THREADS=1
+
     python test.py
 }
 
 function tf_example4 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d frozen_models ]; then
+    if [ ! -d models ]; then
         echo " frozen pb not generated. Exiting..."
         exit 1
     fi
@@ -116,7 +121,7 @@ function tf_example4 {
 
 function tf_example5 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d frozen_models ]; then
+    if [ ! -d models ]; then
         echo " frozen pb not generated. Exiting..."
         exit 1
     fi
