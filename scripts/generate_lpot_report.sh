@@ -33,7 +33,7 @@ function main {
 
 function createOverview {
     echo "Generating overview."
-    if [ -f "${overview_log}" ] || [ $(wc -l ${overview_log} | awk '{ print $1 }') -le 1 ]; then
+    if [ ! -f "${overview_log}" ] || [ $(wc -l ${overview_log} | awk '{ print $1 }') -le 1 ]; then
         return 0
     fi
     
