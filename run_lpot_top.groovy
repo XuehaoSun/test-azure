@@ -720,44 +720,12 @@ def collectLog() {
                 job_models.each { job_model ->
                     echo "-------- ${cpu} - ${system} - ${job_framework} - ${job_model} --------"
 
-                    tf_oob_models = parseStrToList(tensorflow_oob_models)
-                    // reset mode_list for each model
-                    if ( MR_source_branch != '' ) {
-                        mode_list = ["latency"]
-                    } else {
-                        mode_list = parseStrToList(mode)
-                    }
-
-                    if ( job_model in tf_oob_models || job_model == 'style_transfer') {
-                        echo "Found OOB model or \"style_transfer\" model. Setting \"latency\" mode."
-                        mode_list = ["latency"]
-                    }
-                    println("mode_list---->" + mode_list)
-                    def perf_steps=''
-                    if (MR_source_branch != '' && steps_print_models.contains(job_model)){
-                        perf_steps=true
-                    }
                     // Generate tuning info log
-                    withEnv([
-                        "current_model=$job_model",
-                        "current_framework=$job_framework",
-                        "MR=$MR_source_branch",
-                        "perf_steps=$perf_steps",
-                        "cpu=${cpu}",
-                        "os=${system}"]) {
-                        sh '''#!/bin/bash -x
-                            cd $WORKSPACE
-                            chmod 775 lpot-validation/scripts/collect_logs_lpot.sh
-                            lpot-validation/scripts/collect_logs_lpot.sh \
-                                --model=${current_model} \
-                                --framework=${current_framework} \
-                                --mode=tuning \
-                                --cpu=${cpu} \
-                                --os=${os} \
-                                --mr=${MR} \
-                                --perf_steps=$perf_steps
-                        '''
-                    }
+
+                    sh """#!/bin/bash -x
+                        cat ${WORKSPACE}/${job_framework}/${job_model}/tuning_info.log >> ${WORKSPACE}/tuning_info.log
+                    """
+
                     // helloworld keras with specific log collection in tuning mode
                     if (job_model == "helloworld_keras") {
                         return
@@ -766,30 +734,12 @@ def collectLog() {
                     if (MR_source_branch != '' && steps_print_models.contains(job_model)) {
                         return
                     }
-                    precision_list.each { precision ->
-                        mode_list.each { mode ->
-                            echo "Getting results for ${job_framework} - ${job_model} - ${precision} - ${mode}"
-                            withEnv([
-                                "current_model=$job_model",
-                                "current_framework=$job_framework",
-                                "precision=$precision",
-                                "mode=$mode",
-                                "cpu=${cpu}",
-                                "os=${system}"]) {
-                                sh '''#!/bin/bash -x
-                                    cd $WORKSPACE
-                                    chmod 775 lpot-validation/scripts/collect_logs_lpot.sh
-                                    lpot-validation/scripts/collect_logs_lpot.sh \
-                                        --model=${current_model} \
-                                        --framework=${current_framework} \
-                                        --precision=${precision} \
-                                        --mode=${mode} \
-                                        --cpu=${cpu} \
-                                        --os=${os}
-                                '''
-                            }
-                        }
-                    }
+                   
+                    echo "Getting results for ${job_framework} - ${job_model}"
+                    sh """#!/bin/bash -x
+                        cat ${WORKSPACE}/${job_framework}/${job_model}/summary.log >> ${WORKSPACE}/summary.log
+                    """
+
                 }
             }
         }
