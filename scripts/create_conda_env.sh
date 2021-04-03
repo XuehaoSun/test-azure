@@ -164,6 +164,12 @@ else
         else
             pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
         fi
+        if [ ${model} == '3dunet' ]; then
+            # Install mlperf_loadgen
+            pip install absl-py
+            mlperf_loadgen_whl=/tf_dataset/pytorch/mlperf_3dunet/mlperf_loadgen-0.5a0-cp${python_version//./}-*.whl
+            pip install ${mlperf_loadgen_whl}
+        fi
     elif [ ${framework} == 'mxnet' ]; then
         if [ ${framework_version} == '1.6.0' ]; then
             pip install ${framework}-mkl==${framework_version}
