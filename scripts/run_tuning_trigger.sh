@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
@@ -67,26 +67,6 @@ main() {
         echo -e "\nWorking in $(pwd)..."
         if [ "${model_src_dir}" == "${WORKSPACE}/lpot-models/examples/pytorch/language_translation" ]; then
           python setup.py install
-        fi
-        if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
-            # Install nnUnet
-            cd nnUnet
-            python setup.py install
-            cd ..
-            # Workaround for problem with passing dataset location
-            mkdir ${model_src_dir}/build
-            for dirname in `ls ${dataset_location}`
-            do
-                ln -s ${dataset_location}/${dirname} ${model_src_dir}/build/${dirname}
-            done
-            mkdir ${model_src_dir}/build/postprocessed_data
-            mkdir ${model_src_dir}/build/logs
-            dataset_location=${model_src_dir}/build/preprocessed_data
-
-            # Export variables required for nnUnet
-            export nnUNet_raw_data_base=${model_src_dir}/build/raw_data
-            export nnUNet_preprocessed=${dataset_location}
-            export RESULTS_FOLDER=${model_src_dir}/build/result
         fi
     else
         echo "[ERROR] model_src_dir \"${model_src_dir}\" not exists."
