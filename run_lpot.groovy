@@ -217,8 +217,8 @@ def cleanup() {
         sh '''#!/bin/bash 
         set -x
         cd $WORKSPACE
-        sudo rm -rf *
         rm -rf *
+        sudo rm -rf *
         # set perf BKC
         cat /sys/devices/system/cpu/intel_pstate/no_turbo
         lscpu

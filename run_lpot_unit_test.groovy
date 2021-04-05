@@ -131,6 +131,7 @@ def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
+        rm -rf *
         sudo rm -rf *
         '''
     } catch(e) {
