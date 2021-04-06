@@ -49,7 +49,7 @@ main() {
     # Install test requirements
     cd ${REPO_DIR}/test
     if [ -f "requirements.txt" ]; then
-        sed -i '/lpot/d' requirements.txt
+        sed -i '/lpot/d;/tensorflow==/d;/torch==/d;/mxnet==/d;/mxnet-mkl==/d;/torchvision==/d' requirements.txt
         python -m pip install --default-timeout=100 -r requirements.txt
         pip list
     else
