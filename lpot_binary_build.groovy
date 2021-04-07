@@ -61,6 +61,7 @@ def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
+        rm -rf *
         sudo rm -rf *
         git config --global user.email "lab_tfbot@intel.com"
         git config --global user.name "lab_tfbot" 
