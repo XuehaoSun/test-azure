@@ -200,6 +200,12 @@ upstreamUrl = ""
 
 MAX_RERUNS = 3
 
+// MR test dummy inference
+dummy_inference_models = [
+        "resnet50v1.5",
+        "resnet50v1",
+        "inception_v1"]
+
 @NonCPS
 def getUpstreamInfo() {
     def upstream_job = currentBuild.rawBuild.getCause(hudson.model.Cause$UpstreamCause)
@@ -725,11 +731,6 @@ node( sub_node_label ) {
                 mode_list = ["latency"]
             }
 
-            // MR test dummy inference
-            def dummy_inference_models = [
-                "resnet50v1.5",
-                "resnet50v1",
-                "inception_v1"]
             if (lpot_branch == '' && dummy_inference_models.contains(model)) {
                 stage("MR Performance") {
                     precision_list.each { precision ->
