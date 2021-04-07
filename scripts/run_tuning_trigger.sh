@@ -82,7 +82,13 @@ main() {
           if [ "${framework}" == "onnxrt" ]; then
             sed -i '/onnx/d;/onnxruntime/d' requirements.txt
           fi
-          python -m pip install -r requirements.txt
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+              python -m pip install -r requirements.txt && break
+              n=$((n+1))
+              sleep 5
+          done
           pip list
       else
           echo "Not found requirements.txt file."
