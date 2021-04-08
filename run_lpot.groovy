@@ -164,10 +164,6 @@ if (env_name_list[0] == 'customized'){
 println("conda_env_name = " + conda_env_name)
 
 cpu="unknown"
-if ('cpu' in params && params.cpu != ''){
-    cpu=params.cpu
-}
-echo "cpu: ${cpu}"
 
 os="unknown"
 if ('os' in params && params.os != ''){
@@ -537,10 +533,13 @@ def collectLogs() {
 }
 
 node( sub_node_label ) {
-    // Get CPU name from env variable if not defined
+    // Get CPU name
     if (['unknown','any', '*'].contains(cpu)) {
         cpu = env.CPU_NAME
         echo "Detected cpu: ${cpu}"
+        if (cpu == '' && 'cpu' in params && params.cpu != ''){
+            cpu=params.cpu
+        }
     }
 
     getUpstreamInfo()

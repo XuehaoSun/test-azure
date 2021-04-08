@@ -80,6 +80,9 @@ main() {
     if [ -d ${model_src_dir} ]; then
         cd ${model_src_dir}
         echo -e "\nWorking in $(pwd)..."
+        if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
+            dataset_location=${dataset_location}/preprocessed_data
+        fi
     else
         echo "[ERROR] model_src_dir \"${model_src_dir}\" not exists."
         exit 1
@@ -140,7 +143,7 @@ main() {
             run_benchmark;;
         latency)
             run_benchmark;;
-      *)
+        *)
           echo "MODE ${mode} not recognized."; exit 1;;
     esac
 }
@@ -159,9 +162,9 @@ function run_accuracy {
         exit 1
     fi
 
-  logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log
-  echo "RUNCMD: $run_cmd " >& ${logFile}
-  eval "${run_cmd}" >> ${logFile}
+    logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log
+    echo "RUNCMD: $run_cmd " >& ${logFile}
+    eval "${run_cmd}" >> ${logFile}
 }
 
 function run_benchmark {
@@ -175,6 +178,8 @@ function run_benchmark {
     "faster_rcnn_inception_resnet_v2_atrous_coco" "faster_rcnn_nas_coco" "faster_rcnn_nas_lowproposals_coco" \
     "gmcnn-places2" "mask_rcnn_inception_resnet_v2_atrous_coco" "Transformer-LT" "mask_rcnn_resnet101_atrous_coco" \
     "person-vehicle-bike-detection-crossroad-yolov3-1024" "unet-3d-isensee_2017" "unet-3d-origin")
+
+    single_instance=("3dunet")
 
     # get cpu information for multi-instance
     ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
@@ -232,15 +237,19 @@ function run_benchmark {
         export RUN_PROFILING=1
     fi
 
-  for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
-  do
-    end_core_num=$((j + ncores_per_instance -1))
-    if [ ${end_core_num} -ge ${ncores_per_socket} ]; then
-      end_core_num=$((ncores_per_socket-1))
+    if [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
+        ${run_cmd} 2>&1|tee ${logFile}.log &
+    else
+        for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
+        do
+        end_core_num=$((j + ncores_per_instance -1))
+        if [ ${end_core_num} -ge ${ncores_per_socket} ]; then
+            end_core_num=$((ncores_per_socket-1))
+        fi
+        numactl -m 0 -C "$j-$end_core_num" \
+            ${run_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
+        done
     fi
-    numactl -m 0 -C "$j-$end_core_num" \
-    ${run_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
-  done
 
     wait
 
