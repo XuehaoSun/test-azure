@@ -6,7 +6,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "resnet50": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
@@ -14,7 +15,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "resnet50_ipex": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
@@ -22,7 +24,8 @@
       "input_model": "",
       "yaml": "conf_ipex.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "resnet50_gpu": {
       "model_src_dir": "image_recognition/imagenet/gpu",
@@ -30,7 +33,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "resnext101_32x8d": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
@@ -38,7 +42,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "inception_v3": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
@@ -46,7 +51,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "mobilenet_v2": {
       "model_src_dir": "image_recognition/imagenet/cpu/ptq",
@@ -54,7 +60,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "resnet18_qat": {
       "model_src_dir": "image_recognition/imagenet/cpu/qat",
@@ -62,7 +69,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "resnet50_qat": {
       "model_src_dir": "image_recognition/imagenet/cpu/qat",
@@ -70,7 +78,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "resnet101_qat": {
       "model_src_dir": "image_recognition/imagenet/cpu/qat",
@@ -78,7 +87,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "peleenet": {
       "model_src_dir": "image_recognition/peleenet",
@@ -86,7 +96,8 @@
       "input_model": "/tf_dataset/pytorch/peleenet/peleenet_acc7208.pth.tar",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "resnest50": {
       "model_src_dir": "image_recognition/resnest",
@@ -94,7 +105,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "se_resnext50_32x4d": {
       "model_src_dir": "image_recognition/se_resnext",
@@ -102,7 +114,8 @@
       "input_model": "",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "yolo_v3": {
       "model_src_dir": "object_detection/yolo_v3",
@@ -110,7 +123,8 @@
       "input_model": "/tf_dataset/pytorch/coco_data_yolo/yolov3.weights",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "bert_base_MRPC": {
       "model_src_dir": "language_translation",
@@ -118,7 +132,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/MRPC_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_base_CoLA": {
       "model_src_dir": "language_translation",
@@ -126,7 +141,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/CoLA_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_base_STS-B": {
       "model_src_dir": "language_translation",
@@ -134,7 +150,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/STS-B_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_base_SST-2": {
       "model_src_dir": "language_translation",
@@ -142,7 +159,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/SST-2_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_base_RTE": {
       "model_src_dir": "language_translation",
@@ -150,7 +168,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/base_weights/RTE_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_large_MRPC": {
       "model_src_dir": "language_translation",
@@ -158,7 +177,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/weights/MRPC_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_large_SQuAD": {
       "model_src_dir": "language_translation",
@@ -166,7 +186,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/weights/SQuAD_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_large_QNLI": {
       "model_src_dir": "language_translation",
@@ -174,7 +195,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/weights/QNLI_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_large_RTE": {
       "model_src_dir": "language_translation",
@@ -182,7 +204,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/weights/RTE_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert_large_CoLA": {
       "model_src_dir": "language_translation",
@@ -190,7 +213,8 @@
       "input_model": "/tf_dataset/pytorch/glue_data/weights/CoLA_output",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "dlrm": {
       "model_src_dir": "recommendation",
@@ -198,7 +222,8 @@
       "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/tb00_40M.pt",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 16384
+      "batch_size": 16384,
+      "new_benchmark": false
     },
     "blendcnn": {
       "model_src_dir": "blendcnn",
@@ -206,7 +231,8 @@
       "input_model": "/tf_dataset/pytorch/blendcnn/models/",
       "yaml": "blendcnn.yaml",
       "strategy": "basic",
-      "batch_size": 32
+      "batch_size": 32,
+      "new_benchmark": false
     },
     "gpt_WikiText": {
       "model_src_dir": "language_translation",
@@ -214,7 +240,8 @@
       "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/gpt_output",
       "yaml": "openai-gpt.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "ctrl_WikiText": {
       "model_src_dir": "language_translation",
@@ -222,7 +249,8 @@
       "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/ctrl_output",
       "yaml": "ctrl.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "xlnet_base_cased_MRPC": {
       "model_src_dir": "language_translation",
@@ -230,7 +258,8 @@
       "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/xlnet_output",
       "yaml": "xlnet-base-cased.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "roberta_base_MRPC": {
       "model_src_dir": "language_translation",
@@ -238,7 +267,8 @@
       "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/roberta_output",
       "yaml": "roberta-base.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "camembert_base_MRPC": {
       "model_src_dir": "language_translation",
@@ -246,7 +276,8 @@
       "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/camembert_output",
       "yaml": "camembert-base.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "3dunet": {
       "model_src_dir": "medical_imaging/3d-unet",
@@ -254,7 +285,8 @@
       "input_model": "/tf_dataset/pytorch/mlperf_3dunet/nnUNetTrainerV2__nnUNetPlansv2.mlperf.1",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     }
   }
 }

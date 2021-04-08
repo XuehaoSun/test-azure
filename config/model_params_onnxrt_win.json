@@ -6,7 +6,8 @@
             "input_model": "models/onnx/resnet50_export.onnx",
             "yaml": "resnet50_v1_5.yaml",
             "strategy": "basic",
-            "batch_size": 100
+            "batch_size": 100,
+            "new_benchmark": false
         },
         "bert_base_MRPC": {
             "model_src_dir": "language_translation/bert",
@@ -14,7 +15,8 @@
             "input_model": "models/onnx/bert.onnx",
             "yaml": "bert.yaml",
             "strategy": "basic",
-            "batch_size": 64
+            "batch_size": 64,
+            "new_benchmark": false
         },
         "mobilenet_v2": {
             "model_src_dir": "image_recognition/mobilenet_v2",
@@ -22,7 +24,8 @@
             "input_model": "models/onnx/mobilenet_v2.onnx",
             "yaml": "mobilenet_v2.yaml",
             "strategy": "basic",
-            "batch_size": 100
+            "batch_size": 100,
+            "new_benchmark": false
         }
     }
 }

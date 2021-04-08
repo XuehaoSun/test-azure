@@ -1,0 +1,223 @@
+"""New benchmark trigger."""
+
+import argparse
+import math
+import os
+import platform
+import shutil
+from typing import List
+
+import psutil
+import utils.consts as consts
+from lpot.ux.utils.workload.config import Config
+from utils.utils import (
+    execute_command,
+    get_executable,
+    get_number_of_sockets,
+    install_requirements,
+)
+
+parser = argparse.ArgumentParser(allow_abbrev=False)
+parser.add_argument("--framework", type=str, required=True)
+parser.add_argument("--model", type=str, required=True)
+parser.add_argument("--model_src_dir", type=str, required=True)
+parser.add_argument("--input_model", type=str, required=True)
+parser.add_argument("--precision", type=str, choices=consts.SUPPORTED_DATATYPES, required=True)
+parser.add_argument("--mode", type=str, choices=consts.SUPPORTED_MODES, required=True)
+parser.add_argument("--batch_size", type=int, required=True)
+parser.add_argument("--yaml", type=str, required=True)
+parser.add_argument("--cpu", type=str, required=True)
+parser.add_argument("--output_path", type=str, default=os.environ.get("WORKSPACE"))
+
+args = parser.parse_args()
+print(args)
+
+if not os.path.exists(args.output_path):
+    os.makedirs(args.output_path)
+
+excluded_requirements = [
+    "lpot",
+    "tensorflow",
+    "torch",
+    "mxnet",
+    "onnx",
+    "ort_nightly",
+    "onnxruntime",
+]
+
+operating_system = platform.system()
+
+
+def main():
+    """Execute main function."""
+    if not os.path.isdir(args.model_src_dir):
+        raise Exception(f"[ERROR] model_src_dir \"{args.model_src_dir}\" not exists.")
+
+    install_requirements(
+        requirements_file=os.path.join(args.model_src_dir, "requirements.txt"),
+        exclude=consts.EXCLUDED_REQUIREMENTS,
+    )
+
+    yaml_path = os.path.join(args.model_src_dir, args.yaml)
+    benchmark_yaml_path = os.path.join(args.model_src_dir, "benchmark.yaml")
+    shutil.copyfile(yaml_path, benchmark_yaml_path)
+    yaml_path = benchmark_yaml_path
+
+    input_model = args.input_model
+    if args.precision == "int8":
+        input_model = os.path.join(
+            os.environ["WORKSPACE"],
+            f"{args.framework}-{args.model}-tune",
+        )
+        if args.framework == "tensorflow":
+            input_model = f"{input_model}.pb"
+        elif args.framework == "onnxrt":
+            input_model = f"{input_model}.onnx"
+
+    parameters = get_benchmark_parameters(
+        yaml_config=yaml_path,
+        input_model=input_model,
+        os=operating_system,
+    )
+
+    log_file = os.path.join(
+        args.output_path,
+        f"{args.framework}-{args.model}-{args.precision}-"
+        f"{args.mode}-{operating_system.lower()}-{args.cpu}.log",
+    )
+
+    if args.mode == "accuracy":
+        run_accuracy(
+            parameters=parameters,
+            yaml_path=yaml_path,
+            log_file=log_file,
+        )
+    else:
+        run_benchmark(
+            parameters=parameters,
+            yaml_path=yaml_path,
+            log_file=log_file,
+            mode=args.mode,
+        )
+
+
+def run_accuracy(parameters: List[str], yaml_path: str, log_file: str):
+    """Run accuracy benchmark."""
+    # Update yaml config
+    lpot_config = Config()
+    lpot_config.load(yaml_path)
+
+    lpot_config.evaluation.performance = None
+    lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
+    lpot_config.evaluation.accuracy.configs = None
+
+    lpot_config.dump(yaml_path)
+    print("\nPrint updated yaml... ")
+    with open(yaml_path, "r") as yaml_file:
+        print(yaml_file.read())
+    ###
+
+    # Set execution command
+    parameters.append("--mode=accuracy")
+
+    cmd = get_executable("benchmark")
+    cmd.extend(parameters)
+    ###
+
+    execute_command(args=cmd, cwd=args.model_src_dir, shell=True, file=log_file)
+
+
+def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: str):
+    """Run performance benchmark."""
+    # Get cpu information for multi-instance
+    total_cores = psutil.cpu_count(logical=False)
+    total_sockets = get_number_of_sockets()
+    ncores_per_socket = total_cores / total_sockets
+
+    num_sockets = 1  # Use only one socket
+    num_benchmark_cores = ncores_per_socket * num_sockets
+
+    batch_size = args.batch_size
+
+    if mode == "latency":
+        ncores_per_instance = 4
+        batch_size = 1
+        iters = 500
+    else:
+        # Use whole socket per instance
+        ncores_per_instance = ncores_per_socket
+        iters = 100
+
+    env_vars = {
+        "LOGLEVEL": "DEBUG",
+    }
+
+    # Update yaml config
+    lpot_config = Config()
+    lpot_config.load(yaml_path)
+
+    lpot_config.evaluation.accuracy = None
+    lpot_config.evaluation.performance.dataloader.batch_size = batch_size
+    lpot_config.evaluation.performance.iteration = iters
+
+    lpot_config.evaluation.performance.configs.cores_per_instance = ncores_per_instance
+    lpot_config.evaluation.performance.configs.num_of_instance = int(num_benchmark_cores // ncores_per_instance)
+    lpot_config.evaluation.performance.configs.intra_num_of_threads = None
+    lpot_config.evaluation.performance.configs.inter_num_of_threads = None
+    lpot_config.evaluation.performance.configs.kmp_blocktime = None
+
+    lpot_config.dump(yaml_path)
+    print("\nPrint updated yaml... ")
+    with open(yaml_path, "r") as yaml_file:
+        print(yaml_file.read())
+    ###
+
+    # Set execution command
+    parameters.append("--mode=performance")
+
+    cmd = get_executable("benchmark")
+    cmd.extend(parameters)
+    ###
+
+    print(f"Execute command: {cmd}")
+    execute_command(
+        args=cmd,
+        cwd=args.model_src_dir,
+        file=log_file,
+        shell=True,
+        env=env_vars,
+    )
+
+
+def get_benchmark_parameters(yaml_config: str, input_model: str, os: str):
+    """Get benchmark parameter for specified os."""
+    os_map = {
+        "Windows": get_windows_parameters,
+        "Linux": get_linux_parameters,
+    }
+    parameter_parser = os_map.get(os, None)
+    if parameter_parser is None:
+        raise Exception(f"Could not found parameter parser for {os} OS.")
+
+    return parameter_parser(yaml_config, input_model)
+
+
+def get_windows_parameters(yaml_path: str, input_model: str):
+    """Get benchmark parameters for Windows OS."""
+    return [
+        f"--input-graph={input_model}",
+        f"--config={yaml_path}",
+        "--benchmark",
+    ]
+
+
+def get_linux_parameters(yaml_path: str, input_model: str):
+    """Get benchmark parameters for Linux OS."""
+    return [
+        f"--config={yaml_path}",
+        f"--input_model={input_model}",
+    ]
+
+
+if __name__ == "__main__":
+    main()
