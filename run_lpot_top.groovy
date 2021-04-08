@@ -659,16 +659,6 @@ def collectLog() {
         "inception_v1"
     ]
 
-    precision_list = ["fp32", "int8"]
-    if ( MR_source_branch != '' ) {
-        echo "Setting mode_list to latency..."
-        mode_list = ["latency"]
-    } else {
-        echo "Parsing ${mode} to list..."
-        mode_list = parseStrToList(mode)
-    }
-    echo "Global mode list: ${mode_list}"
-
     PLATFORMS.split(";").each { systemConfig ->
         def system = systemConfig.split(":")[0]
         platforms = systemConfig.split(":")[1].split(",")
@@ -690,10 +680,6 @@ def collectLog() {
                         job_models = parseStrToList(tensorflow_models_windows)
                     }
                     job_models = job_models.plus(tf_oob_models)
-                    // Temporary change for helloworld_keras
-                    //if (MR_source_branch != '') {
-                    //    job_models << "helloworld_keras"
-                    //}
                 }else if (job_framework == 'pytorch'){
                     job_models = parseStrToList(pytorch_models)
                      if (system == "windows") {
@@ -719,7 +705,7 @@ def collectLog() {
 
                 job_models.each { job_model ->
                     echo "-------- ${cpu} - ${system} - ${job_framework} - ${job_model} --------"
-
+    
                      // Generate tuning info log
 
                     sh """#!/bin/bash -x
@@ -754,7 +740,6 @@ def collectLog() {
     }
     echo "done running collectLog ......."
     stash allowEmpty: true, includes: "*.log, *.json", name: "logfile"
-
 }
 
 def collectUTLog() {

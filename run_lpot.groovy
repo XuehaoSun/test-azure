@@ -261,73 +261,78 @@ def create_conda_env(){
         }
 }
 
-def runPerfTestMR(mode, precision, output_path="${WORKSPACE}") {
-    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))
-    def input_model = modelConf."${framework}"."${model}"."input_model"
-    def batch_size = modelConf."${framework}"."${model}"."batch_size"
-    if (mode == 'latency') {
-        batch_size = 1
-    }
-    sh """#!/bin/bash -x
-    echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
-    
-    echo "-------w-------"
-    w
-    echo "-------w-------"
-    echo "=======cache clean======="
-    
-    sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-
-    echo "=======cache clean======="
-    bash ${WORKSPACE}/lpot-validation/scripts/run_dummy_inference.sh \
-        --framework=${framework} \
-        --model=${model} \
-        --input_model=${input_model} \
-        --precision=${precision} \
-        --mode=${mode} \
-        --batch_size=${batch_size} \
-        --os=${os} \
-        --cpu=${cpu} \
-        --conda_env_name=${conda_env_name} \
-        --output_path=${output_path}
-    """
-}
-
 def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
-    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))
-    def model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
-    def dataset_location = modelConf."${framework}"."${model}"."dataset_location"
-    def input_model = modelConf."${framework}"."${model}"."input_model"
-    def yaml = modelConf."${framework}"."${model}"."yaml"
-    def batch_size = modelConf."${framework}"."${model}"."batch_size"
+    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
+    def model_src_dir = modelConf."model_src_dir"
+    def dataset_location = modelConf."dataset_location"
+    def input_model = modelConf."input_model"
+    def yaml = modelConf."yaml"
+    def batch_size = modelConf."batch_size"
+    def new_benchmark = modelConf."new_benchmark"
 
-    sh """#!/bin/bash -x
-    echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
-    
-    echo "-------w-------"
-    w
-    echo "-------w-------"
-    echo "=======cache clean======="
-    
-    sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+    if (new_benchmark == true) {
+        sh """#!/bin/bash -x
+            echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking - New"
+            
+            echo "-------w-------"
+            w
+            echo "-------w-------"
 
-    echo "=======cache clean======="
-    bash ${WORKSPACE}/lpot-validation/scripts/run_benchmark_trigger.sh \
-        --framework=${framework} \
-        --model=${model} \
-        --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \\
-        --dataset_location=${dataset_location} \
-        --input_model=${input_model} \
-        --precision=${precision} \
-        --mode=${mode} \
-        --batch_size=${batch_size} \
-        --conda_env_name=${conda_env_name} \
-        --yaml=${yaml} \
-        --os=${os} \
-        --cpu=${cpu} \
-        --profiling=${RUN_PROFILING} \
-        --output_path=${output_path}
-    """
+            echo "=======cache clean======="
+            sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+            echo "========================="
+
+        
+            echo "======= Activate conda env ======="
+            source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh \
+                --framework=${framework} \
+                --model=${model} \
+                --conda_env_name=${conda_env_name}
+            set_environment
+            echo "=================================="
+
+            export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
+            python ${WORKSPACE}/lpot-validation/scripts/run_new_benchmark_trigger.py \
+                --framework=${framework} \
+                --model=${model} \
+                --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
+                --input_model=${input_model} \
+                --precision=${precision} \
+                --mode=${mode} \
+                --batch_size=${batch_size} \
+                --yaml=${yaml} \
+                --cpu=${cpu} \
+                --output_path=${output_path}
+            """
+    } else {
+        sh """#!/bin/bash -x
+            echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
+            
+            echo "-------w-------"
+            w
+            echo "-------w-------"
+            echo "=======cache clean======="
+            
+            sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+
+            echo "=======cache clean======="
+            bash ${WORKSPACE}/lpot-validation/scripts/run_benchmark_trigger.sh \
+                --framework=${framework} \
+                --model=${model} \
+                --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
+                --dataset_location=${dataset_location} \
+                --input_model=${input_model} \
+                --precision=${precision} \
+                --mode=${mode} \
+                --batch_size=${batch_size} \
+                --conda_env_name=${conda_env_name} \
+                --yaml=${yaml} \
+                --os=${os} \
+                --cpu=${cpu} \
+                --profiling=${RUN_PROFILING} \
+                --output_path=${output_path}
+            """
+    }
 }
 
 def getReferenceData() {
@@ -421,12 +426,7 @@ def checkReferenceData() {
                 rerun_num += 1
                 def rerun_path = "${WORKSPACE}/rerun_${mode}_${precision}_${rerun_num}"
 
-                // Execute perf test
-                if (lpot_branch == '' && dummy_inference_models.contains(model)) {
-                    runPerfTestMR(mode, precision, "${rerun_path}")
-                } else {
-                    runPerfTest(mode, precision, "${rerun_path}")
-                }
+                runPerfTest(mode, precision, "${rerun_path}")
 
                 // Copy tuning log to rerun path
                 sh """
@@ -644,11 +644,11 @@ node( sub_node_label ) {
             getReferenceData()
 
             // get params for tuning and benchmark
-            def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))
-            model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
-            dataset_location = modelConf."${framework}"."${model}"."dataset_location"
-            input_model = modelConf."${framework}"."${model}"."input_model"
-            yaml = modelConf."${framework}"."${model}"."yaml"
+            def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
+            model_src_dir = modelConf."model_src_dir"
+            dataset_location = modelConf."dataset_location"
+            input_model = modelConf."input_model"
+            yaml = modelConf."yaml"
 
             //mr test will cover different strategies, the other test mode will use the passed strategy
             if ( MR_source_branch != '' ){
@@ -664,8 +664,8 @@ node( sub_node_label ) {
                         dataset_location = "/tf_dataset/tensorflow/mini-coco-500.record"
                         withEnv(["model_src_dir=${model_src_dir}"]) {
                             sh(
-                                    script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
-                                    returnStdout: true
+                                script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
+                                returnStdout: true
                             ).trim()
                         }
                     }
@@ -730,37 +730,25 @@ node( sub_node_label ) {
                 mode_list = ["latency"]
             }
 
-            if (lpot_branch == '' && dummy_inference_models.contains(model)) {
-                stage("MR Performance") {
-                    precision_list.each { precision ->
-                        echo "precision is ${precision}"
-                        mode_list.each { mode ->
-                            runPerfTestMR(mode, precision)
-                        }
-                    }
-                }
-            } else {
-                // Nightly tests and OOB MR tests
-                if (!tune_only) {
-                    println("==========nightly benchmark========")
-                    timeout(360) {
-                        stage("Performance") {
-                            precision_list.each { precision ->
-                                echo "precision is ${precision}"
-                                // oob only support dummy data
-                                if (model_src_dir == 'oob_models' || model == 'style_transfer') {
-                                    mode_list = ['latency']
-                                    echo "mode list is ${mode_list}"
-                                }
-                                mode_list.each { mode ->
-                                    runPerfTest(mode, precision)
-                                }
+            
+            if (!tune_only) {
+                println("==========nightly benchmark========")
+                timeout(360) {
+                    stage("Performance") {
+                        precision_list.each { precision ->
+                            echo "precision is ${precision}"
+                            // oob only support dummy data
+                            if (model_src_dir == 'oob_models' || model == 'style_transfer') {
+                                mode_list = ['latency']
+                                echo "mode list is ${mode_list}"
+                            }
+                            mode_list.each { mode ->
+                                runPerfTest(mode, precision)
                             }
                         }
                     }
                 }
             }
-
         } catch(e) {
             currentBuild.result = "FAILURE"
             throw e

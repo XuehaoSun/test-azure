@@ -6,7 +6,8 @@
       "input_model": "",
       "yaml": "",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "resnet50v1.0": {
       "model_src_dir": "image_recognition",
@@ -14,7 +15,8 @@
       "input_model": "/tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb",
       "yaml": "resnet50_v1.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnet50v1.5": {
       "model_src_dir": "image_recognition",
@@ -22,7 +24,8 @@
       "input_model": "/tf_dataset/pre-trained-models/resnet50v1_5/fp32/resnet50_v1.pb",
       "yaml": "resnet50_v1_5.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnet101": {
       "model_src_dir": "image_recognition",
@@ -30,7 +33,8 @@
       "input_model": "/tf_dataset/pre-trained-models/resnet101/fp32/optimized_graph.pb",
       "yaml": "resnet101.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnet_v1_50_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -38,7 +42,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/resnet_v1_50.ckpt",
       "yaml": "resnet_v1_50.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnet_v1_101_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -46,7 +51,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/resnet_v1_101.ckpt",
       "yaml": "../resnet101.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnet_v1_152_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -54,7 +60,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/resnet_v1_152.ckpt",
       "yaml": "resnet_v1_152.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v1": {
       "model_src_dir": "image_recognition",
@@ -62,7 +69,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_inception_v1.pb",
       "yaml": "inception_v1.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v1_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -70,7 +78,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/inception_v1.ckpt",
       "yaml": "../inception_v1.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v2": {
       "model_src_dir": "image_recognition",
@@ -78,7 +87,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_inception_v2.pb",
       "yaml": "inception_v2.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v2_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -86,7 +96,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/inception_v2.ckpt",
       "yaml": "../inception_v2.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v3": {
       "model_src_dir": "image_recognition",
@@ -94,7 +105,8 @@
       "input_model": "/tf_dataset/pre-trained-models/inceptionv3/fp32/freezed_inceptionv3.pb",
       "yaml": "inception_v3.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v3_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -102,7 +114,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/inception_v3.ckpt",
       "yaml": "inception_v3.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v4": {
       "model_src_dir": "image_recognition",
@@ -110,7 +123,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_inception_v4.pb",
       "yaml": "inception_v4.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v4_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -118,7 +132,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/inception_v4.ckpt",
       "yaml": "../inception_v4.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_resnet_v2": {
       "model_src_dir": "image_recognition",
@@ -126,7 +141,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_inception_resnet_v2.pb",
       "yaml": "inception_resnet_v2.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "vgg16": {
       "model_src_dir": "image_recognition",
@@ -134,7 +150,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_vgg16.pb",
       "yaml": "vgg16.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "vgg16_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -142,7 +159,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/vgg_16.ckpt",
       "yaml": "../vgg16.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "vgg19": {
       "model_src_dir": "image_recognition",
@@ -150,7 +168,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_vgg19.pb",
       "yaml": "vgg19.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "vgg19_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -158,7 +177,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/vgg_19.ckpt",
       "yaml": "../vgg19.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "densenet121": {
       "model_src_dir": "image_recognition",
@@ -166,7 +186,8 @@
       "input_model": "/tf_dataset/tensorflow/densenet/densenet-121.pb",
       "yaml": "densenet121.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "densenet161": {
       "model_src_dir": "image_recognition",
@@ -174,7 +195,8 @@
       "input_model": "/tf_dataset/tensorflow/densenet/densenet-161.pb",
       "yaml": "densenet161.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "densenet169": {
       "model_src_dir": "image_recognition",
@@ -182,7 +204,8 @@
       "input_model": "/tf_dataset/tensorflow/densenet/densenet-169.pb",
       "yaml": "densenet169.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnetv2_50": {
       "model_src_dir": "image_recognition",
@@ -190,7 +213,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_resnet_v2_50.pb",
       "yaml": "resnet_v2_50.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnetv2_50_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -198,7 +222,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/resnet_v2_50.ckpt",
       "yaml": "../resnet_v2_50.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnetv2_101": {
       "model_src_dir": "image_recognition",
@@ -206,7 +231,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_resnet_v2_101.pb",
       "yaml": "resnet_v2_101.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnetv2_101_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -214,7 +240,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/resnet_v2_101.ckpt",
       "yaml": "../resnet_v2_101.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnetv2_152": {
       "model_src_dir": "image_recognition",
@@ -222,7 +249,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_resnet_v2_152.pb",
       "yaml": "resnet_v2_152.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "resnetv2_152_slim": {
       "model_src_dir": "image_recognition/slim",
@@ -230,7 +258,8 @@
       "input_model": "/tf_dataset/tensorflow/slim/resnet_v2_152.ckpt",
       "yaml": "../resnet_v2_152.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "mobilenetv1": {
       "model_src_dir": "image_recognition",
@@ -238,7 +267,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_mobilenet_v1.pb",
       "yaml": "mobilenet_v1.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "mobilenetv2": {
       "model_src_dir": "image_recognition",
@@ -246,7 +276,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_mobilenet_v2.pb",
       "yaml": "mobilenet_v2.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "mobilenetv3": {
       "model_src_dir": "image_recognition",
@@ -254,7 +285,8 @@
       "input_model": "/tf_dataset/tensorflow/mobilenet/mobilenet_v3.pb",
       "yaml": "mobilenet_v3.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "nasnet_mobile": {
       "model_src_dir": "image_recognition",
@@ -262,7 +294,8 @@
       "input_model": "/tf_dataset/pre-train-model-slim/pbfile/frozen_pb/frozen_nasnet_mobile.pb",
       "yaml": "nasnet_mobile.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "ssd_resnet50_v1": {
       "model_src_dir": "object_detection",
@@ -270,7 +303,8 @@
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/ssd_resnet50_v1/frozen_inference_graph.pb",
       "yaml": "ssd_resnet50_v1.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "ssd_resnet50_v1_ckpt": {
       "model_src_dir": "object_detection",
@@ -278,7 +312,8 @@
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/ssd_resnet50_v1",
       "yaml": "ssd_resnet50_v1.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "ssd_mobilenet_v1": {
       "model_src_dir": "object_detection",
@@ -286,7 +321,8 @@
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/ssd_mobilenet_v1/frozen_inference_graph.pb",
       "yaml": "ssd_mobilenet_v1.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "ssd_mobilenet_v1_ckpt": {
       "model_src_dir": "object_detection",
@@ -294,7 +330,8 @@
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/ssd_mobilenet_v1",
       "yaml": "ssd_mobilenet_v1.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "faster_rcnn_inception_resnet_v2": {
       "model_src_dir": "object_detection",
@@ -302,7 +339,8 @@
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/faster_rcnn_inception_resnet_v2/frozen_inference_graph.pb",
       "yaml": "faster_rcnn_inception_resnet_v2.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "faster_rcnn_resnet101": {
       "model_src_dir": "object_detection",
@@ -310,7 +348,8 @@
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/faster_rcnn_resnet101/frozen_inference_graph.pb",
       "yaml": "faster_rcnn_resnet101.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "mask_rcnn_inception_v2": {
       "model_src_dir": "object_detection",
@@ -318,7 +357,8 @@
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/mask_rcnn_inception_v2/frozen_inference_graph.pb",
       "yaml": "mask_rcnn_inception_v2.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "mask_rcnn_inception_v2_ckpt": {
       "model_src_dir": "object_detection",
@@ -326,7 +366,8 @@
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/mask_rcnn_inception_v2",
       "yaml": "mask_rcnn_inception_v2.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "ssd_resnet34": {
       "model_src_dir": "object_detection",
@@ -334,7 +375,8 @@
       "input_model": "/tf_dataset/pre-trained-models/ssd_resnet34/fp32/resnet34_tf.22.1.pb",
       "yaml": "ssd_resnet34.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": true
     },
     "wide_deep_large_ds": {
       "model_src_dir": "recommendation/wide_deep_large_ds",
@@ -342,7 +384,8 @@
       "input_model": "/tf_dataset/tensorflow/wide_deep_large_ds/fp32_optimized_graph.pb",
       "yaml": "wide_deep_large_ds.yaml",
       "strategy": "basic",
-      "batch_size": 256
+      "batch_size": 256,
+      "new_benchmark": false
     },
     "style_transfer": {
       "model_src_dir": "style_transfer",
@@ -350,7 +393,8 @@
       "input_model": "/tf_dataset/tensorflow/style_transfer/arbitrary_style_transfer/model.ckpt",
       "yaml": "conf.yaml",
       "strategy": "basic",
-      "batch_size": -1
+      "batch_size": -1,
+      "new_benchmark": false
     },
     "transformer_lt": {
       "model_src_dir": "nlp/transformer_lt",
@@ -358,7 +402,8 @@
       "input_model": "/tf_dataset/tensorflow/transformer-lt-official-fp32-inference/transformer_lt_official_fp32_pretrained_model/graph/fp32_graphdef.pb",
       "yaml": "transformer_lt.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "bert": {
       "model_src_dir": "nlp/bert",
@@ -366,7 +411,8 @@
       "input_model": "/tf_dataset/tensorflow/bert/bert_fp32.pb",
       "yaml": "bert.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": true
     },
     "aipg-vdcnn": {
       "model_src_dir": "oob_models",
@@ -374,7 +420,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/AIPG_trained/text_classification/vdcnn/agnews/tf/aipg-vdcnn.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "arttrack-coco-multi": {
       "model_src_dir": "oob_models",
@@ -382,7 +429,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/arttrack/coco/tf/arttrack-coco-multi.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "arttrack-mpii-single": {
       "model_src_dir": "oob_models",
@@ -390,7 +438,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/arttrack/mpii/tf/arttrack-mpii-single.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "ava-face-recognition-3.0.0": {
       "model_src_dir": "oob_models",
@@ -398,7 +447,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Security/feature_extraction/ava/tf/ava-face-recognition-3.0.0.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "ava-person-vehicle-detection-stage2-2.0.0": {
       "model_src_dir": "oob_models",
@@ -406,7 +456,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Security/object_detection/common/ava/stage2/tf/ava-person-vehicle-detection-stage2-2.0.0.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "bert-base-uncased_L-12_H-768_A-12": {
       "model_src_dir": "oob_models",
@@ -414,7 +465,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/language_representation/bert/base/uncased_L-12_H-768_A-12/tf/bert-base-uncased_L-12_H-768_A-12.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "darknet19": {
       "model_src_dir": "oob_models",
@@ -422,7 +474,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/classification/darknet19/darknet19.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "darknet53": {
       "model_src_dir": "oob_models",
@@ -430,7 +483,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/classification/darknet53/darknet53.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "deeplabv3": {
       "model_src_dir": "oob_models",
@@ -438,7 +492,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/semantic_segmentation/deeplab/v3/deeplabv3.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "deepvariant_wgs": {
       "model_src_dir": "oob_models",
@@ -446,7 +501,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/dna_sequencing/deepvariant/wgs/deepvariant_wgs.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "densenet-121": {
       "model_src_dir": "oob_models",
@@ -454,7 +510,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/densenet/121/tf/densenet-121.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "densenet-161": {
       "model_src_dir": "oob_models",
@@ -462,7 +519,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/densenet/161/tf/densenet-161.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "densenet-169": {
       "model_src_dir": "oob_models",
@@ -470,7 +528,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/densenet/169/tf/densenet-169.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "east_resnet_v1_50": {
       "model_src_dir": "oob_models",
@@ -478,7 +537,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/text_detection/east/tf/east_resnet_v1_50.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "efficientnet-b0": {
       "model_src_dir": "oob_models",
@@ -486,7 +546,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/efficientnet/b0/tf/efficientnet-b0.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "efficientnet-b0_auto_aug": {
       "model_src_dir": "oob_models",
@@ -494,7 +555,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/efficientnet/b0_auto_aug/tf/efficientnet-b0_auto_aug.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "efficientnet-b5": {
       "model_src_dir": "oob_models",
@@ -502,7 +564,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/efficientnet/b5/tf/efficientnet-b5.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "facenet-20180408-102900": {
       "model_src_dir": "oob_models",
@@ -510,7 +573,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/face_recognition/facenet/CASIA-WebFace/tf/facenet-20180408-102900.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_inception_v2_coco": {
       "model_src_dir": "oob_models",
@@ -518,7 +582,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_inception_v2_coco/tf/faster_rcnn_inception_v2_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_resnet101_ava_v2.1": {
       "model_src_dir": "oob_models",
@@ -526,7 +591,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_ava_v2.1_2018_04_30/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_resnet101_coco": {
       "model_src_dir": "oob_models",
@@ -534,7 +600,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_resnet101_coco/tf/faster_rcnn_resnet101_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_resnet101_kitti": {
       "model_src_dir": "oob_models",
@@ -542,7 +609,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_kitti_2018_01_28/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_resnet101_lowproposals_coco": {
       "model_src_dir": "oob_models",
@@ -550,7 +618,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_lowproposals_coco_2018_01_28/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_resnet50_coco": {
       "model_src_dir": "oob_models",
@@ -558,7 +627,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_resnet50_coco/tf/faster_rcnn_resnet50_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_resnet50_lowproposals_coco": {
       "model_src_dir": "oob_models",
@@ -566,7 +636,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_resnet50_lowproposals_coco/tf/faster_rcnn_resnet50_lowproposals_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "googlenet-v1": {
       "model_src_dir": "oob_models",
@@ -574,7 +645,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/googlenet/v1/tf/googlenet-v1.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "googlenet-v2": {
       "model_src_dir": "oob_models",
@@ -582,7 +654,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/googlenet/v2/tf/googlenet-v2.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "googlenet-v3": {
       "model_src_dir": "oob_models",
@@ -590,7 +663,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/googlenet/v3/tf/googlenet-v3.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "googlenet-v4": {
       "model_src_dir": "oob_models",
@@ -598,7 +672,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/googlenet/v4/tf/googlenet-v4.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "Hierarchical_LSTM": {
       "model_src_dir": "oob_models",
@@ -606,7 +681,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Hierarchical/text8_freeze.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "image-retrieval-0001": {
       "model_src_dir": "oob_models",
@@ -614,7 +690,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/image-retrieval-0001/image-retrieval-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "inceptionv2_ssd": {
       "model_src_dir": "oob_models",
@@ -622,7 +699,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/ssd_inceptionv2/tf/inceptionv2_ssd.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "3d-pose-baseline": {
       "model_src_dir": "oob_models",
@@ -630,7 +708,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/3d-pose-baseline/tf/3d-pose-baseline.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "cpm-person": {
       "model_src_dir": "oob_models",
@@ -638,7 +717,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/cpm/person/tf/cpm-person.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "ctpn": {
       "model_src_dir": "oob_models",
@@ -646,7 +726,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/text_detection/ctpn/tf/ctpn.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "DSSD_12": {
       "model_src_dir": "oob_models",
@@ -654,7 +735,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/object_detection/common/dssd/DSSD_12/tf/DSSD_12.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "efficientnet-b7_auto_aug": {
       "model_src_dir": "oob_models",
@@ -662,7 +744,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/efficientnet/b7_auto_aug/tf/efficientnet-b7_auto_aug.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_resnet101_fgvc": {
       "model_src_dir": "oob_models",
@@ -670,7 +753,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet101_fgvc_2018_07_19/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "faster_rcnn_resnet50_fgvc": {
       "model_src_dir": "oob_models",
@@ -678,7 +762,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_resnet50_fgvc_2018_07_19/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "handwritten-score-recognition-0003": {
       "model_src_dir": "oob_models",
@@ -686,7 +771,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Retail/handwritten-score-recognition/0003/tf/handwritten-score-recognition-0003.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "HugeCTR": {
       "model_src_dir": "oob_models",
@@ -694,7 +780,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/HugeCTR/dcn_model-0_freeze.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "i3d-flow": {
       "model_src_dir": "oob_models",
@@ -702,7 +789,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/action_recognition/i3d/flow/tf/i3d-flow.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "i3d-rgb": {
       "model_src_dir": "oob_models",
@@ -710,7 +798,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/action_recognition/i3d/rgb/tf/i3d-rgb.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "icnet-camvid-ava-0001": {
       "model_src_dir": "oob_models",
@@ -718,7 +807,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws00/icnet-camvid-ava-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "icnet-camvid-ava-sparse-30-0001": {
       "model_src_dir": "oob_models",
@@ -726,7 +816,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws30/icnet-camvid-ava-sparse-30-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "icnet-camvid-ava-sparse-60-0001": {
       "model_src_dir": "oob_models",
@@ -734,7 +825,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws60/icnet-camvid-ava-sparse-60-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "icv-emotions-recognition-0002": {
       "model_src_dir": "oob_models",
@@ -742,7 +834,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Retail/object_attributes/emotions_recognition/0002/tf/icv-emotions-recognition-0002.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "inception-resnet-v2": {
       "model_src_dir": "oob_models",
@@ -750,7 +843,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/inception-resnet/v2/tf/inception-resnet-v2.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "intel-labs-nonlocal-dehazing": {
       "model_src_dir": "oob_models",
@@ -758,7 +852,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/IntelLabs/FastImageProcessing/NonlocalDehazing/intel-labs-nonlocal-dehazing.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": false
     },
     "learning-to-see-in-the-dark-fuji": {
       "model_src_dir": "oob_models",
@@ -766,7 +861,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/IntelLabs/LearningToSeeInTheDark/Fuji/learning-to-see-in-the-dark-fuji.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "learning-to-see-in-the-dark-sony": {
       "model_src_dir": "oob_models",
@@ -774,7 +870,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/IntelLabs/LearningToSeeInTheDark/Sony/learning-to-see-in-the-dark-sony.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "license-plate-recognition-barrier-0007": {
       "model_src_dir": "oob_models",
@@ -782,7 +879,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/optical_character_recognition/license_plate_recognition/tf/license-plate-recognition-barrier-0007.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "mask_rcnn_inception_v2_coco": {
       "model_src_dir": "oob_models",
@@ -790,7 +888,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/instance_segmentation/mask_rcnn/mask_rcnn_inception_v2_coco/tf/mask_rcnn_inception_v2_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "nasnet-a-large-331": {
       "model_src_dir": "oob_models",
@@ -798,7 +897,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/nasnet/large/tf/nasnet-a-large-331.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "nasnet-a-mobile-224": {
       "model_src_dir": "oob_models",
@@ -806,7 +906,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/nasnet/mobile/tf/nasnet-a-mobile-224.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "openpose-pose": {
       "model_src_dir": "oob_models",
@@ -814,7 +915,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/human_pose_estimation/openpose/pose/tf/openpose-pose.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "optical_character_recognition-text_recognition-tf": {
       "model_src_dir": "oob_models",
@@ -822,7 +924,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/optical_character_recognition/text_recognition/tf/optical_character_recognition-text_recognition-tf.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "person-vehicle-bike-detection-crossroad-yolov3-1020": {
       "model_src_dir": "oob_models",
@@ -830,7 +933,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Security/object_detection/crossroad/1020/tf/person-vehicle-bike-detection-crossroad-yolov3-1020.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "PRNet": {
       "model_src_dir": "oob_models",
@@ -838,7 +942,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/face_reconstruction/PRNet/tf/PRNet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "resnet-101": {
       "model_src_dir": "oob_models",
@@ -846,7 +951,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/resnet/v1/101/tf/resnet-101.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "resnet-152": {
       "model_src_dir": "oob_models",
@@ -854,7 +960,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/resnet/v1/152/tf/resnet-152.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "resnet-50": {
       "model_src_dir": "oob_models",
@@ -862,7 +969,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/resnet/v1/50/tf/official/resnet-50.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "resnet-v2-101": {
       "model_src_dir": "oob_models",
@@ -870,7 +978,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/resnet/v2/101/tf/resnet-v2-101.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "resnet-v2-152": {
       "model_src_dir": "oob_models",
@@ -878,7 +987,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/resnet/v2/152/tf/resnet-v2-152.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "resnet-v2-50": {
       "model_src_dir": "oob_models",
@@ -886,7 +996,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/resnet/v2/50/tf/224x224/resnet-v2-50.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "Resnetv2_200": {
       "model_src_dir": "oob_models",
@@ -894,7 +1005,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Resnet_v2_200/Resnet_v2_200.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "retinanet": {
       "model_src_dir": "oob_models",
@@ -902,7 +1014,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/retinanet/tf/retinanet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "rfcn-resnet101-coco": {
       "model_src_dir": "oob_models",
@@ -910,7 +1023,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/rfcn/rfcn_resnet101_coco/tf/rfcn-resnet101-coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "rmnet_ssd": {
       "model_src_dir": "oob_models",
@@ -918,7 +1032,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Retail/action_detection/pedestrian/rmnet_ssd/0028_tf/tf/rmnet_ssd.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "squeezenet-1.1": {
       "model_src_dir": "oob_models",
@@ -926,7 +1041,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/squeezenet/1.1/tf/squeezenet-1.1.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "RetinaNet50": {
       "model_src_dir": "oob_models",
@@ -934,7 +1050,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/ssd_resnet50_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ssd_inception_v2_coco": {
       "model_src_dir": "oob_models",
@@ -942,7 +1059,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/ssd_inceptionv2/tf/inceptionv2_ssd.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ssd_resnet50_v1_fpn_coco": {
       "model_src_dir": "oob_models",
@@ -950,7 +1068,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/ssd_resnet50/ssd_resnet50_v1_fpn_coco/tf/ssd_resnet50_v1_fpn_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ssd-resnet34_300x300": {
       "model_src_dir": "oob_models",
@@ -958,7 +1077,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/ssd-resnet34_300x300/ssd_resnet34_fp32_bs1_pretrained_model.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "TCN": {
       "model_src_dir": "oob_models",
@@ -966,7 +1086,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/sequence_modelling/tcn/tf/TCN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "text-recognition-0012": {
       "model_src_dir": "oob_models",
@@ -974,7 +1095,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Retail/text_recognition/bilstm_crnn_bilstm_decoder/0012/tf/text-recognition-0012.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "tiny_yolo_v1": {
       "model_src_dir": "oob_models",
@@ -982,7 +1104,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/object_detection/common/yolo/v1_tiny/tf/tiny_yolo_v1.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "tiny_yolo_v2": {
       "model_src_dir": "oob_models",
@@ -990,7 +1113,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/object_detection/common/yolo/v2_tiny/tf/tiny_yolo_v2.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "vehicle-attributes-barrier-0103": {
       "model_src_dir": "oob_models",
@@ -998,7 +1122,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_attributes/vehicle_attributes/tf/vehicle-attributes-barrier-0103.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "vehicle-license-plate-detection-barrier-0123": {
       "model_src_dir": "oob_models",
@@ -1006,7 +1131,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/barrier/tf/0123/vehicle-license-plate-detection-barrier-0123.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "vgg16-oob": {
       "model_src_dir": "oob_models",
@@ -1014,7 +1140,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/vgg/16/tf/vgg16.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "vgg19-oob": {
       "model_src_dir": "oob_models",
@@ -1022,7 +1149,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/classification/vgg/19/tf/vgg19.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "vggvox": {
       "model_src_dir": "oob_models",
@@ -1030,7 +1158,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/voice_recognition/vggvox/vggvox.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v3-tiny": {
       "model_src_dir": "oob_models",
@@ -1038,7 +1167,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/yolo/yolo_v3/yolo-v3-tiny/yolo-v3-tiny-tf/yolo-v3-tiny.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v2": {
       "model_src_dir": "oob_models",
@@ -1046,7 +1176,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/yolo/yolo_v2/tf/yolo-v2.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v2-ava-sparse-35-0001": {
       "model_src_dir": "oob_models",
@@ -1054,7 +1185,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/detection/YOLOv2/fp32_sparsity35/yolo-v2-ava-sparse-35-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v2-ava-sparse-70-0001": {
       "model_src_dir": "oob_models",
@@ -1062,7 +1194,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/detection/YOLOv2/fp32_sparsity70/yolo-v2-ava-sparse-70-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v2-tiny-ava-0001": {
       "model_src_dir": "oob_models",
@@ -1070,7 +1203,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/detection/tinyYOLOv2/fp32_sparsity00/yolo-v2-tiny-ava-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v2-tiny-ava-sparse-30-0001": {
       "model_src_dir": "oob_models",
@@ -1078,7 +1212,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/detection/tinyYOLOv2/fp32_sparsity30/yolo-v2-tiny-ava-sparse-30-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v2-tiny-ava-sparse-60-0001": {
       "model_src_dir": "oob_models",
@@ -1086,7 +1221,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/detection/tinyYOLOv2/fp32_sparsity60/yolo-v2-tiny-ava-sparse-60-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v2-tiny-vehicle-detection-0001": {
       "model_src_dir": "oob_models",
@@ -1094,7 +1230,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Security/object_detection/barrier/yolo/yolo-v2-tiny-vehicle-detection-0001/tf/yolo-v2-tiny-vehicle-detection-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "yolo-v3": {
       "model_src_dir": "oob_models",
@@ -1102,7 +1239,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/yolo/yolo_v3/tf/yolo-v3.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "DeepLab": {
       "model_src_dir": "oob_models",
@@ -1110,7 +1248,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/deeplabv3_mnv2_cityscapes_train/deeplab.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "GraphSage": {
       "model_src_dir": "oob_models",
@@ -1118,7 +1257,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/GraphSage/gcn.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "WGAN": {
       "model_src_dir": "oob_models",
@@ -1126,7 +1266,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/WGAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "VNet": {
       "model_src_dir": "oob_models",
@@ -1134,7 +1275,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/vnet/vnet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "DRAW": {
       "model_src_dir": "oob_models",
@@ -1142,7 +1284,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/DRAW/DRAW.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ALBERT": {
       "model_src_dir": "oob_models",
@@ -1150,7 +1293,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/ALBERT/ALBERT.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "BERT_BASE": {
       "model_src_dir": "oob_models",
@@ -1158,7 +1302,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/BERT_BASE/BERT_BASE.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "BERT-LARGE": {
       "model_src_dir": "oob_models",
@@ -1166,7 +1311,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/BERT_LARGE/BERT_LARGE.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "CapsuleNet": {
       "model_src_dir": "oob_models",
@@ -1174,7 +1320,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/CapsuleNet/CapsuleNet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "CharCNN": {
       "model_src_dir": "oob_models",
@@ -1182,7 +1329,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/CharCNN/epoch000.model.meta",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "CRNN": {
       "model_src_dir": "oob_models",
@@ -1190,7 +1338,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "DIEN": {
       "model_src_dir": "oob_models",
@@ -1198,7 +1347,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/DIEN/dien.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "dense_vnet_abdominal_ct": {
       "model_src_dir": "oob_models",
@@ -1206,7 +1356,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/semantic_segmentation/dense_vnet/tf/dense_vnet_abdominal_ct.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "dilation": {
       "model_src_dir": "oob_models",
@@ -1214,7 +1365,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Dilation/dilation.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "faster_rcnn_inception_resnet_v2_atrous_coco": {
       "model_src_dir": "oob_models",
@@ -1222,7 +1374,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_inception_resnet_v2_atrous_coco/tf/faster_rcnn_inception_resnet_v2_atrous_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "faster_rcnn_inception_resnet_v2_atrous_lowproposals_coco": {
       "model_src_dir": "oob_models",
@@ -1230,7 +1383,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "faster_rcnn_nas_coco": {
       "model_src_dir": "oob_models",
@@ -1238,7 +1392,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/faster_rcnn_nas_coco/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "faster_rcnn_nas_lowproposals_coco": {
       "model_src_dir": "oob_models",
@@ -1246,7 +1401,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/object_detection/common/faster_rcnn/faster_rcnn_nas_lowproposals_coco/tf/faster_rcnn_nas_lowproposals_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "GAN": {
       "model_src_dir": "oob_models",
@@ -1254,7 +1410,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/GAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "gmcnn-places2": {
       "model_src_dir": "oob_models",
@@ -1262,7 +1419,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/image_inpainting/gmcnn/tf/gmcnn-places2.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "LSGAN": {
       "model_src_dir": "oob_models",
@@ -1270,7 +1428,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/LSGAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "mask_rcnn_inception_resnet_v2_atrous_coco": {
       "model_src_dir": "oob_models",
@@ -1278,7 +1437,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/instance_segmentation/mask_rcnn/mask_rcnn_inception_resnet_v2_atrous_coco/tf/mask_rcnn_inception_resnet_v2_atrous_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "NCF-1B": {
       "model_src_dir": "oob_models",
@@ -1286,7 +1446,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/ncf_trained_movielens_1m/ncf.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "R-FCN": {
       "model_src_dir": "oob_models",
@@ -1294,7 +1455,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/R-FCN/rfcn_resnet101_coco_2018_01_28/frozen_inference_graph.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "TextCNN": {
       "model_src_dir": "oob_models",
@@ -1302,7 +1464,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "TextRNN": {
       "model_src_dir": "oob_models",
@@ -1310,7 +1473,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "Transformer-LT": {
       "model_src_dir": "oob_models",
@@ -1318,7 +1482,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/transformer_lt_official_fp32_pretrained_model/graph/fp32_graphdef.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ACGAN": {
       "model_src_dir": "oob_models",
@@ -1326,7 +1491,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/ACGAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "BEGAN": {
       "model_src_dir": "oob_models",
@@ -1334,7 +1500,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/BEGAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "CGAN": {
       "model_src_dir": "oob_models",
@@ -1342,7 +1509,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/CGAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "DRAGAN": {
       "model_src_dir": "oob_models",
@@ -1350,7 +1518,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/DRAGAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "EBGAN": {
       "model_src_dir": "oob_models",
@@ -1358,7 +1527,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/EBGAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "infoGAN": {
       "model_src_dir": "oob_models",
@@ -1366,7 +1536,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/infoGAN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "mask_rcnn_resnet101_atrous_coco": {
       "model_src_dir": "oob_models",
@@ -1374,7 +1545,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/instance_segmentation/mask_rcnn/mask_rcnn_resnet101_atrous_coco/tf/mask_rcnn_resnet101_atrous_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "mask_rcnn_resnet50_atrous_coco": {
       "model_src_dir": "oob_models",
@@ -1382,7 +1554,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/instance_segmentation/mask_rcnn/mask_rcnn_resnet50_atrous_coco/tf/mask_rcnn_resnet50_atrous_coco.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "person-vehicle-bike-detection-crossroad-yolov3-1024": {
       "model_src_dir": "oob_models",
@@ -1390,7 +1563,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Security/object_detection/crossroad/1024/tf/person-vehicle-bike-detection-crossroad-yolov3-1024.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "srgan": {
       "model_src_dir": "oob_models",
@@ -1398,7 +1572,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "SSD-ResNet34_1200x1200": {
       "model_src_dir": "oob_models",
@@ -1406,7 +1581,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/SSD-ResNet34_1200x1200/ssd_resnet34_fp32_1200x1200_pretrained_model.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "unet-3d-isensee_2017": {
       "model_src_dir": "oob_models",
@@ -1414,7 +1590,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/volumetric_segmentation/unet/3d/isensee_2017/tf/unet-3d-isensee_2017.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "unet-3d-origin": {
       "model_src_dir": "oob_models",
@@ -1422,7 +1599,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicInHouse/volumetric_segmentation/unet/3d/origin/tf/unet-3d-origin.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "WGAN_GP": {
       "model_src_dir": "oob_models",
@@ -1430,7 +1608,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/oob_gan_models/WGAN_GP.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "wide_deep": {
       "model_src_dir": "oob_models",
@@ -1438,7 +1617,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/wide_deep/wide_deep.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "DynamicMemory": {
       "model_src_dir": "oob_models",
@@ -1446,7 +1626,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/checkpoint_dynamic_memory_network/DynamicMemory.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "EntityNet": {
       "model_src_dir": "oob_models",
@@ -1454,7 +1635,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/checkpoint_entity_network2/EntityNet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "Seq2seqAttn": {
       "model_src_dir": "oob_models",
@@ -1462,7 +1644,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/Seq2seqAttn/Seq2seqAttn.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "show_and_tell": {
       "model_src_dir": "oob_models",
@@ -1470,7 +1653,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/show_and_tell/Show_and_tell.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "SqueezeNet": {
       "model_src_dir": "oob_models",
@@ -1478,7 +1662,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/SqueezeNet-tf/SqueezeNet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ssd_resnet34_1200x1200": {
       "model_src_dir": "oob_models",
@@ -1486,7 +1671,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/ssd_resnet34_model/ssd_resnet34_1200x1200.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "deepspeech": {
       "model_src_dir": "oob_models",
@@ -1494,7 +1680,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/deepspeech/v1/tf/deepspeech.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "TextRCNN": {
       "model_src_dir": "oob_models",
@@ -1502,7 +1689,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/TextRCNN/TextRCNN.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "U-Net": {
       "model_src_dir": "oob_models",
@@ -1510,7 +1698,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/unet/unet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "wavenet": {
       "model_src_dir": "oob_models",
@@ -1518,7 +1707,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/wavenet/wavenet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "HierAtteNet": {
       "model_src_dir": "oob_models",
@@ -1526,7 +1716,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/text_hier_atten_title_desc_checkpoint_MHA/HierAtteNet.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "SphereFace": {
       "model_src_dir": "oob_models",
@@ -1534,7 +1725,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/SphereFace/SphereFace.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ResNet-50v1.5": {
       "model_src_dir": "oob_models",
@@ -1542,7 +1734,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/ResNet50_v1_5/model_dir/ResNet-50_v1.5.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ResNeXt-50": {
       "model_src_dir": "oob_models",
@@ -1550,7 +1743,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/ResNext_50/ResNext_50.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "MiniGo": {
       "model_src_dir": "oob_models",
@@ -1558,7 +1752,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/MiniGo/MiniGo.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "ResNeXt-101": {
       "model_src_dir": "oob_models",
@@ -1566,7 +1761,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/ResNext_101/ResNext_101.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     },
     "COVID-Net": {
       "model_src_dir": "oob_models",
@@ -1574,7 +1770,8 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/COVID-Net/COVID-Net.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 1
+      "batch_size": 1,
+      "new_benchmark": false
     }
   }
 }

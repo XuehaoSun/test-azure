@@ -106,9 +106,20 @@ def install_requirements(requirements_file: str, exclude: List[str]) -> None:
         print("Not found requirements.txt file.")
 
 
-def execute_command(args: List[str], cwd = None, file = None, shell = False, universal_newlines = False):
+def execute_command(args: List[str],
+                    cwd = None,
+                    file = None,
+                    shell = False,
+                    universal_newlines = False,
+                    env: dict = None):
+    
+    env_variables = os.environ.copy()  # Inherit environment variables from host
+    if env:
+        env_variables.update(env)
+
     cmd = " ".join(map(str, args))
     proc = subprocess.Popen(cmd,
+                            env=env_variables,
                             cwd=cwd,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE,
@@ -138,8 +149,8 @@ def execute_command(args: List[str], cwd = None, file = None, shell = False, uni
 def get_executable(mode: str):
     executable_map = {
         "Linux": {
-            "tuning": ["run_tuning.sh"],
-            "benchmark": ["run_benchmark.sh"],
+            "tuning": ["bash", "run_tuning.sh"],
+            "benchmark": ["bash", "run_benchmark.sh"],
         },
         "Windows": {
             "tuning": ["python", "main.py"],

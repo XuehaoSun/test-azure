@@ -147,18 +147,22 @@ def read_perf_logs(precision, mode):
         }))
         return
     partials = []
+    num_instances = None
     for log in log_files:
         partial = {}
         with open(log, "r") as f:
             for line in f:
-                partial.update(parse_perf_line(mode, line))
+                parse_result = parse_perf_line(mode, line)
+                partial = update_partial(partial, parse_result)
         if args.mr and args.perf_steps:
             partial.update({"latency": get_average_latency(log, 200, 200, s_to_ms=True)})
+
+        partial, num_instances = normalize_partial(partial)
         partials.append(partial)
 
     measurement = Measurement()
     measurement.batch_size = partials[0].get("batch_size")
-    measurement.instances = len(partials)
+    measurement.instances = num_instances if num_instances else len(partials)
     measurement.mode = mode
     measurement.precision = precision
     measurement.log = args.logs_prefix_url + os.path.basename(log_files[0])
@@ -173,7 +177,7 @@ def read_perf_logs(precision, mode):
     
     result.benchmarks.append(measurement)
 
-def parse_perf_line(mode, line):
+def parse_perf_line(mode: str, line: str) -> dict:
     perf_data = {}
     batch_size = re.search(r"Batch size = ([0-9]+)", line)
     if batch_size and batch_size.group(1):
@@ -198,6 +202,37 @@ def parse_perf_line(mode, line):
             break
 
     return perf_data
+
+
+def update_partial(partial: dict, parsed_result: dict):
+    for key, value in parsed_result.items():
+        partial_value = partial.get(key)
+        if not partial_value:
+            partial.update({key: [value]})
+        elif isinstance(partial_value, list):
+            partial[key].append(value)
+        else:
+            partial.update({key: [partial_value, value]})
+    return partial
+
+def normalize_partial(partial: dict) -> dict:
+    num_instances = None
+    for key, value in partial.items():
+        if isinstance(value, list):
+            partial.update({key: summarize_values(key, value)})
+            if isinstance(value, list) and len(value) > 1:
+                num_instances = len(value)
+    return partial, num_instances
+
+
+def summarize_values(key: str, value: list):
+    if key == "latency":
+        return round(sum(value)/len(value), 4)
+    if key == "throughput":
+        return round(sum(value), 4)
+    if key in ["accuracy", "batch_size"]:
+        return value[0]
+
 
 if __name__ == "__main__":
     main()

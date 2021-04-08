@@ -6,7 +6,8 @@
       "input_model": "/tf_dataset/mxnet/resnet50_v1",
       "yaml": "cnn.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "inceptionv3": {
       "model_src_dir": "image_recognition",
@@ -14,7 +15,8 @@
       "input_model": "/tf_dataset/mxnet/inceptionv3",
       "yaml": "cnn.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "mobilenet1.0": {
       "model_src_dir": "image_recognition",
@@ -22,7 +24,8 @@
       "input_model": "/tf_dataset/mxnet/mobilenet1.0",
       "yaml": "cnn.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "mobilenetv2_1.0": {
       "model_src_dir": "image_recognition",
@@ -30,7 +33,8 @@
       "input_model": "/tf_dataset/mxnet/mobilenetv2_1.0",
       "yaml": "cnn.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "resnet18_v1": {
       "model_src_dir": "image_recognition",
@@ -38,7 +42,8 @@
       "input_model": "/tf_dataset/mxnet/resnet18_v1",
       "yaml": "cnn.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "squeezenet1.0": {
       "model_src_dir": "image_recognition",
@@ -46,7 +51,8 @@
       "input_model": "/tf_dataset/mxnet/squeezenet1.0",
       "yaml": "cnn.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "resnet152_v1": {
       "model_src_dir": "image_recognition",
@@ -54,7 +60,8 @@
       "input_model": "/tf_dataset/mxnet/resnet152_v1",
       "yaml": "cnn.yaml",
       "strategy": "basic",
-      "batch_size": 64
+      "batch_size": 64,
+      "new_benchmark": false
     },
     "ssd-resnet50_v1": {
       "model_src_dir": "object_detection",
@@ -62,7 +69,8 @@
       "input_model": "/tf_dataset/mxnet/ssd-resnet50_v1/ssd_512_resnet50_v1_voc",
       "yaml": "ssd.yaml",
       "strategy": "basic",
-      "batch_size": 256
+      "batch_size": 256,
+      "new_benchmark": false
     },
     "ssd-mobilenet1.0": {
       "model_src_dir": "object_detection",
@@ -70,7 +78,8 @@
       "input_model": "/tf_dataset/mxnet/ssd-mobilenet1.0/ssd_512_mobilenet1.0_voc",
       "yaml": "ssd.yaml",
       "strategy": "basic",
-      "batch_size": 256
+      "batch_size": 256,
+      "new_benchmark": false
     }
   }
 }

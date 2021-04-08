@@ -6,7 +6,8 @@
       "input_model": "models/tensorflow/freezed_resnet50.pb",
       "yaml": "resnet50_v1.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "inception_v3": {
       "model_src_dir": "image_recognition",
@@ -14,7 +15,8 @@
       "input_model": "models/tensorflow/freezed_inceptionv3.pb",
       "yaml": "inception_v3.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     },
     "mobilenetv1": {
       "model_src_dir": "image_recognition",
@@ -22,7 +24,8 @@
       "input_model": "models/tensorflow/frozen_mobilenet_v1.pb",
       "yaml": "mobilenet_v1.yaml",
       "strategy": "basic",
-      "batch_size": 100
+      "batch_size": 100,
+      "new_benchmark": true
     }
   }
 }
