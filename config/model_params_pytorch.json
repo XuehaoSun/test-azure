@@ -247,6 +247,14 @@
       "yaml": "camembert-base.yaml",
       "strategy": "basic",
       "batch_size": 64
+    },
+    "3dunet": {
+      "model_src_dir": "medical_imaging/3d-unet",
+      "dataset_location": "/tf_dataset/dataset/mlperf_3dunet/build",
+      "input_model": "/tf_dataset/pytorch/mlperf_3dunet/nnUNetTrainerV2__nnUNetPlansv2.mlperf.1",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 100
     }
   }
 }
