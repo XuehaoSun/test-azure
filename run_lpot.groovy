@@ -177,13 +177,6 @@ if ('refer_build' in params && params.refer_build != '') {
 }
 echo "Refer build is ${refer_build}"
 
-steps_print_models = [
-    "resnet50v1.5",
-    "resnet50v1",
-    "inception_v1",
-    "wide_deep_large_ds"
-]
-
 dataset_prefix=""
 if ('dataset_prefix' in params && params.dataset_prefix != ''){
     dataset_prefix=params.dataset_prefix
@@ -504,9 +497,6 @@ def collectLogs() {
 
         if (MR_source_branch != "") {
             cmd += " --mr"
-            if (steps_print_models.contains(model)) {
-                cmd += " --perf_steps"
-            }
         }
 
         required = "["
