@@ -52,7 +52,7 @@ done
 # Run auto tune
 main() {
     # Import common functions
-    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
+    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --model_src_dir=${model_src_dir} --conda_env_name=${conda_env_name}
 
     echo -e "\nSetting environment..."
     set_environment
@@ -66,7 +66,11 @@ main() {
         cd ${model_src_dir}
         echo -e "\nWorking in $(pwd)..."
         if [ "${model_src_dir}" == "${WORKSPACE}/lpot-models/examples/pytorch/language_translation" ]; then
-          python setup.py install
+            python setup.py install
+        fi
+        if [ "${model_src_dir}" == "${WORKSPACE}/lpot-models/examples/pytorch/huggingface_models" ]; then
+            python setup.py install
+            pip install git-python -r examples/text-classification/requirements.txt -r examples/seq2seq/requirements.txt
         fi
         if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
             # Install nnUnet

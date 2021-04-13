@@ -3,12 +3,13 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "3" ] ; then 
+if [ $# != "4" ] ; then 
     echo 'ERROR:'
-    echo "Expected 3 parameters got $#"
+    echo "Expected 4 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
+    --model_src_dir=<path to model tuning script>
     --conda_env_name=<conda environment name>
     '
     exit 1
@@ -21,6 +22,8 @@ do
             framework=`echo $i | sed "s/${PATTERN}//"`;;
         --model=*)
             model=`echo $i | sed "s/${PATTERN}//"`;;
+        --model_src_dir=*)
+            model_src_dir=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         *)
@@ -52,7 +55,7 @@ function set_MXNet_env {
 function set_PT_env {
     export OMP_NUM_THREADS=28
 
-    if [[ ${model} = 'bert'* ]] || [[ ${model} = *'WikiText' ]] || [[ ${model} = *'MRPC' ]]; then
+    if [[ ${model_src_dir} == "language_translation" ]]; then
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate pytorch-bert-1.6
     elif [[ ${model} = 'dlrm' ]]; then
