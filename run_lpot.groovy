@@ -189,11 +189,7 @@ upstreamUrl = ""
 
 MAX_RERUNS = 3
 
-// MR test dummy inference
-dummy_inference_models = [
-        "resnet50v1.5",
-        "resnet50v1",
-        "inception_v1"]
+torchvision_version=''
 
 @NonCPS
 def getUpstreamInfo() {
@@ -240,6 +236,35 @@ def parseStrToList(srtingElements, delimiter=',') {
 }
 
 def create_conda_env(){
+
+    if (framework == 'pytorch'){
+        torchvision_versions = [
+                "1.8.0": "0.9.0",
+                "1.7.0": "0.8.0",
+                "1.6.0": "0.7.0",
+                "1.5.1": "0.6.1",
+                "1.5.0": "0.6.0",
+                "1.4.0": "0.5.0",
+                "1.3.1": "0.4.2",
+                "1.3.0": "0.4.1",
+                "1.2.0": "0.4.0",
+                "1.1.0": "0.3.0",
+        ]
+
+        pytorch_version_base = pytorch_version.split('\\+')[0]
+        try {
+            pytorch_version_postfix = pytorch_version.split('\\+')[1]
+        } catch(e) {
+            pytorch_version_postfix = ""
+        }
+
+        torchvision_version = torchvision_versions[pytorch_version_base]
+
+        if (!torchvision_version) {
+            error("Could not found torchvision for pytorch " + pytorch_version)
+        }
+    }
+
     retry(20){
             sh """#!/bin/bash
                 bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
@@ -248,6 +273,7 @@ def create_conda_env(){
                     --framework_version="${framework_version}" \
                     --python_version="${python_version}" \
                     --onnx_version="${onnx_version}" \
+                    --torchvision_version="${torchvision_version}" \
                     --requirement_list="${requirement_list}" \
                     --conda_env_name="${conda_env_name}"
             """
