@@ -170,7 +170,6 @@ else
             mlperf_loadgen_whl=/tf_dataset/pytorch/mlperf_3dunet/mlperf_loadgen-0.5a0-cp${python_version//./}-*.whl
             pip install ${mlperf_loadgen_whl}
         fi
-        pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
     elif [ ${framework} == 'mxnet' ]; then
         if [ ${framework_version} == '1.6.0' ]; then
             pip install ${framework}-mkl==${framework_version}
