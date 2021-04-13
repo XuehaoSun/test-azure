@@ -346,7 +346,11 @@ function generate_html_core {
                 }else if(d == "fps") {
                     printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",a,b,c);
                 }else {
-                    printf("<td>%s</td> <td><a href=%s>%.2f%</a></td>\n",a,b,c*100);
+                    if (c <= 1){
+                        printf("<td>%s</td> <td><a href=%s>%.2f%</a></td>\n",a,b,c*100);
+                    }else{
+                        printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",a,b,c);
+                    }
                 }
             }else {
                 if(b == "" || c == "N/A") {
@@ -412,7 +416,12 @@ function generate_html_core {
                     }else {
                         status_png = "background-color:#FFD2D2";
                     }
-                    printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
+                    if (a <= 1){
+                        printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
+                    }else{
+                        printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
+                    }
+
                 }else {
                     target = a / b;
                     if(target >= 0.95) {

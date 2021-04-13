@@ -164,6 +164,13 @@ else
         else
             pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
         fi
+        torchvision_whl=${torch_whl_path}/${python_version}/torchvision-${torchvision_version}-*.whl
+        if [ -f ${torchvision_whl} ]; then
+            pip install ${torchvision_whl}
+        else
+            pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
+        fi
+
         if [ ${model} == '3dunet' ]; then
             # Install mlperf_loadgen
             pip install absl-py

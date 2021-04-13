@@ -29,6 +29,40 @@ if ('framework_version' in params && params.framework_version != '') {
 }
 echo "framework_version: ${framework_version}"
 
+torchvision_versions = [
+    "1.7.0": "0.8.0",
+    "1.6.0": "0.7.0",
+    "1.5.1": "0.6.1",
+    "1.5.0": "0.6.0",
+    "1.4.0": "0.5.0",
+    "1.3.1": "0.4.2",
+    "1.3.0": "0.4.1",
+    "1.2.0": "0.4.0",
+    "1.1.0": "0.3.0",
+]
+
+torchvision_version = ""
+if (framework == "pytorch") {
+    pytorch_version_base = framework_version.split('\\+')[0]
+    try {
+        pytorch_version_postfix = framework_version.split('\\+')[1]
+    } catch(e) {
+        pytorch_version_postfix = ""
+    }
+
+    torchvision_version = torchvision_versions[pytorch_version_base]
+
+    if (!torchvision_version) {
+        error("Could not found torchvision for pytorch " + pytorch_version)
+    }
+
+    if (pytorch_version_postfix != "") {
+        torchvision_version = torchvision_version + "+" + pytorch_version_postfix
+    }
+}
+println("torchvision_version: " + torchvision_version)
+
+
 // setting onnx_version
 onnx_version  = '1.7.0'
 if ('onnx_version' in params && params.onnx_version != '') {
@@ -247,6 +281,7 @@ def create_conda_env(){
                     --framework="${framework}" \
                     --framework_version="${framework_version}" \
                     --python_version="${python_version}" \
+                    --torchvision_version="${torchvision_version}" \
                     --onnx_version="${onnx_version}" \
                     --requirement_list="${requirement_list}" \
                     --conda_env_name="${conda_env_name}"
@@ -728,7 +763,7 @@ node( sub_node_label ) {
                         precision_list.each { precision ->
                             echo "precision is ${precision}"
                             // oob only support dummy data
-                            if (model_src_dir == 'oob_models' || model == 'style_transfer') {
+                                if (['oob_models'].contains(model_src_dir) || model == 'style_transfer') {
                                 mode_list = ['latency']
                                 echo "mode list is ${mode_list}"
                             }

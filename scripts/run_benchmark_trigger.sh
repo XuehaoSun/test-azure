@@ -72,7 +72,7 @@ fi
 main() {
 
     # Import common functions
-    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
+    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --model_src_dir=${model_src_dir} --conda_env_name=${conda_env_name}
 
     echo -e "\nSetting environment..."
     set_environment

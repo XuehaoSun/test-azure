@@ -241,7 +241,7 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
         except Exception as e:
             print(f"[ WARNING ] {e}")
 
-    if strategy:
+    if strategy and strategy != "basic":  # Workaround for PyTorch huggingface models (`sed` in run_tuning.sh)
         try:
             tuning_config = yaml_config.get("tuning", {})
             prev_strategy = tuning_config.get("strategy", {})
