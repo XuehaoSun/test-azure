@@ -620,6 +620,7 @@ def copyrightCheck() {
 def featureTests() {
     List featureTestsParams = [
             string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_branch}"),
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
