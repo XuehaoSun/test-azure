@@ -242,6 +242,12 @@ function update_yaml_config {
         sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
         sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
       fi
+      if [ "${framework}" == "tensorflow" ] && [ "${model}" == "efficientnet_b0" ]; then
+        sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
+        sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
+        sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+        sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+      fi
     fi
 
     update_yaml_params=""
