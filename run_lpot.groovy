@@ -315,7 +315,8 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
             source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh \
                 --framework=${framework} \
                 --model=${model} \
-                --conda_env_name=${conda_env_name}
+                --conda_env_name=${conda_env_name} \
+                --model_src_dir=${model_src_dir} 
             set_environment
             echo "=================================="
 
