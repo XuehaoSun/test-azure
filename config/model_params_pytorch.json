@@ -359,6 +359,24 @@
       "strategy": "basic",
       "batch_size": 64,
       "new_benchmark": false
+    },
+    "dialogpt_wikitext": {
+      "model_src_dir": "huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/dialogpt_clm",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
+    },
+    "reformer_crime_and_punishment": {
+      "model_src_dir": "huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/reformer_clm",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
     }
   }
 }
