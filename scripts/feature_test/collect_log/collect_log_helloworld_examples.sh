@@ -28,7 +28,7 @@ function check_tf_example_status {
     if [[ ${example_number} == 5 ]]; then
         accuracy_count=$(grep -c 'Accuracy is [0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
         latency_count=$(grep -c 'Latency: [0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
-        if [[ ${status} == "pass" ]] && [[ ${accuracy_count} == 2 ]] && [[ ${latency_count} == 2 ]]; then
+        if [[ ${status} == "pass" ]] && [[ ${accuracy_count} == 1 ]] && [[ ${latency_count} == 1 ]]; then
             test_status="pass"
         else
             test_status="fail"
