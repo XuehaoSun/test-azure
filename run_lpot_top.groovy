@@ -722,10 +722,6 @@ def collectLog() {
                         return
                     }
 
-                    if (MR_source_branch != '' && steps_print_models.contains(job_model)) {
-                        return
-                    }
-
                     echo "Getting results for ${job_framework} - ${job_model}"
                     sh """#!/bin/bash -x
                         if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/summary.log ]]; then
