@@ -17,6 +17,7 @@ parser.add_argument("--commit", type=str, default="")
 parser.add_argument("--tensorflow-version", type=str, default="")
 parser.add_argument("--mxnet-version", type=str, default="")
 parser.add_argument("--pytorch-version", type=str, default="")
+parser.add_argument("--onnxruntime-version", type=str, default="")
 parser.add_argument("--WW", type=str, default="xx")
 args = parser.parse_args()
 
@@ -32,7 +33,8 @@ strategies = [
 result_collector = ResultCollector({
     "tensorflow_version": args.tensorflow_version,
     "mxnet_version": args.mxnet_version,
-    "pytorch_version": args.pytorch_version
+    "pytorch_version": args.pytorch_version,
+    "onnxrt_version": args.onnxruntime_version
 })
 
 for log in glob.glob(os.path.join(args.logs_dir, "**", args.tuning_log_name)):
@@ -46,15 +48,22 @@ for result in result_collector.results:
         framework_versions.append(result.version)
     frameworks.update({ result.framework: framework_versions })
 
+num_frameworks = 0
+for framework, versions in frameworks.items():
+    for version in versions:
+        num_frameworks += 1
+
 report_path = os.path.join(args.logs_dir, f"lpot_strategy_test_WW{args.WW}.xlsx")
 workbook = xlsxwriter.Workbook(report_path)
 header_format = workbook.add_format({
     "bold": 1,
+    "border": 1,
     "align": "center",
     "valign": "vcenter",
     "text_wrap": True })
-green_bg = workbook.add_format({"bg_color": "#c6e0b4", "align": "center"})
-red_bg = workbook.add_format({"bg_color": "#ff5050", "align": "center"})
+
+green_bg = workbook.add_format({"bg_color": "#c6e0b4", "align": "center", "border": 1})
+red_bg = workbook.add_format({"bg_color": "#ff5050", "align": "center", "border": 1})
 
 def main():
     for framework, versions in frameworks.items():
@@ -129,67 +138,68 @@ def write_summary(workbook):
     """Add summary tab to workbook."""
     worksheet = workbook.add_worksheet("SUMMARY")
 
-    default_format = workbook.add_format()
-    percentage_format = workbook.add_format({"num_format": "0.00%"})
+    default_format = workbook.add_format({"border": 1})
+    percentage_format = workbook.add_format({"num_format": "0.00%", "border": 1})
 
     header = ["Framework", "Version"]
     strategy_columns = [
         {
             "name": "SUCCESS",
-            "formula": "=COUNTIFS('{worksheet_name}'!B2:B{last_row}, {strategy_column}2,'{worksheet_name}'!F2:F{last_row}, \"SUCCESS\")",
+            "formula": "=COUNTIFS('{worksheet_name}'!B2:B{last_row}, C{strategy_row},'{worksheet_name}'!F2:F{last_row}, \"SUCCESS\")",
             "format": default_format,
         },
         {
             "name": "ACC THRESHOLD FAILURES",
-            "formula": "=COUNTIFS('{worksheet_name}'!B2:B{last_row}, {strategy_column}2,'{worksheet_name}'!F2:F{last_row},\"FAILURE\",'{worksheet_name}'!G2:G{last_row},\"ACCURACY THRESHOLD\")",
+            "formula": "=COUNTIFS('{worksheet_name}'!B2:B{last_row}, C{strategy_row},'{worksheet_name}'!F2:F{last_row},\"FAILURE\",'{worksheet_name}'!G2:G{last_row},\"ACCURACY THRESHOLD\")",
             "format": default_format
         },
         {
             "name": "CODE ERRORS\nOR\nINVALID ACC",
-            "formula": "=COUNTIFS('{worksheet_name}'!B2:B{last_row}, {strategy_column}2,'{worksheet_name}'!F2:F{last_row},\"FAILURE\",'{worksheet_name}'!G2:G{last_row},\"CODE\")+COUNTIFS('{worksheet_name}'!B2:B{last_row},{strategy_column}2,'{worksheet_name}'!F2:F{last_row},\"FAILURE\",'{worksheet_name}'!G2:G{last_row},\"ACCURACY INVALID\")",
+            "formula": "=COUNTIFS('{worksheet_name}'!B2:B{last_row}, C{strategy_row},'{worksheet_name}'!F2:F{last_row},\"FAILURE\",'{worksheet_name}'!G2:G{last_row},\"CODE\")+COUNTIFS('{worksheet_name}'!B2:B{last_row},C{strategy_row},'{worksheet_name}'!F2:F{last_row},\"FAILURE\",'{worksheet_name}'!G2:G{last_row},\"ACCURACY INVALID\")",
             "format": default_format
         },
         {
             "name": "TIMEOUT\n(WIP)",
-            "formula": "=COUNTIFS('{worksheet_name}'!B2:B{last_row}, {strategy_column}2,'{worksheet_name}'!F2:F{last_row},\"FAILURE\",'{worksheet_name}'!G2:G{last_row},\"*TIMEOUT*\")",
+            "formula": "=COUNTIFS('{worksheet_name}'!B2:B{last_row}, C{strategy_row},'{worksheet_name}'!F2:F{last_row},\"FAILURE\",'{worksheet_name}'!G2:G{last_row},\"*TIMEOUT*\")",
             "format": default_format
         },
         {
             "name": "PROGRESS",
-            "formula": "=SUM({strategy_column}{row}:{code_err_column}{row})/{num_models}",
+            "formula": "=SUM(C{row}:{code_err_column}{row})/{num_models}",
             "format": percentage_format
         },
         {
             "name": "PASS\n/\nPROGRESS",
-            "formula": "=IF(SUM({strategy_column}{row}:{code_err_column}{row})<>0,SUM({strategy_column}{row}:{acc_threshold_column}{row})/SUM({strategy_column}{row}:{code_err_column}{row}), \"N/A\")",
+            "formula": "=IF(SUM(C{row}:{code_err_column}{row})<>0,SUM(C{row}:{acc_threshold_column}{row})/SUM(C{row}:{code_err_column}{row}), \"N/A\")",
             "format": percentage_format
         },
         {
             "name": "SUCCESS/TOTAL",
-            "formula": "=SUM({strategy_column}{row},{code_err_column}{row})/COUNTIF('{worksheet_name}'!B2:B{last_row}, {strategy_column}2)",
+            "formula": "=SUM(C{row},{code_err_column}{row})/COUNTIF('{worksheet_name}'!B2:B{last_row}, C{strategy_row})",
             "format": percentage_format
         }
     ] 
-    header.extend([column.get("name") for column in strategy_columns] * len(strategies))
+    header.extend([column.get("name") for column in strategy_columns])
 
-    worksheet.merge_range(0, 2, 0, len(strategy_columns) * len(strategies) + 1, "Strategies", header_format)
     for idx, strategy in enumerate(strategies):
-        worksheet.merge_range(1, 2 + idx*len(strategy_columns), 1, (idx+1) * len(strategy_columns) + 1, strategy, header_format)
-    worksheet.write_row(2, 0, header, header_format)
+        row = idx * (num_frameworks+4)
 
-    row = 3
-    for framework, versions in frameworks.items():
-        for version in versions:
-            models = list(set([result.model for result in result_collector.get_results_by_version(framework, version)]))
+        strategy_row = row + 1 
+        worksheet.merge_range(row, 2, row, len(strategy_columns)+1, strategy, header_format)
+        row += 1
+        worksheet.write_row(row, 0, header, header_format)
+        for framework, versions in frameworks.items():
+            for version in versions:
+                row += 1
+                models = list(set([result.model for result in result_collector.get_results_by_version(framework, version)]))
 
-            # Replace strings to variables
-            worksheet.write_row(row, 0, [framework, version])
-            col = 2
-            for strategy in strategies:
+                # Replace strings to variables
+                worksheet.write_row(row, 0, [framework, version], header_format)
+                col = 2
                 replacements = {
                     "{worksheet_name}": f"{framework} {version}",
                     "{last_row}": f"{len(strategies)*len(models) + 1}",
-                    "{strategy_column}": xl_col_to_name(col),
+                    "{strategy_row}": f"{strategy_row}",
                     "{acc_threshold_column}": xl_col_to_name(col + 1),
                     "{code_err_column}": xl_col_to_name(col + 2),
                     "{num_models}": f"{len(models)}",
@@ -214,8 +224,6 @@ def write_summary(workbook):
                         "max_color": "#63be7b",
                         "max_type": "num",
                         "max_value": 1,})
-
-        row += 1
 
 if __name__ == "__main__":
     main()
