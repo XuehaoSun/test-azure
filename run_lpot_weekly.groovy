@@ -27,20 +27,32 @@ if ('frameworks' in params && params.frameworks != '') {
     frameworks = params.frameworks
 }
 
-tensorflow_versions = "lpot"
+tensorflow_versions = "2.4.0"
 if ('tensorflow_versions' in params && params.tensorflow_versions != '') {
     tensorflow_versions = params.tensorflow_versions
 }
 
-pytorch_versions = "lpot"
+pytorch_versions = "1.5.0+cpu"
 if ('pytorch_versions' in params && params.pytorch_versions != '') {
     pytorch_versions = params.pytorch_versions
 }
 
-mxnet_versions = "lpot"
+mxnet_versions = "1.7.0"
 if ('mxnet_versions' in params && params.mxnet_versions != '') {
     mxnet_versions = params.mxnet_versions
 }
+
+onnxruntime_versions = "1.6.0"
+if ('onnxruntime_versions' in params && params.onnxruntime_versions != '') {
+    onnxruntime_versions = params.onnxruntime_versions
+}
+
+// setting onnx_version
+onnx_version = '1.7.0'
+if ('onnx_version' in params && params.onnx_version != '') {
+    onnx_version = params.onnx_version
+}
+echo "onnx_version: ${onnx_version}"
 
 tune_only=false
 if (params.tune_only != null){
@@ -64,6 +76,7 @@ echo "---- frameworks: ${frameworks} ----"
 echo "---- tensorflow_versions: ${tensorflow_versions} ----"
 echo "---- pytorch_versions: ${pytorch_versions} ----"
 echo "---- mxnet_versions: ${mxnet_versions} ----"
+echo "---- onnxruntime_versions: ${onnxruntime_versions} ----"
 
 lpot_url = "https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool.git"
 if ('lpot_url' in params && params.lpot_url != '') {
@@ -88,18 +101,34 @@ if ('tuning_timeout' in params && params.tuning_timeout != ''){
 }
 echo "tuning_timeout: ${tuning_timeout}"
 
+
+val_branch="master"
+if ('val_branch' in params && params.val_branch != ''){
+    val_branch=params.val_branch
+}
+echo "val_branch: ${val_branch}"
+
+
 py_list = pythons.split(",")
 st_list = strategies.split(",")
 fw_list = frameworks.split(",")
 tf_list = tensorflow_versions.split(",")
 pt_list = pytorch_versions.split(",")
 mx_list = mxnet_versions.split(",")
+onnxrt_list = onnxruntime_versions.split(",")
 
 def tensorflow_models_pass = ""
 def tensorflow_oob_models_pass = ""
 def pytorch_models_pass = ""
 def mxnet_models_pass = ""
+def onnxrt_models_pass = ""
 def weekly_description = ""
+
+EXCEL_REPORT=false
+if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
+    echo "EXCEL_REPORT is true"
+    EXCEL_REPORT=params.EXCEL_REPORT
+}
 
 def main() {
     // clean up
@@ -177,6 +206,8 @@ def main() {
                     fw_ver_list = pt_list
                 }else if( fw == "mxnet" ) {
                     fw_ver_list = mx_list
+                }else if( fw == "onnxrt" ) {
+                    fw_ver_list = onnxrt_list
                 }else {
                     error("${fw}: No such framework!")
                 }
@@ -210,6 +241,16 @@ def main() {
             sort ${summary_log_init} >> ${summary_log} 
             bash ${WORKSPACE}/lpot-validation/scripts/generate_lpot_report_weekly.sh 
             '''
+        }
+
+        if (EXCEL_REPORT) {
+            stage("Generate excel report") {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    retry(5) {
+                        generateExcelReport(lpot_commit)
+                    }
+                }
+            }
         }
 
     } catch (e) {
@@ -256,6 +297,10 @@ def getJob(python_version, framework, framework_version, strategy, lpot_commit) 
             tensorflow_oob_models_pass = tensorflow_oob_models
             pytorch_models_pass = pytorch_models
             mxnet_models_pass = mxnet_models
+            onnxrt_models_pass = onnxrt_models
+
+            fw_version_param_name = "${framework}_version"
+            
             weekly_description = "${python_version}-${framework}-${framework_version}-${strategy}"
             if(python_version == '3.6' && strategy == 'basic') {
                 if (framework == 'tensorflow' && framework_version == '2.2.0') {
@@ -271,15 +316,22 @@ def getJob(python_version, framework, framework_version, strategy, lpot_commit) 
                     mxnet_models_pass = all_mxnet_models
                     weekly_description = "${python_version}-${framework}-${framework_version}-${strategy}-all_models"
                 }
+                if (framework == 'onnxrt' && framework_version == '1.6.0') {
+                    onnxrt_models_pass = all_onnxrt_models
+                    weekly_description = "${python_version}-${framework}-${framework_version}-${strategy}-all_models"
+                    fw_version_param_name = "onnxruntime_version"
+                }
             }
 
             echo "---- tensorflow_models_pass: ${tensorflow_models_pass}"
             echo "---- pytorch_models_pass: ${pytorch_models_pass}"
             echo "---- mxnet_models_pass: ${mxnet_models_pass}"
+            echo "---- onnxrt_models_pass: ${onnxrt_models_pass}"
 
             downstreamJob = build job: "intel-lpot-validation-top-weekly", propagate: false, parameters: [
                 string(name: 'Frameworks', value:"${framework}"),
-                string(name: "${framework}_version", value:"${framework_version}"),
+                string(name: "${fw_version_param_name}", value:"${framework_version}"),
+                string(name: "onnx_version", value: "${onnx_version}"),
                 string(name: 'strategy', value:"${strategy}"),
                 string(name: 'python_version', value:"${python_version}"),
                 string(name: 'sub_node_label', value:"${node_label}"),
@@ -288,8 +340,10 @@ def getJob(python_version, framework, framework_version, strategy, lpot_commit) 
                 string(name: 'tensorflow_oob_models', value:"${tensorflow_oob_models_pass}"),
                 string(name: 'pytorch_models', value:"${pytorch_models_pass}"),
                 string(name: 'mxnet_models', value:"${mxnet_models_pass}"),
+                string(name: 'onnxrt_models', value:"${onnxrt_models_pass}"),
                 string(name: 'lpot_url', value:"${lpot_url}"),
                 string(name: 'lpot_branch', value:"${lpot_commit}"),
+                string(name: 'val_branch', value:"${val_branch}"),
                 string(name: 'test_mode', value: "weekly"),
                 string(name: 'weekly_description', value:"${weekly_description}"),
                 booleanParam(name: "tune_only", value: tune_only),
@@ -317,6 +371,59 @@ def getJob(python_version, framework, framework_version, strategy, lpot_commit) 
         }
     } // stage
 }
+
+
+def generateExcelReport(lpot_commit) {
+    withEnv([
+        "summaryLog=${summary_log}",
+        "lpot_commit=${lpot_commit}",
+        "tensorflow_version=${tensorflow_version}",
+        "mxnet-version=${mxnet_version}",
+        "pytorch-version=${pytorch_version}",
+        "onnxruntime-version=${onnxruntime_version}"
+    ]) {
+        sh '''#!/bin/bash
+            set -x
+
+            if [ ! -d "${WORKSPACE}/.lpot-report-generator" ]; then
+                python3 -m venv ${WORKSPACE}/.lpot-report-generator
+            fi
+
+            source ${WORKSPACE}/.lpot-report-generator/bin/activate
+
+            set +e
+            python -m pip install --index-url https://pypi.douban.com/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
+            exit_code=$?
+            set -e
+
+            if [ $exit_code -ne 0 ]; then
+                for requirement in `cat ./lpot-validation/scripts/report_generator/requirements.txt`
+                do
+                    requirement_whl=$(find ${HOME}/whls  -iname "${requirement}*.whl")
+                    if [ ! -z ${requirement_whl} ]; then
+                        python -m pip install ${requirement_whl}
+                    else
+                        echo "Could not found whl file for ${requirement}"
+                        exit 1
+                    fi
+                done
+            fi
+
+            workweek=$(($(date +%V)+1))  # TODO: Make WW correct for each year. Current solution will work only for 2021
+
+            python ./lpot-validation/scripts/report_generator/generate_weekly_report.py \
+                --logs-dir="${WORKSPACE}/logs" \
+                --commit="${lpot_commit}" \
+                --tensorflow-version="${tensorflow_version}" \
+                --mxnet-version="${mxnet_version}" \
+                --pytorch-version="${pytorch_version}" \
+                --onnxruntime-version="${onnxruntime_version}" \
+                --WW="${workweek}"
+
+        '''
+    }
+}
+
 
 node() {
     main()
