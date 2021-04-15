@@ -30,6 +30,7 @@ if ('framework_version' in params && params.framework_version != '') {
 echo "framework_version: ${framework_version}"
 
 torchvision_versions = [
+    "1.8.0": "0.9.0",
     "1.7.0": "0.8.0",
     "1.6.0": "0.7.0",
     "1.5.1": "0.6.1",
