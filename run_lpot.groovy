@@ -29,41 +29,6 @@ if ('framework_version' in params && params.framework_version != '') {
 }
 echo "framework_version: ${framework_version}"
 
-torchvision_versions = [
-    "1.8.0": "0.9.0",
-    "1.7.0": "0.8.0",
-    "1.6.0": "0.7.0",
-    "1.5.1": "0.6.1",
-    "1.5.0": "0.6.0",
-    "1.4.0": "0.5.0",
-    "1.3.1": "0.4.2",
-    "1.3.0": "0.4.1",
-    "1.2.0": "0.4.0",
-    "1.1.0": "0.3.0",
-]
-
-torchvision_version = ""
-if (framework == "pytorch") {
-    pytorch_version_base = framework_version.split('\\+')[0]
-    try {
-        pytorch_version_postfix = framework_version.split('\\+')[1]
-    } catch(e) {
-        pytorch_version_postfix = ""
-    }
-
-    torchvision_version = torchvision_versions[pytorch_version_base]
-
-    if (!torchvision_version) {
-        error("Could not found torchvision for pytorch " + pytorch_version)
-    }
-
-    if (pytorch_version_postfix != "") {
-        torchvision_version = torchvision_version + "+" + pytorch_version_postfix
-    }
-}
-println("torchvision_version: " + torchvision_version)
-
-
 // setting onnx_version
 onnx_version  = '1.7.0'
 if ('onnx_version' in params && params.onnx_version != '') {
@@ -172,6 +137,45 @@ if ('val_branch' in params && params.val_branch != ''){
 }
 echo "val_branch: ${val_branch}"
 
+torchvision_versions = [
+        "1.8.0": "0.9.0",
+        "1.7.0": "0.8.0",
+        "1.6.0": "0.7.0",
+        "1.5.1": "0.6.1",
+        "1.5.0": "0.6.0",
+        "1.4.0": "0.5.0",
+        "1.3.1": "0.4.2",
+        "1.3.0": "0.4.1",
+        "1.2.0": "0.4.0",
+        "1.1.0": "0.3.0",
+]
+
+torchvision_version = ""
+if (framework == "pytorch") {
+    if (model == 'blendcnn' || model == 'resnest50'){
+        framework_version = '1.6.0+cpu'
+    }
+
+    pytorch_version_base = framework_version.split('\\+')[0]
+    try {
+        pytorch_version_postfix = framework_version.split('\\+')[1]
+    } catch(e) {
+        pytorch_version_postfix = ""
+    }
+
+    torchvision_version = torchvision_versions[pytorch_version_base]
+
+    if (!torchvision_version) {
+        error("Could not found torchvision for pytorch " + pytorch_version)
+    }
+
+    if (pytorch_version_postfix != "") {
+        torchvision_version = torchvision_version + "+" + pytorch_version_postfix
+    }
+}
+println("torchvision_version: " + torchvision_version)
+
+
 def algorithm=''
 def new_conda_env=true
 if(framework == 'pytorch'){
@@ -223,12 +227,6 @@ upstreamJobName = ""
 upstreamUrl = ""
 
 MAX_RERUNS = 3
-
-// MR test dummy inference
-dummy_inference_models = [
-        "resnet50v1.5",
-        "resnet50v1",
-        "inception_v1"]
 
 @NonCPS
 def getUpstreamInfo() {

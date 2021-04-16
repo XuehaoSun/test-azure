@@ -55,7 +55,7 @@ function set_MXNet_env {
 function set_PT_env {
     export OMP_NUM_THREADS=28
 
-    if [[ ${model_src_dir} == "language_translation" ]]; then
+    if [[ ${model_src_dir} = *'language_translation' ]]; then
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate pytorch-bert-1.6
     elif [[ ${model} = 'dlrm' ]]; then
@@ -93,6 +93,9 @@ function set_environment {
             echo "Framework ${framework} not recognized."; exit 1;;
     esac
 
+    echo "Real conda environment..."
+    conda info --env
+
     echo "Checking pip list..."
     python -V
     pip list
@@ -103,7 +106,14 @@ function set_environment {
     fi
 
     cd ${WORKSPACE}
-    pip install lpot*.whl
+    echo "Install lpot binary..."
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        pip install lpot*.whl && break
+        n=$((n+1))
+        sleep 5
+    done
     echo "Checking lpot..."
     pip list
 

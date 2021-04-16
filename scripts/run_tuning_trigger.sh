@@ -5,7 +5,7 @@ set -eo pipefail
 PATTERN='[-a-zA-Z0-9_]*='
 if [ $# != "10" ] ; then
     echo 'ERROR:'
-    echo "Expected 9 parameters got $#"
+    echo "Expected 10 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
