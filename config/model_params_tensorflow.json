@@ -297,6 +297,15 @@
       "batch_size": 100,
       "new_benchmark": true
     },
+    "efficientnet_b0": {
+      "model_src_dir": "image_recognition",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw_images",
+      "input_model": "/tf_dataset/pre-trained-models/efficientnet-b0",
+      "yaml": "efficientnet-b0.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": true
+    },
     "ssd_resnet50_v1": {
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
