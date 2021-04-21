@@ -178,10 +178,15 @@ main() {
 
     # new config with yaml
     if [ "${framework}" == "tensorflow" ]; then
-      if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]] || [[ "${model_src_dir}" == *"nlp/bert"* ]]; then
-        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
-      fi
+        new_config_dirs=("image_recognition" "object_detection" "nlp/bert" "semantic_image_segmentation")
+        for model_dir in ${new_config_dirs[*]}; do
+            if [[ "${model_src_dir}" == *"${model_dir}"* ]]; then
+                parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
+                break
+            fi
+        done
     fi
+
     if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" != *"language_translation"* ]]; then
       parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
     fi
@@ -249,20 +254,25 @@ function update_yaml_config {
     fi
     # update dataset
     if [ "${framework}" != "pytorch" ]; then
-      sed -i "/\/path\/to\/calibration\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
-      sed -i "/\/path\/to\/evaluation\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
-      sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: /tf_dataset/dataset/coco_dataset/raw-data/annotations/instances_val2017.json |g" ${yaml}
-      if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert" ]; then
-        sed -i "/\/path\/to\/eval.tf_record/s|root:.*|root: $dataset_location/eval.tf_record|g" ${yaml}
-        sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
-        sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
-      fi
-      if [ "${framework}" == "tensorflow" ] && [ "${model}" == "efficientnet_b0" ]; then
-        sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
-        sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
-        sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
-        sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
-      fi
+        sed -i "/\/path\/to\/calibration\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
+        sed -i "/\/path\/to\/evaluation\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
+        sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: /tf_dataset/dataset/coco_dataset/raw-data/annotations/instances_val2017.json |g" ${yaml}
+        if [ "${framework}" == "tensorflow" ]; then
+            if [ "${model}" == "bert" ]; then
+                sed -i "/\/path\/to\/eval.tf_record/s|root:.*|root: $dataset_location/eval.tf_record|g" ${yaml}
+                sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
+                sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
+            fi
+            if [ "${model}" == "efficientnet_b0" ]; then
+                sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
+                sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
+                sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+                sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+            fi
+            if [ "${model}" == "deeplab" ]; then
+                sed -i "/\/path\/to\/pascal_voc_seg\/tfrecord/s|root:.*|root: $dataset_location|g" ${yaml}
+            fi
+        fi
     fi
 
     update_yaml_params=""
