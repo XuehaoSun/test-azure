@@ -288,6 +288,15 @@
       "batch_size": 100,
       "new_benchmark": false
     },
+    "rnnt": {
+      "model_src_dir": "speech_recognition/inference/rnnt",
+      "dataset_location": "/tf_dataset/pytorch/rnnt/convert_dataset/",
+      "input_model": "/tf_dataset/pytorch/rnnt/rnnt.pt",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": false
+    },
     "distilbert_base_MRPC": {
       "model_src_dir": "huggingface_models",
       "dataset_location": "/tf_dataset/pytorch/glue_data_new",

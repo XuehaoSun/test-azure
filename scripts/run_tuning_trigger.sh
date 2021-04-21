@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
@@ -119,6 +119,14 @@ main() {
       fi
     fi
 
+    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "rnnt" ]]; then
+        cd ${model_src_dir}/../loadgen
+        echo "Checking gcc version:"
+        gcc -v
+        python setup.py install
+        cd ${model_src_dir}
+    fi
+
     echo -e "\nGetting git information..."
     echo "$(git remote -v)"
     echo "$(git branch)"
@@ -164,6 +172,8 @@ main() {
     # pytorch need to use default output_model path
     if [ ${framework} != "pytorch" ]; then
       parameters="${parameters} --output_model=${q_model}"
+    elif [ "${model}" == "rnnt" ]; then
+        parameters=" ${parameters} --output_model=${model_src_dir}/saved_results"
     fi
 
     # new config with yaml
@@ -179,6 +189,7 @@ main() {
     if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" == *"language_translation"* ]]; then
       ln -s ${input_model} ${model_src_dir}/
     fi
+
     update_yaml_config
     echo -e "\nPrint_updated_yaml... "
     cat ${yaml}
