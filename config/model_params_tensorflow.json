@@ -423,6 +423,15 @@
       "batch_size": 64,
       "new_benchmark": true
     },
+    "deeplab": {
+      "model_src_dir": "semantic_image_segmentation/deeplab",
+      "dataset_location": "/tf_dataset2/datasets/pascal_voc_2012/VOCRecord",
+      "input_model": "/tf_dataset2/models/tensorflow/deeplab/deeplab_export.pb",
+      "yaml": "deeplab.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
     "aipg-vdcnn": {
       "model_src_dir": "oob_models",
       "dataset_location": "",
