@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
@@ -216,8 +215,7 @@ main() {
         rm -rf /tmp/pytorch-dlrm-tune*
     fi
     save_path=/tmp/${framework}-${model}-tune-$(date +%s)
-    echo "HOSTNAME IS ${HOSTNAME}"
-    echo "!!!tune model save path is ${save_path} !!!"
+    echo "!!!tune model save path is ${HOSTNAME}:${save_path}/* !!!"
     mkdir -p "${save_path}"
     cp -r "${q_model}"* "${save_path}"
 }
