@@ -29,7 +29,7 @@ function main {
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
     python train.py
 
-    for i in `seq 5`
+    for i in `seq 6`
     do
         tf_example${i} 2>&1 | tee ${WORKSPACE}/tf_example${i}.log
     done
@@ -134,13 +134,35 @@ function tf_example5 {
     lpot_install
 
     if [-f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
-        mv ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
+        cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
     else
         wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/mobilenet_v1_1.0_224_frozen.pb
     fi
     sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
 
-    python test.py
+    python test.py --tune
+    python test.py --benchmark
+}
+
+function tf_example6 {
+    cd ${WORKSPACE}/lpot-models/examples/helloworld || return
+    if [ ! -d models ]; then
+        echo " frozen pb not generated. Exiting..."
+        exit 1
+    fi
+
+    cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example6 || return
+    lpot_install
+
+    if [-f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
+        cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
+    else
+        wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/mobilenet_v1_1.0_224_frozen.pb
+    fi
+    sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
+
+    python test.py --tune
+    python test.py --benchmark
 }
 
 function create_conda_env {
