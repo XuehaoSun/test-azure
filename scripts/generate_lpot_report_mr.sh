@@ -162,7 +162,7 @@ function createCoverageOverview {
         <tr>
             <td></td>
             <td>Base branch coverage</td>
-            <td>MR branch coverage</td>
+            <td>PR branch coverage</td>
             <td>Diff</td>
         </tr>
         <tr>
@@ -502,7 +502,7 @@ if [ "${qtools_branch}" == "" ];
 then
   commit_id=$(echo ${gitlabMergeRequestLastCommit} |awk '{print substr($1,1,7)}')
 
-  MR_TITLE="[ <a href='${gitlabSourceRepoHomepage}/merge_requests/${gitlabMergeRequestIid}'>MR-${gitlabMergeRequestIid}</a> ]"
+  MR_TITLE="[ <a href='${gitlabSourceRepoHomepage}/merge_requests/${gitlabMergeRequestIid}'>PR-${gitlabMergeRequestIid}</a> ]"
   Test_Info_Title="<th colspan="2">Source Branch</th> <th colspan="4">Target Branch</th> <th colspan="4">Commit</th> "
   Test_Info="<td colspan="2">${gitlabSourceBranch}</td> <td colspan="4">${gitlabTargetBranch}</td> <td colspan="4">${commit_id}"
 else
