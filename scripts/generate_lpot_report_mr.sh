@@ -500,11 +500,11 @@ Test_Info_Title=''
 Test_Info=''
 if [ "${qtools_branch}" == "" ];
 then
-  commit_id=$(echo ${gitlabMergeRequestLastCommit} |awk '{print substr($1,1,7)}')
+  commit_id=$(echo ${ghprbActualCommit} |awk '{print substr($1,1,7)}')
 
-  MR_TITLE="[ <a href='${gitlabSourceRepoHomepage}/merge_requests/${gitlabMergeRequestIid}'>PR-${gitlabMergeRequestIid}</a> ]"
+  MR_TITLE="[ <a href='${ghprbPullLink}'>MR-${ghprbPullId}</a> ]"
   Test_Info_Title="<th colspan="2">Source Branch</th> <th colspan="4">Target Branch</th> <th colspan="4">Commit</th> "
-  Test_Info="<td colspan="2">${gitlabSourceBranch}</td> <td colspan="4">${gitlabTargetBranch}</td> <td colspan="4">${commit_id}"
+  Test_Info="<td colspan="2">${MR_source_branch}</td> <td colspan="4">${MR_target_branch}</td> <td colspan="4">${commit_id}"
 else
   Test_Info_Title="<th colspan="4">Test Branch</th> <th colspan="4">Commit ID</th> "
   Test_Info="<th colspan="4">${qtools_branch}</th> <th colspan="4">${qtools_commit}</th> "
@@ -529,7 +529,7 @@ cat >> ${WORKSPACE}/report.html << eof
                     <td>${tensorflow_version}</td>
                     <td>${pytorch_version}</td>
                     <td>${mxnet_version}</td>
-                    <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">LPOT</a></td>
+                    <td><a href="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot">LPOT</a></td>
               ${Test_Info}
                 </tr>
         </table>

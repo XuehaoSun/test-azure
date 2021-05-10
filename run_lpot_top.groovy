@@ -109,7 +109,7 @@ if ('onnxrt_models' in params && params.onnxrt_models != '') {
 }
 echo "onnxrt_models: ${onnxrt_models}"
 
-lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
+lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -216,25 +216,38 @@ if ('onnxrt_models_windows' in params && params.onnxrt_models_windows != '') {
 echo "onnxrt_models_windows: ${onnxrt_models_windows}"
 
 lpot_branch = ''
+// pass down commit instead of branch, the unify the test commit.
+lpot_commit = ''
 MR_source_branch = ''
 MR_target_branch = ''
 if ('lpot_branch' in params && params.lpot_branch != '') {
     lpot_branch = params.lpot_branch
 }else{
-    if ("${gitlabSourceBranch}" != '') {
-        MR_source_branch = "${gitlabSourceBranch}"
-        MR_target_branch = "${gitlabTargetBranch}"
-        updateGitlabCommitStatus state: 'pending'
-        addGitLabMRComment comment: "Pipeline started: [Job-${BUILD_NUMBER}](${BUILD_URL})"
-        gitLabConnection('gitlab.devtools.intel.com')
-    }
+    MR_source_branch = params.ghprbSourceBranch
+    MR_target_branch = params.ghprbTargetBranch
 }
 echo "lpot_branch: $lpot_branch"
 echo "MR_source_branch: $MR_source_branch"
 echo "MR_target_branch: $MR_target_branch"
 
+ActualCommitAuthorEmail=''
+TriggerAuthorEmail=''
+ghprbActualCommit=''
+ghprbPullLink=''
+ghprbPullId=''
 if ( MR_source_branch != '') {
-    echo "gitlabMergeRequestLastCommit: $gitlabMergeRequestLastCommit"
+    // githubPRComment comment: "Pipeline started: [Job-${BUILD_NUMBER}](${BUILD_URL})"
+    ActualCommitAuthorEmail=params.ghprbActualCommitAuthorEmail
+    TriggerAuthorEmail=params.ghprbTriggerAuthorEmail
+    ghprbActualCommit=params.ghprbActualCommit
+    ghprbPullLink=params.ghprbPullLink
+    ghprbPullId=params.ghprbPullId
+
+    echo "ActualCommitAuthorEmail: ${params.ghprbActualCommitAuthorEmail}"
+    echo "TriggerAuthorEmail: ${params.TriggerAuthorEmail}"
+    echo "ghprbActualCommit: ${params.ghprbActualCommit}"
+    echo "ghprbPullLink: ${params.ghprbPullLink}"
+    echo "ghprbPullId: ${params.ghprbPullId}"
 }
 
 // setting refer_build
@@ -250,7 +263,8 @@ if ('test_mode' in params && params.test_mode != ''){
 }
 if ( MR_source_branch != ''){
     test_mode = 'mr'
-    email_subject="MR${gitlabMergeRequestIid}: ${test_title}"
+    PullId=params.ghprbPullId
+    email_subject="PR${PullId}: ${test_title}"
 }else if (test_mode == 'weekly'){
     email_subject="Weekly: ${test_title}"
     currentBuild.description = params.weekly_description
@@ -330,12 +344,17 @@ if ('tuning_precision' in params && params.tuning_precision != ''){
 }
 echo "tuning_precision: ${tuning_precision}"
 
-
 feature_list = ""
 if ("feature_list" in params && params.feature_list != "") {
     feature_list = params.feature_list
 }
 echo "feature_list: ${feature_list}"
+
+upload_nightly_binary=false
+if (params.upload_nightly_binary != null){
+    upload_nightly_binary=params.upload_nightly_binary
+}
+echo "upload_nightly_binary = ${upload_nightly_binary}"
 
 
 def cleanup() {
@@ -432,7 +451,7 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
     ParamsPerJob += string(name: "model", value: "${job_model}")
     ParamsPerJob += string(name: "lpot_url", value: "${lpot_url}")
-    ParamsPerJob += string(name: "lpot_branch", value: "${lpot_branch}")
+    ParamsPerJob += string(name: "lpot_branch", value: "${lpot_commit}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
     ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
@@ -554,7 +573,7 @@ def codeScan(tool) {
     List codeScanParams = [
         string(name: "TOOL", value: "${tool}"),
         string(name: "lpot_url", value: "${lpot_url}"),
-        string(name: "lpot_branch", value: "${lpot_branch}"),
+        string(name: "lpot_branch", value: "${lpot_commit}"),
         string(name: "MR_source_branch", value: "${MR_source_branch}"),
         string(name: "MR_target_branch", value: "${MR_target_branch}"),
         string(name: "val_branch", value: "${val_branch}"),
@@ -620,7 +639,7 @@ def copyrightCheck() {
 def featureTests() {
     List featureTestsParams = [
             string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}"),
+            string(name: "lpot_branch", value: "${lpot_commit}"),
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
@@ -706,7 +725,7 @@ def collectLog() {
 
                 job_models.each { job_model ->
                     echo "-------- ${cpu} - ${system} - ${job_framework} - ${job_model} --------"
-    
+
                      // Generate tuning info log
 
                     sh """#!/bin/bash -x
@@ -772,7 +791,7 @@ def UTBuildParams(tf_version, run_coverage){
 
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
     ParamsPerJob += string(name: "lpot_url", value: "${lpot_url}")
-    ParamsPerJob += string(name: "lpot_branch", value: "${lpot_branch}")
+    ParamsPerJob += string(name: "lpot_branch", value: "${lpot_commit}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
     ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
@@ -852,13 +871,27 @@ def unitTestJobs() {
 }
 
 def buildBinary(){
+    pypi_version='default'
+    if (upload_nightly_binary){
+        base_version=sh(
+            script: 'cd lpot-models/lpot && grep \'__version__\' version.py | awk -F \'\\"\' \'{print $(NF-1)}\'',
+            returnStdout: true
+        ).trim()
+        date_info=sh(
+            script: 'date +%Y-%m-%d | tr -cd "[0-9]"',
+            returnStdout: true
+        ).trim()
+        pypi_version = base_version +'dev'+date_info
+    }
+
     List binaryBuildParams = [
             string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}"),
+            string(name: "lpot_branch", value: "${lpot_commit}"),
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
-            string(name: "tuning_precision", value: "${tuning_precision}")
+            string(name: "tuning_precision", value: "${tuning_precision}"),
+            string(name: "pypi_version", value: "${pypi_version}")
     ]
     downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
     
@@ -890,10 +923,6 @@ def generateReport() {
     }
 
     dir(WORKSPACE) {
-        qtools_commit = sh (
-            script: 'cd lpot-models && git rev-parse HEAD',
-            returnStdout: true
-        ).trim()
         def Jenkins_job_status = currentBuild.result
         println("Jenkins_job_status ==== " + Jenkins_job_status)
         if (Jenkins_job_status == null){
@@ -901,7 +930,7 @@ def generateReport() {
         }
         withEnv([
             "qtools_branch=${lpot_branch}",
-            "qtools_commit=${qtools_commit}",
+            "qtools_commit=${lpot_commit}",
             "summaryLog=${SUMMARYTXT}",
             "summaryLogLast=${summaryLogLast}",
             "tuneLog=${TUNETXT}",
@@ -910,7 +939,13 @@ def generateReport() {
             "coverage_summary=${coverage_summary}",
             "coverage_summary_base=${coverage_summary_base}",
             "Jenkins_job_status=${Jenkins_job_status}",
-            "feature_tests_summary=${WORKSPACE}/featureTests/summary.log"
+            "feature_tests_summary=${WORKSPACE}/featureTests/summary.log",
+            "ghprbActualCommit=${ghprbActualCommit}",
+            "ghprbPullLink=${ghprbPullLink}",
+            "ghprbPullId=${ghprbPullId}",
+            "MR_source_branch=${MR_source_branch}",
+            "MR_target_branch=${MR_target_branch}"
+
         ]) {
             sh '''
                 if [[ ${qtools_branch} == '' ]]; then
@@ -971,9 +1006,9 @@ def generateExcelReport() {
 def sendReport() {
     dir("$WORKSPACE") {
         if (MR_source_branch != '') {
-            recipient_list = "${gitlabUserEmail}"
+            recipient_list = ActualCommitAuthorEmail + ',' + TriggerAuthorEmail
             if ('recipient_list' in params && params.recipient_list != '') {
-                recipient_list = params.recipient_list + ',' + gitlabUserEmail
+                recipient_list = params.recipient_list + ',' + ActualCommitAuthorEmail + ',' + TriggerAuthorEmail
             }
         } else {
             recipient_list = ''
@@ -1051,33 +1086,46 @@ def parseStrToList(srtingElements, delimiter=',') {
 }
 
 def cancelPreviousBuilds() {
-  echo "Source Branch for this build is: ${gitlabSourceBranch}"
+  echo "Source Branch for this build is: ${ghprbSourceBranch}"
   def jobName = env.JOB_NAME
   def currentBuildNumber = env.BUILD_NUMBER.toInteger()
   def currentJob = Jenkins.instance.getItemByFullName(jobName)
 
   for (def build : currentJob.builds) {
-    def buildBranch = build.getEnvironment()['gitlabSourceBranch']
-    def buildCommit = build.getEnvironment()['gitlabMergeRequestLastCommit']
+    def buildBranch = build.getEnvironment()['ghprbSourceBranch']
+    def buildCommit = build.getEnvironment()['ghprbActualCommit']
 
     if (build.isBuilding() && (build.number.toInteger() < currentBuildNumber)) {
-        if (buildCommit == gitlabMergeRequestLastCommit) {
+        if (buildCommit == ghprbActualCommit) {
             currentBuild.result = "ABORTED"
-            addGitLabMRComment comment: "Executed test on the same commit. Aborting latest build.: [Job-${BUILD_NUMBER}](${BUILD_URL})"
+            // githubPRComment comment: "Executed test on the same commit. Aborting latest build.: [Job-${BUILD_NUMBER}](${BUILD_URL})"
             error('Executed test on the same commit. Aborting current build.')
-        } else if (buildBranch == gitlabSourceBranch) {
+        } else if (buildBranch == ghprbSourceBranch) {
             echo "Older build ${build.number} Source Branch is ${buildBranch}"
             echo "Older build still queued. Sending kill signal to build number: ${build.number}"
             build.doTerm()
-            addGitLabMRComment comment: "Previous pipeline has been canceled: [Job-${build.number}](${build.url})"
+            // comment: "Previous pipeline has been canceled: [Job-${build.number}](${build.url})"
         }
     }
   }
 }
 
-if (ABORT_DUPLICATE_MR && "${MR_source_branch}" != '') {
-    stage("Cancel previous builds") {
-        cancelPreviousBuilds()
+//if (ABORT_DUPLICATE_MR && "${MR_source_branch}" != '') {
+//    stage("Cancel previous builds") {
+//        cancelPreviousBuilds()
+//    }
+//}
+
+def uploadNightlyBinary(){
+    List binaryBuildParams = [
+        string(name: "binary_build_job", value: "${binary_build_job}"),
+        string(name: "val_branch", value: "${val_branch}")
+    ]
+    downstreamJob = build job: "lpot-nightly-binary-upload", propagate: false, parameters: binaryBuildParams
+
+    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+    if (downstreamJob.getResult() != "SUCCESS") {
+        currentBuild.result = "FAILURE"
     }
 }
 
@@ -1119,6 +1167,12 @@ node( node_label ) {
         writeJSON file: "fw_versions.json", json: fw_versions, pretty: 4
         
         download()
+        if (lpot_branch != ''){
+            lpot_commit = sh (
+                    script: 'cd lpot-models && git rev-parse HEAD',
+                    returnStdout: true
+            ).trim()
+        }
 
         stage('Build wheel'){
             buildBinary()
@@ -1172,6 +1226,18 @@ node( node_label ) {
         error(e.toString())
 
     } finally {
+        if (upload_nightly_binary){
+            stage("upload nightly binary"){
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    if (currentBuild.result != 'FAILURE' && currentBuild.result != 'ABORTED') {
+                        uploadNightlyBinary()
+                    }else{
+                        println('Nightly build not succeed, will not push binary.')
+                    }
+                }
+            }
+        }
+
         stage("Collect Logs") {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                if ( Frameworks != '' || Frameworks_windows != '' ){
@@ -1219,12 +1285,10 @@ node( node_label ) {
             }
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
-                updateGitlabCommitStatus state: 'failed'
-                addGitLabMRComment comment: "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
+                // githubPRComment comment: "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
             } else {
                 echo "pipeline success"
-                updateGitlabCommitStatus state: 'success'
-                addGitLabMRComment comment: "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
+                // githubPRComment comment: "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
             }
         }
     }
