@@ -134,6 +134,7 @@ def cleanup() {
         cd $WORKSPACE
         rm -rf *
         sudo rm -rf *
+        sudo rm -rf .git
         '''
     } catch(e) {
         echo "==============================================="
