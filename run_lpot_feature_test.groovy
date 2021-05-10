@@ -43,6 +43,12 @@ if ('lpot_branch' in params && params.lpot_branch != '') {
 }
 echo "lpot_branch: $lpot_branch"
 
+val_branch="master"
+if ('val_branch' in params && params.val_branch != ''){
+    val_branch=params.val_branch
+}
+echo "val_branch: ${val_branch}"
+
 feature_name = ''
 if ('feature_name' in params && params.feature_name != '') {
     feature_name = params.feature_name

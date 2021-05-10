@@ -44,6 +44,12 @@ if ('conda_version' in params && params.conda_version != ''){
 }
 echo "conda_version is ${conda_version}"
 
+pypi_version = "default"
+if ('pypi_version' in params && params.pypi_version != ''){
+    pypi_version = params.pypi_version
+}
+echo "pypi_version is ${pypi_version}"
+
 val_branch="master"
 if ('val_branch' in params && params.val_branch != ''){
     val_branch=params.val_branch
@@ -126,31 +132,42 @@ def download() {
 
 def do_binary_build() {
     if (binary_class == 'wheel') {
-        sh '''#!/bin/bash
-            set -xe
-            echo "Create conda env..."
-            export PATH=${HOME}/miniconda3/bin/:$PATH
-            if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                echo "${conda_env} exist!"
-            else
-                conda create python=3.6.9 -y -n ${conda_env}
-            fi
-
-            source activate ${conda_env}
-
-            # Upgrade pip
-            pip install -U pip
-
-            echo "Build Pypi binary..."
-            cd lpot-models
-            if [ ${tuning_precision} != 'default' ]; then
-                sed -i "s/names: int8, uint8, bf16, fp32/names: ${tuning_precision}/g" lpot/adaptor/tensorflow.yaml
-                echo "lpot/adaptor/tensorflow.yaml..."
-                cat lpot/adaptor/tensorflow.yaml
-            fi  
-            python3 setup.py sdist bdist_wheel
-            cp dist/lpot*.whl ${WORKSPACE}/
-        '''
+        withEnv(["tuning_precision=${tuning_precision}",
+                "pypi_version=${pypi_version}"]) {
+            sh '''#!/bin/bash
+                set -xe
+                echo "Create conda env..."
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
+                    echo "${conda_env} exist!"
+                else
+                    conda create python=3.6.9 -y -n ${conda_env}
+                fi
+    
+                source activate ${conda_env}
+    
+                # Upgrade pip
+                pip install -U pip
+    
+                echo "Build Pypi binary..."
+                cd lpot-models
+                if [ "${tuning_precision}" != "default" ]; then
+                    sed -i "s/names: int8, uint8, bf16, fp32/names: ${tuning_precision}/g" lpot/adaptor/tensorflow.yaml
+                    echo "lpot/adaptor/tensorflow.yaml..."
+                    cat lpot/adaptor/tensorflow.yaml
+                fi
+                if [ "${pypi_version}" != "default" ]; then
+                    cd lpot
+                    sed -i '/__version__ =/d' version.py
+                    sed -i '$a\\__version__ = \\"'$pypi_version'\\"' version.py
+                    cat version.py
+                    cd -
+                fi
+                python3 setup.py sdist bdist_wheel
+                cp dist/lpot*.whl ${WORKSPACE}/
+                cp dist/lpot*.tar.gz ${WORKSPACE}/
+            '''
+        }
     } else if (binary_class == 'conda') {
         sh '''#!/bin/bash
             set -xe
@@ -204,14 +221,13 @@ node(node_label){
                 do_binary_build()
             }
         }
-
     }catch(e){
         currentBuild.result = "FAILURE"
         throw e
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'lpot*.whl, lpot-*-py_0.tar.bz2', excludes: null
+            archiveArtifacts artifacts: 'lpot*.whl, lpot-*-py_0.tar.bz2, lpot-*.tar.gz', excludes: null
             fingerprint: true
         }
     }
