@@ -133,7 +133,10 @@ if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
 def main() {
     // clean up
     dir( WORKSPACE ) {
-        sh " rm -rf ./* "
+        sh """
+            rm -rf ./*
+            rm -rf .git
+        """
         dir('lpot-validation'){
             retry(5) {
                 checkout scm
