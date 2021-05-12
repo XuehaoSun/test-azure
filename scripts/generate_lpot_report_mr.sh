@@ -502,7 +502,7 @@ if [ "${qtools_branch}" == "" ];
 then
   commit_id=$(echo ${ghprbActualCommit} |awk '{print substr($1,1,7)}')
 
-  MR_TITLE="[ <a href='${ghprbPullLink}'>MR-${ghprbPullId}</a> ]"
+  MR_TITLE="[ <a href='${ghprbPullLink}'>PR-${ghprbPullId}</a> ]"
   Test_Info_Title="<th colspan="2">Source Branch</th> <th colspan="4">Target Branch</th> <th colspan="4">Commit</th> "
   Test_Info="<td colspan="2">${MR_source_branch}</td> <td colspan="4">${MR_target_branch}</td> <td colspan="4">${commit_id}"
 else
