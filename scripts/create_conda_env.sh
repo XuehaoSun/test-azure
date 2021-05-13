@@ -53,7 +53,7 @@ function update_conda_env {
 }
 
 # step 0: export conda
-if [[ ${model} = 'dlrm' ]]; then
+if [[ ${model} = "dlrm"* ]]; then
     export PATH=${HOME}/anaconda3/bin/:$PATH
     export https_proxy=http://child-prc.intel.com:913
     export http_proxy=http://child-prc.intel.com:913
@@ -150,7 +150,7 @@ else
             pip install intel-${framework}==${framework_version}
         fi
     elif [ ${framework} == 'pytorch' ]; then
-        if [ ${model} == 'dlrm' ]; then
+        if [[ ${model} == 'dlrm'* ]]; then
             torch_whl_path=/home/torch/lpot/pytorch/pypi
         else
             torch_whl_path=/tf_dataset/pytorch/pypi

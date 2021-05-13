@@ -153,6 +153,10 @@ main() {
         topology="${model%_gpu}"
     fi
 
+    if [[ "${model}" == *"_fx" ]]; then
+        topology="${model%_fx}"
+    fi
+
     q_model=${WORKSPACE}/${framework}-${model}-tune
     if [ ${framework} == "tensorflow" ]; then
         q_model="${q_model}.pb"
@@ -211,8 +215,8 @@ main() {
     collect_pb_size || true
 
     # copy tuning result to /tmp, dlrm is too big and space consuming
-    if [ "${model}" == "dlrm" ];then
-        rm -rf /tmp/pytorch-dlrm-tune*
+    if [[ "${model}" == "dlrm"* ]];then
+        rm -rf /tmp/pytorch-"${model}"-tune*
     fi
     save_path=/tmp/${framework}-${model}-tune-$(date +%s)
     echo "!!!tune model save path is ${HOSTNAME}:${save_path}/* !!!"

@@ -118,6 +118,10 @@ main() {
         topology="${model%_qat} "
     fi
 
+    if [[ "${model}" == *"_fx" ]]; then
+        topology="${model%_fx}"
+    fi
+
     # pytorch int8 still use fp32 input_model
     if [ ${precision} == "int8" ] && [ ${framework} != "pytorch" ]; then
         input_model=${q_model}
@@ -184,7 +188,7 @@ function run_benchmark {
     # get cpu information for multi-instance
     ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
 
-    if [[ ${mode} == "latency" ]] && [[ ${model} != "dlrm" ]]; then
+    if [[ ${mode} == "latency" ]] && [[ "${model}" != "dlrm"* ]]; then
         ncores_per_instance=4
         batch_size=1
         iters=500
