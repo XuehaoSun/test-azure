@@ -380,10 +380,10 @@ def generateExcelReport(lpot_commit) {
     withEnv([
         "summaryLog=${summary_log}",
         "lpot_commit=${lpot_commit}",
-        "tensorflow_version=${tensorflow_version}",
-        "mxnet-version=${mxnet_version}",
-        "pytorch-version=${pytorch_version}",
-        "onnxruntime-version=${onnxruntime_version}"
+        "tensorflow_versions=${tensorflow_versions}",
+        "mxnet-versions=${mxnet_versions}",
+        "pytorch-versions=${pytorch_versions}",
+        "onnxruntime-versions=${onnxruntime_versions}"
     ]) {
         sh '''#!/bin/bash
             set -x
@@ -417,10 +417,10 @@ def generateExcelReport(lpot_commit) {
             python ./lpot-validation/scripts/report_generator/generate_weekly_report.py \
                 --logs-dir="${WORKSPACE}/logs" \
                 --commit="${lpot_commit}" \
-                --tensorflow-version="${tensorflow_version}" \
-                --mxnet-version="${mxnet_version}" \
-                --pytorch-version="${pytorch_version}" \
-                --onnxruntime-version="${onnxruntime_version}" \
+                --tensorflow-version="${tensorflow_versions}" \
+                --mxnet-version="${mxnet_versions}" \
+                --pytorch-version="${pytorch_versions}" \
+                --onnxruntime-version="${onnxruntime_versions}" \
                 --WW="${workweek}"
 
         '''
