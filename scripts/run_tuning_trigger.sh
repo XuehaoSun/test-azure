@@ -67,9 +67,9 @@ main() {
         if [ "${model_src_dir}" == "${WORKSPACE}/lpot-models/examples/pytorch/language_translation" ]; then
             python setup.py install
         fi
-        if [ "${model_src_dir}" == "${WORKSPACE}/lpot-models/examples/pytorch/huggingface_models" ]; then
+        if [ "${model_src_dir}" == "${WORKSPACE}/lpot-models/examples/pytorch/eager/huggingface_models" ]; then
             python setup.py install
-            pip install git-python -r examples/text-classification/requirements.txt -r examples/seq2seq/requirements.txt
+            pip install git-python -r examples/text-classification/requirements.txt -r examples/seq2seq/requirements.txt -r examples/language-modeling/requirements.txt
         fi
         if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
             # Install nnUnet
