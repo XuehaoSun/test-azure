@@ -404,6 +404,69 @@
       "strategy": "basic",
       "batch_size": 64,
       "new_benchmark": false
+    },
+    "xlm-roberta-base_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/xlm-roberta_mrpc",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
+    },
+    "flaubert_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/flaubert_mrpc",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
+    },
+    "barthez_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/barthez_mrpc",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
+    },
+    "longformer_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/longformer_mrpc",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
+    },
+    "layoutlm_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/layoutlm_mrpc",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
+    },
+    "deberta_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/deberta_mrpc",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
+    },
+    "squeezebert_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/squeezebert_mrpc",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 64,
+      "new_benchmark": false
     }
   }
 }
