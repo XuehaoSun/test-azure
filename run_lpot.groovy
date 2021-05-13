@@ -155,6 +155,10 @@ if (framework == "pytorch") {
     if (model == 'blendcnn' || model == 'resnest50'){
         framework_version = '1.6.0+cpu'
     }
+    label=model.split('_')
+    if(label[-1] == 'fx'){
+        framework_version = '1.8.0+cpu'
+    }
 
     pytorch_version_base = framework_version.split('\\+')[0]
     try {
@@ -184,7 +188,7 @@ if(framework == 'pytorch'){
         sub_node_label=sub_node_label + " && " + 'py-bert'
         new_conda_env=false
     }
-    if(model == 'dlrm'){
+    if(model == 'dlrm' || model == 'dlrm_fx'){
         sub_node_label='dlrm'
     }
     if(label[-1] == 'ipex'){
@@ -388,7 +392,7 @@ def getReferenceData() {
             sh"""#!/bin/bash
                 set -x
                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                if [[ ${framework} = 'pytorch' ]] && [[ ${model} = 'dlrm' ]]; then
+                if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
                     export PATH=${HOME}/anaconda3/bin/:$PATH
                 fi
                 source activate ${conda_env_name}
@@ -420,7 +424,7 @@ def findPerfDrops(result_json, os="", platform="", precision="", mode="") {
     def drops = sh(returnStdout: true, script: """#!/bin/bash
         set -x
         export PATH=${HOME}/miniconda3/bin/:$PATH
-        if [[ ${framework} = 'pytorch' ]] && [[ ${model} = 'dlrm' ]]; then
+        if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
             export PATH=${HOME}/anaconda3/bin/:$PATH
         fi
         source activate ${conda_env_name}
@@ -475,7 +479,7 @@ def checkReferenceData() {
                 sh """#!/bin/bash
                     set -x
                     export PATH=${HOME}/miniconda3/bin/:$PATH
-                    if [[ ${framework} = 'pytorch' ]] && [[ ${model} = 'dlrm' ]]; then
+                    if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
                         export PATH=${HOME}/anaconda3/bin/:$PATH
                     fi
                     source activate ${conda_env_name}
@@ -547,7 +551,7 @@ def collectLogs() {
         sh """#!/bin/bash
             set -x
             export PATH=${HOME}/miniconda3/bin/:$PATH
-            if [[ ${framework} = 'pytorch' ]] && [[ ${model} = 'dlrm' ]]; then
+            if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
                 export PATH=${HOME}/anaconda3/bin/:$PATH
             fi
             source activate ${conda_env_name}

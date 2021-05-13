@@ -58,7 +58,7 @@ function set_PT_env {
     if [[ ${model_src_dir} = *'language_translation' ]]; then
       export PATH=${HOME}/miniconda3/bin/:$PATH
       source activate pytorch-bert-1.6
-    elif [[ ${model} = 'dlrm' ]]; then
+    elif [[ "${model}" = "dlrm"* ]]; then
       export PATH=${HOME}/anaconda3/bin/:$PATH
       source activate ${conda_env_name}
       export https_proxy=http://child-prc.intel.com:913
