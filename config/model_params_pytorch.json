@@ -81,6 +81,15 @@
       "batch_size": 100,
       "new_benchmark": false
     },
+    "resnet18_qat_fx": {
+      "model_src_dir": "fx/image_recognition/imagenet/cpu/qat",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
+      "input_model": "",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": false
+    },
     "resnet50_qat": {
       "model_src_dir": "eager/image_recognition/imagenet/cpu/qat",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",

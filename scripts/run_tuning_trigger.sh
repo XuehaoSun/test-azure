@@ -157,6 +157,10 @@ main() {
         topology="${model%_fx}"
     fi
 
+    if [[ "${model}" == *"_qat_fx" ]]; then
+        topology="${model%_qat_fx}"
+    fi
+
     q_model=${WORKSPACE}/${framework}-${model}-tune
     if [ ${framework} == "tensorflow" ]; then
         q_model="${q_model}.pb"
