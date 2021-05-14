@@ -133,7 +133,7 @@ function tf_example5 {
     fi
     lpot_install
 
-    if [-f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
+    if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
         cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
     else
         wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/mobilenet_v1_1.0_224_frozen.pb
@@ -154,7 +154,7 @@ function tf_example6 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example6 || return
     lpot_install
 
-    if [-f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
+    if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
         cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
     else
         wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/mobilenet_v1_1.0_224_frozen.pb
