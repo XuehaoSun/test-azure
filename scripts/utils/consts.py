@@ -12,7 +12,7 @@ SUPPORTED_MODES = [
 
 EXCLUDED_REQUIREMENTS = [
     "lpot",
-    "tensorflow",
+    "intel-tensorflow",
     "torch",
     "mxnet",
     "onnx",
