@@ -33,7 +33,7 @@ function main {
     config_path=${WORKSPACE}/lpot-validation/scripts/feature_test/test/pytorch_prune_config.yaml
 
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/imagenet/cpu/prune
+    cd ${WORKSPACE}/lpot-models/examples/pytorch/eager/image_recognition/imagenet/cpu/prune
     python main.py ${dataset_location} --prune --config ${config_path} --pretrained 2>&1 | tee ${WORKSPACE}/pytorch_prune.log
 }
 
