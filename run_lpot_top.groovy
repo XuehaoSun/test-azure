@@ -350,6 +350,11 @@ if (params.upload_nightly_binary != null){
 }
 echo "upload_nightly_binary = ${upload_nightly_binary}"
 
+precision = 'int8,fp32'
+if ('precision' in params && params.precision != '') {
+    precision = params.precision
+}
+echo "Precision: ${precision}"
 
 def cleanup() {
 
@@ -463,6 +468,7 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "os", value: "${os}")
     ParamsPerJob += string(name: "dataset_prefix", value: "${dataset_prefix}")
     ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
+    ParamsPerJob += string(name: "precision", value: "${precision}")
 
     return ParamsPerJob
 }
