@@ -56,12 +56,6 @@ if ('val_branch' in params && params.val_branch != ''){
 }
 echo "val_branch: ${val_branch}"
 
-tuning_precision="default"
-if ('tuning_precision' in params && params.tuning_precision != ''){
-    tuning_precision=params.tuning_precision
-}
-echo "tuning_precision: ${tuning_precision}"
-
 def cleanup() {
 
     try {
@@ -132,8 +126,7 @@ def download() {
 
 def do_binary_build() {
     if (binary_class == 'wheel') {
-        withEnv(["tuning_precision=${tuning_precision}",
-                "pypi_version=${pypi_version}"]) {
+        withEnv(["pypi_version=${pypi_version}"]) {
             sh '''#!/bin/bash
                 set -xe
                 echo "Create conda env..."
@@ -151,11 +144,6 @@ def do_binary_build() {
     
                 echo "Build Pypi binary..."
                 cd lpot-models
-                if [ "${tuning_precision}" != "default" ]; then
-                    sed -i "s/names: int8, uint8, bf16, fp32/names: ${tuning_precision}/g" lpot/adaptor/tensorflow.yaml
-                    echo "lpot/adaptor/tensorflow.yaml..."
-                    cat lpot/adaptor/tensorflow.yaml
-                fi
                 if [ "${pypi_version}" != "default" ]; then
                     cd lpot
                     sed -i '/__version__ =/d' version.py

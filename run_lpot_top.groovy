@@ -338,12 +338,6 @@ if ('dataset_prefix' in params && params.dataset_prefix != ''){
 }
 echo "dataset_prefix: ${dataset_prefix}"
 
-tuning_precision="default"
-if ('tuning_precision' in params && params.tuning_precision != ''){
-    tuning_precision=params.tuning_precision
-}
-echo "tuning_precision: ${tuning_precision}"
-
 feature_list = ""
 if ("feature_list" in params && params.feature_list != "") {
     feature_list = params.feature_list
@@ -891,7 +885,6 @@ def buildBinary(){
             string(name: "MR_source_branch", value: "${MR_source_branch}"),
             string(name: "MR_target_branch", value: "${MR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
-            string(name: "tuning_precision", value: "${tuning_precision}"),
             string(name: "pypi_version", value: "${pypi_version}")
     ]
     downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
