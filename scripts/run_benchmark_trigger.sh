@@ -118,6 +118,10 @@ main() {
         topology="${model%_qat} "
     fi
 
+    if [[ "${model}" == *"_buildin_qat" ]]; then
+        topology="${model%_buildin_qat} "
+    fi
+
     if [[ "${model}" == *"_fx" ]]; then
         topology="${model%_fx}"
     fi
