@@ -102,9 +102,17 @@ main() {
     if [[ "${model}" != *"_ipex" ]]; then
       if [ -f "requirements.txt" ]; then
           sed -i '/lpot/d' requirements.txt
-          sed -i "/tensorflow==/d;/tensorflow$/d;/torch==/d;/torch$/d;/mxnet==/d;/mxnet$/d;/mxnet-mkl==/d;/mxnet-mkl$/d;/torchvision==/d;/torchvision$/d" requirements.txt
           if [ "${framework}" == "onnxrt" ]; then
             sed -i '/onnx/d;/onnxruntime/d' requirements.txt
+          fi
+          if [ "${framework}" == "tensorflow" ]; then
+            sed -i '/tensorflow==/d;/tensorflow$/d' requirements.txt
+          fi
+          if [ "${framework}" == "mxnet" ]; then
+            sed -i '/mxnet==/d;/mxnet$/d;/mxnet-mkl==/d;/mxnet-mkl$/d' requirements.txt
+          fi
+          if [ "${framework}" == "pytorch" ]; then
+            sed -i '/torch==/d;/torch$/d;/torchvision==/d;/torchvision$/d' requirements.txt
           fi
           n=0
           until [ "$n" -ge 5 ]
