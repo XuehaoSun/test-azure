@@ -34,7 +34,7 @@ function main {
 
     # Run Pytorch Prune test
     cd ${WORKSPACE}/lpot-models/examples/pytorch/eager/image_recognition/imagenet/cpu/prune
-    python main.py ${dataset_location} --prune --config ${config_path} --pretrained 2>&1 | tee ${WORKSPACE}/pytorch_prune.log
+    python main.py --prune --config ${config_path} --pretrained 2>&1 | tee ${WORKSPACE}/pytorch_prune.log
 }
 
 function create_conda_env {
