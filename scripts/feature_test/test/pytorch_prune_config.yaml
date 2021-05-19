@@ -66,6 +66,26 @@ pruning:
           update_frequency: 2
           params: ['layer1.0.conv2.weight']
 
+evaluation:                                          # optional. required if user doesn't provide eval_func in lpot.Quantization.
+  accuracy:                                          # optional. required if user doesn't provide eval_func in lpot.Quantization.
+    metric:
+      topk: 1                                        # built-in metrics are topk, map, f1, allow user to register new metric.
+    dataloader:
+      batch_size: 30
+      dataset:
+        ImageFolder:
+          root: /tf_dataset/pytorch/ImageNet/raw                   # NOTE: modify to evaluation dataset location if needed
+      transform:
+        Resize:
+          size: 256
+        CenterCrop:
+          size: 224
+        ToTensor: {}
+        Normalize:
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+
+
 tuning:
   accuracy_criterion:
     relative: 0.01                             # the tuning target of accuracy loss percentage: 1%
