@@ -485,6 +485,33 @@
       "strategy": "basic",
       "batch_size": 64,
       "new_benchmark": false
+    },
+    "xlm_roberta_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/xlm_roberta_MRPC",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": false
+    },
+    "xlnet_base_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/xlnet_base_MRPC",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": false
+    },
+    "gpt2_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/gpt2_MRPC",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": false
     }
   }
 }
