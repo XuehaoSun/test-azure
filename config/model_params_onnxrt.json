@@ -52,7 +52,7 @@
       "yaml": "bert.yaml",
       "strategy": "basic",
       "batch_size": 8,
-      "new_benchmark": false
+      "new_benchmark": true
     },
     "distilbert_base_MRPC": {
       "model_src_dir": "language_translation/distilbert",
@@ -61,7 +61,7 @@
       "yaml": "distilbert.yaml",
       "strategy": "basic",
       "batch_size": 8,
-      "new_benchmark": false
+      "new_benchmark": true
     },
     "mobilebert_MRPC": {
       "model_src_dir": "language_translation/mobilebert",
@@ -70,7 +70,7 @@
       "yaml": "mobilebert.yaml",
       "strategy": "basic",
       "batch_size": 8,
-      "new_benchmark": false
+      "new_benchmark": true
     },
     "roberta_base_MRPC": {
       "model_src_dir": "language_translation/roberta",
@@ -79,7 +79,7 @@
       "yaml": "roberta.yaml",
       "strategy": "basic",
       "batch_size": 8,
-      "new_benchmark": false
+      "new_benchmark": true
     }
   }
 }

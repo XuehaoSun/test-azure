@@ -89,7 +89,7 @@ def install_requirements(requirements_file: str, exclude: List[str]) -> None:
                 "-r",
                 requirements_file]
                 
-            print(f"[ EXEC ] {cmd}")
+            print(f"[ EXEC ] {' '.join(cmd)}")
             subprocess.run(cmd, check=True)
 
             cmd = [
@@ -98,7 +98,7 @@ def install_requirements(requirements_file: str, exclude: List[str]) -> None:
                 "pip",
                 "list"]
 
-            print(f"[ EXEC ] {cmd}")
+            print(f"[ EXEC ] {' '.join(cmd)}")
             subprocess.run(cmd, check=True)
         else:
             print("No requirements to install.")

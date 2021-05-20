@@ -303,6 +303,20 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     def new_benchmark = modelConf."new_benchmark"
 
     if (new_benchmark == true) {
+        def cmd = "python ${WORKSPACE}/lpot-validation/scripts/run_new_benchmark_trigger.py \
+                --framework=${framework} \
+                --model=${model} \
+                --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
+                --input_model=${dataset_prefix}${input_model} \
+                --precision=${precision} \
+                --mode=${mode} \
+                --batch_size=${batch_size} \
+                --yaml=${yaml} \
+                --cpu=${cpu} \
+                --output_path=${output_path}"
+        if (framework == "onnxrt" && model_src_dir.contains("language_translation")) {
+            cmd += " --dataset_location=\"${dataset_location}\""
+        }
         sh """#!/bin/bash -x
             echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking - New"
             
@@ -325,17 +339,8 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
             echo "=================================="
 
             export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
-            python ${WORKSPACE}/lpot-validation/scripts/run_new_benchmark_trigger.py \
-                --framework=${framework} \
-                --model=${model} \
-                --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
-                --input_model=${dataset_prefix}${input_model} \
-                --precision=${precision} \
-                --mode=${mode} \
-                --batch_size=${batch_size} \
-                --yaml=${yaml} \
-                --cpu=${cpu} \
-                --output_path=${output_path}
+
+            ${cmd}
             """
     } else {
         sh """#!/bin/bash -x
