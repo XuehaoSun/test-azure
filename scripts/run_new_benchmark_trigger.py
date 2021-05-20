@@ -28,6 +28,7 @@ parser.add_argument("--batch_size", type=int, required=True)
 parser.add_argument("--yaml", type=str, required=True)
 parser.add_argument("--cpu", type=str, required=True)
 parser.add_argument("--output_path", type=str, default=os.environ.get("WORKSPACE"))
+parser.add_argument("--dataset_location", type=str, required=False, help="Dataset location for ONNXRT LT models.")
 
 args = parser.parse_args()
 print(args)
@@ -91,6 +92,8 @@ def main():
             parameters=parameters,
             yaml_path=yaml_path,
             log_file=log_file,
+            input_model=input_model,
+
         )
     else:
         run_benchmark(
@@ -98,18 +101,22 @@ def main():
             yaml_path=yaml_path,
             log_file=log_file,
             mode=args.mode,
+            input_model=input_model,
         )
 
 
-def run_accuracy(parameters: List[str], yaml_path: str, log_file: str):
+def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_model: str):
     """Run accuracy benchmark."""
     # Update yaml config
     lpot_config = Config()
     lpot_config.load(yaml_path)
 
     lpot_config.evaluation.performance = None
-    lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
-    lpot_config.evaluation.accuracy.configs = None
+    try:
+        lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
+        lpot_config.evaluation.accuracy.configs = None
+    except AttributeError:
+        print("Could not update accuracy config.")
 
     lpot_config.dump(yaml_path)
     print("\nPrint updated yaml... ")
@@ -120,6 +127,18 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str):
     # Set execution command
     parameters.append("--mode=accuracy")
 
+    # Workaround for ONNXRT LT models
+    if args.framework == "onnxrt" and "language_translation" in args.model_src_dir:
+        onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "benchmark"
+        parameters = [
+            f"--topology={args.model}",
+            f"--dataset_location={args.dataset_location}",
+            f"--input_model={input_model}",
+            f"--mode={onnxrt_lt_mode}",
+            f"--batch_size={args.batch_size}",
+        ]
+
+
     cmd = get_executable("benchmark")
     cmd.extend(parameters)
     ###
@@ -127,7 +146,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str):
     execute_command(args=cmd, cwd=args.model_src_dir, shell=True, file=log_file)
 
 
-def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: str):
+def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: str, input_model: str):
     """Run performance benchmark."""
     # Get cpu information for multi-instance
     total_cores = psutil.cpu_count(logical=False)
@@ -174,6 +193,18 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
 
     # Set execution command
     parameters.append("--mode=performance")
+
+    # Workaround for ONNXRT LT models
+    if args.framework == "onnxrt" and "language_translation" in args.model_src_dir:
+        onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "benchmark"
+        parameters = [
+            f"--topology={args.model}",
+            f"--dataset_location={args.dataset_location}",
+            f"--input_model={input_model}",
+            f"--mode={onnxrt_lt_mode}",
+            f"--batch_size={batch_size}",
+            f"--iters={iters}",
+        ]
 
     cmd = get_executable("benchmark")
     cmd.extend(parameters)
