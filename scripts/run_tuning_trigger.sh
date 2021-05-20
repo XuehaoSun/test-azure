@@ -171,7 +171,7 @@ main() {
     fi
 
     q_model=${WORKSPACE}/${framework}-${model}-tune
-    if [ ${framework} == "tensorflow" ]; then
+    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras" ]]; then
         q_model="${q_model}.pb"
     elif [ ${framework} == "mxnet" ]; then
         mkdir -p ${q_model}
@@ -194,7 +194,7 @@ main() {
 
     # new config with yaml
     if [ "${framework}" == "tensorflow" ]; then
-        new_config_dirs=("image_recognition" "object_detection" "nlp/bert" "semantic_image_segmentation")
+        new_config_dirs=("image_recognition" "object_detection" "nlp/bert" "semantic_image_segmentation" "keras")
         for model_dir in ${new_config_dirs[*]}; do
             if [[ "${model_src_dir}" == *"${model_dir}"* ]]; then
                 parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
