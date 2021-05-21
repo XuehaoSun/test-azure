@@ -1790,6 +1790,15 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": false
+    },
+    "resnet50_fashion": {
+      "model_src_dir": "keras",
+      "dataset_location": "/tf_dataset2/datasets/mnist/FashionMNIST",
+      "input_model": "/tf_dataset2/models/tensorflow/resnet50_fashion",
+      "yaml": "resnet50_fashion.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
     }
   }
 }

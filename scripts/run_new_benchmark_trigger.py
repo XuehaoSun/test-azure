@@ -64,16 +64,13 @@ def main():
     shutil.copyfile(yaml_path, benchmark_yaml_path)
     yaml_path = benchmark_yaml_path
 
-    input_model = args.input_model
-    if args.precision == "int8":
-        input_model = os.path.join(
-            os.environ["WORKSPACE"],
-            f"{args.framework}-{args.model}-tune",
-        )
-        if args.framework == "tensorflow":
-            input_model = f"{input_model}.pb"
-        elif args.framework == "onnxrt":
-            input_model = f"{input_model}.onnx"
+    input_model = get_model_name(
+        framework=args.framework,
+        model=args.model,
+        model_src_dir=args.model_src_dir,
+        precision=args.precision,
+        input_model=args.input_model,
+    )
 
     parameters = get_benchmark_parameters(
         yaml_config=yaml_path,
@@ -249,6 +246,22 @@ def get_linux_parameters(yaml_path: str, input_model: str):
         f"--input_model={input_model}",
     ]
 
+def get_model_name(framework: str, model: str, model_src_dir: str, precision: str, input_model: str) -> str:
+    if precision == "fp32":
+        return input_model
+    int8_model = os.path.join(
+        os.environ["WORKSPACE"],
+        f"{framework}-{model}-tune",
+    )
+    if model_src_dir.endswith("keras"):
+        return int8_model
+    if framework == "tensorflow":
+        return f"{int8_model}.pb"
+    elif framework == "onnxrt":
+        return f"{int8_model}.onnx"
+
+    return int8_model
+    
 
 if __name__ == "__main__":
     main()
