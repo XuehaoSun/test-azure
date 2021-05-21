@@ -181,8 +181,8 @@ def issue_to_table_row(issue: JiraIssue):
     if issue.pr_link not in ["", "N/A"]:
         pr_cell = a(href=issue.pr_link, style="color: inherit;background-color: inherit;")(issue.pr)
     return tr(
-        td(style="font-size: medium")(a(href=issue.jira_link, style="color: inherit;background-color: inherit;")(issue.jira_id)),
-        td(style="font-size: medium")(a(href=issue.jira_link, style="color: inherit;background-color: inherit;")(issue.task)),
+        td(a(href=issue.jira_link, style="color: inherit;background-color: inherit;")(issue.jira_id)),
+        td(a(href=issue.jira_link, style="color: inherit;background-color: inherit;")(issue.task)),
         td(issue.owner),
         td(issue.priority),
         td(style=eta_style)(issue.eta),
