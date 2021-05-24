@@ -179,6 +179,11 @@ if (framework == "pytorch") {
 }
 println("torchvision_version: " + torchvision_version)
 
+if (framework == "tensorflow") {
+    if(model == 'bert'){
+        framework_version = '1.15UP2'
+    }
+}
 
 def algorithm=''
 def new_conda_env=true
