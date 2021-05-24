@@ -512,6 +512,33 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": false
+    },
+    "transfo_xl_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "/tf_dataset/pytorch/glue_data_new",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/transfo_xl_mrpc_dynamic",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": false
+    },
+    "ctrl_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "/tf_dataset/pytorch/glue_data_new",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/ctrl_mrpc_dynamic",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": false
+    },
+    "xlm_MRPC": {
+      "model_src_dir": "eager/huggingface_models",
+      "dataset_location": "/tf_dataset/pytorch/glue_data_new",
+      "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/xlm_mrpc_dynamic",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": false
     }
   }
 }
