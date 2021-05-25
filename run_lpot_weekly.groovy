@@ -1,4 +1,3 @@
-
 // Groovy
 
 credential = 'lab_tfbot'
@@ -428,6 +427,6 @@ def generateExcelReport(lpot_commit) {
 }
 
 
-node() {
+node(node_label) {
     main()
 }
