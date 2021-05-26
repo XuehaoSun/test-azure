@@ -206,10 +206,8 @@ def get_pending_days_style(issue: JiraIssue) -> str:
     """Get style for pending days cell."""
     if issue.pending_days is None or issue.pending_days == "N/A":
         return ""
-    if 0 < float(issue.pending_days) <= 3:
+    if float(issue.pending_days) >= 3:
         return "background-color: #fff2d0; font-weight: bold"
-    if float(issue.pending_days) < 0:
-        return "color: #931c1a; background-color: #ffe1dd; font-weight: bold"
     return ""
 
 
