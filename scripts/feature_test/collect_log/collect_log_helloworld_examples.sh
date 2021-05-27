@@ -14,7 +14,7 @@ function main {
 function check_tf_example_status {
     example_number=${1}
     test_status="check"
-    test_phrase="Tune [0-9]* result is: \[accuracy: [0-9]*\.[0-9]*\, duration (seconds): [0-9]*\.[0-9]*\] Best tune result is: \[accuracy: [0-9]*\.[0-9]*\, duration (seconds): [0-9]*\.[0-9]*\]"
+    test_phrase="Tune [0-9]* result is: \[[0-9]*\.[0-9]*\, [0-9]*\.[0-9]*\] Best tune result is: \[[0-9]*\.[0-9]*\, [0-9]*\.[0-9]*\]"
     if [[ ${example_number} == 2 ]]; then
         test_phrase="Inference is done."
     fi

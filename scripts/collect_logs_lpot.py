@@ -101,15 +101,15 @@ def parse_tuning_line(line):
     if tuning_strategy and tuning_strategy.group(1):
         result.tuning.strategy = tuning_strategy.group(1)
 
-    baseline_acc = re.search(r"FP32 baseline is:\s+\[accuracy:\s(\d+(\.\d+)?), duration \(seconds\):\s*(\d+(\.\d+)?)\]", line)
+    baseline_acc = re.search(r"FP32 baseline is:\s+\[(\d+(\.\d+)?),\s*(\d+(\.\d+)?)\]", line)
     if baseline_acc and baseline_acc.group(1):
         result.tuning.baseline_acc = float(baseline_acc.group(1))
 
-    tuned_acc = re.search(r"Best tune result is:\s+\[accuracy:\s(\d+(\.\d+)?), duration \(seconds\):\s(\d+(\.\d+)?)\]", line)
+    tuned_acc = re.search(r"Best tune result is:\s+\[(\d+(\.\d+)?),\s*(\d+(\.\d+)?)\]", line)
     if tuned_acc and tuned_acc.group(1):
         result.tuning.tuned_acc = float(tuned_acc.group(1))
 
-    tune_trial = re.search(r"Tune \d*\s*result is:", line)
+    tune_trial = re.search(r"Tune \d*\s*result is:\s+\[(\d+\.\d+), (\d+\.\d+)\]", line)
     if tune_trial:
         result.tuning.trials += 1
 
