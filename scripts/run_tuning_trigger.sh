@@ -64,7 +64,7 @@ main() {
     if [ -d ${model_src_dir} ]; then
         cd ${model_src_dir}
         echo -e "\nWorking in $(pwd)..."
-        if [ "${model_src_dir}" == "${WORKSPACE}/lpot-models/examples/pytorch/language_translation" ]; then
+        if [[ "${model_src_dir}" == *"pytorch/eager/language_translation/ptq" ]]; then
             python setup.py install
         fi
         if [[ "${model_src_dir}" == *"/huggingface_models" ]]; then
