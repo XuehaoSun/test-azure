@@ -77,6 +77,12 @@ def main():
         input_model=input_model,
         os=operating_system,
     )
+    if args.framework == "tensorflow" and args.model == "bert_base_mrpc":
+        parameters.extend([
+            f"--dataset_location={args.dataset_location}",
+            f"--init_checkpoint={args.input_model}",
+            f"--batch_size={args.batch_size}"
+        ])
 
     log_file = os.path.join(
         args.output_path,
@@ -173,7 +179,8 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
     lpot_config.load(yaml_path)
 
     lpot_config.evaluation.accuracy = None
-    lpot_config.evaluation.performance.dataloader.batch_size = batch_size
+    if lpot_config.evaluation.performance.dataloader:
+        lpot_config.evaluation.performance.dataloader.batch_size = batch_size
     lpot_config.evaluation.performance.iteration = iters
 
     lpot_config.evaluation.performance.configs.cores_per_instance = ncores_per_instance
@@ -254,6 +261,8 @@ def get_model_name(framework: str, model: str, model_src_dir: str, precision: st
         f"{framework}-{model}-tune",
     )
     if model_src_dir.endswith("keras"):
+        return int8_model
+    if model == "bert_base_mrpc":
         return int8_model
     if framework == "tensorflow":
         return f"{int8_model}.pb"

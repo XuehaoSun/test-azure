@@ -322,6 +322,9 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
         if (framework == "onnxrt" && model_src_dir.contains("language_translation")) {
             cmd += " --dataset_location=\"${dataset_location}\""
         }
+        if (framework == "tensorflow" && model == "bert_base_mrpc") {
+            cmd += " --dataset_location=\"${dataset_location}\""
+        }
         sh """#!/bin/bash -x
             echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking - New"
             
