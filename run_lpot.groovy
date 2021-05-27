@@ -190,14 +190,14 @@ def new_conda_env=true
 if(framework == 'pytorch'){
     label=model.split('_')
     if(label[0] == 'bert' || label[-1] == 'MRPC' || label[-1] == 'WikiText'){
-        sub_node_label=sub_node_label + " && " + 'py-bert'
+        sub_node_label='py-bert'
         new_conda_env=false
     }
     if(model == 'dlrm' || model == 'dlrm_fx'){
         sub_node_label='dlrm'
     }
     if(label[-1] == 'ipex'){
-        sub_node_label=sub_node_label + " && " + 'py-ipex'
+        sub_node_label='py-ipex'
         new_conda_env=false
     }
 }
