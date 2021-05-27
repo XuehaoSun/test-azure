@@ -171,7 +171,7 @@ main() {
     fi
 
     q_model=${WORKSPACE}/${framework}-${model}-tune
-    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras" ]]; then
+    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras" ]] && [ ${model} != "bert_base_mrpc" ];  then
         q_model="${q_model}.pb"
     elif [ ${framework} == "mxnet" ]; then
         mkdir -p ${q_model}
@@ -180,6 +180,11 @@ main() {
         q_model="${q_model}.onnx"
     elif [ ${framework} == "pytorch" ]; then
         q_model=""
+    fi
+
+    if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
+        cp -r ${input_model} ${model_src_dir}/bert_base_mrpc
+        input_model=${model_src_dir}/bert_base_mrpc
     fi
 
     # run_tuning.sh
@@ -209,6 +214,10 @@ main() {
 
     if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" == *"language_translation"* ]]; then
       ln -s ${input_model} ${model_src_dir}/
+    fi
+
+    if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
+        parameters="${parameters} --dataset_location=${dataset_location}"
     fi
 
     update_yaml_config
@@ -273,7 +282,7 @@ function update_yaml_config {
         sed -i "/\/path\/to\/evaluation\/dataset/s|root:.*|root: $dataset_location|g" ${yaml}
         sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: /tf_dataset/dataset/coco_dataset/raw-data/annotations/instances_val2017.json |g" ${yaml}
         if [ "${framework}" == "tensorflow" ]; then
-            if [ "${model}" == "bert" ]; then
+            if [ "${model}" == "bert_large_squad" ]; then
                 sed -i "/\/path\/to\/eval.tf_record/s|root:.*|root: $dataset_location/eval.tf_record|g" ${yaml}
                 sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
                 sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
