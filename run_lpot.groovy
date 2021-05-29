@@ -180,7 +180,8 @@ if (framework == "pytorch") {
 println("torchvision_version: " + torchvision_version)
 
 if (framework == "tensorflow") {
-    if(model == 'bert'){
+    label=model.split('_')
+    if(label[0] == 'bert'){
         framework_version = '1.15UP2'
     }
 }
