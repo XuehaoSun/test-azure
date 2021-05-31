@@ -63,7 +63,7 @@ if ('lpot_url' in params && params.lpot_url != ''){
 }
 echo "lpot_url is ${lpot_url}"
 
-requirement_list="ruamel.yaml"
+requirement_list="ruamel.yaml==0.17.4"
 if ('requirement_list' in params && params.requirement_list != ''){
     requirement_list = params.requirement_list
 }
