@@ -178,7 +178,7 @@ function create_conda_env {
     conda deactivate || source deactivate
     source activate ${conda_env_name}
     pip install intel-tensorflow==${tensorflow_version}
-    pip install ruamel.yaml
+    pip install ruamel.yaml==0.17.4
     pip list
 
     if [ ! -d ${WORKSPACE}/lpot-models ]; then

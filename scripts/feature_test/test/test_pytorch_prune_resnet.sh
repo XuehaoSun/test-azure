@@ -46,7 +46,7 @@ function create_conda_env {
     pip install pytorch-ignite
     pip install torch==${pytorch_version} -f https://download.pytorch.org/whl/torch_stable.html
     pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
-    pip install ruamel.yaml
+    pip install ruamel.yaml==0.17.4
     pip list
 
     if [ ! -d ${WORKSPACE}/lpot-models ]; then

@@ -56,7 +56,7 @@ if ('lpot_url' in params && params.lpot_url != ''){
 }
 echo "lpot_url is ${lpot_url}"
 
-requirement_list="ruamel.yaml"
+requirement_list="ruamel.yaml==0.17.4"
 if ('requirement_list' in params && params.requirement_list != ''){
     requirement_list = params.requirement_list
 }
@@ -226,7 +226,7 @@ def create_virtual_env() {
 
                 CALL pip config list
                 CALL pip install -U pip
-                CALL pip install ruamel.yaml wheel
+                CALL pip install ruamel.yaml==0.17.4 wheel
 
                 IF "%framework%" == "tensorflow" (
                     IF "%framework_version%" == "1.15UP1" (
@@ -328,7 +328,7 @@ def create_conda_env() {
                 CALL pip config list
 
                 CALL pip install -U pip
-                CALL pip install ruamel.yaml wheel
+                CALL pip install ruamel.yaml==0.17.4 wheel
 
                 IF "%framework%" == "tensorflow" (
                     IF "%framework_version%" == "1.15UP1" (
