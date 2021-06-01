@@ -77,12 +77,6 @@ def main():
         input_model=input_model,
         os=operating_system,
     )
-    if args.framework == "tensorflow" and args.model == "bert_base_mrpc":
-        parameters.extend([
-            f"--dataset_location={args.dataset_location}",
-            f"--init_checkpoint={args.input_model}",
-            f"--batch_size={args.batch_size}"
-        ])
 
     log_file = os.path.join(
         args.output_path,
@@ -114,7 +108,6 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
     lpot_config = Config()
     lpot_config.load(yaml_path)
 
-    lpot_config.evaluation.performance = None
     try:
         lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
         lpot_config.evaluation.accuracy.configs = None
@@ -129,6 +122,14 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
 
     # Set execution command
     parameters.append("--mode=accuracy")
+
+    # Workaround for tensorflow bert_base_mrpc
+    if args.framework == "tensorflow" and args.model == "bert_base_mrpc":
+        parameters.extend([
+            f"--dataset_location={args.dataset_location}",
+            f"--init_checkpoint={args.input_model}",
+            f"--batch_size={args.batch_size}"
+        ])
 
     # Workaround for ONNXRT LT models
     if args.framework == "onnxrt" and "language_translation" in args.model_src_dir:
@@ -178,7 +179,6 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
     lpot_config = Config()
     lpot_config.load(yaml_path)
 
-    lpot_config.evaluation.accuracy = None
     if lpot_config.evaluation.performance.dataloader:
         lpot_config.evaluation.performance.dataloader.batch_size = batch_size
     lpot_config.evaluation.performance.iteration = iters
@@ -197,6 +197,14 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
 
     # Set execution command
     parameters.append("--mode=performance")
+
+    # Workaround for tensorflow bert_base_mrpc
+    if args.framework == "tensorflow" and args.model == "bert_base_mrpc":
+        parameters.extend([
+            f"--dataset_location={args.dataset_location}",
+            f"--init_checkpoint={args.input_model}",
+            f"--batch_size={batch_size}"
+        ])
 
     # Workaround for ONNXRT LT models
     if args.framework == "onnxrt" and "language_translation" in args.model_src_dir:
@@ -261,8 +269,6 @@ def get_model_name(framework: str, model: str, model_src_dir: str, precision: st
         f"{framework}-{model}-tune",
     )
     if model_src_dir.endswith("keras"):
-        return int8_model
-    if model == "bert_base_mrpc":
         return int8_model
     if framework == "tensorflow":
         return f"{int8_model}.pb"
