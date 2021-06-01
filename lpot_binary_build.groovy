@@ -38,12 +38,6 @@ if ('binary_class' in params && params.binary_class != ''){
 }
 echo "binary_class is ${binary_class}"
 
-conda_version = "v1.1"
-if ('conda_version' in params && params.conda_version != ''){
-    conda_version = params.conda_version
-}
-echo "conda_version is ${conda_version}"
-
 pypi_version = "default"
 if ('pypi_version' in params && params.pypi_version != ''){
     pypi_version = params.pypi_version
