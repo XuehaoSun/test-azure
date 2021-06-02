@@ -427,6 +427,6 @@ def generateExcelReport(lpot_commit) {
 }
 
 
-node(node_label) {
+node("master") {
     main()
 }
