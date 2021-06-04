@@ -3,7 +3,7 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "4" ] ; then 
+if [ $# != "4" ] ; then
     echo 'ERROR:'
     echo "Expected 4 parameters got $#"
     printf 'Please use following parameters:
@@ -38,6 +38,8 @@ function set_TF_env {
     export KMP_BLOCKTIME=1
     export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
     export TF_MKL_OPTIMIZE_PRIMITIVE_MEMUSE=false
+    # default use block format
+    export TF_ENABLE_MKL_NATIVE_FORMAT=0
 
     export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate ${conda_env_name}
