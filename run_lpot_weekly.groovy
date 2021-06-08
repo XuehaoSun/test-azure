@@ -394,7 +394,7 @@ def generateExcelReport(lpot_commit) {
             source ${WORKSPACE}/.lpot-report-generator/bin/activate
 
             set +e
-            python -m pip install --index-url https://pypi.douban.com/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
+            python -m pip install --index-url http://mirrors.aliyun.com/pypi/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
             exit_code=$?
             set -e
 
