@@ -117,6 +117,15 @@
       "batch_size": 100,
       "new_benchmark": false
     },
+    "mobilenet_v2_qat": {
+      "model_src_dir": "eager/image_recognition/imagenet/cpu/qat",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
+      "input_model": "",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": false
+    },
     "peleenet": {
       "model_src_dir": "eager/image_recognition/peleenet",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",
