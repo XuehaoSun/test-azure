@@ -95,18 +95,22 @@ if [[ ${run_ut} != '' ]]; then
     fi
 
     # Install PyTorch
-    torch_whl_path=/tf_dataset/pytorch/pypi
-    torch_whl=${torch_whl_path}/${python_version}/torch-${pytorch_version}-*.whl
-    if [ -f ${torch_whl} ]; then
-        pip install ${torch_whl}
+    if [ ${framework} == "pytorch" ] && [[ ${model} == *"_qat"* ]]; then
+        pip install torch==1.8.0+cpu torchvision==0.9.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
     else
-        pip install torch==${pytorch_version} -f https://download.pytorch.org/whl/torch_stable.html
-    fi
-    torchvision_whl=${torch_whl_path}/${python_version}/torchvision-${torchvision_version}-*.whl
-    if [ -f ${torchvision_whl} ]; then
-        pip install ${torchvision_whl}
-    else
-        pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
+        torch_whl_path=/tf_dataset/pytorch/pypi
+        torch_whl=${torch_whl_path}/${python_version}/torch-${pytorch_version}-*.whl
+        if [ -f ${torch_whl} ]; then
+            pip install ${torch_whl}
+        else
+            pip install torch==${pytorch_version} -f https://download.pytorch.org/whl/torch_stable.html
+        fi
+        torchvision_whl=${torch_whl_path}/${python_version}/torchvision-${torchvision_version}-*.whl
+        if [ -f ${torchvision_whl} ]; then
+            pip install ${torchvision_whl}
+        else
+            pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
+        fi
     fi
 
     # Install MXNet
@@ -161,22 +165,27 @@ else
             pip install intel-${framework}==${framework_version}
         fi
     elif [ ${framework} == 'pytorch' ]; then
-        if [[ ${model} == 'dlrm'* ]]; then
-            torch_whl_path=/home/torch/lpot/pytorch/pypi
+        if [[ ${model} == *"_qat"* ]]; then
+            echo "Detected pytorch QAT model. Installing PyTorch 1.8.0+cpu"
+            pip install torch==1.8.0+cpu torchvision==0.9.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
         else
-            torch_whl_path=/tf_dataset/pytorch/pypi
-        fi
-        torch_whl=${torch_whl_path}/${python_version}/torch-${framework_version}-*.whl
-        if [ -f ${torch_whl} ]; then
-            pip install ${torch_whl}
-        else
-            pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
-        fi
-        torchvision_whl=${torch_whl_path}/${python_version}/torchvision-${torchvision_version}-*.whl
-        if [ -f ${torchvision_whl} ]; then
-            pip install ${torchvision_whl}
-        else
-            pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
+            if [[ ${model} == 'dlrm'* ]]; then
+                torch_whl_path=/home/torch/lpot/pytorch/pypi
+            else
+                torch_whl_path=/tf_dataset/pytorch/pypi
+            fi
+            torch_whl=${torch_whl_path}/${python_version}/torch-${framework_version}-*.whl
+            if [ -f ${torch_whl} ]; then
+                pip install ${torch_whl}
+            else
+                pip install torch==${framework_version} -f https://download.pytorch.org/whl/torch_stable.html
+            fi
+            torchvision_whl=${torch_whl_path}/${python_version}/torchvision-${torchvision_version}-*.whl
+            if [ -f ${torchvision_whl} ]; then
+                pip install ${torchvision_whl}
+            else
+                pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
+            fi
         fi
 
         if [ ${model} == '3dunet' ]; then
