@@ -54,7 +54,11 @@ def compare_result(result, reference):
         ref_benchmark = find_benchmark_result(
             reference, benchmark.get("mode"), benchmark.get("precision")
         )
-        benchmark.update({"reference_value": ref_benchmark.get("value")})
+        if ref_benchmark and isinstance(ref_benchmark, dict):
+            ref_value = ref_benchmark.get("value")
+        else:
+            ref_value = None
+        benchmark.update({"reference_value": ref_value})
         benchmark.update({"diff": get_diff(benchmark)})
 
 
