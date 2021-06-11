@@ -183,7 +183,7 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         lpot_config.evaluation.performance.dataloader.batch_size = batch_size
     lpot_config.evaluation.performance.iteration = iters
 
-    lpot_config.evaluation.performance.configs.cores_per_instance = ncores_per_instance
+    lpot_config.evaluation.performance.configs.cores_per_instance = int(ncores_per_instance)
     lpot_config.evaluation.performance.configs.num_of_instance = int(num_benchmark_cores // ncores_per_instance)
     lpot_config.evaluation.performance.configs.intra_num_of_threads = None
     lpot_config.evaluation.performance.configs.inter_num_of_threads = None
