@@ -834,7 +834,7 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws00/icnet-camvid-ava-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100,
+      "batch_size": 16,
       "new_benchmark": false
     },
     "icnet-camvid-ava-sparse-30-0001": {
@@ -843,7 +843,7 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws30/icnet-camvid-ava-sparse-30-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100,
+      "batch_size": 16,
       "new_benchmark": false
     },
     "icnet-camvid-ava-sparse-60-0001": {
@@ -852,7 +852,7 @@
       "input_model": "/tf_dataset/tensorflow/tf_oob_models/PublicCompressed/semantic_segmentation/icnet-camvid-tf-ws60/icnet-camvid-ava-sparse-60-0001.pb",
       "yaml": "config.yaml",
       "strategy": "basic",
-      "batch_size": 100,
+      "batch_size": 16,
       "new_benchmark": false
     },
     "icv-emotions-recognition-0002": {
