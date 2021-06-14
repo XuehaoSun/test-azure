@@ -130,6 +130,10 @@ main() {
         topology="${model%_qat_fx}"
     fi
 
+    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34" ]; then
+        topology="ssd-resnet34"
+    fi
+    
     # pytorch int8 still use fp32 input_model
     if [ ${precision} == "int8" ] && [ ${framework} != "pytorch" ]; then
         input_model=${q_model}
