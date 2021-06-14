@@ -344,6 +344,12 @@ if ("feature_list" in params && params.feature_list != "") {
 }
 echo "feature_list: ${feature_list}"
 
+collect_tuned_model=false
+if (params.collect_tuned_model != null){
+    collect_tuned_model=params.collect_tuned_model
+}
+echo "collect_tuned_model = ${collect_tuned_model}"
+
 upload_nightly_binary=false
 if (params.upload_nightly_binary != null){
     upload_nightly_binary=params.upload_nightly_binary
@@ -468,6 +474,7 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "os", value: "${os}")
     ParamsPerJob += string(name: "dataset_prefix", value: "${dataset_prefix}")
     ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
+    ParamsPerJob += booleanParam(name: "collect_tuned_model", value: collect_tuned_model)
     ParamsPerJob += string(name: "precision", value: "${precision}")
 
     return ParamsPerJob
@@ -539,6 +546,15 @@ def getPerfJobs() {
                                     fingerprintArtifacts: true,
                                     target: "${job_framework}/${job_model}",
                                     optional: true)
+                            if (collect_tuned_model){
+                                copyArtifacts(
+                                        projectName: sub_jenkins_job,
+                                        selector: specific("${downstreamJob.getNumber()}"),
+                                        filter: "${job_framework}-${job_model}-tune*",
+                                        fingerprintArtifacts: true,
+                                        target: "${job_framework}/tuned_model",
+                                        optional: true)
+                            }
 
                             // Archive in Jenkins
                             archiveArtifacts artifacts: "${job_framework}/${job_model}/**", allowEmptyArchive: true
@@ -1245,6 +1261,13 @@ node( node_label ) {
                }
                 if (RUN_UT){
                     collectUTLog()
+                }
+
+                if (collect_tuned_model){
+                    sh (
+                            script: 'cp -r ./tensorflow/tuned_model /tmp/',
+                            returnStdout: true
+                    ).trim()
                 }
             }
         }

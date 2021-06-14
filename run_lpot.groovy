@@ -137,6 +137,12 @@ if ('val_branch' in params && params.val_branch != ''){
 }
 echo "val_branch: ${val_branch}"
 
+collect_tuned_model=false
+if (params.collect_tuned_model != null){
+    collect_tuned_model=params.collect_tuned_model
+}
+echo "collect_tuned_model = ${collect_tuned_model}"
+
 torchvision_versions = [
         "1.8.0": "0.9.0",
         "1.7.0": "0.8.0",
@@ -782,8 +788,8 @@ node( sub_node_label ) {
                         precision_list.each { precision ->
                             echo "precision is ${precision}"
                             // oob only support dummy data
-                                if (['oob_models'].contains(model_src_dir) || model == 'style_transfer') {
-                                mode_list = ['latency']
+                            if (['oob_models'].contains(model_src_dir) || model == 'style_transfer') {
+                                mode_list = mode_list - 'accuracy'
                                 echo "mode list is ${mode_list}"
                             }
                             mode_list.each { mode ->
@@ -806,8 +812,12 @@ node( sub_node_label ) {
     } finally {
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,summary.log,tuning_info.log,reference_data.json", excludes: null
+            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,summary.log,tuning_info.log,reference_data.json,${framework}-${model}-tune*", excludes: null
             fingerprint: true
+            if (collect_tuned_model){
+                archiveArtifacts artifacts: "${framework}-${model}-tune*", excludes: null
+                fingerprint: true
+            }
         }
     }
     
