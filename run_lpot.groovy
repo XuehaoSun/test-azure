@@ -687,50 +687,58 @@ node( sub_node_label ) {
 
             getReferenceData()
 
-            // get params for tuning and benchmark
-            def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
-            model_src_dir = modelConf."model_src_dir"
-            dataset_location = modelConf."dataset_location"
-            input_model = modelConf."input_model"
-            yaml = modelConf."yaml"
-
-            //mr test will cover different strategies, the other test mode will use the passed strategy
-            if ( MR_source_branch != '' ){
-                if (framework == "tensorflow"){
-                    strategy = "basic"
-                    if (model_src_dir == "image_recognition"){
-                        dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
-                        println("MR test tensorflow model_src_dir is image_recognition.")
-                        println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
-                    }
-                    if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
-                        // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
-                        dataset_location = "/tf_dataset/tensorflow/mini-coco-500.record"
-                        withEnv(["model_src_dir=${model_src_dir}"]) {
-                            sh(
-                                script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
-                                returnStdout: true
-                            ).trim()
+            stage("Get model parameters") {
+                println("Getting model parameters...")
+                try {
+                    // get params for tuning and benchmark
+                    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
+                    model_src_dir = modelConf."model_src_dir"
+                    dataset_location = modelConf."dataset_location"
+                    input_model = modelConf."input_model"
+                    yaml = modelConf."yaml"
+                } catch(e) {
+                    error("Could not load parameters for ${framework} ${model}")
+                }
+    
+                //mr test will cover different strategies, the other test mode will use the passed strategy
+                if ( MR_source_branch != '' ){
+                    if (framework == "tensorflow"){
+                        strategy = "basic"
+                        if (model_src_dir == "image_recognition"){
+                            dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
+                            println("MR test tensorflow model_src_dir is image_recognition.")
+                            println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
                         }
+                        if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
+                            // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
+                            dataset_location = "/tf_dataset/tensorflow/mini-coco-500.record"
+                            withEnv(["model_src_dir=${model_src_dir}"]) {
+                                sh(
+                                    script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
+                                    returnStdout: true
+                                ).trim()
+                            }
+                        }
+                        if (model == "inception_v1"){
+                            // set kl test for inception_v1
+                            algorithm='kl'
+                        }
+                    }else if(framework == "pytorch" && model == "resnet18"){
+                        strategy = "bayesian"
+                    }else if(framework == "mxnet" && model == "resnet50v1"){
+                        strategy = "mse"
+                    }else{
+                        strategy = "basic"
                     }
-                    if (model == "inception_v1"){
-                        // set kl test for inception_v1
-                        algorithm='kl'
-                    }
-                }else if(framework == "pytorch" && model == "resnet18"){
-                    strategy = "bayesian"
-                }else if(framework == "mxnet" && model == "resnet50v1"){
-                    strategy = "mse"
-                }else{
-                    strategy = "basic"
+                }
+    
+                if ( MR_source_branch != '' ){
+                    timeout="timeout 5400"
                 }
             }
 
-            if ( MR_source_branch != '' ){
-                timeout="timeout 5400"
-            }
-            echo "Tuning timeout ${timeout}"
             stage("Tuning") {
+                echo "Tuning timeout ${timeout}"
 
                 sh """#!/bin/bash -x
                     echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"

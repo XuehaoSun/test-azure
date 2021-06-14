@@ -334,7 +334,7 @@
       "new_benchmark": false
     },
     "rnnt": {
-      "model_src_dir": "eager/speech_recognition/inference/rnnt",
+      "model_src_dir": "eager/speech_recognition/rnnt",
       "dataset_location": "/tf_dataset/pytorch/rnnt/convert_dataset/",
       "input_model": "/tf_dataset/pytorch/rnnt/rnnt.pt",
       "yaml": "conf.yaml",
@@ -544,6 +544,15 @@
       "model_src_dir": "eager/huggingface_models",
       "dataset_location": "/tf_dataset/pytorch/glue_data_new",
       "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/xlm_mrpc_dynamic",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": false
+    },
+    "ssd_resnet34": {
+      "model_src_dir": "fx/object_detection/ssd_resnet34/ptq",
+      "dataset_location": "/tf_dataset2/datasets/coco2017/resized_1200x1200/coconpy",
+      "input_model": "/tf_dataset2/models/pytorch/ssd_resnet34/resnet34-ssd1200.pytorch",
       "yaml": "conf.yaml",
       "strategy": "basic",
       "batch_size": 1,

@@ -127,12 +127,18 @@ main() {
       fi
     fi
 
-    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "rnnt" ]]; then
-        cd ${model_src_dir}/../loadgen
-        echo "Checking gcc version:"
-        gcc -v
-        python setup.py install
-        cd ${model_src_dir}
+    if [[ "${framework}" == "pytorch" ]]; then
+        if [[ "${model}" == "rnnt" ]] || [[ "${model}" == "ssd_resnet34" ]]; then
+            if [ ${model} == "rnnt" ];then
+                cd ${model_src_dir}/../../../utils/MLPerf/loadgen
+            else
+                cd ${model_src_dir}/../../../../utils/MLPerf/loadgen
+            fi
+            echo "Checking gcc version:"
+            gcc -v
+            python setup.py install
+            cd ${model_src_dir}
+        fi
     fi
 
     echo -e "\nGetting git information..."
@@ -187,13 +193,23 @@ main() {
         input_model=${model_src_dir}/bert_base_mrpc
     fi
 
+    echo "Checking topology..."
+    echo "Framework: '${framework}'"
+    echo "Model: '${model}'"
+    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34" ]; then
+        topology="ssd-resnet34"
+        echo "Setting topology to ${topology}"
+    fi
+
+    echo "Topology is '${topology}'"
+
     # run_tuning.sh
     starttime=`date +'%Y-%m-%d %H:%M:%S'`
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
     # pytorch need to use default output_model path
     if [ ${framework} != "pytorch" ]; then
       parameters="${parameters} --output_model=${q_model}"
-    elif [ "${model}" == "rnnt" ]; then
+    elif [ "${model}" == "rnnt" ] || [ "${model}" == "ssd_resnet34" ]; then
         parameters=" ${parameters} --output_model=${model_src_dir}/saved_results"
     fi
 
@@ -237,12 +253,16 @@ main() {
     collect_pb_size || true
 
     # copy tuning result to /tmp, dlrm is too big and space consuming
+    if [ -z ${q_model} ]; then
+        return
+    fi
     if [[ "${model}" == "dlrm"* ]];then
         rm -rf /tmp/pytorch-"${model}"-tune*
     fi
     save_path=/tmp/${framework}-${model}-tune-$(date +%s)
     echo "!!!tune model save path is ${HOSTNAME}:${save_path}/* !!!"
     mkdir -p "${save_path}"
+    echo "Copying \"${q_model}*\" to \"${save_path}\""
     cp -r "${q_model}"* "${save_path}"
 }
 
@@ -297,6 +317,10 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/pascal_voc_seg\/tfrecord/s|root:.*|root: $dataset_location|g" ${yaml}
             fi
         fi
+    fi
+
+    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34" ]; then
+        sed -i "/convert_dataset\/annotations\/instances_val2017\.json/s|anno_dir:.*|anno_dir: ${dataset_location}/annotations/instances_val2017.json |g" ${yaml}
     fi
 
     update_yaml_params=""
