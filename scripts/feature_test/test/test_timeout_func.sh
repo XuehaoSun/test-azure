@@ -16,50 +16,18 @@ function main {
   cd ${WORKSPACE}/lpot-models/examples/helloworld || return
   python train.py
 
-  # 3. test for keras models tuning
-  helloworld_keras 2>&1 | tee ${WORKSPACE}/helloworld_keras.log
-
-  # 4. test for frozen pb tuning
-  helloworld_pb 2>&1 | tee ${WORKSPACE}/helloworld_pb.log
-
   # 5. test for timeout function
   helloworld_timeout 2>&1 | tee ${WORKSPACE}/helloworld_timeout.log
 }
 
 function helloworld_timeout {
   # update timeout
-  yaml=${WORKSPACE}/lpot-models/examples/helloworld/tf2.x/conf.yaml
-  python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=1
+  yaml=${WORKSPACE}/lpot-models/examples/helloworld/tf_example2/conf.yaml
+  python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=10
   echo "yaml after update timeout...."
   cat ${yaml}
-  helloworld_keras
-  python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=200
-  echo "yaml after update timeout...."
-  cat ${yaml}
-  helloworld_keras
-}
-
-function helloworld_pb {
-  cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-  if [ ! -d frozen_models ]; then
-    echo " frozen pb not generated. Exiting..."
-    return
-  fi
-  create_conda_env 1.15.2
+  cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example2 || return
   lpot_install
-  cd ${WORKSPACE}/lpot-models/examples/helloworld/tf1.x || return
-  python test.py
-}
-
-function helloworld_keras {
-  cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-  if [ ! -d models ]; then
-    echo " keras models not generated. Exiting..."
-    return
-  fi
-  create_conda_env 2.3.0
-  lpot_install
-  cd ${WORKSPACE}/lpot-models/examples/helloworld/tf2.x || return
   python test.py
 }
 
