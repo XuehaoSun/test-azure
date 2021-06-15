@@ -92,6 +92,11 @@ main() {
             export nnUNet_preprocessed=${dataset_location}
             export RESULTS_FOLDER=${model_src_dir}/build/result
         fi
+        if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "maskrcnn"* ]]; then
+            echo "Checking gcc version:"
+            gcc -v
+            bash install.sh
+        fi
     else
         echo "[ERROR] model_src_dir \"${model_src_dir}\" not exists."
         exit 1
@@ -185,7 +190,11 @@ main() {
     elif [ ${framework} == "onnxrt" ]; then
         q_model="${q_model}.onnx"
     elif [ ${framework} == "pytorch" ]; then
-        q_model=""
+        if [ ${model} == "maskrcnn_fx" ]; then
+            q_model="${q_model}.pth"
+        else
+            q_model=""
+        fi
     fi
 
     if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
