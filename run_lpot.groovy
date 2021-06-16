@@ -262,6 +262,7 @@ def cleanup() {
         set -x
         cd $WORKSPACE
         rm -rf *
+        rm -rf .git
         sudo rm -rf *
         sudo rm -rf .git
         # set perf BKC
