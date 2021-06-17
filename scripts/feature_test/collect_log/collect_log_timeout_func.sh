@@ -5,7 +5,7 @@ echo "feature_name: ${feature}"
 echo "summaryLog: ${summaryLog}"
 
 test_status="check"
-if [ $(grep -c 'Terminated' ${WORKSPACE}/helloworld_timeout.log) == 1 ];then
+if [ $(grep -c 'Terminated' ${WORKSPACE}/${feature_name}/helloworld_timeout.log) == 1 ];then
     test_status="pass"
 fi
 
