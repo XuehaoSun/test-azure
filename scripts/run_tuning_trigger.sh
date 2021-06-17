@@ -188,6 +188,11 @@ main() {
         q_model=""
     fi
 
+    # Workaround for ONNX models from remote storage
+    if [ "${framework}" == "onnxrt" ]; then
+        copy_model
+    fi
+
     if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
         cp -r ${input_model} ${model_src_dir}/bert_base_mrpc
         input_model=${model_src_dir}/bert_base_mrpc
@@ -342,6 +347,14 @@ function update_yaml_config {
     fi
 
     echo "Tuning strategy: ${strategy}"
+}
+
+function copy_model {
+    echo "Copying model to workspace."
+    model_name=$(basename ${input_model})
+    local_model="${WORKSPACE}/${model_name}"
+    cp -r "${input_model}" "${local_model}"
+    input_model=${local_model}
 }
 
 main
