@@ -51,7 +51,7 @@ function main {
 
 function generate_inference {
 
-    awk -v framework="${framework}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
+    awk -v framework="${framework}" -v fw_version="${fw_version}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
         BEGINE {
             fp32_ms_bs = "nan";
             fp32_ms_value = "nan";
@@ -73,48 +73,48 @@ function generate_inference {
             int8_acc_value = "nan";
             int8_acc_url = "nan";
         }{
-            if($1 == os && $2 == platform && $3 == framework && $5 == model) {
+            if($1 == os && $2 == platform && $3 == framework && $4 == fw_version && $6 == model) {
                 // FP32
-                if($4 == "FP32") {
+                if($5 == "FP32") {
                     // Latency
-                    if($7 == "Latency") {
-                        fp32_ms_bs = $8;
-                        fp32_ms_value = $9;
-                        fp32_ms_url = $10;
+                    if($8 == "Latency") {
+                        fp32_ms_bs = $9;
+                        fp32_ms_value = $10;
+                        fp32_ms_url = $11;
                     }
                     // Throughput
-                    if($7 == "Throughput") {
-                        fp32_fps_bs = $8;
-                        fp32_fps_value = $9;
-                        fp32_fps_url = $10;
+                    if($8 == "Throughput") {
+                        fp32_fps_bs = $9;
+                        fp32_fps_value = $10;
+                        fp32_fps_url = $11;
                     }
                     // Accuracy
-                    if($7 == "Accuracy") {
-                        fp32_acc_bs = $8;
-                        fp32_acc_value = $9;
-                        fp32_acc_url = $10;
+                    if($8 == "Accuracy") {
+                        fp32_acc_bs = $9;
+                        fp32_acc_value = $10;
+                        fp32_acc_url = $11;
                     }
                 }
                 
                 // INT8
-                if($4 == "INT8") {
+                if($5 == "INT8") {
                     // Latency
-                    if($7 == "Latency") {
-                        int8_ms_bs = $8;
-                        int8_ms_value = $9;
-                        int8_ms_url = $10;
+                    if($8 == "Latency") {
+                        int8_ms_bs = $9;
+                        int8_ms_value = $10;
+                        int8_ms_url = $11;
                     }
                     // Throughput
-                    if($7 == "Throughput") {
-                        int8_fps_bs = $8;
-                        int8_fps_value = $9;
-                        int8_fps_url = $10;
+                    if($8 == "Throughput") {
+                        int8_fps_bs = $9;
+                        int8_fps_value = $10;
+                        int8_fps_url = $11;
                     }
                     // Accuracy
-                    if($7 == "Accuracy") {
-                        int8_acc_bs = $8;
-                        int8_acc_value = $9;
-                        int8_acc_url = $10;
+                    if($8 == "Accuracy") {
+                        int8_acc_bs = $9;
+                        int8_acc_value = $10;
+                        int8_acc_url = $11;
                     }
                 }
             }
@@ -128,17 +128,17 @@ function generate_inference {
 
 function generate_html_core {
     
-    tuning_strategy=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $5}')
-    tuning_time=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $6}')
-    tuning_count=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $7}')
-    tuning_log=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F';' '{print $8}')
-    echo "<tr><td rowspan=3>${platform}</td><td rowspan=3>${os}</td><td rowspan=3>${framework}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
+    tuning_strategy=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $6}')
+    tuning_time=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $7}')
+    tuning_count=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $8}')
+    tuning_log=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $9}')
+    echo "<tr><td rowspan=3>${platform}</td><td rowspan=3>${os}</td><td rowspan=3>${framework}</td><td rowspan=3>${fw_version}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
     echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
 
-    tuning_strategy=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $5}')
-    tuning_time=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
-    tuning_count=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $7}')
-    tuning_log=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
+    tuning_strategy=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
+    tuning_time=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $7}')
+    tuning_count=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
+    tuning_log=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $9}')
 
     echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
               -v pb_size="${pb_size}" -v last_pb_size="${last_pb_size}" \
@@ -326,17 +326,21 @@ function generate_results {
             frameworks=$(sed '1d' ${summaryLog} |grep "^${os};${platform}" |cut -d';' -f3 | awk '!a[$0]++')
             for framework in ${frameworks[@]}
             do
-                models=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework}" |cut -d';' -f5 | awk '!a[$0]++')
-                for model in ${models[@]}
+                fw_versions=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework}" |cut -d';' -f4 | awk '!a[$0]++')
+                for fw_version in ${fw_versions[@]}
                 do
-                    current_values=$(generate_inference ${summaryLog})
-                    last_values=$(generate_inference ${summaryLogLast})
+                    models=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework};${fw_version}" |cut -d';' -f6 | awk '!a[$0]++')
+                    for model in ${models[@]}
+                    do
+                        current_values=$(generate_inference ${summaryLog})
+                        last_values=$(generate_inference ${summaryLogLast})
 
-                    # PB Size
-                    pb_size=$(grep "^${os};${platform};${framework};${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
-                    last_pb_size=$(grep "^${os};${platform};${framework};${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
+                        # PB Size
+                        pb_size=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
+                        last_pb_size=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
 
-                    generate_html_core
+                        generate_html_core
+                    done
                 done
             done
         done
@@ -395,7 +399,7 @@ function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
             <tr>
-                <td colspan="18"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+                <td colspan="19"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
                 <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
             </tr>
         </table>

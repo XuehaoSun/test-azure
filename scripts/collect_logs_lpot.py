@@ -10,7 +10,6 @@ import json
 
 parser = argparse.ArgumentParser(allow_abbrev = False)
 parser.add_argument("--framework", type=str, required=True)
-parser.add_argument("--framework_version", type=str, default="")
 parser.add_argument("--python_version", type=str, default="")
 parser.add_argument("--model", type=str, required=True)
 parser.add_argument("--mr", action="store_true")
@@ -29,13 +28,14 @@ cpu_name = os.environ.get("CPU_NAME", "unknown").lower()
 
 result = Result()
 result.framework = args.framework
-result.version = args.framework_version
+result.version = "N/A"
 result.python = args.python_version
 result.model = args.model
 result.os = os_name
 result.platform = cpu_name
 
 def main():
+    update_framework_version(result)
     tuning_log = os.path.join(args.logs_dir, f"{args.framework}-{args.model}-{os_name}-{cpu_name}-tune.log")
     read_tuning_log(tuning_log)
 
@@ -233,6 +233,20 @@ def summarize_values(key: str, value: list):
     if key in ["accuracy", "batch_size"]:
         return value[0]
 
+
+def update_framework_version(result: Result) -> None:
+    fw_modules = {
+        "tensorflow": "tensorflow",
+        "onnxrt": "onnxruntime",
+        "mxnet": "mxnet",
+        "pytorch": "torch"
+    }
+    fw_module_name = fw_modules.get(result.framework, None)
+    if fw_module_name is None:
+        return
+    import importlib
+    fw_module = importlib.import_module(fw_module_name)
+    result.version = fw_module.__version__
 
 if __name__ == "__main__":
     main()

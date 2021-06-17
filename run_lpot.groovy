@@ -490,7 +490,6 @@ def checkReferenceData() {
                 // Collect logs
                 cmd = "python ${WORKSPACE}/lpot-validation/scripts/collect_logs_lpot.py \
                         --framework=\"${framework}\" \
-                        --framework_version=\"${framework_version}\" \
                         --python_version=\"${python_version}\" \
                         --model=\"${model}\" \
                         --logs_dir=\"${rerun_path}\" \
@@ -547,7 +546,6 @@ def collectLogs() {
 
         cmd = "python ${WORKSPACE}/lpot-validation/scripts/collect_logs_lpot.py \
         --framework=\"${framework}\" \
-        --framework_version=\"${framework_version}\" \
         --python_version=\"${python_version}\" \
         --model=\"${model}\" \
         --logs_dir=\"${WORKSPACE}\" \

@@ -6,10 +6,9 @@ from utils import JsonSerializer
 
 
 class ResultCollector(JsonSerializer):
-    def __init__(self, data: Optional[Dict[str, Any]] = {}):
+    def __init__(self):
         super().__init__()
         self.results: List[Result] = []
-        self.additional_data = data
 
     def read_perf(self, perf_log_path: str):
         with open(perf_log_path, newline="") as summary_file:
@@ -71,7 +70,7 @@ class ResultCollector(JsonSerializer):
         result.os = raw_data.get("os")
         result.platform = raw_data.get("platform")
         result.framework = raw_data.get("framework")
-        result.version = self.additional_data.get(f"{result.framework}_version", "")
+        result.version = raw_data.get("version")
         result.platform = raw_data.get("platform")
         result.model = raw_data.get("model")
 
@@ -90,24 +89,24 @@ class ResultCollector(JsonSerializer):
         result.platform = data[1]
 
         result.framework = data[2]
-        result.version = self.additional_data.get(f"{result.framework}_version", "")
-        result.model = data[3]
+        result.version = data[3]
+        result.model = data[4]
 
-        strategy = data[4]
+        strategy = data[5]
         try:
-            time = int(data[5])
+            time = int(data[6])
         except:
             time = ""
         
         try:
-            trials = int(data[6])
+            trials = int(data[7])
         except:
             trials = ""
 
-        url = data[7]
+        url = data[8]
 
         try:
-            model_size_ratio = float(data[8]) / int(data[9])
+            model_size_ratio = float(data[9]) / int(data[10])
         except:
             model_size_ratio = "NaN"
         return result, strategy, time, trials, model_size_ratio, url
