@@ -42,6 +42,7 @@ function set_TF_env {
     export TF_ENABLE_MKL_NATIVE_FORMAT=0
 
     export PATH=${HOME}/miniconda3/bin/:$PATH
+    echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
 }
 
@@ -51,6 +52,7 @@ function set_MXNet_env {
     export OMP_NUM_THREADS=28
 
     export PATH=${HOME}/miniconda3/bin/:$PATH
+    echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
 }
 
@@ -82,6 +84,7 @@ function set_ONNXRT_env {
     export KMP_AFFINITY=granularity=fine,noduplicates,compact,1,0
     export OMP_NUM_THREADS=28
     export PATH=${HOME}/miniconda3/bin/:$PATH
+    echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
 }
 
@@ -98,9 +101,6 @@ function set_environment {
         *)
             echo "Framework ${framework} not recognized."; exit 1;;
     esac
-
-    echo "Real conda environment..."
-    conda info --env
 
     echo "Checking pip list..."
     python -V
