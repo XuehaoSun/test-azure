@@ -749,7 +749,7 @@ def collectLog() {
                         if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/tuning_info.log ]]; then
                             cat ${WORKSPACE}/${job_framework}/${job_model}/tuning_info.log >> ${WORKSPACE}/tuning_info.log
                         else
-                            echo "${system};Unknown;${job_framework};${job_model};basic;;;${RUN_DISPLAY_URL};;;" >> ${WORKSPACE}/tuning_info.log
+                            echo "${system};Unknown;${job_framework};N/A;${job_model};basic;;;${RUN_DISPLAY_URL};;;" >> ${WORKSPACE}/tuning_info.log
                         fi
                     """
 
@@ -763,8 +763,8 @@ def collectLog() {
                         if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/summary.log ]]; then
                             cat ${WORKSPACE}/${job_framework}/${job_model}/summary.log >> ${WORKSPACE}/summary.log
                         else
-                            echo "${system};Unknown;${job_framework};INT8;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
-                            echo "${system};Unknown;${job_framework};FP32;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                            echo "${system};Unknown;${job_framework};N/A;INT8;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                            echo "${system};Unknown;${job_framework};N/A;FP32;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                         fi
                     """
                 }
@@ -1158,11 +1158,11 @@ node( node_label ) {
         // Setup logs path
         echo "WORKSPACE IS ${WORKSPACE}"
         SUMMARYTXT = "${WORKSPACE}/summary.log"
-        writeFile file: SUMMARYTXT, text: "OS;Platform;Framework;Precision;Model;Mode;Type;BS;Value;Url\n"
+        writeFile file: SUMMARYTXT, text: "OS;Platform;Framework;Version;Precision;Model;Mode;Type;BS;Value;Url\n"
         summaryLogLast = "${WORKSPACE}/reference/summary.log"
 
         TUNETXT = "${WORKSPACE}/tuning_info.log"
-        writeFile file: TUNETXT, text: "OS;Platform;Framework;Model;Strategy;Tune_time\n"
+        writeFile file: TUNETXT, text: "OS;Platform;Framework;Version;Model;Strategy;Tune_time\n"
         tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
 
         coverage_summary = "${WORKSPACE}/unittest/coverage_summary.log"
