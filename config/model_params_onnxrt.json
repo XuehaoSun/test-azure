@@ -49,7 +49,7 @@
       "model_src_dir": "language_translation/bert",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
       "input_model": "/tf_dataset2/models/onnx/bert_base_MRPC/bert.onnx",
-      "yaml": "bert_static.yaml",
+      "yaml": "bert.yaml",
       "strategy": "basic",
       "batch_size": 8,
       "new_benchmark": true
