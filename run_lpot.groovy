@@ -503,6 +503,7 @@ def checkReferenceData() {
                         export PATH=${HOME}/anaconda3/bin/:$PATH
                     fi
                     source activate ${conda_env_name}
+                    pip list
                     ${cmd}
                 """
 
@@ -574,6 +575,7 @@ def collectLogs() {
                 export PATH=${HOME}/anaconda3/bin/:$PATH
             fi
             source activate ${conda_env_name}
+            pip list
             ${cmd}
         """
 
@@ -611,7 +613,6 @@ node( sub_node_label ) {
                 }else{
                     println("Test need a special local conda env, DO NOT create again!!!")
                 }
-
             }
 
             stage("Download") {
@@ -740,6 +741,18 @@ node( sub_node_label ) {
                 if ( MR_source_branch != '' ){
                     timeout="timeout 5400"
                 }
+
+                // Update conda env name
+                echo "Getting conda env name..."
+                env_name = sh(
+                    returnStdout: true, 
+                    script: """
+                        source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --model_src_dir=${model_src_dir} --conda_env_name=${conda_env_name}
+                        get_conda_env_name
+                    """
+                ).trim()
+                echo "Detected env name: \"${env_name}\""
+                conda_env_name = env_name
             }
 
             stage("Tuning") {
