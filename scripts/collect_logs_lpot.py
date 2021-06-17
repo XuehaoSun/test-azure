@@ -35,7 +35,7 @@ result.os = os_name
 result.platform = cpu_name
 
 def main():
-    update_framework_version(result)
+    result.version = get_framework_version(result.framework)
     tuning_log = os.path.join(args.logs_dir, f"{args.framework}-{args.model}-{os_name}-{cpu_name}-tune.log")
     read_tuning_log(tuning_log)
 
@@ -234,19 +234,22 @@ def summarize_values(key: str, value: list):
         return value[0]
 
 
-def update_framework_version(result: Result) -> None:
+def get_framework_version(framework: str) -> None:
+    print(f"Checking {framework} version")
     fw_modules = {
         "tensorflow": "tensorflow",
         "onnxrt": "onnxruntime",
         "mxnet": "mxnet",
         "pytorch": "torch"
     }
-    fw_module_name = fw_modules.get(result.framework, None)
+    fw_module_name = fw_modules.get(framework, None)
     if fw_module_name is None:
         return
     import importlib
     fw_module = importlib.import_module(fw_module_name)
-    result.version = fw_module.__version__
+    version = fw_module.__version__
+    print("Framework version is {version}")
+    return version
 
 if __name__ == "__main__":
     main()
