@@ -327,7 +327,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                 --yaml=${yaml} \
                 --cpu=${cpu} \
                 --output_path=${output_path}"
-        if (framework == "onnxrt" && model_src_dir.contains("language_translation")) {
+        if (framework == "onnxrt") {
             cmd += " --dataset_location=\"${dataset_location}\""
         }
         if (framework == "tensorflow" && model == "bert_base_mrpc") {

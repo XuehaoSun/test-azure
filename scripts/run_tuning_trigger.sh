@@ -181,6 +181,10 @@ main() {
         topology="${model%_qat_fx}"
     fi
 
+    if [[ "${framework}" == "onnxrt" ]] && [[ "${model}" == "gpt2_lm_head_wikitext_model_zoo" ]]; then
+        topology="gpt2_lm_wikitext2"
+    fi
+
     q_model=${WORKSPACE}/${framework}-${model}-tune
     if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras" ]];  then
         q_model="${q_model}.pb"
@@ -199,6 +203,10 @@ main() {
 
     # Workaround for ONNX models from remote storage
     if [ "${framework}" == "onnxrt" ]; then
+        if [ "${model}" == "bert_squad_model_zoo" ] || [ "${model}" == "mobilebert_squad_mlperf" ]; then
+            bert_dirname=$(dirname ${input_model})
+            cp -r ${bert_dirname}/uncased_L-12_H-768_A-12 ${model_src_dir}/
+        fi
         copy_model
     fi
 
@@ -238,7 +246,7 @@ main() {
         done
     fi
 
-    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" != *"language_translation"* ]]; then
+    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" != *"language_translation"* ]] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
       parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
     fi
 
@@ -248,6 +256,13 @@ main() {
 
     if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
         parameters="${parameters} --dataset_location=${dataset_location}"
+    fi
+
+    if [ "${framework}" == "onnxrt" ]; then
+        onnxrt_ds_location_models=("bert_squad_model_zoo" "mobilebert_squad_mlperf" "gpt2_lm_head_wikitext_model_zoo")
+        if [[ " ${onnxrt_ds_location_models[@]} " =~ " ${model} " ]]; then
+            parameters="${parameters} --dataset_location=${dataset_location}"
+        fi
     fi
 
     update_yaml_config
@@ -322,6 +337,7 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
             fi
             if [ "${model}" == "efficientnet_b0" ]; then
+                echo "Updating imagenet dataset in ${yaml} yaml"
                 sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
                 sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
                 sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
@@ -330,6 +346,12 @@ function update_yaml_config {
             if [ "${model}" == "deeplab" ]; then
                 sed -i "/\/path\/to\/pascal_voc_seg\/tfrecord/s|root:.*|root: $dataset_location|g" ${yaml}
             fi
+        fi
+        if [ "${framework}" == "onnxrt" ] && [ "${model}" == "resnet_v1_5_mlperf" ];  then
+            sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
+            sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
+            sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+            sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
         fi
     fi
 
