@@ -181,7 +181,8 @@ def do_binary_build() {
             export LPOT_WHL=${WORKSPACE}/lpot*.whl
             pip install pyyaml six 
             conda install patchelf conda-build conda-verify -y
-            conda config --add channels conda-forge 
+            conda config --add channels conda-forge
+            conda config --add channels fastai
             conda build meta.yaml
             cp /home/tensorflow/miniconda3/envs/${conda_env}/conda-bld/noarch/lpot-*-py_0.tar.bz2 ${WORKSPACE}/
         '''
