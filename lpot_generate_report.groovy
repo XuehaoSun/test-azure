@@ -68,11 +68,7 @@ node(NODE_NAME) {
                 pip install -r ./lpot-validation/scripts/report_generator/requirements.txt
                 python ./lpot-validation/scripts/report_generator/generate_excel_report.py \
                     --tuning-log=${WORKSPACE}/logs/tuning_info.log \
-                    --summary-log=${WORKSPACE}/logs/summary.log \
-                    --tensorflow-version=${tensorflow_version} \
-                    --mxnet-version=${mxnet_version} \
-                    --pytorch-version=${pytorch_version} \
-                    --onnxruntime-version=${onnxruntime_version}
+                    --summary-log=${WORKSPACE}/logs/summary.log
             '''
         }
     }
