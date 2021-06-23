@@ -34,7 +34,7 @@ def write_header():
     header_format = workbook.add_format({'bold': 1, 'align': 'center'})
     worksheet.merge_range("D1:G1", "Tuning", header_format)
     worksheet.merge_range("H1:J1", "Accuracy", header_format)
-    worksheet.merge_range("K1:M1", "Performance", header_format)
+    worksheet.merge_range("K1:R1", "Performance", header_format)
 
     header = [
         {"header": "Platform"},
@@ -51,7 +51,10 @@ def write_header():
         {"header": "Acc Ratio[(INT8-FP32)/FP32]"},
         {"header": "INT8 realtime(ms)"},
         {"header": "FP32 realtime(ms)"},
-        {"header": "Realtime Latency Ratio[FP32/INT8]"}
+        {"header": "Realtime Latency Ratio[FP32/INT8]"},
+        {"header": "INT8 throughput(fps)"},
+        {"header": "FP32 throughput(fps))"},
+        {"header": "Throughput Ratio[INT8/FP32]"},
     ]
 
     worksheet.add_table(1, 0, len(result_collector.results) + 1, len(header)-1, {"header_row": True, "columns": header})
@@ -71,10 +74,19 @@ def write_row(row, result):
 
     int8_latency = result.performance.latency.get("int8", {}).get("value", "")
     fp32_latency = result.performance.latency.get("fp32", {}).get("value", "")
+
     try:
         latency_ratio = float(fp32_latency) / float(int8_latency)
     except:
         latency_ratio = "N/A"
+
+    int8_throughput = result.performance.throughput.get("int8", {}).get("value", "")
+    fp32_throughput = result.performance.throughput.get("fp32", {}).get("value", "")
+
+    try:
+        throughput_ratio = float(int8_throughput) / float(fp32_throughput)
+    except:
+        throughput_ratio = "N/A"
 
     default_format = workbook.add_format()
     default_format.set_text_wrap()
@@ -82,6 +94,7 @@ def write_row(row, result):
     model_size_format = workbook.add_format({'num_format': '0.00x'})
     accuracy_format = workbook.add_format({'num_format': '0.00%'})
     latency_format = workbook.add_format({'num_format': '0.00x'})
+    throughput_format = workbook.add_format({'num_format': '0.00x'})
     data = {
         "platform": result.platform,
         "os": result.os,
@@ -97,14 +110,18 @@ def write_row(row, result):
         "acc_ratio": acc_ratio,
         "int8_latency": int8_latency,
         "fp32_latency": fp32_latency,
-        "latency_ratio": latency_ratio
+        "latency_ratio": latency_ratio,
+        "int8_throughput": int8_throughput,
+        "fp32_throughput": fp32_throughput,
+        "throughput_ratio": throughput_ratio
     }
 
     col = 0
     format_map = {
         "model_size_ratio": model_size_format,
         "acc_ratio": accuracy_format,
-        "latency_ratio": latency_format
+        "latency_ratio": latency_format,
+        "throughput_ratio": throughput_format
     }
     for key, value in data.items():
         cell_format = format_map.get(key, default_format)
