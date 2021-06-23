@@ -112,7 +112,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
         lpot_config.evaluation.accuracy.configs = None
     except AttributeError:
-        print("Could not update accuracy config.")
+        print("[ WARNING ] Could not update accuracy config.")
 
     lpot_config.dump(yaml_path)
     print("\nPrint updated yaml... ")
@@ -132,15 +132,24 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         ])
 
     # Workaround for ONNXRT LT models
-    if args.framework == "onnxrt" and "language_translation" in args.model_src_dir:
-        onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "benchmark"
-        parameters = [
-            f"--topology={args.model}",
-            f"--dataset_location={args.dataset_location}",
-            f"--input_model={input_model}",
-            f"--mode={onnxrt_lt_mode}",
-            f"--batch_size={args.batch_size}",
-        ]
+    if args.framework == "onnxrt":
+        if "language_translation" in args.model_src_dir:
+            onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "benchmark"
+            parameters = [
+                f"--topology={args.model}",
+                f"--dataset_location={args.dataset_location}",
+                f"--input_model={input_model}",
+                f"--mode={onnxrt_lt_mode}",
+                f"--batch_size={args.batch_size}",
+            ]
+        elif args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
+            onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
+            parameters = [
+                f"--config={yaml_path}",
+                f"--input_model={input_model}",
+                f"--mode={onnxrt_lt_mode}",
+                f"--dataset_location={args.dataset_location}"
+            ]
 
 
     cmd = get_executable("benchmark")
@@ -179,15 +188,18 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
     lpot_config = Config()
     lpot_config.load(yaml_path)
 
-    if lpot_config.evaluation.performance.dataloader:
-        lpot_config.evaluation.performance.dataloader.batch_size = batch_size
-    lpot_config.evaluation.performance.iteration = iters
+    try:
+        if lpot_config.evaluation.performance.dataloader:
+            lpot_config.evaluation.performance.dataloader.batch_size = batch_size
+        lpot_config.evaluation.performance.iteration = iters
 
-    lpot_config.evaluation.performance.configs.cores_per_instance = int(ncores_per_instance)
-    lpot_config.evaluation.performance.configs.num_of_instance = int(num_benchmark_cores // ncores_per_instance)
-    lpot_config.evaluation.performance.configs.intra_num_of_threads = None
-    lpot_config.evaluation.performance.configs.inter_num_of_threads = None
-    lpot_config.evaluation.performance.configs.kmp_blocktime = None
+        lpot_config.evaluation.performance.configs.cores_per_instance = int(ncores_per_instance)
+        lpot_config.evaluation.performance.configs.num_of_instance = int(num_benchmark_cores // ncores_per_instance)
+        lpot_config.evaluation.performance.configs.intra_num_of_threads = None
+        lpot_config.evaluation.performance.configs.inter_num_of_threads = None
+        lpot_config.evaluation.performance.configs.kmp_blocktime = None
+    except:
+        print("[ WARNING ] Could not update performance config.")
 
     lpot_config.dump(yaml_path)
     print("\nPrint updated yaml... ")
@@ -217,6 +229,14 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
             f"--batch_size={batch_size}",
             f"--iters={iters}",
         ]
+    elif args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
+            onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
+            parameters = [
+                f"--config={yaml_path}",
+                f"--input_model={input_model}",
+                f"--mode={onnxrt_lt_mode}",
+                f"--dataset_location={args.dataset_location}"
+            ]
 
     cmd = get_executable("benchmark")
     cmd.extend(parameters)
