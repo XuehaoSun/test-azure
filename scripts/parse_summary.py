@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import csv
 
 from utils.result import Measurement, Result
 
@@ -14,40 +15,39 @@ def parse_args():
 def parse_summary(summary_file: str, output_name: str):
     results = []
     if os.path.isfile(summary_file):
-        with open(summary_file, "r") as f:
-            for line in f:
-                if line.startswith("OS;Platform;Framework;"):  # Skip header
-                    continue
-                result = parse_result(line)
+        with open(summary_file, newline="") as summary_file:
+            header = summary_file.readline().lower().strip().split(";")
+            reader = csv.DictReader(summary_file, fieldnames=header, delimiter=";")
+            for row in reader:
+                result = parse_result(row)
                 append_result(result, results)
 
     with open(output_name, "w") as f:
         json.dump([result.serialize() for result in results], f, indent=4)
 
-def parse_result(result_line: str):
+def parse_result(data: dict):
     result = Result()
-    data = result_line.strip().split(";")
-    result.os = data[0]
-    result.platform = data[1]
-    result.framework = data[2]
-    result.model = data[4]
+    result.os = data.get("os")
+    result.platform = data.get("platform")
+    result.framework = data.get("framework")
+    result.model = data.get("model")
 
     try:
-        batch_size = int(data[7])
+        batch_size = int(data.get("bs"))
     except:
         batch_size = None
 
     try:
-        value = float(data[8])
+        value = float(data.get("value"))
     except:
         value = None
 
     result.benchmarks.append(Measurement({
         "batch_size": batch_size,
-        "mode": data[6].lower(),
-        "precision": data[3].lower(),
+        "mode": data.get("type", "n/a").lower(),
+        "precision": data.get("precision", "n/a").lower(),
         "value": value,
-        "log": data[9]
+        "log": data.get("url")
     }))
 
     return result
