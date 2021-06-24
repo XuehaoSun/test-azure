@@ -746,7 +746,7 @@ node( sub_node_label ) {
                 echo "Getting conda env name..."
                 env_name = sh(
                     returnStdout: true, 
-                    script: """
+                    script: """#!/bin/bash
                         source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --model_src_dir=${model_src_dir} --conda_env_name=${conda_env_name}
                         get_conda_env_name
                     """
