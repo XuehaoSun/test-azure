@@ -1,0 +1,13 @@
+matrix:
+- name: Markdown
+  hunspell:
+    d: en_US.ISO8859-15
+  dictionary:
+    wordlists:
+    - ${VAL_REPO}/lpot_dict.txt
+    output: ${VAL_REPO}/lpot_dict.dic
+  sources:
+  - ${LPOT_REPO}/docs/*
+  - ${LPOT_REPO}/*.md
+  - ${LPOT_REPO}/examples/**/*.md|!${LPOT_REPO}/examples/pytorch/**/huggingface_models/**/*.md
+  - ${LPOT_REPO}/lpot/**/*.md
