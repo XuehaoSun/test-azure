@@ -549,7 +549,7 @@
       "batch_size": 1,
       "new_benchmark": false
     },
-    "ssd_resnet34": {
+    "ssd_resnet34_fx": {
       "model_src_dir": "fx/object_detection/ssd_resnet34/ptq",
       "dataset_location": "/tf_dataset2/datasets/coco2017/resized_1200x1200/coconpy",
       "input_model": "/tf_dataset2/models/pytorch/ssd_resnet34/resnet34-ssd1200.pytorch",
