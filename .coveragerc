@@ -4,6 +4,7 @@ branch = True
 [report]
 omit =
  */**/fake*yaml
+ */**/fake.py
  */lpot/ux/*
  */lpot/model/nets_factory.py
 exclude_lines =
