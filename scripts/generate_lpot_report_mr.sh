@@ -84,11 +84,11 @@ function createOverview {
 
     spellcheck_scan=($(grep 'format-scan,pyspelling' ${overview_log} |sed 's/,/ /g'))
     if [[ "${spellcheck_scan[2]}" == *"FAIL"* ]];then
-        spellcheck_scan_status=${fail_status}
+        spellcheck_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${spellcheck_scan[2]}" == *"SUCC"* ]];then
-        spellcheck_scan_status=${pass_status}
+        spellcheck_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        spellcheck_scan_status=${verify_status}
+        spellcheck_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     helloworld_keras=($(grep 'Helloworld Keras' ${overview_log} |sed 's/,/ /g'))
