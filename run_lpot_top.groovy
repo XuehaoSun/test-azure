@@ -135,6 +135,13 @@ if (params.RUN_UT != null){
 }
 echo "RUN_UT = ${RUN_UT}"
 
+RUN_SPELLCHECK=false
+if ('RUN_SPELLCHECK' in params && params.RUN_SPELLCHECK){
+    echo "RUN_SPELLCHECK is true"
+    RUN_SPELLCHECK=params.RUN_SPELLCHECK
+}
+echo "RUN_SPELLCHECK = ${RUN_SPELLCHECK}"
+
 // set ut extension test
 ut_extension_tensorflows='1.15.2,1.15UP2'
 if (params.ut_extension_tensorflows != null) {
@@ -1203,6 +1210,11 @@ node( node_label ) {
         if (RUN_BANDIT) {
             job_list["Bandit Scan"] = {
                 codeScan("bandit")
+            }
+        }
+        if (RUN_SPELLCHECK) {
+            job_list["Spellcheck Scan"] = {
+                codeScan("pyspelling")
             }
         }
         if (CHECK_COPYRIGHT && MR_source_branch != '') {

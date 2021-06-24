@@ -63,6 +63,7 @@ main() {
     case ${SCAN_TOOL} in
         "pylint") run_pylint;;
         "bandit") run_bandit;;
+        "pyspelling") run_pyspelling;;
         *)
             echo "Scan tool ${SCAN_TOOL} not supported."; exit 1;;
     esac
@@ -86,6 +87,25 @@ run_bandit() {
         echo "Bandit exited with non-zero exit code."; exit 1
     fi
     exit 0
+}
+
+run_pyspelling() {
+    pip install pyspelling
+    # Update paths to validation and lpot repositories
+    VAL_REPO=${WORKSPACE}
+
+    sed -i "s|\${VAL_REPO}|$VAL_REPO|g" ${VAL_REPO}/pyspelling_conf.yaml
+    sed -i "s|\${LPOT_REPO}|$REPO_DIR|g" ${VAL_REPO}/pyspelling_conf.yaml
+    echo "Modified config:"
+    cat ${VAL_REPO}/pyspelling_conf.yaml
+    pyspelling -c ${VAL_REPO}/pyspelling_conf.yaml > ${WORKSPACE}/pyspelling_output.log
+    exit_code=$?
+    if [ ${exit_code} -ne 0 ] ; then
+        echo "Pyspelling exited with non-zero exit code."; exit 1
+    fi
+    exit 0
+
+
 }
 
 main

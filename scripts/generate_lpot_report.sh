@@ -93,6 +93,15 @@ function createOverview {
         bandit_scan_status=${verify_status}
     fi
 
+    spellcheck_scan=($(grep 'format-scan,pyspelling' ${overview_log} |sed 's/,/ /g'))
+    if [[ "${spellcheck_scan[2]}" == *"FAIL"* ]];then
+        spellcheck_scan_status=${fail_status}
+    elif [[ "${spellcheck_scan[2]}" == *"SUCC"* ]];then
+        spellcheck_scan_status=${pass_status}
+    else
+        spellcheck_scan_status=${verify_status}
+    fi
+
     helloworld_keras=($(grep 'Helloworld Keras' ${overview_log} |sed 's/,/ /g'))
     if [[ "${helloworld_keras[2]}" == *"FAIL"* ]];then
         helloworld_keras_status=${fail_status}
@@ -126,6 +135,12 @@ function createOverview {
                  echo "<tr><td>Bandit Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${bandit_scan[0]}/${bandit_scan[3]}\">${bandit_scan[0]}#${bandit_scan[3]}</a></td>"
                  echo "${bandit_scan_status}</tr>"
+             fi
+
+             if [ "${spellcheck_scan[3]}" != "" ]; then
+                 echo "<tr><td>Spellcheck Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${spellcheck_scan[0]}/${spellcheck_scan[3]}\">${spellcheck_scan[0]}#${spellcheck_scan[3]}</a></td>"
+                 echo "${spellcheck_scan_status}</tr>"
              fi
 
              if [ "${helloworld_keras[3]}" != "" ]; then
