@@ -133,7 +133,7 @@ main() {
     fi
 
     if [[ "${framework}" == "pytorch" ]]; then
-        if [[ "${model}" == "rnnt" ]] || [[ "${model}" == "ssd_resnet34" ]]; then
+        if [[ "${model}" == "rnnt" ]] || [[ "${model}" == "ssd_resnet34_fx" ]]; then
             if [ ${model} == "rnnt" ];then
                 cd ${model_src_dir}/../../../utils/MLPerf/loadgen
             else
@@ -218,7 +218,7 @@ main() {
     echo "Checking topology..."
     echo "Framework: '${framework}'"
     echo "Model: '${model}'"
-    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34" ]; then
+    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34_fx" ]; then
         topology="ssd-resnet34"
         echo "Setting topology to ${topology}"
     fi
@@ -231,7 +231,7 @@ main() {
     # pytorch need to use default output_model path
     if [ ${framework} != "pytorch" ]; then
       parameters="${parameters} --output_model=${q_model}"
-    elif [ "${model}" == "rnnt" ] || [ "${model}" == "ssd_resnet34" ]; then
+    elif [ "${model}" == "rnnt" ] || [ "${model}" == "ssd_resnet34_fx" ]; then
         parameters=" ${parameters} --output_model=${model_src_dir}/saved_results"
     fi
 
@@ -355,7 +355,7 @@ function update_yaml_config {
         fi
     fi
 
-    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34" ]; then
+    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34_fx" ]; then
         sed -i "/convert_dataset\/annotations\/instances_val2017\.json/s|anno_dir:.*|anno_dir: ${dataset_location}/annotations/instances_val2017.json |g" ${yaml}
     fi
 

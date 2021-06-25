@@ -130,7 +130,7 @@ main() {
         topology="${model%_qat_fx}"
     fi
 
-    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34" ]; then
+    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34_fx" ]; then
         topology="ssd-resnet34"
     fi
     
