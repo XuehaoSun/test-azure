@@ -123,7 +123,7 @@ node(node_label) {
             echo "-----------------  Running Code Scan  -----------------"
             echo "---------------------------------------------------------"
             status = sh(
-            script: "${WORKSPACE}/scripts/run_format_scan.sh --python_version=${python_version} --tool=${TOOL} --repo_dir=${WORKSPACE}/lpot",  // There is no source branch as script assumes that it is currently on MR branch; look at download funtion.
+            script: "${WORKSPACE}/scripts/run_format_scan.sh --python_version=${python_version} --tool=${TOOL} --repo_dir=${WORKSPACE}/lpot",  // There is no source branch as script assumes that it is currently on MR branch; look at download function.
             returnStatus:true)
             if (status != 0) {
                 throw new Exception("Found code format scan errors.")
