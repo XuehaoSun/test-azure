@@ -559,42 +559,45 @@ node( sub_node_label ) {
                 model_src_dir = normalizePath("${WORKSPACE}\\lpot-models\\examples\\${framework}\\${model_src_dir}")
                 dataset_location = normalizePath("${DATASET_DIR}\\${dataset_location}")
                 input_model = normalizePath("${DATASET_DIR}\\${input_model}")
-                withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
-                    bat """
-                        echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
-                        CALL quser
-                        echo "-------quser-------"
-                        
-                        SET env_name=%framework%-%framework_version%-%python_version%
-                        IF "%framework%" == "pytorch" (
-                            IF NOT %model:bert=% == %model% (
-                                SET env_name=pytorch-bert-1.6
+                withCredentials([string(credentialsId: 'sigopt_api_token_suyue', variable: 'SIGOPT_TOKEN')]) {
+                    withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
+                        bat """
+                            echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
+                            CALL quser
+                            echo "-------quser-------"
+                            
+                            SET env_name=%framework%-%framework_version%-%python_version%
+                            IF "%framework%" == "pytorch" (
+                                IF NOT %model:bert=% == %model% (
+                                    SET env_name=pytorch-bert-1.6
+                                )
                             )
-                        )
 
-                        IF "${env_type}" == "conda" (
-                            CALL conda activate %env_name%
-                        ) else (
-                            CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
-                        )
-                        IF %ERRORLEVEL% NEQ 0 (
-                            echo "Could not activate environment."
-                            exit 1
-                        )
+                            IF "${env_type}" == "conda" (
+                                CALL conda activate %env_name%
+                            ) else (
+                                CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
+                            )
+                            IF %ERRORLEVEL% NEQ 0 (
+                                echo "Could not activate environment."
+                                exit 1
+                            )
 
-                        CALL ${WORKSPACE}%\\lpot-validation\\scripts\\env_setup.bat ${framework} ${model}
+                            CALL ${WORKSPACE}%\\lpot-validation\\scripts\\env_setup.bat ${framework} ${model}
 
-                        CALL python ${WORKSPACE}%\\lpot-validation\\scripts\\run_tuning_trigger.py ^
-                        --framework=${framework} ^
-                        --model=${model} ^
-                        --model_src_dir=${model_src_dir} ^
-                        --dataset_location=${dataset_location} ^
-                        --input_model=${input_model} ^
-                        --yaml=${yaml} ^
-                        --strategy=${strategy} ^
-                        --max_trials=${max_trials} ^
-                        --cpu=${cpu}
-                    """
+                            CALL python ${WORKSPACE}%\\lpot-validation\\scripts\\run_tuning_trigger.py ^
+                            --framework=${framework} ^
+                            --model=${model} ^
+                            --model_src_dir=${model_src_dir} ^
+                            --dataset_location=${dataset_location} ^
+                            --input_model=${input_model} ^
+                            --yaml=${yaml} ^
+                            --strategy=${strategy} ^
+                            --strategy_token=${SIGOPT_TOKEN} ^
+                            --max_trials=${max_trials} ^
+                            --cpu=${cpu}
+                        """
+                    }
                 }
             }
         }

@@ -26,6 +26,7 @@ parser.add_argument("--yaml", type=str, required=True)
 parser.add_argument("--strategy", type=str, required=True)
 parser.add_argument("--max_trials", type=int, required=True)
 parser.add_argument("--cpu", type=str, required=True)
+parser.add_argument("--strategy_token", type=str, required=False)
 
 
 args = parser.parse_args()
