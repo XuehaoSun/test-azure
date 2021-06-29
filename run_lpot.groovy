@@ -187,7 +187,7 @@ println("torchvision_version: " + torchvision_version)
 
 if (framework == "tensorflow") {
     label=model.split('_')
-    if(label[0] == 'bert'){
+    if(label[0] == 'bert' || label[-1] == 'slim'){
         framework_version = '1.15UP2'
     }
 }
