@@ -47,18 +47,15 @@ main() {
     fi
 
     # Install test requirements
-    cd ${REPO_DIR}/test
+    cd ${REPO_DIR}
     if [ -f "requirements.txt" ]; then
-        sed -i '/lpot/d;/tensorflow==/d;/torch==/d;/pytorch-ignite$/d;/mxnet==/d;/mxnet-mkl==/d;/torchvision==/d;/onnx$/d;/onnx==/d;/onnxruntime$/d;/onnxruntime==/d' requirements.txt
         python -m pip install --default-timeout=100 -r requirements.txt
         pip list
     else
         echo "Not found requirements.txt file."
     fi
 
-    cd ${REPO_DIR}
-
-    echo "Executing pylint on branch: $(git name-rev --name-only HEAD)."
+    echo "Executing code scan on branch: $(git name-rev --name-only HEAD)."
 
     case ${SCAN_TOOL} in
         "pylint") run_pylint;;
@@ -71,6 +68,8 @@ main() {
 
 run_pylint() {
     pip install pylint
+    # tf_utils.util will import some deps installed by tensorflow
+    pip install intel-tensorflow
     python -m pylint -f json --disable=R,C,W --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torchvision,mxnet,onnx,onnxruntime lpot > ${WORKSPACE}/lpot-pylint.json
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
