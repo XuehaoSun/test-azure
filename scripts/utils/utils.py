@@ -183,7 +183,7 @@ def get_number_of_sockets():
     return 0
 
 
-def update_yaml(yaml, framework, dataset_location = None, strategy = None, max_trials = None):
+def update_yaml(yaml, framework, dataset_location = None, strategy = None, max_trials = None, strategy_token = None):
     if not os.path.isfile(yaml):
         raise Exception(f"Not found yaml config at '{yaml}' location.")
 
@@ -202,7 +202,8 @@ def update_yaml(yaml, framework, dataset_location = None, strategy = None, max_t
     update_yaml_config(
         yaml_file=yaml,
         strategy=strategy,
-        max_trials=max_trials
+        max_trials=max_trials,
+        strategy_token=strategy_token,
     )
     print(f"Tuning strategy: {strategy}")
 
@@ -210,7 +211,7 @@ def update_yaml(yaml, framework, dataset_location = None, strategy = None, max_t
 def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Optional[str] = None,
     batch_size: Optional[int] = None, iteration: Optional[int] = None,
     max_trials: Optional[int] = None, algorithm: Optional[str] = None,
-    timeout: Optional[int] = None):
+    timeout: Optional[int] = None, strategy_token: Optional[str] = None):
     tuning_config = {}
     with open(yaml_file) as f:
         yaml_config = yaml.round_trip_load(f, preserve_quotes=True)
@@ -250,6 +251,12 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
                 prev_strategy = tuning_config.get("strategy", {})
             strategy_name = prev_strategy.get("name", None)
             prev_strategy.update({"name": strategy})
+            if strategy == "sigopt":
+                prev_strategy.update({
+                    "sigopt_api_token": strategy_token,
+                    "sigopt_project_id": "lpot",
+                    "sigopt_experiment_name": "lpot-tune",
+                    })
             print(f"Changed {strategy_name} to {strategy}")
         except Exception as e:
             print(f"[ WARNING ] {e}")

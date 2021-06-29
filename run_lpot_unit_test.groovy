@@ -289,76 +289,82 @@ node(node_label){
             stage('unit test') {
                 // ut test
                 timeout(30) {
-                    echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
-                    ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    source activate ${conda_env}
-                    # pip config set global.index-url https://pypi.douban.com/simple/
-                    
-                    echo "Checking lpot..."
-                    python -V
-                    pip list
-                    c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
-                    if [ ${c_lpot} != 0 ]; then
-                        pip uninstall lpot -y
+                    withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+                        echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
+                        ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        source activate ${conda_env}
+                        # pip config set global.index-url https://pypi.douban.com/simple/
+                        
+                        echo "Checking lpot..."
+                        python -V
                         pip list
-                    fi
-                                    
-                    echo "Install lpot binary..."
-                    n=0
-                    until [ "$n" -ge 5 ]
-                    do
-                        pip install lpot*.whl && break
-                        n=$((n+1))
-                        sleep 5
-                    done
-                    
-                    if [ ! -d ${WORKSPACE}/lpot-models ]; then
-                        echo "\\"lpot-model\\" not found. Exiting..."
-                        exit 1
-                    fi
-                    
-                    echo -e "\\nInstalling ut requirements..."
-                    cd ${WORKSPACE}/lpot-models/test
-                    if [ -f "requirements.txt" ]; then
-                        sed -i '/^lpot/d' requirements.txt
-                        sed -i '/^intel-tensorflow/d' requirements.txt
-                        sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                        sed -i '/^torch/d' requirements.txt
-                        sed -i '/^mxnet-mkl/d' requirements.txt
-                        sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
-
+                        c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+                        if [ ${c_lpot} != 0 ]; then
+                            pip uninstall lpot -y
+                            pip list
+                        fi
+                                        
+                        echo "Install lpot binary..."
                         n=0
                         until [ "$n" -ge 5 ]
                         do
-                            python -m pip install -r requirements.txt && pip install coverage && break
+                            pip install lpot*.whl && break
                             n=$((n+1))
                             sleep 5
                         done
+                        
+                        if [ ! -d ${WORKSPACE}/lpot-models ]; then
+                            echo "\\"lpot-model\\" not found. Exiting..."
+                            exit 1
+                        fi
+                        
+                        echo -e "\\nInstalling ut requirements..."
+                        cd ${WORKSPACE}/lpot-models/test
+                        if [ -f "requirements.txt" ]; then
+                            sed -i '/^lpot/d' requirements.txt
+                            sed -i '/^intel-tensorflow/d' requirements.txt
+                            sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                            sed -i '/^torch/d' requirements.txt
+                            sed -i '/^mxnet-mkl/d' requirements.txt
+                            sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
 
-                        pip list
-                    else
-                        echo "Not found requirements.txt file."
-                    fi
+                            n=0
+                            until [ "$n" -ge 5 ]
+                            do
+                                python -m pip install -r requirements.txt && pip install coverage && break
+                                n=$((n+1))
+                                sleep 5
+                            done
 
-                    export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
-                    cat ${COVERAGE_RCFILE}
+                            pip list
+                        else
+                            echo "Not found requirements.txt file."
+                        fi
 
-                    lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
-                    find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
-                    ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
-                    coverage erase
-                    bash run.sh 2>&1 | tee ${ut_log_name}
-                    coverage report -m --rcfile=${COVERAGE_RCFILE}
-                    coverage html -d ${WORKSPACE}/coverage_results/htmlcov --rcfile=${COVERAGE_RCFILE}
-                    coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml --rcfile=${COVERAGE_RCFILE}
-                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
-                        exit 1
-                    fi
-                    ''')
-                    if (ut_status != 0) {
-                        currentBuild.result = 'FAILURE'
-                        error("Unit test failed!")
+                        export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
+                        cat ${COVERAGE_RCFILE}
+
+                        echo "Setting SigOpt strategy env variables"
+                        export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
+                        export SIGOPT_PROJECT_ID="lpot"
+
+                        lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                        find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
+                        ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
+                        coverage erase
+                        bash run.sh 2>&1 | tee ${ut_log_name}
+                        coverage report -m --rcfile=${COVERAGE_RCFILE}
+                        coverage html -d ${WORKSPACE}/coverage_results/htmlcov --rcfile=${COVERAGE_RCFILE}
+                        coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml --rcfile=${COVERAGE_RCFILE}
+                        if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                            exit 1
+                        fi
+                        ''')
+                        if (ut_status != 0) {
+                            currentBuild.result = 'FAILURE'
+                            error("Unit test failed!")
+                        }
                     }
                 }
                 // Coverage status check
@@ -406,53 +412,59 @@ node(node_label){
                         }
                     } else {
                         println("Getting base coverage on branch \"" + MR_target_branch + "\"")
-                        sh '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
-                        source activate ${conda_env}
+                        withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+                            sh '''#!/bin/bash
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            source activate ${conda_env}
 
-                        pip uninstall lpot -y
-                        cd ${WORKSPACE}/lpot-models-base
-                        python setup.py install
-                        pip list
-
-                        cd ${WORKSPACE}/lpot-models-base/test
-                        if [ -f "requirements.txt" ]; then
-                            sed -i '/^lpot/d' requirements.txt
-                            sed -i '/^intel-tensorflow/d' requirements.txt
-                            sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                            sed -i '/^torch/d' requirements.txt
-                            sed -i '/^mxnet-mkl/d' requirements.txt
-                            sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
-
-                            n=0
-                            until [ "$n" -ge 5 ]
-                            do
-                            python -m pip install -r requirements.txt && break
-                            n=$((n+1))
-                            sleep 5
-                            done
-
+                            pip uninstall lpot -y
+                            cd ${WORKSPACE}/lpot-models-base
+                            python setup.py install
                             pip list
-                        else
-                            echo "Not found requirements.txt file."
-                        fi
-                    
-                        export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
-                        cat ${COVERAGE_RCFILE}
 
-                        lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
-                        find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
-                        ut_log_name=${WORKSPACE}/unit_test_base.log
-                        coverage erase
-                        bash run.sh 2>&1 | tee ${ut_log_name}
-                        coverage report -m --rcfile=${COVERAGE_RCFILE}
-                        coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml --rcfile=${COVERAGE_RCFILE}
+                            cd ${WORKSPACE}/lpot-models-base/test
+                            if [ -f "requirements.txt" ]; then
+                                sed -i '/^lpot/d' requirements.txt
+                                sed -i '/^intel-tensorflow/d' requirements.txt
+                                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                                sed -i '/^torch/d' requirements.txt
+                                sed -i '/^mxnet-mkl/d' requirements.txt
+                                sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
 
-                        python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
-                            --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
-                            --summary-file=${WORKSPACE}/coverage_summary_base.log
+                                n=0
+                                until [ "$n" -ge 5 ]
+                                do
+                                python -m pip install -r requirements.txt && break
+                                n=$((n+1))
+                                sleep 5
+                                done
 
-                    '''
+                                pip list
+                            else
+                                echo "Not found requirements.txt file."
+                            fi
+                        
+                            export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
+                            cat ${COVERAGE_RCFILE}
+
+                            echo "Setting SigOpt strategy env variables"
+                            export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
+                            export SIGOPT_PROJECT_ID="lpot"
+
+                            lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                            find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
+                            ut_log_name=${WORKSPACE}/unit_test_base.log
+                            coverage erase
+                            bash run.sh 2>&1 | tee ${ut_log_name}
+                            coverage report -m --rcfile=${COVERAGE_RCFILE}
+                            coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml --rcfile=${COVERAGE_RCFILE}
+
+                            python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
+                                --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
+                                --summary-file=${WORKSPACE}/coverage_summary_base.log
+
+                            '''
+                        }
                         lines_coverage_base = Float.parseFloat(sh(
                                 script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
                                 returnStdout: true
@@ -486,63 +498,69 @@ node(node_label){
                     echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
                     withEnv(["tensorflow_version=${tensorflow_version}"]){
                         timeout(30) {
-                            ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
-                            source activate ${conda_env}
-                    
-                            echo "Checking lpot..."
-                            python -V
-                            pip list
-                            c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
-                            if [ ${c_lpot} != 0 ]; then
-                                pip uninstall lpot -y
+                            withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+                                ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env}
+                        
+                                echo "Checking lpot..."
+                                python -V
                                 pip list
-                            fi
-                                    
-                            echo "Install lpot binary..."
-                            n=0
-                            until [ "$n" -ge 5 ]
-                            do
-                                pip install lpot*.whl && break
-                                n=$((n+1))
-                                sleep 5
-                            done
-                    
-                            if [ ! -d ${WORKSPACE}/lpot-models ]; then
-                                echo "\\"lpot-model\\" not found. Exiting..."
-                                exit 1
-                            fi
-                    
-                            echo -e "\\nInstalling ut requirements..."
-                            cd ${WORKSPACE}/lpot-models/test
-                            if [ -f "requirements.txt" ]; then
-                                sed -i '/^lpot/d' requirements.txt
-                                sed -i '/^intel-tensorflow/d' requirements.txt
-                                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                                sed -i '/^torch/d' requirements.txt
-                                sed -i '/^mxnet-mkl/d' requirements.txt
-                                sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
-        
+                                c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+                                if [ ${c_lpot} != 0 ]; then
+                                    pip uninstall lpot -y
+                                    pip list
+                                fi
+                                        
+                                echo "Install lpot binary..."
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
-                                    python -m pip install -r requirements.txt && break
+                                    pip install lpot*.whl && break
                                     n=$((n+1))
                                     sleep 5
                                 done
-        
-                                pip list
-                            else
-                                echo "Not found requirements.txt file."
-                            fi
+                        
+                                if [ ! -d ${WORKSPACE}/lpot-models ]; then
+                                    echo "\\"lpot-model\\" not found. Exiting..."
+                                    exit 1
+                                fi
+                        
+                                echo -e "\\nInstalling ut requirements..."
+                                cd ${WORKSPACE}/lpot-models/test
+                                if [ -f "requirements.txt" ]; then
+                                    sed -i '/^lpot/d' requirements.txt
+                                    sed -i '/^intel-tensorflow/d' requirements.txt
+                                    sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                                    sed -i '/^torch/d' requirements.txt
+                                    sed -i '/^mxnet-mkl/d' requirements.txt
+                                    sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
+            
+                                    n=0
+                                    until [ "$n" -ge 5 ]
+                                    do
+                                        python -m pip install -r requirements.txt && break
+                                        n=$((n+1))
+                                        sleep 5
+                                    done
+            
+                                    pip list
+                                else
+                                    echo "Not found requirements.txt file."
+                                fi
 
-                            find . -name "test*.py" | sed 's,\\.\\/,python ,g' > run.sh
-                            ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
-                            bash run.sh 2>&1 | tee ${ut_log_name}
-                            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
-                                exit 1
-                            fi
-                            ''')
+                                echo "Setting SigOpt strategy env variables"
+                                export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
+                                export SIGOPT_PROJECT_ID="lpot"
+                                
+                                find . -name "test*.py" | sed 's,\\.\\/,python ,g' > run.sh
+                                ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
+                                bash run.sh 2>&1 | tee ${ut_log_name}
+                                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                                    exit 1
+                                fi
+                                ''')
+                            }
                             if (ut_status != 0) {
                                 currentBuild.result = 'FAILURE'
                                 error("Unit test extension failed!")

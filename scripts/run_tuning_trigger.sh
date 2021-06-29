@@ -2,7 +2,7 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "10" ] ; then
+if [ $# != "11" ] ; then
     echo 'ERROR:'
     echo "Expected 10 parameters got $#"
     printf 'Please use following parameters:
@@ -13,6 +13,7 @@ if [ $# != "10" ] ; then
     --input_model=<path to input model>
     --yaml=<path to lpot yaml configuration>
     --strategy=<tuning strategy>
+    --strategy_token=<token for strategy>
     --max_trials=<max tuning trials>
     --algorithm=<algorithm for quantization>
     --conda_env_name=<conda environment name>
@@ -37,6 +38,8 @@ do
             yaml=`echo $i | sed "s/${PATTERN}//"`;;
         --strategy=*)
             strategy=`echo $i | sed "s/${PATTERN}//"`;;
+        --strategy_token=*)
+            strategy_token=`echo $i | sed "s/${PATTERN}//"`;;
         --max_trials=*)
             max_trials=`echo $i | sed "s/${PATTERN}//"`;;
         --algorithm=*)
@@ -362,7 +365,7 @@ function update_yaml_config {
     update_yaml_params=""
     # Replace tuning strategy in yaml file
     if [ "${strategy}" != "" ]; then
-        update_yaml_params="${update_yaml_params} --strategy=${strategy}"
+        update_yaml_params="${update_yaml_params} --strategy=${strategy} --strategy-token=${strategy_token}"
     fi
 
     if [ "${max_trials}" != "" ]; then

@@ -16,6 +16,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--yaml", type=str, required=True, help="Path to yaml config.")
     parser.add_argument("--strategy", type=str, required=False, help="Strategy to update.")
+    parser.add_argument("--strategy-token", type=str, required=False, help="Token for sigopt strategy.")
     parser.add_argument("--mode", type=str, required=False, help="Benchmark mode.")
     parser.add_argument("--batch-size", type=int, required=False, help="Benchmark batch size.")
     parser.add_argument("--iteration", type=int, required=False, help="Benchmark iteration")
@@ -34,5 +35,6 @@ if __name__ == "__main__":
         iteration=args.iteration,
         max_trials=args.max_trials,
         algorithm=args.algorithm,
-        timeout=args.timeout
+        timeout=args.timeout,
+        strategy_token=args.strategy_token,
     )

@@ -333,59 +333,63 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
         if (framework == "tensorflow" && model == "bert_base_mrpc") {
             cmd += " --dataset_location=\"${dataset_location}\""
         }
-        sh """#!/bin/bash -x
-            echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking - New"
+        withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+            sh """#!/bin/bash -x
+                echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking - New"
+                
+                echo "-------w-------"
+                w
+                echo "-------w-------"
+
+                echo "=======cache clean======="
+                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+                echo "========================="
+
             
-            echo "-------w-------"
-            w
-            echo "-------w-------"
+                echo "======= Activate conda env ======="
+                source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh \
+                    --framework=${framework} \
+                    --model=${model} \
+                    --conda_env_name=${conda_env_name} \
+                    --model_src_dir=${model_src_dir} 
+                set_environment
+                echo "=================================="
 
-            echo "=======cache clean======="
-            sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-            echo "========================="
+                export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
 
-        
-            echo "======= Activate conda env ======="
-            source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh \
-                --framework=${framework} \
-                --model=${model} \
-                --conda_env_name=${conda_env_name} \
-                --model_src_dir=${model_src_dir} 
-            set_environment
-            echo "=================================="
-
-            export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
-
-            ${cmd}
-            """
+                ${cmd}
+                """
+        }
     } else {
-        sh """#!/bin/bash -x
-            echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
-            
-            echo "-------w-------"
-            w
-            echo "-------w-------"
-            echo "=======cache clean======="
-            
-            sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+        withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+            sh """#!/bin/bash -x
+                echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
+                
+                echo "-------w-------"
+                w
+                echo "-------w-------"
+                echo "=======cache clean======="
+                
+                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
 
-            echo "=======cache clean======="
-            bash ${WORKSPACE}/lpot-validation/scripts/run_benchmark_trigger.sh \
-                --framework=${framework} \
-                --model=${model} \
-                --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
-                --dataset_location=${dataset_prefix}${dataset_location} \
-                --input_model=${dataset_prefix}${input_model} \
-                --precision=${precision} \
-                --mode=${mode} \
-                --batch_size=${batch_size} \
-                --conda_env_name=${conda_env_name} \
-                --yaml=${yaml} \
-                --os=${os} \
-                --cpu=${cpu} \
-                --profiling=${RUN_PROFILING} \
-                --output_path=${output_path}
-            """
+                echo "=======cache clean======="
+                bash ${WORKSPACE}/lpot-validation/scripts/run_benchmark_trigger.sh \
+                    --framework=${framework} \
+                    --model=${model} \
+                    --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
+                    --dataset_location=${dataset_prefix}${dataset_location} \
+                    --input_model=${dataset_prefix}${input_model} \
+                    --precision=${precision} \
+                    --mode=${mode} \
+                    --batch_size=${batch_size} \
+                    --conda_env_name=${conda_env_name} \
+                    --yaml=${yaml} \
+                    --os=${os} \
+                    --cpu=${cpu} \
+                    --profiling=${RUN_PROFILING} \
+                    --output_path=${output_path}
+                """
+        }
     }
 }
 
@@ -757,26 +761,28 @@ node( sub_node_label ) {
 
             stage("Tuning") {
                 echo "Tuning timeout ${timeout}"
-
-                sh """#!/bin/bash -x
-                    echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
-                    
-                    echo "-------w-------"
-                    w
-                    echo "-------w-------"
-                    ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger.sh \
-                        --framework=${framework} \
-                        --model=${model} \
-                        --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
-                        --dataset_location=${dataset_prefix}${dataset_location} \
-                        --input_model=${dataset_prefix}${input_model} \
-                        --yaml=${yaml} \
-                        --strategy=${strategy} \
-                        --max_trials=${max_trials} \
-                        --algorithm=${algorithm} \
-                        --conda_env_name=${conda_env_name} \
-                        2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
-                """
+                withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+                    sh """#!/bin/bash -x
+                        echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
+                        
+                        echo "-------w-------"
+                        w
+                        echo "-------w-------"
+                        ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger.sh \
+                            --framework=${framework} \
+                            --model=${model} \
+                            --model_src_dir=${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir} \
+                            --dataset_location=${dataset_prefix}${dataset_location} \
+                            --input_model=${dataset_prefix}${input_model} \
+                            --yaml=${yaml} \
+                            --strategy=${strategy} \
+                            --strategy_token=${SIGOPT_TOKEN} \
+                            --max_trials=${max_trials} \
+                            --algorithm=${algorithm} \
+                            --conda_env_name=${conda_env_name} \
+                            2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
+                    """
+                }
             }
 
             stage("Check tuning status") {
