@@ -14,10 +14,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--logs-dir", type=str, required=False, default=".")
 parser.add_argument("--tuning-log-name", type=str, default="tuning_info.log")
 parser.add_argument("--commit", type=str, default="")
-parser.add_argument("--tensorflow-version", type=str, default="")
-parser.add_argument("--mxnet-version", type=str, default="")
-parser.add_argument("--pytorch-version", type=str, default="")
-parser.add_argument("--onnxruntime-version", type=str, default="")
 parser.add_argument("--WW", type=str, default="xx")
 args = parser.parse_args()
 
@@ -27,15 +23,11 @@ strategies = [
     "bayesian",
     "exhaustive",
     "random",
-    "tpe"
+    "tpe",
+    "sigopt"
 ]
 
-result_collector = ResultCollector({
-    "tensorflow_version": args.tensorflow_version,
-    "mxnet_version": args.mxnet_version,
-    "pytorch_version": args.pytorch_version,
-    "onnxrt_version": args.onnxruntime_version
-})
+result_collector = ResultCollector()
 
 for log in glob.glob(os.path.join(args.logs_dir, "**", args.tuning_log_name)):
     result_collector.read_tuning(log)
