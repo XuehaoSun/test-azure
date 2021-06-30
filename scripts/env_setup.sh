@@ -59,25 +59,16 @@ function set_MXNet_env {
 function set_PT_env {
     export OMP_NUM_THREADS=28
 
-    if [[ ${model_src_dir} = *'language_translation'* ]]; then
-      export PATH=${HOME}/miniconda3/bin/:$PATH
-      echo "Activating pytorch-bert-1.6 env"
-      source activate pytorch-bert-1.6
-    elif [[ "${model}" = "dlrm"* ]]; then
+    if [[ "${model}" = "dlrm"* ]]; then
       export PATH=${HOME}/anaconda3/bin/:$PATH
-      echo "Activating ${conda_env_name} env"
-      source activate ${conda_env_name}
       export https_proxy=http://child-prc.intel.com:913
       export http_proxy=http://child-prc.intel.com:913
-    elif [[ ${model} = *'_ipex' ]]; then
-      export PATH=${HOME}/miniconda3/bin/:$PATH
-      echo "Activating pt-ipex-3.6 env"
-      source activate pt-ipex-3.6
     else
       export PATH=${HOME}/miniconda3/bin/:$PATH
-      echo "Activating ${conda_env_name} env"
-      source activate ${conda_env_name}
     fi
+
+    echo "Activating ${conda_env_name} env"
+    source activate ${conda_env_name}
 }
 
 function set_ONNXRT_env {
@@ -130,21 +121,4 @@ function set_environment {
     cd ${WORKSPACE}/lpot-models
 
     export LOGLEVEL=DEBUG
-}
-
-function get_conda_env_name {
-    if [ ${framework} != "pytorch" ]; then
-        echo ${conda_env_name}
-        exit
-    fi
-
-    if [[ ${model_src_dir} = *'language_translation'* ]]; then
-        echo "pytorch-bert-1.6"
-        exit
-    elif [[ ${model} = *'_ipex' ]]; then
-        export PATH=${HOME}/miniconda3/bin/:$PATH
-        echo "pt-ipex-3.6"
-        exit
-    fi
-    echo ${conda_env_name}
 }
