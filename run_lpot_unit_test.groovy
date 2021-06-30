@@ -348,6 +348,9 @@ node(node_label){
                         echo "Setting SigOpt strategy env variables"
                         export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                         export SIGOPT_PROJECT_ID="lpot"
+                        if [ ${tensorflow_version} == '2.5.0' ]; then
+                            export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                        fi
 
                         lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
                         find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' > run.sh
@@ -552,6 +555,9 @@ node(node_label){
                                 echo "Setting SigOpt strategy env variables"
                                 export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                                 export SIGOPT_PROJECT_ID="lpot"
+                                if [ ${tensorflow_version} == '2.5.0' ]; then
+                                    export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                                fi
                                 
                                 find . -name "test*.py" | sed 's,\\.\\/,python ,g' > run.sh
                                 ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
