@@ -112,8 +112,6 @@ run_pyspelling() {
         echo "Pyspelling exited with non-zero exit code."; exit 1
     fi
     exit 0
-
-
 }
 
 main
