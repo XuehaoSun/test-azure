@@ -288,7 +288,7 @@ node(node_label){
         if (run_coverage){
             stage('unit test') {
                 // ut test
-                timeout(30) {
+                timeout(35) {
                     withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                         echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
                         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
@@ -371,7 +371,7 @@ node(node_label){
                     }
                 }
                 // Coverage status check
-                timeout(30) {
+                timeout(35) {
                     branch = lpot_branch
                     if (MR_source_branch != "") {
                         branch = MR_source_branch
@@ -499,81 +499,78 @@ node(node_label){
             }
         }else {
             stage("unit test") {
-                timeout(30) {
-
-                    echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
-                    withEnv(["tensorflow_version=${tensorflow_version}"]){
-                        timeout(30) {
-                            withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
-                                ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
-                                source activate ${conda_env}
-                        
-                                echo "Checking lpot..."
-                                python -V
+                echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
+                withEnv(["tensorflow_version=${tensorflow_version}"]){
+                    timeout(35) {
+                        withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+                            ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            source activate ${conda_env}
+                    
+                            echo "Checking lpot..."
+                            python -V
+                            pip list
+                            c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+                            if [ ${c_lpot} != 0 ]; then
+                                pip uninstall lpot -y
                                 pip list
-                                c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
-                                if [ ${c_lpot} != 0 ]; then
-                                    pip uninstall lpot -y
-                                    pip list
-                                fi
-                                        
-                                echo "Install lpot binary..."
+                            fi
+                                    
+                            echo "Install lpot binary..."
+                            n=0
+                            until [ "$n" -ge 5 ]
+                            do
+                                pip install lpot*.whl && break
+                                n=$((n+1))
+                                sleep 5
+                            done
+                    
+                            if [ ! -d ${WORKSPACE}/lpot-models ]; then
+                                echo "\\"lpot-model\\" not found. Exiting..."
+                                exit 1
+                            fi
+                    
+                            echo -e "\\nInstalling ut requirements..."
+                            cd ${WORKSPACE}/lpot-models/test
+                            if [ -f "requirements.txt" ]; then
+                                sed -i '/^lpot/d' requirements.txt
+                                sed -i '/^intel-tensorflow/d' requirements.txt
+                                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                                sed -i '/^torch/d' requirements.txt
+                                sed -i '/^mxnet-mkl/d' requirements.txt
+                                sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
+        
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
-                                    pip install lpot*.whl && break
+                                    python -m pip install -r requirements.txt && break
                                     n=$((n+1))
                                     sleep 5
                                 done
-                        
-                                if [ ! -d ${WORKSPACE}/lpot-models ]; then
-                                    echo "\\"lpot-model\\" not found. Exiting..."
-                                    exit 1
-                                fi
-                        
-                                echo -e "\\nInstalling ut requirements..."
-                                cd ${WORKSPACE}/lpot-models/test
-                                if [ -f "requirements.txt" ]; then
-                                    sed -i '/^lpot/d' requirements.txt
-                                    sed -i '/^intel-tensorflow/d' requirements.txt
-                                    sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                                    sed -i '/^torch/d' requirements.txt
-                                    sed -i '/^mxnet-mkl/d' requirements.txt
-                                    sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
-            
-                                    n=0
-                                    until [ "$n" -ge 5 ]
-                                    do
-                                        python -m pip install -r requirements.txt && break
-                                        n=$((n+1))
-                                        sleep 5
-                                    done
-            
-                                    pip list
-                                else
-                                    echo "Not found requirements.txt file."
-                                fi
+        
+                                pip list
+                            else
+                                echo "Not found requirements.txt file."
+                            fi
 
-                                echo "Setting SigOpt strategy env variables"
-                                export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
-                                export SIGOPT_PROJECT_ID="lpot"
-                                if [ ${tensorflow_version} == '2.5.0' ]; then
-                                    export TF_ENABLE_MKL_NATIVE_FORMAT=0
-                                fi
-                                
-                                find . -name "test*.py" | sed 's,\\.\\/,python ,g' > run.sh
-                                ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
-                                bash run.sh 2>&1 | tee ${ut_log_name}
-                                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
-                                    exit 1
-                                fi
-                                ''')
-                            }
-                            if (ut_status != 0) {
-                                currentBuild.result = 'FAILURE'
-                                error("Unit test extension failed!")
-                            }
+                            echo "Setting SigOpt strategy env variables"
+                            export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
+                            export SIGOPT_PROJECT_ID="lpot"
+                            if [ ${tensorflow_version} == '2.5.0' ]; then
+                                export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                            fi
+                            
+                            find . -name "test*.py" | sed 's,\\.\\/,python ,g' > run.sh
+                            ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
+                            bash run.sh 2>&1 | tee ${ut_log_name}
+                            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                                exit 1
+                            fi
+                            ''')
+                        }
+                        if (ut_status != 0) {
+                            currentBuild.result = 'FAILURE'
+                            error("Unit test extension failed!")
                         }
                     }
                 }
