@@ -185,27 +185,19 @@ if (framework == "pytorch") {
 }
 println("torchvision_version: " + torchvision_version)
 
-if (framework == "tensorflow") {
-    label=model.split('_')
-    if(label[0] == 'bert' || label[-1] == 'slim'){
-        framework_version = '1.15UP2'
+// specify sub node label for pytorch models
+if(framework == 'pytorch') {
+    label = model.split('_')
+    if (framework_version == '1.5.0+cpu'){
+        if (label[0] == 'bert' || model == 'gpt_WikiText' || model == 'ctrl_WikiText' || model == 'xlnet_base_cased_MRPC' || model == 'roberta_base_MRPC' || model == 'camembert_base_MRPC' ) {
+            sub_node_label = 'py-bert'
+        }
     }
-}
-
-def algorithm=''
-def new_conda_env=true
-if(framework == 'pytorch'){
-    label=model.split('_')
-    if(label[0] == 'bert' || label[-1] == 'MRPC' || label[-1] == 'WikiText'){
-        sub_node_label='py-bert'
-        new_conda_env=false
+    if (model == 'dlrm' || model == 'dlrm_fx') {
+        sub_node_label = 'dlrm'
     }
-    if(model == 'dlrm' || model == 'dlrm_fx'){
-        sub_node_label='dlrm'
-    }
-    if(label[-1] == 'ipex'){
-        sub_node_label='py-ipex'
-        new_conda_env=false
+    if (label[-1] == 'ipex') {
+        sub_node_label = 'py-ipex'
     }
 }
 
@@ -241,6 +233,7 @@ echo "dataset_prefix: ${dataset_prefix}"
 upstreamBuild = ""
 upstreamJobName = ""
 upstreamUrl = ""
+algorithm=''
 
 MAX_RERUNS = 3
 
@@ -611,13 +604,6 @@ node( sub_node_label ) {
 
     try {
         try {
-            stage("Build"){
-                if (new_conda_env){
-                    create_conda_env()
-                }else{
-                    println("Test need a special local conda env, DO NOT create again!!!")
-                }
-            }
 
             stage("Download") {
                 retry(5) {
@@ -709,9 +695,9 @@ node( sub_node_label ) {
                 } catch(e) {
                     error("Could not load parameters for ${framework} ${model}")
                 }
-    
-                //mr test will cover different strategies, the other test mode will use the passed strategy
+
                 if ( MR_source_branch != '' ){
+                    //PR test will cover different strategies, the other test mode will use the passed strategy
                     if (framework == "tensorflow"){
                         strategy = "basic"
                         if (model_src_dir == "image_recognition"){
@@ -740,23 +726,46 @@ node( sub_node_label ) {
                     }else{
                         strategy = "basic"
                     }
-                }
-    
-                if ( MR_source_branch != '' ){
+
+                    // set timeout for PR test
                     timeout="timeout 5400"
                 }
 
-                // Update conda env name
-                echo "Getting conda env name..."
-                env_name = sh(
-                    returnStdout: true, 
-                    script: """#!/bin/bash
-                        source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --model_src_dir=${model_src_dir} --conda_env_name=${conda_env_name}
-                        get_conda_env_name
-                    """
-                ).trim()
-                echo "Detected env name: \"${env_name}\""
-                conda_env_name = env_name
+            }
+
+            stage("Build Conda Env"){
+                // specify conda env
+                def new_conda_env=true
+                if(framework == 'pytorch'){
+                    label=model_src_dir.split('/')
+                    if(label[1] == 'language_translation' && framework_version == '1.5.0+cpu'){
+                        new_conda_env=false
+                        conda_env_name='pytorch-bert-1.6'
+                    }
+                    if(label[0] == 'ipex'){
+                        new_conda_env=false
+                        conda_env_name='pt-ipex-3.6'
+                    }
+                    if(label[-1] == 'qat'){
+                        framework_version='1.8.0+cpu'
+                        torchvision_version='0.9.0+cpu'
+                        conda_env_name="${framework}-${framework_version}-${python_version}"
+                    }
+                }
+                if (framework == "tensorflow") {
+                    label=model.split('_')
+                    if(label[0] == 'bert' || label[-1] == 'slim'){
+                        framework_version = '1.15UP2'
+                        conda_env_name="${framework}-${framework_version}-${python_version}"
+                    }
+                }
+
+                if (new_conda_env){
+                    create_conda_env()
+                }else{
+                    println("Test need a special local conda env, DO NOT create again!!!")
+                }
+                println("Final conda env name is: $conda_env_name")
             }
 
             stage("Tuning") {
