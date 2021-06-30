@@ -83,6 +83,8 @@ if ('log_level' in params && params.log_level != ''){
 echo "log_level: ${log_level}"
 
 torchvision_versions = [
+        "1.8.0": "0.9.0",
+        "1.7.0": "0.8.0",
         "1.6.0": "0.7.0",
         "1.5.1": "0.6.1",
         "1.5.0": "0.6.0",
