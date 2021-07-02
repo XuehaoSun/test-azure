@@ -120,6 +120,7 @@ Bengio
 Benoît
 berkeleyvision
 bert
+BERT's
 BertAdam
 BertConfig
 BertForMaskedLM
@@ -130,7 +131,6 @@ BertForSequenceClassification
 BertForTokenClassification
 BertModel
 berts
-BERT's
 bertsquad
 BertTokenizer
 bfloat
@@ -203,9 +203,9 @@ CFLAGS
 ChamNet
 Chaumond
 Cheng
+Cho's
 chongruo
 Chongruo
-Cho's
 chris
 Chuanqi
 ci
@@ -796,9 +796,9 @@ ln
 loadgen
 LoadGen
 LOADGEN
+LoadGen's
 LoadgenAPI
 LoadgenAPITestSettings
-LoadGen's
 LoadgenVersion
 LoadImage
 LOC
@@ -958,8 +958,8 @@ MultiNLI
 multiscale
 MULTISCALE
 MultiStream
-MultiStreamFree
 MultiStream's
+MultiStreamFree
 mutli
 mv
 mx
@@ -1088,10 +1088,10 @@ OOM
 OOQtYMH
 openai
 OpenAI
+OpenAI's
 OpenAIAdam
 OpenAIGPTModel
 OpenAIGPTTokenizer
-OpenAI's
 opencv
 OpenCV
 opensource
@@ -1285,6 +1285,7 @@ quickstart
 Quickstart
 QuickStart
 Quoc
+R'emi
 Radboud
 Radford
 Radu
@@ -1321,10 +1322,9 @@ relase
 relu
 Relu
 ReLU
-R'emi
 repo
-repo’s
 repo's
+repo’s
 representating
 requantize
 resampled
@@ -1428,6 +1428,10 @@ Shirish
 ShuffleNet
 Shvets
 sigmoid
+signup
+sigopt
+Sigopt
+SigOpt
 SingleStream
 Skylake
 skylion
