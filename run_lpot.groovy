@@ -176,7 +176,7 @@ if (framework == "pytorch") {
     torchvision_version = torchvision_versions[pytorch_version_base]
 
     if (!torchvision_version) {
-        error("Could not found torchvision for pytorch " + pytorch_version)
+        error("Could not found torchvision for pytorch " + pytorch_version_base)
     }
 
     if (pytorch_version_postfix != "") {
@@ -283,16 +283,18 @@ def parseStrToList(srtingElements, delimiter=',') {
     return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
 
-def create_conda_env(){
+def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version){
     retry(20){
             sh """#!/bin/bash
                 bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
                     --model="${model}" \
-                    --framework="${framework}" \
-                    --framework_version="${framework_version}" \
                     --python_version="${python_version}" \
+                    --tensorflow_version="${tensorflow_version}" \
+                    --pytorch_version="${pytorch_version}" \
                     --torchvision_version="${torchvision_version}" \
+                    --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
+                    --onnxruntime_version="${onnxruntime_version}" \
                     --requirement_list="${requirement_list}" \
                     --conda_env_name="${conda_env_name}"
             """
@@ -761,7 +763,20 @@ node( sub_node_label ) {
                 }
 
                 if (new_conda_env){
-                    create_conda_env()
+                    def tensorflow_version=''
+                    def pytorch_version=''
+                    def mxnet_version=''
+                    def onnxruntime_version=''
+                    if (framework=='tensorflow'){
+                        tensorflow_version=framework_version
+                    }else if(framework=='pytorch'){
+                        pytorch_version=framework_version
+                    }else if(framework=='mxnet'){
+                        mxnet_version=framework_version
+                    }else if(framework=='onnxrt'){
+                        onnxruntime_version=framework_version
+                    }
+                    create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version)
                 }else{
                     println("Test need a special local conda env, DO NOT create again!!!")
                 }
