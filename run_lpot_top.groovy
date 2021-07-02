@@ -11,6 +11,8 @@ credential = 'lab_tfbot'
 windows_job = "intel-lpot-validation-windows"
 linux_job = "intel-lpot-validation"
 
+sys_lpot_val_credentialsId = "dcf0dff2-03fb-45b0-9e64-5b4db466bee5"
+
 // setting test_title
 test_title = "LPOT Tests"
 if ('test_title' in params && params.test_title != '') {
@@ -225,36 +227,36 @@ echo "onnxrt_models_windows: ${onnxrt_models_windows}"
 lpot_branch = ''
 // pass down commit instead of branch, the unify the test commit.
 lpot_commit = ''
-MR_source_branch = ''
-MR_target_branch = ''
+PR_source_branch = ''
+PR_target_branch = ''
 if ('lpot_branch' in params && params.lpot_branch != '') {
     lpot_branch = params.lpot_branch
 }else{
-    MR_source_branch = params.ghprbSourceBranch
-    MR_target_branch = params.ghprbTargetBranch
+    PR_source_branch = params.GITHUB_PR_SOURCE_BRANCH
+    PR_target_branch = params.GITHUB_PR_TARGET_BRANCH
 }
 echo "lpot_branch: $lpot_branch"
-echo "MR_source_branch: $MR_source_branch"
-echo "MR_target_branch: $MR_target_branch"
+echo "PR_source_branch: $PR_source_branch"
+echo "PR_target_branch: $PR_target_branch"
 
 ActualCommitAuthorEmail=''
 TriggerAuthorEmail=''
 ghprbActualCommit=''
 ghprbPullLink=''
 ghprbPullId=''
-if ( MR_source_branch != '') {
+if ( PR_source_branch != '') {
     // githubPRComment comment: "Pipeline started: [Job-${BUILD_NUMBER}](${BUILD_URL})"
-    ActualCommitAuthorEmail=params.ghprbActualCommitAuthorEmail
-    TriggerAuthorEmail=params.ghprbTriggerAuthorEmail
-    ghprbActualCommit=params.ghprbActualCommit
-    ghprbPullLink=params.ghprbPullLink
-    ghprbPullId=params.ghprbPullId
+    ActualCommitAuthorEmail=env.GITHUB_PR_AUTHOR_EMAIL
+    TriggerAuthorEmail=env.GITHUB_PR_TRIGGER_SENDER_EMAIL
+    ghprbActualCommit=env.GITHUB_PR_HEAD_SHA
+    ghprbPullLink=env.GITHUB_PR_URL
+    ghprbPullId=env.GITHUB_PR_NUMBER
 
-    echo "ActualCommitAuthorEmail: ${params.ghprbActualCommitAuthorEmail}"
-    echo "TriggerAuthorEmail: ${params.TriggerAuthorEmail}"
-    echo "ghprbActualCommit: ${params.ghprbActualCommit}"
-    echo "ghprbPullLink: ${params.ghprbPullLink}"
-    echo "ghprbPullId: ${params.ghprbPullId}"
+    echo "ActualCommitAuthorEmail: ${env.GITHUB_PR_AUTHOR_EMAIL}"
+    echo "TriggerAuthorEmail: ${env.GITHUB_PR_TRIGGER_SENDER_EMAIL}"
+    echo "ghprbActualCommit: ${env.GITHUB_PR_HEAD_SHA}"
+    echo "ghprbPullLink: ${env.GITHUB_PR_URL}"
+    echo "ghprbPullId: ${env.GITHUB_PR_NUMBER}"
 }
 
 // setting refer_build
@@ -268,10 +270,9 @@ test_mode = 'nightly'
 if ('test_mode' in params && params.test_mode != ''){
     test_mode = params.test_mode
 }
-if ( MR_source_branch != ''){
+if ( PR_source_branch != ''){
     test_mode = 'mr'
-    PullId=params.ghprbPullId
-    email_subject="PR${PullId}: ${test_title}"
+    email_subject="PR${ghprbPullId}: ${test_title}"
 }else if (test_mode == 'weekly'){
     email_subject="Weekly: ${test_title}"
     currentBuild.description = params.weekly_description
@@ -369,6 +370,62 @@ if ('precision' in params && params.precision != '') {
 }
 echo "Precision: ${precision}"
 
+def updateGithubCommitStatus(String state, String description) {
+    try {
+        supportedStatuses = ["error", "failure", "pending", "success"]
+        if (!supportedStatuses.contains(state)) {
+            error("Unknown status: ${state}")
+        }
+        withCredentials([string(credentialsId: sys_lpot_val_credentialsId, variable: 'LPOT_VAL_GH_TOKEN')]) {
+            withEnv([
+            "commit_sha=${env.GITHUB_PR_HEAD_SHA}",
+            "state=${state}",
+            "description=${description}"
+            ]) {
+                sh """
+                    curl \
+                    -X POST \
+                    -H \"Accept: application/vnd.github.v3+json\" \
+                    -H \"Authorization: Bearer $LPOT_VAL_GH_TOKEN\" \
+                    --proxy child-prc.intel.com:913 \
+                    https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/statuses/${commit_sha} \
+                    -d '{\"state\": \"${state}\", \"context\": \"Jenkins CI\", \"target_url\": \"${RUN_DISPLAY_URL}\", \"description\": \"${description}\"}'
+                """
+            }
+        }
+    } catch (e) {
+        println("Could not set status \"${state}\" for ${env.GITHUB_PR_HEAD_SHA} commit.")
+        currentBuild.result = "FAILURE"
+        error(e.toString())
+    }
+}
+
+def createGithubIssueComment(String comment) {
+    try {
+        withCredentials([string(credentialsId: sys_lpot_val_credentialsId, variable: 'LPOT_VAL_GH_TOKEN')]) {
+            withEnv([
+            "issueNumber=${env.GITHUB_PR_NUMBER}",
+            "comment=${comment}",
+            ]) {
+                sh """
+                    curl \
+                    -X POST \
+                    -H \"Accept: application/vnd.github.v3+json\" \
+                    -H \"Authorization: Bearer $LPOT_VAL_GH_TOKEN\" \
+                    --proxy child-prc.intel.com:913 \
+                    https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/issues/${issueNumber}/comments \
+                    -d '{\"body\": \"${comment}\"}'
+                """
+            }
+        }
+    } catch (e) {
+        println("Could not add comment for PR #${env.GITHUB_PR_NUMBER}")
+        currentBuild.result = "FAILURE"
+        error(e.toString())
+    }
+}
+
+
 def cleanup() {
 
     try {
@@ -393,16 +450,16 @@ def cleanup() {
 
 def download() {
     retry(5) {
-        if(MR_source_branch != ''){
+        if(PR_source_branch != ''){
             checkout changelog: true, poll: true, scm: [
                     $class                           : 'GitSCM',
-                    branches                         : [[name: "${MR_source_branch}"]],
+                    branches                         : [[name: "${PR_source_branch}"]],
                     browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
                             [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
                             [$class: 'CloneOption', timeout: 60],
-                            [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+                            [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${PR_target_branch}"]]
                     ],
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
@@ -465,8 +522,8 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "model", value: "${job_model}")
     ParamsPerJob += string(name: "lpot_url", value: "${lpot_url}")
     ParamsPerJob += string(name: "lpot_branch", value: "${lpot_commit}")
-    ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
-    ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
+    ParamsPerJob += string(name: "MR_source_branch", value: "${PR_source_branch}")
+    ParamsPerJob += string(name: "MR_target_branch", value: "${PR_target_branch}")
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
     ParamsPerJob += string(name: "strategy", value: "${strategy}")
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
@@ -530,7 +587,7 @@ def getPerfJobs() {
                         job_models = parseStrToList(onnxrt_models_windows)
                     }
                 }
-                if (MR_source_branch != '' && system == "linux"){
+                if (PR_source_branch != '' && system == "linux"){
                     add_models_list = collectModelList(job_framework)
                     job_models = job_models.plus(add_models_list)
                     job_models.unique()
@@ -586,7 +643,7 @@ def getPerfJobs() {
             }
         }
     }
-    if (MR_source_branch != ''|| pipeline_failFast) {
+    if (PR_source_branch != ''|| pipeline_failFast) {
         echo "enable failFast"
         jobs.failFast = true
     }
@@ -598,8 +655,8 @@ def codeScan(tool) {
         string(name: "TOOL", value: "${tool}"),
         string(name: "lpot_url", value: "${lpot_url}"),
         string(name: "lpot_branch", value: "${lpot_commit}"),
-        string(name: "MR_source_branch", value: "${MR_source_branch}"),
-        string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        string(name: "MR_source_branch", value: "${PR_source_branch}"),
+        string(name: "MR_target_branch", value: "${PR_target_branch}"),
         string(name: "val_branch", value: "${val_branch}"),
         string(name: "python_version", value: "${python_version}")
     ]
@@ -622,7 +679,7 @@ def codeScan(tool) {
     
     if (downstreamJob.result != 'SUCCESS') {
         currentBuild.result = "FAILURE"
-        if (MR_source_branch != '') {
+        if (PR_source_branch != '') {
             error("${tool} scan failed!")
         }
     }
@@ -631,8 +688,8 @@ def codeScan(tool) {
 def copyrightCheck() {
     List copyrightCheckParams = [
             string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "MR_source_branch", value: "${MR_source_branch}"),
-            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "MR_source_branch", value: "${PR_source_branch}"),
+            string(name: "MR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}")
     ]
 
@@ -654,7 +711,7 @@ def copyrightCheck() {
 
     if (downstreamJob.result != 'SUCCESS') {
         currentBuild.result = "FAILURE"
-        if (MR_source_branch != '') {
+        if (PR_source_branch != '') {
             error("Copyright check failed!")
         }
     }
@@ -664,8 +721,8 @@ def featureTests() {
     List featureTestsParams = [
             string(name: "lpot_url", value: "${lpot_url}"),
             string(name: "lpot_branch", value: "${lpot_commit}"),
-            string(name: "MR_source_branch", value: "${MR_source_branch}"),
-            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "MR_source_branch", value: "${PR_source_branch}"),
+            string(name: "MR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "feature_list", value: "${feature_list}")
     ]
@@ -685,7 +742,7 @@ def featureTests() {
 
     if (downstreamJob.result != 'SUCCESS') {
         currentBuild.result = "FAILURE"
-        if (MR_source_branch != '') {
+        if (PR_source_branch != '') {
             error("Feature tests check failed!")
         }
     }
@@ -741,7 +798,7 @@ def collectLog() {
                     }
                 }
 
-                if (MR_source_branch != ''){
+                if (PR_source_branch != ''){
                     add_models_list = collectModelList(job_framework)
                     job_models = job_models.plus(add_models_list)
                     job_models.unique()
@@ -816,8 +873,8 @@ def UTBuildParams(tf_version, run_coverage){
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
     ParamsPerJob += string(name: "lpot_url", value: "${lpot_url}")
     ParamsPerJob += string(name: "lpot_branch", value: "${lpot_commit}")
-    ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
-    ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
+    ParamsPerJob += string(name: "MR_source_branch", value: "${PR_source_branch}")
+    ParamsPerJob += string(name: "MR_target_branch", value: "${PR_target_branch}")
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
     ParamsPerJob += string(name: "tensorflow_version", value: "${tf_version}")
     ParamsPerJob += string(name: "mxnet_version", value: "${mxnet_version}")
@@ -911,8 +968,8 @@ def buildBinary(){
     List binaryBuildParams = [
             string(name: "lpot_url", value: "${lpot_url}"),
             string(name: "lpot_branch", value: "${lpot_commit}"),
-            string(name: "MR_source_branch", value: "${MR_source_branch}"),
-            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "MR_source_branch", value: "${PR_source_branch}"),
+            string(name: "MR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "pypi_version", value: "${pypi_version}")
     ]
@@ -966,8 +1023,8 @@ def generateReport() {
             "ghprbActualCommit=${ghprbActualCommit}",
             "ghprbPullLink=${ghprbPullLink}",
             "ghprbPullId=${ghprbPullId}",
-            "MR_source_branch=${MR_source_branch}",
-            "MR_target_branch=${MR_target_branch}"
+            "MR_source_branch=${PR_source_branch}",
+            "MR_target_branch=${PR_target_branch}"
 
         ]) {
             sh '''
@@ -1024,7 +1081,7 @@ def generateExcelReport() {
 
 def sendReport() {
     dir("$WORKSPACE") {
-        if (MR_source_branch != '') {
+        if (PR_source_branch != '') {
             recipient_list = ActualCommitAuthorEmail + ',' + TriggerAuthorEmail
             if ('recipient_list' in params && params.recipient_list != '') {
                 recipient_list = params.recipient_list + ',' + ActualCommitAuthorEmail + ',' + TriggerAuthorEmail
@@ -1051,9 +1108,9 @@ def collectModelList(framework) {
     dir("$WORKSPACE/lpot-models"){
         def modelconf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_list.json"))
 
-        withEnv(["MR_target_branch=${MR_target_branch}", "framework=${framework}"]) {
+        withEnv(["PR_target_branch=${PR_target_branch}", "framework=${framework}"]) {
             sh (
-                    script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) > diff.log',
+                    script: 'git --no-pager diff --name-only $(git show-ref -s remotes/origin/${PR_target_branch}) > diff.log',
                     returnStdout: true
             ).trim()
             classes = sh (
@@ -1105,7 +1162,7 @@ def parseStrToList(srtingElements, delimiter=',') {
 }
 
 def cancelPreviousBuilds() {
-  echo "Source Branch for this build is: ${ghprbSourceBranch}"
+  echo "Source Branch for this build is: ${env.GITHUB_PR_SOURCE_BRANCH}"
   def jobName = env.JOB_NAME
   def currentBuildNumber = env.BUILD_NUMBER.toInteger()
   def currentJob = Jenkins.instance.getItemByFullName(jobName)
@@ -1118,22 +1175,26 @@ def cancelPreviousBuilds() {
         if (buildCommit == ghprbActualCommit) {
             currentBuild.result = "ABORTED"
             // githubPRComment comment: "Executed test on the same commit. Aborting latest build.: [Job-${BUILD_NUMBER}](${BUILD_URL})"
+            comment = "Executed test on the same commit. Aborting latest build.: [Job-${BUILD_NUMBER}](${BUILD_URL})"
+            createGithubIssueComment(comment)
             error('Executed test on the same commit. Aborting current build.')
-        } else if (buildBranch == ghprbSourceBranch) {
+        } else if (buildBranch == env.GITHUB_PR_SOURCE_BRANCH) {
             echo "Older build ${build.number} Source Branch is ${buildBranch}"
             echo "Older build still queued. Sending kill signal to build number: ${build.number}"
             build.doTerm()
             // comment: "Previous pipeline has been canceled: [Job-${build.number}](${build.url})"
+            comment = "Previous pipeline has been canceled: [Job-${build.number}](${build.url})"
+            createGithubIssueComment(comment)
         }
     }
   }
 }
 
-//if (ABORT_DUPLICATE_MR && "${MR_source_branch}" != '') {
-//    stage("Cancel previous builds") {
-//        cancelPreviousBuilds()
-//    }
-//}
+if (ABORT_DUPLICATE_MR && "${PR_source_branch}" != '') {
+   stage("Cancel previous builds") {
+       cancelPreviousBuilds()
+   }
+}
 
 def uploadNightlyBinary(){
     List binaryBuildParams = [
@@ -1149,7 +1210,9 @@ def uploadNightlyBinary(){
 }
 
 node( node_label ) {
-
+    if (PR_source_branch != '') {
+        updateGithubCommitStatus("pending", "Waiting for status to be reported")
+    }
     try {
         cleanup()
         dir('lpot-validation') {
@@ -1217,7 +1280,7 @@ node( node_label ) {
                 codeScan("pyspelling")
             }
         }
-        if (CHECK_COPYRIGHT && MR_source_branch != '') {
+        if (CHECK_COPYRIGHT && PR_source_branch != '') {
             job_list["Copyright Check"] = {
                 copyrightCheck()
             }
@@ -1234,7 +1297,7 @@ node( node_label ) {
             job_list = job_list + perf_jobs
         }
 
-        if (MR_source_branch != ''|| pipeline_failFast) {
+        if (PR_source_branch != ''|| pipeline_failFast) {
             echo "enable failFast"
             job_list.failFast = true
         }
@@ -1307,7 +1370,7 @@ node( node_label ) {
             fingerprint: true
         }
 
-        if (MR_source_branch != ''){
+        if (PR_source_branch != ''){
             // If default model has perf regression, then fail the job.
             def destFile = new File("${WORKSPACE}/perf_regression.log")
             if (destFile.exists()) {
@@ -1317,9 +1380,15 @@ node( node_label ) {
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
                 // githubPRComment comment: "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
+                updateGithubCommitStatus("failure", "Pipeline failed!")
+                comment = "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
+                createGithubIssueComment(comment)
             } else {
                 echo "pipeline success"
                 // githubPRComment comment: "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
+                updateGithubCommitStatus("success", "Pipeline success!")
+                comment = "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
+                createGithubIssueComment(comment)
             }
         }
     }
