@@ -188,8 +188,10 @@ def download() {
 
 def build_conda_env() {
     withEnv([
+            "pytorch_version=${pytorch_version}",
             "torchvision_version=${torchvision_version}",
             "tensorflow_version=${tensorflow_version}",
+            "mxnet_version=${mxnet_version}",
             "onnx_version=${onnx_version}",
             "onnxruntime_version=${onnxruntime_version}",
             "conda_env_name=${conda_env}",
@@ -200,12 +202,13 @@ def build_conda_env() {
                 echo "Create new conda env for UT..."
                 bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
                     --conda_env_name=${conda_env_name} \
-                    --python_version=${python_version} \
-                    --torchvision_version=${torchvision_version} \
-                    --tensorflow_version=${tensorflow_version} \
-                    --onnxruntime_version=${onnxruntime_version} \
-                    --onnx_version=${onnx_version} \
-                    --run_ut=true
+                    --python_version="${python_version}" \
+                    --tensorflow_version="${tensorflow_version}" \
+                    --pytorch_version="${pytorch_version}" \
+                    --torchvision_version="${torchvision_version}" \
+                    --mxnet_version="${mxnet_version}" \
+                    --onnx_version="${onnx_version}" \
+                    --onnxruntime_version="${onnxruntime_version}" \
             '''
         }
     }
