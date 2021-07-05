@@ -63,12 +63,6 @@ if ('lpot_url' in params && params.lpot_url != ''){
 }
 echo "lpot_url is ${lpot_url}"
 
-requirement_list="ruamel.yaml==0.17.4"
-if ('requirement_list' in params && params.requirement_list != ''){
-    requirement_list = params.requirement_list
-}
-echo "requirement_list is ${requirement_list}"
-
 python_version="3.6"
 if ('python_version' in params && params.python_version != ''){
     python_version = params.python_version
@@ -295,7 +289,6 @@ def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxrun
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
                     --onnxruntime_version="${onnxruntime_version}" \
-                    --requirement_list="${requirement_list}" \
                     --conda_env_name="${conda_env_name}"
             """
         }
