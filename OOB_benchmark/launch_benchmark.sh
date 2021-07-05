@@ -56,9 +56,12 @@ function set_environment {
         export DNNL_VERBOSE=1
     fi
 
-    if [ "${precision}" == "int8" ] || [ "${precision}" == "bf16" ]; then
-        export DNNL_MAX_CPU_ISA=AVX512_CORE_AMX
-        echo "export DNNL_MAX_CPU_ISA=AVX512_CORE_AMX ..."
+
+    if [ "${CPU_NAME}" == "spr" ]; then
+        if [ "${precision}" == "int8" ] || [ "${precision}" == "bf16" ]; then
+            export DNNL_MAX_CPU_ISA=AVX512_CORE_AMX
+            echo "export DNNL_MAX_CPU_ISA=AVX512_CORE_AMX ..."
+        fi
     fi
 }
 
