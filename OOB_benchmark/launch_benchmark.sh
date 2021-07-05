@@ -38,6 +38,9 @@ function set_environment {
     source activate ${conda_env_name}
     echo "Real conda environment..."
     conda info --env
+    # install oob requirements
+    pip install pyyaml
+
     cd ${WORKSPACE}/lpot-validation/OOB_benchmark/oob_models || true
 
     export KMP_BLOCKTIME=1
