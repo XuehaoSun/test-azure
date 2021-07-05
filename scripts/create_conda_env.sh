@@ -56,7 +56,7 @@ function update_conda_env {
     pip install -U pip
 
     if [ -f "${WORKSPACE}/lpot_validation/requirements.txt" ]; then
-        pip install -r requirements.txt
+        pip install -r "${WORKSPACE}/lpot_validation/requirements.txt"
     fi
 }
 
