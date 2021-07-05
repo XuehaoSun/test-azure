@@ -21,8 +21,6 @@ do
             onnx_version=`echo $i | sed "s/${PATTERN}//"`;;
         --onnxruntime_version=*)
             onnxruntime_version=`echo $i | sed "s/${PATTERN}//"`;;
-        --requirement_list=*)
-            requirement_list=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         *)
@@ -57,8 +55,8 @@ function update_conda_env {
     # Upgrade pip
     pip install -U pip
 
-    if [[ ${requirement_list} != '' ]]; then
-        pip install ${requirement_list}
+    if [ -f "${WORKSPACE}/lpot_validation/requirements.txt" ]; then
+        pip install -r requirements.txt
     fi
 }
 
