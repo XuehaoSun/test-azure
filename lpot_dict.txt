@@ -502,6 +502,7 @@ faq
 Farhadi
 FashionMNIST
 FasterRCNN
+FastFormers
 fastrcnn
 fatihcakirs
 favourably
