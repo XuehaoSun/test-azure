@@ -344,8 +344,17 @@
     },
     "faster_rcnn_inception_resnet_v2": {
       "model_src_dir": "object_detection",
-      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "dataset_location": "/tf_dataset/tensorflow/mini-coco-500.record",
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/faster_rcnn_inception_resnet_v2/frozen_inference_graph.pb",
+      "yaml": "faster_rcnn_inception_resnet_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
+    "faster_rcnn_inception_resnet_v2_saved": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/tensorflow/mini-coco-500.record",
+      "input_model": "/tf_dataset/pre-train-model-oob/object_detection/faster_rcnn_inception_resnet_v2/saved_model",
       "yaml": "faster_rcnn_inception_resnet_v2.yaml",
       "strategy": "basic",
       "batch_size": 1,
@@ -355,6 +364,15 @@
       "model_src_dir": "object_detection",
       "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
       "input_model": "/tf_dataset/pre-train-model-oob/object_detection/faster_rcnn_resnet101/frozen_inference_graph.pb",
+      "yaml": "faster_rcnn_resnet101.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
+    "faster_rcnn_resnet101_saved": {
+      "model_src_dir": "object_detection",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "input_model": "/tf_dataset/pre-train-model-oob/object_detection/faster_rcnn_resnet101/saved_model",
       "yaml": "faster_rcnn_resnet101.yaml",
       "strategy": "basic",
       "batch_size": 1,
