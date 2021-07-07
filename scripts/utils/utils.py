@@ -224,12 +224,6 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
                 model_wise.update({"activation": {}})
                 prev_activation = model_wise.get("activation", {})
             prev_activation.update({"algorithm": algorithm})
-
-            weight = model_wise.get("weight", {})
-            if not weight:
-                model_wise.update({"weight": {}})
-                weight = model_wise.get("weight", {})
-            weight.update({"algorithm": algorithm})
         except Exception as e:
             print(f"[ WARNING ] {e}")
 
