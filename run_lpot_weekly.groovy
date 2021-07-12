@@ -330,7 +330,7 @@ def getJob(python_version, framework, framework_version, strategy, lpot_commit) 
             echo "---- mxnet_models_pass: ${mxnet_models_pass}"
             echo "---- onnxrt_models_pass: ${onnxrt_models_pass}"
 
-            downstreamJob = build job: "intel-lpot-validation-top-weekly", propagate: false, parameters: [
+            downstreamJob = build job: "intel-lpot-validation-top-strategy", propagate: false, parameters: [
                 string(name: 'Frameworks', value:"${framework}"),
                 string(name: "${fw_version_param_name}", value:"${framework_version}"),
                 string(name: "onnx_version", value: "${onnx_version}"),
