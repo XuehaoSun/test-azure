@@ -153,13 +153,6 @@ torchvision_versions = [
 
 torchvision_version = ""
 if (framework == "pytorch") {
-    if (model == 'blendcnn' || model == 'resnest50'){
-        framework_version = '1.6.0+cpu'
-    }
-    label=model.split('_')
-    if(label[-1] == 'fx'){
-        framework_version = '1.8.0+cpu'
-    }
 
     pytorch_version_base = framework_version.split('\\+')[0]
     try {
@@ -746,6 +739,15 @@ node( sub_node_label ) {
                         framework_version='1.8.0+cpu'
                         torchvision_version='0.9.0+cpu'
                         conda_env_name="${framework}-${framework_version}-${python_version}"
+                    }
+                    if (model == 'blendcnn' || model == 'resnest50'){
+                        framework_version = '1.6.0+cpu'
+                        torchvision_version='0.7.0+cpu'
+                    }
+                    label=model.split('_')
+                    if(label[-1] == 'fx' && framework_version == '1.5.0+cpu'){
+                        framework_version = '1.8.0+cpu'
+                        torchvision_version='0.9.0+cpu'
                     }
                 }
                 if (framework == "tensorflow") {
