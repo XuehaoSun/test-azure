@@ -50,8 +50,7 @@ function main {
 }
 
 function generate_inference {
-
-    awk -v framework="${framework}" -v fw_version="${fw_version}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
+    awk -v framework="${framework}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
         BEGINE {
             fp32_ms_bs = "nan";
             fp32_ms_value = "nan";
@@ -73,7 +72,7 @@ function generate_inference {
             int8_acc_value = "nan";
             int8_acc_url = "nan";
         }{
-            if($1 == os && $2 == platform && $3 == framework && $4 == fw_version && $6 == model) {
+            if($1 == os && $2 == platform && $3 == framework && $6 == model) {
                 // FP32
                 if($5 == "FP32") {
                     // Latency
@@ -127,24 +126,26 @@ function generate_inference {
 }
 
 function generate_html_core {
-    
+    fw_version=$(grep "^${os};${platform};${framework};.*;${model};" ${tuneLog} |awk -F';' '{print $4}')
     tuning_strategy=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $6}')
     tuning_time=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $7}')
     tuning_count=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $8}')
     tuning_log=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $9}')
-    echo "<tr><td rowspan=3>${platform}</td><td rowspan=3>${os}</td><td rowspan=3>${framework}</td><td rowspan=3>${fw_version}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
+    echo "<tr><td rowspan=3>${platform}</td><td rowspan=3>${os}</td><td rowspan=3>${framework}</td><td>${fw_version}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
     echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
 
-    tuning_strategy=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
-    tuning_time=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $7}')
-    tuning_count=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
-    tuning_log=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $9}')
+    ref_fw_ver=$(grep "^${os};${platform};${framework};.*;${model};" ${tuneLogLast} |awk -F';' '{print $4}')
+    tuning_strategy=$(grep "^${os};${platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
+    tuning_time=$(grep "^${os};${platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $7}')
+    tuning_count=$(grep "^${os};${platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
+    tuning_log=$(grep "^${os};${platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $9}')
 
     echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
               -v pb_size="${pb_size}" -v last_pb_size="${last_pb_size}" \
               -v ts="${tuning_strategy}" -v tt="${tuning_time}" -v tc="${tuning_count}" -v tl="${tuning_log}" \
               -v ref_build_name="${ref_build[0]}" -v ref_build_number="${ref_build[1]}" \
               -v new_build_name="${new_build[0]}" -v new_build_number="${new_build[1]}" \
+              -v ref_fw_ver="${ref_fw_ver}" \
               -v jenkins_url="${JENKINS_URL}" '
 
         function abs(x) { return x < 0 ? -x : x }
@@ -281,12 +282,13 @@ function generate_html_core {
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td><a href=\"%1$s/job/%2$s/%3$s\">%2$s #%3$s</a></td><td><a href=%7$s>%4$s</a></td><td><a href=%7$s>%5$s</a></td><td><a href=%7$s>%6$s</a></td>", jenkins_url, ref_build_name, ref_build_number, ts, tt, tc, tl);
+            printf("</tr>\n<tr><td>%8$s</td><td><a href=\"%1$s/job/%2$s/%3$s\">%2$s #%3$s</a></td><td><a href=%7$s>%4$s</a></td><td><a href=%7$s>%5$s</a></td><td><a href=%7$s>%6$s</a></td>", jenkins_url, ref_build_name, ref_build_number, ts, tt, tc, tl, ref_fw_ver);
             if(last_pb_size_[1] ~/[1-9]/ && last_pb_size_[2] ~/[1-9]/) {
                 printf("<td>%.2fx</td>", last_pb_size_[1]/last_pb_size_[2]);
             }else {
                 printf("<td>NaN</td>");
             }
+
             show_new_last(last_value[1],last_value[13],last_value[2],"ms");
             show_new_last(last_value[3],last_value[14],last_value[4],"fps");
             show_new_last(last_value[5],last_value[15],last_value[6],"acc");
@@ -296,7 +298,7 @@ function generate_html_core {
             printf("</tr>")
             
             // current vs last
-            printf("</tr>\n<tr><td>%s... #%s/%s... #%s</td><td colspan=4>Mem Peak:%s</td>",
+            printf("</tr>\n<tr><td>-</td><td>%s... #%s/%s... #%s</td><td colspan=4>Mem Peak:%s</td>",
                 substr(new_build_name,0,5),
                 substr(new_build_number,0,5),
                 substr(ref_build_name,0,5),
@@ -326,21 +328,17 @@ function generate_results {
             frameworks=$(sed '1d' ${summaryLog} |grep "^${os};${platform}" |cut -d';' -f3 | awk '!a[$0]++')
             for framework in ${frameworks[@]}
             do
-                fw_versions=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework}" |cut -d';' -f4 | awk '!a[$0]++')
-                for fw_version in ${fw_versions[@]}
+                models=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework}" |cut -d';' -f6 | awk '!a[$0]++')
+                for model in ${models[@]}
                 do
-                    models=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework};${fw_version}" |cut -d';' -f6 | awk '!a[$0]++')
-                    for model in ${models[@]}
-                    do
-                        current_values=$(generate_inference ${summaryLog})
-                        last_values=$(generate_inference ${summaryLogLast})
+                    current_values=$(generate_inference ${summaryLog})
+                    last_values=$(generate_inference ${summaryLogLast})
 
-                        # PB Size
-                        pb_size=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
-                        last_pb_size=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
+                    # PB Size
+                    pb_size=$(grep "^${os};${platform};${framework};*;${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
+                    last_pb_size=$(grep "^${os};${platform};${framework};*;${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $9,$10,$11)}')
 
-                        generate_html_core
-                    done
+                    generate_html_core
                 done
             done
         done
@@ -365,6 +363,7 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Platform</th>
                 <th rowspan="2">System</th>
                 <th rowspan="2">Framework</th>
+                <th rowspan="2">Version</th>
                 <th rowspan="2">Model</th>
                 <th rowspan="2">VS</th>
                 <th rowspan="2">Tuning<br>Strategy</th>
@@ -399,7 +398,7 @@ function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
             <tr>
-                <td colspan="19"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+                <td colspan="22"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
                 <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
             </tr>
         </table>
