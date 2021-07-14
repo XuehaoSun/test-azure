@@ -1775,3 +1775,5 @@ zxvf
 SigOpt
 sigopt
 signup
+HAWQ
+hawq
