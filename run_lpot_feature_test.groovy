@@ -80,13 +80,15 @@ if (feature_name == 'graph_optimization'){
 
 def cleanup() {
     try {
-        sh '''#!/bin/bash -x
-        cd $WORKSPACE
-        sudo rm -rf *
-        sudo rm -rf .git
-        rm -rf *
-        rm -rf .git
-        '''
+        dir(WORKSPACE) {
+            deleteDir()
+            sh '''#!/bin/bash -x
+                sudo rm -rf *
+                sudo rm -rf .git
+                rm -rf *
+                rm -rf .git
+            '''
+        }
     } catch(e) {
         echo "==============================================="
         echo "ERROR: Exception caught in cleanup()           "
