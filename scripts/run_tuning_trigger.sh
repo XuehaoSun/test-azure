@@ -238,7 +238,6 @@ main() {
         parameters=" ${parameters} --output_model=${model_src_dir}/saved_results"
     fi
 
-    # new config with yaml
     if [ "${framework}" == "tensorflow" ]; then
         new_config_dirs=("image_recognition" "object_detection" "nlp/bert" "semantic_image_segmentation" "keras")
         for model_dir in ${new_config_dirs[*]}; do
@@ -249,12 +248,11 @@ main() {
         done
     fi
 
-    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" != *"language_translation"* ]] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
-      parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
-    fi
-
-    if [ "${framework}" == "onnxrt" ] && [[ "${model_src_dir}" == *"language_translation"* ]]; then
-      ln -s ${input_model} ${model_src_dir}/
+    if [ "${framework}" == "onnxrt" ] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
+        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
+        if [[ "${model_src_dir}" == *"language_translation"* ]]; then
+            ln -s ${input_model} ${model_src_dir}/
+        fi
     fi
 
     if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
@@ -350,11 +348,16 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/pascal_voc_seg\/tfrecord/s|root:.*|root: $dataset_location|g" ${yaml}
             fi
         fi
-        if [ "${framework}" == "onnxrt" ] && [ "${model}" == "resnet_v1_5_mlperf" ];  then
-            sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
-            sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
-            sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
-            sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+        if [ "${framework}" == "onnxrt" ]; then 
+            if [[ "${model_src_dir}" == *"/language_translation/"* ]]; then
+                sed -i "/\/path\/to\/dataset/s|data_dir:.*|data_dir: $dataset_location|g" ${yaml}
+            fi
+            if [ "${model}" == "resnet_v1_5_mlperf" ];  then
+                sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
+                sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
+                sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+                sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+            fi
         fi
     fi
 

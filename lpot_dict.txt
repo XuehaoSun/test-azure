@@ -578,6 +578,7 @@ github
 githubusercontent
 gitmodules
 GLIBCXX
+GLUE
 gluebenchmark
 gluepy
 gluoncv
@@ -613,6 +614,8 @@ Haihao
 hangzhang
 hardcoding
 HasAns
+hawq
+HAWQ
 HdQ
 heatmaps
 Hein
@@ -1257,6 +1260,7 @@ qnli
 QNLI
 qps
 QPS
+qqp
 QQP
 qscheme
 qsl
@@ -1430,8 +1434,11 @@ ShuffleNet
 Shvets
 sigmoid
 signup
+signup
+sigopt
 sigopt
 Sigopt
+SigOpt
 SigOpt
 SingleStream
 Skylake
@@ -1580,6 +1587,7 @@ tokenizer
 Tokenizer
 tokenizers
 Tokenizers
+tokenizing
 tol
 TOL
 tolist
@@ -1772,9 +1780,3 @@ Zptls
 zrelro
 zrl
 zxvf
-SigOpt
-sigopt
-signup
-HAWQ
-hawq
-qqp
