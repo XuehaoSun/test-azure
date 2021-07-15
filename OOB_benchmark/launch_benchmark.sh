@@ -82,6 +82,12 @@ function run_benchmark {
     ncores_per_instance=4
     export OMP_NUM_THREADS=${ncores_per_instance}
     iters=200
+    num_warmup=10
+
+    if [ "${verbose}" == "true" ]; then
+        iters=10
+        num_warmup=5
+    fi
 
     # custom iteration
     if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
@@ -100,12 +106,6 @@ function run_benchmark {
 
     echo "BENCHMARK RUNCMD: $run_cmd "
     logFile=${output_path}/${model}-${precision}
-
-
-    if [ "${verbose}" == "true" ]; then
-        iters=10
-        num_warmup=5
-    fi
 
     for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
     do
