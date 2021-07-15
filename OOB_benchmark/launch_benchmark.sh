@@ -40,6 +40,7 @@ function set_environment {
     conda info --env
     # install oob requirements
     pip install pyyaml
+    pip install pandas
 
     cd ${WORKSPACE}/lpot-validation/OOB_benchmark/oob_models || true
 
