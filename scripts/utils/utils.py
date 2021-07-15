@@ -197,6 +197,7 @@ def update_yaml(yaml, framework, dataset_location = None, strategy = None, max_t
         with open(yaml, "w") as config:
             for line in lines:
                 config.write(re.sub(r'root:.*/path/to/(calibration|evaluation)/dataset/?', f"root: {dataset_location}", line))
+                config.write(re.sub(r'data_dir:.*/path/to/dataset/?', f"data_dir: {dataset_location}", line))
 
 
     update_yaml_config(

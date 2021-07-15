@@ -228,9 +228,6 @@ def get_windows_parameters(framework: str, topology: str, q_model: str):
             ],
             "bert_base_MRPC": [
                 "--model_path", f"{args.input_model}",
-                "--data_dir", f"{args.dataset_location}",
-                "--task_name", "mrpc",
-                "--input_dir", "bert-base-uncased",
                 "--config", f"{args.yaml}",
                 "--output_model", f"{q_model}",
                 "--tune"

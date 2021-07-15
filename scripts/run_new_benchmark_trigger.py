@@ -132,17 +132,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         ])
 
     # Workaround for ONNXRT LT models
-    if args.framework == "onnxrt":
-        if "language_translation" in args.model_src_dir:
-            onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "benchmark"
-            parameters = [
-                f"--topology={args.model}",
-                f"--dataset_location={args.dataset_location}",
-                f"--input_model={input_model}",
-                f"--mode={onnxrt_lt_mode}",
-                f"--batch_size={args.batch_size}",
-            ]
-        elif args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
+    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
             onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
             parameters = [
                 f"--config={yaml_path}",
@@ -219,17 +209,7 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         ])
 
     # Workaround for ONNXRT LT models
-    if args.framework == "onnxrt" and "language_translation" in args.model_src_dir:
-        onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "benchmark"
-        parameters = [
-            f"--topology={args.model}",
-            f"--dataset_location={args.dataset_location}",
-            f"--input_model={input_model}",
-            f"--mode={onnxrt_lt_mode}",
-            f"--batch_size={batch_size}",
-            f"--iters={iters}",
-        ]
-    elif args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
+    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
             onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
             parameters = [
                 f"--config={yaml_path}",
@@ -240,7 +220,6 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
 
     cmd = get_executable("benchmark")
     cmd.extend(parameters)
-    ###
 
     print(f"Execute command: {cmd}")
     execute_command(
