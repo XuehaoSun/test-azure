@@ -22,6 +22,9 @@ function init_params {
       --iters=*)
           iters=$(echo ${var} |cut -f2 -d=)
       ;;
+      --num_warmup=*)
+            num_warmup=$(echo ${var} |cut -f2 -d=)
+      ;;
       *)
           echo "Error: No such parameter: ${var}"
           exit 1
@@ -68,15 +71,15 @@ vggvox
 # run_tuning
 function run_benchmark {
     mode_cmd=" --num_iter ${iters} --benchmark"
-    extra_cmd='--num_warmup 10'
+    extra_cmd="--num_warmup ${num_warmup}"
     if [[ "${models_need_name[@]}"  =~ "${topology}" ]]; then
       echo "$topology need model name!"
-      extra_cmd='--num_warmup 10 --model_name '${topology}
+      extra_cmd="--num_warmup ${num_warmup} --model_name "${topology}
     fi
 
     if [[ "${models_need_disable_optimize[@]}"  =~ "${topology}" ]]; then
       echo "$topology need to disable optimize_for_inference!"
-      extra_cmd='--num_warmup 10 --disable_optimize --model_name '${topology}
+      extra_cmd="--num_warmup ${num_warmup} --disable_optimize --model_name "${topology}
     fi
 
     python tf_benchmark.py \

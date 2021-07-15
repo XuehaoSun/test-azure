@@ -92,7 +92,7 @@ function run_benchmark {
 
 
     if [ -f "run_benchmark.sh" ]; then
-        run_cmd="bash run_benchmark.sh --topology=${model} --input_model=${input_model} --iters=${iters}"
+        run_cmd="bash run_benchmark.sh --topology=${model} --input_model=${input_model} --iters=${iters} --num_warmup=${num_warmup}"
     else
         echo "Not found run_benchmark file."
         exit 1
@@ -103,7 +103,8 @@ function run_benchmark {
 
 
     if [ "${verbose}" == "true" ]; then
-        iters=20
+        iters=10
+        num_warmup=5
     fi
 
     for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
