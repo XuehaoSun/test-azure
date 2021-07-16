@@ -3,7 +3,7 @@ def jsonParse(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
 }
 
-credential = 'lab_tfbot'
+credential = 'c09d6555-5e41-4b99-bf90-50f518319b49'
 
 // parameters
 // setting node_label

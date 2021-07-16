@@ -1,4 +1,4 @@
-credential = 'lab_tfbot'
+credential = 'c09d6555-5e41-4b99-bf90-50f518319b49'
 try{ echo "BRANCH=${BRANCH}"; } catch (Exception e) { BRANCH="master" ; echo "BRANCH=${BRANCH}" }
 try{ echo "python_version=${python_version}"; } catch (Exception e) { python_version="3.6" ; echo "python_version=${python_version}" }
 

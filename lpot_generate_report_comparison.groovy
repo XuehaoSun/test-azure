@@ -1,4 +1,4 @@
-credential = 'lab_tfbot'
+credential = 'c09d6555-5e41-4b99-bf90-50f518319b49'
 try{ echo "BRANCH=${BRANCH}"; } catch (Exception e) { BRANCH="master" ; echo "BRANCH=${BRANCH}" }
 def JOB_NAMES_LIST = JOB_NAMES.split(",")
 def BUILD_NUMBERS_LIST = BUILD_NUMBERS.split(",")

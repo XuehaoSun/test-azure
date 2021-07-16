@@ -7,7 +7,7 @@ import jenkins.model.*
 def jsonParse(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
 }
-credential = 'lab_tfbot'
+credential = 'c09d6555-5e41-4b99-bf90-50f518319b49'
 windows_job = "intel-lpot-validation-windows"
 linux_job = "intel-lpot-validation"
 
@@ -433,8 +433,8 @@ def cleanup() {
         cd $WORKSPACE
         sudo rm -rf *
         sudo rm -rf .git
-        git config --global user.email "lab_tfbot@intel.com"
-        git config --global user.name "lab_tfbot"
+        git config --global user.email "sys_lpot_val@intel.com"
+        git config --global user.name "sys-lpot-val"
         '''
     } catch(e) {
         echo "==============================================="
