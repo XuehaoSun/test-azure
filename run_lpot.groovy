@@ -753,7 +753,7 @@ node( sub_node_label ) {
                 if (framework == "tensorflow") {
                     label=model.split('_')
                     if((label[0] == 'bert' || label[-1] == 'slim') && (!(framework_version=~'1.15').find())){
-                        framework_version = '1.15UP3'
+                        framework_version = '1.15UP2'
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
                 }
