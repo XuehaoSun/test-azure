@@ -38,6 +38,8 @@ alexnet
 AlexNet
 algo
 algos
+alibaba
+Alibaba
 AlignImageChannel
 allenai
 alloc
@@ -194,6 +196,8 @@ CenterCrop
 centos
 CentOS
 Centre
+cern
+CERN's
 certfile
 Cesa
 cfa
@@ -410,6 +414,7 @@ dividiti
 Djamé
 DKFZ
 dl
+dlboost
 dlrm
 DLRM's
 dmlc
@@ -557,6 +562,7 @@ Funtowicz
 fw
 fx
 GameAI
+GANs
 Garnett
 gcc
 gclient
@@ -650,6 +656,7 @@ HybridBlock
 hyperparameter
 hyperparameters
 ICCV
+Icelake
 ide
 idx
 ie
@@ -773,6 +780,7 @@ layernorm
 layoutlm
 ld
 len
+lfaidata
 li
 libffi
 libglib
@@ -1008,6 +1016,7 @@ NeurIPS
 neval
 NewMetric
 newstest
+nextplatform
 ng
 ngatang
 NGPUS
@@ -1127,6 +1136,7 @@ ov
 overfeat
 overfit
 overfitted
+pageId
 panoptic
 Panoptic
 paperswithcode
@@ -1533,6 +1543,8 @@ TBD
 tbe
 tbody
 td
+techdecoded
+tencent
 tensorboard
 tensorBoard
 TensorBoard
@@ -1670,6 +1682,7 @@ Veronika
 veronikayurchuk
 Veselin
 vgg
+viewpage
 Villemonte
 voc
 VOC
@@ -1714,6 +1727,7 @@ xad
 xception
 Xception
 xcode
+xeon
 Xeon
 Xiang
 Xiong
@@ -1780,4 +1794,3 @@ Zptls
 zrelro
 zrl
 zxvf
-Icelake
