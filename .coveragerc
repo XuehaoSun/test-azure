@@ -14,3 +14,5 @@ exclude_lines =
  if self.device == "gpu":
  if device == "gpu":
  except ImportError:
+ onnx_version < ONNX18_VERSION
+ onnx_version >= ONNX18_VERSION
