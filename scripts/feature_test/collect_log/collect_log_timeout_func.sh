@@ -9,22 +9,12 @@ timeout_log="${WORKSPACE}/${feature_name}/test_timeout_.log"
 # fetch valie
 test_status="check"
 exit_label=$(grep -c 'Specified timeout or max trials is reached' ${timeout_log})
-best_acc_manual=$(
-    grep "Tune [0-9]* result is:" ${timeout_log} |sed 's/,//g' |awk 'BEGIN{
-        best_acc = 0;
-    }{
-        if($9 > best_acc) {
-            best_acc = $9;
-        }
-    }END{
-        print best_acc;
-    }'
-)
+
 best_acc_lpot=$(grep "Best tune result is:" ${timeout_log} |tail -1 |sed 's/.*accuracy://;s/,.*//;s/ //g')
 check_acc=$(grep -A 3 "accuracy mode benchmark result:" ${timeout_log} |grep "Accuracy is" |awk '{print $NF}')
 
 # get result
-if [ ${exit_label} -eq 1 ] && [ "${check_acc}" == "${best_acc_manual}" ] && [ "${check_acc}" == "${best_acc_lpot}" ];then
+if [ ${exit_label} -eq 1 ] && [ "${check_acc}" == "${best_acc_lpot}" ];then
     test_status="pass"
 fi
 
