@@ -11,6 +11,8 @@ credential = 'c09d6555-5e41-4b99-bf90-50f518319b49'
 windows_job = "intel-lpot-validation-windows"
 linux_job = "intel-lpot-validation"
 
+def autoCancel = false
+
 sys_lpot_val_credentialsId = "dcf0dff2-03fb-45b0-9e64-5b4db466bee5"
 
 // setting test_title
@@ -169,11 +171,11 @@ if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
     EXCEL_REPORT=params.EXCEL_REPORT
 }
 
-ABORT_DUPLICATE_MR = false
-if ('ABORT_DUPLICATE_MR' in params && params.ABORT_DUPLICATE_MR){
-    ABORT_DUPLICATE_MR=params.ABORT_DUPLICATE_MR
+ABORT_DUPLICATE_TEST = false
+if ('ABORT_DUPLICATE_TEST' in params && params.ABORT_DUPLICATE_TEST){
+    ABORT_DUPLICATE_TEST=params.ABORT_DUPLICATE_TEST
 }
-echo "ABORT_DUPLICATE_MR is ${ABORT_DUPLICATE_MR}"
+echo "ABORT_DUPLICATE_TEST is ${ABORT_DUPLICATE_TEST}"
 
 FEATURE_TESTS=false
 if (params.FEATURE_TESTS != null){
@@ -244,10 +246,12 @@ TriggerAuthorEmail=''
 ghprbActualCommit=''
 ghprbPullLink=''
 ghprbPullId=''
+ghprbSourceBranch=''
 if ( PR_source_branch != '') {
     // githubPRComment comment: "Pipeline started: [Job-${BUILD_NUMBER}](${BUILD_URL})"
     ActualCommitAuthorEmail=env.GITHUB_PR_AUTHOR_EMAIL
     TriggerAuthorEmail=env.GITHUB_PR_TRIGGER_SENDER_EMAIL
+    ghprbSourceBranch=env.GITHUB_PR_SOURCE_BRANCH
     ghprbActualCommit=env.GITHUB_PR_HEAD_SHA
     ghprbPullLink=env.GITHUB_PR_URL
     ghprbPullId=env.GITHUB_PR_NUMBER
@@ -382,7 +386,7 @@ def updateGithubCommitStatus(String state, String description) {
             "state=${state}",
             "description=${description}"
             ]) {
-                sh """
+                sh """#!/bin/bash -x
                     curl \
                     -X POST \
                     -H \"Accept: application/vnd.github.v3+json\" \
@@ -407,7 +411,7 @@ def createGithubIssueComment(String comment) {
             "issueNumber=${env.GITHUB_PR_NUMBER}",
             "comment=${comment}",
             ]) {
-                sh """
+                sh """#!/bin/bash -x
                     curl \
                     -X POST \
                     -H \"Accept: application/vnd.github.v3+json\" \
@@ -421,6 +425,7 @@ def createGithubIssueComment(String comment) {
     } catch (e) {
         println("Could not add comment for PR #${env.GITHUB_PR_NUMBER}")
         currentBuild.result = "FAILURE"
+        println("ERROR\n" + e.toString())
         error(e.toString())
     }
 }
@@ -1162,38 +1167,33 @@ def parseStrToList(srtingElements, delimiter=',') {
 }
 
 def cancelPreviousBuilds() {
-  echo "Source Branch for this build is: ${env.GITHUB_PR_SOURCE_BRANCH}"
   def jobName = env.JOB_NAME
   def currentBuildNumber = env.BUILD_NUMBER.toInteger()
   def currentJob = Jenkins.instance.getItemByFullName(jobName)
-
+  
   for (def build : currentJob.builds) {
-    def buildBranch = build.getEnvironment()['ghprbSourceBranch']
-    def buildCommit = build.getEnvironment()['ghprbActualCommit']
-
+    def buildEnv = build.getEnvironment()
+    def buildBranch = buildEnv['GITHUB_PR_SOURCE_BRANCH']
+    def buildCommit = buildEnv['GITHUB_PR_HEAD_SHA']
+  
     if (build.isBuilding() && (build.number.toInteger() < currentBuildNumber)) {
         if (buildCommit == ghprbActualCommit) {
             currentBuild.result = "ABORTED"
-            // githubPRComment comment: "Executed test on the same commit. Aborting latest build.: [Job-${BUILD_NUMBER}](${BUILD_URL})"
             comment = "Executed test on the same commit. Aborting latest build.: [Job-${BUILD_NUMBER}](${BUILD_URL})"
-            createGithubIssueComment(comment)
-            error('Executed test on the same commit. Aborting current build.')
+            return [1, comment]
         } else if (buildBranch == env.GITHUB_PR_SOURCE_BRANCH) {
             echo "Older build ${build.number} Source Branch is ${buildBranch}"
             echo "Older build still queued. Sending kill signal to build number: ${build.number}"
             build.doTerm()
-            // comment: "Previous pipeline has been canceled: [Job-${build.number}](${build.url})"
-            comment = "Previous pipeline has been canceled: [Job-${build.number}](${build.url})"
-            createGithubIssueComment(comment)
+            buildNumber = buildEnv['BUILD_NUMBER']
+            buildUrl = buildEnv['BUILD_URL']
+            comment = "Previous pipeline has been canceled: [Job-${buildNumber}](${buildUrl})"
+            return [2, comment]
+            
         }
     }
   }
-}
-
-if (ABORT_DUPLICATE_MR && "${PR_source_branch}" != '') {
-   stage("Cancel previous builds") {
-       cancelPreviousBuilds()
-   }
+  return [0, "Nothing to abort."]
 }
 
 def uploadNightlyBinary(){
@@ -1210,6 +1210,19 @@ def uploadNightlyBinary(){
 }
 
 node( node_label ) {
+    
+    if (ABORT_DUPLICATE_TEST && "${PR_source_branch}" != '') {
+        stage("Cancel previous builds") {
+            (exit_code, message) = cancelPreviousBuilds()
+            if (exit_code != 0) {
+                createGithubIssueComment(message)
+            }
+            if (exit_code == 1) {
+                error("Executed test on the same commit. Aborting current build.")
+            }
+        }
+    }
+
     if (PR_source_branch != '') {
         updateGithubCommitStatus("pending", "Waiting for status to be reported")
     }
@@ -1310,6 +1323,11 @@ node( node_label ) {
     } catch (e) {
         // If there was an exception thrown, the build failed
         currentBuild.result = "FAILURE"
+        if (e.toString() == "org.jenkinsci.plugins.workflow.steps.FlowInterruptedException" && e.getCauses().size() == 0) {
+            println("Setting autoCancel flag to true.")
+            autoCancel = true
+            println("autoCancel: ${autoCancel}")
+        }
         error(e.toString())
 
     } finally {
@@ -1379,13 +1397,16 @@ node( node_label ) {
             }
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
-                // githubPRComment comment: "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
+                echo "autoCancel: ${autoCancel}"
+                if (PR_source_branch != '' && autoCancel) {
+                    echo "Build was auto cancelled. Skipping sending status and comment to GitHub."
+                    return
+                }
                 updateGithubCommitStatus("failure", "Pipeline failed!")
                 comment = "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
                 createGithubIssueComment(comment)
             } else {
                 echo "pipeline success"
-                // githubPRComment comment: "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
                 updateGithubCommitStatus("success", "Pipeline success!")
                 comment = "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
                 createGithubIssueComment(comment)
