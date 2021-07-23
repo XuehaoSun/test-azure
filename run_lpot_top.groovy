@@ -146,6 +146,13 @@ if ('RUN_SPELLCHECK' in params && params.RUN_SPELLCHECK){
 }
 echo "RUN_SPELLCHECK = ${RUN_SPELLCHECK}"
 
+COUNT_CODE_LINES=false
+if ('COUNT_CODE_LINES' in params && params.COUNT_CODE_LINES){
+    echo "COUNT_CODE_LINES is true"
+    COUNT_CODE_LINES=params.COUNT_CODE_LINES
+}
+echo "COUNT_CODE_LINES = ${COUNT_CODE_LINES}"
+
 // set ut extension test
 ut_extension_tensorflows='1.15.2,1.15UP2'
 if (params.ut_extension_tensorflows != null) {
@@ -671,13 +678,15 @@ def codeScan(tool) {
     copyArtifacts(
         projectName: "intel-lpot-format-scan",
         selector: specific("${downstreamJob.getNumber()}"),
-        filter: '*.json,*.log',
+        filter: '*.json,*.log,*.csv',
         fingerprintArtifacts: true,
         target: "format_scan",
         optional: true)
 
-    text_comment = readFile file: "${overview_log}"
-    writeFile file: "${overview_log}", text: text_comment + "intel-lpot-format-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
+    if (tool != "cloc") {
+        text_comment = readFile file: "${overview_log}"
+        writeFile file: "${overview_log}", text: text_comment + "intel-lpot-format-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
+    }
 
     // Archive in Jenkins
     archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true
@@ -1029,7 +1038,8 @@ def generateReport() {
             "ghprbPullLink=${ghprbPullLink}",
             "ghprbPullId=${ghprbPullId}",
             "MR_source_branch=${PR_source_branch}",
-            "MR_target_branch=${PR_target_branch}"
+            "MR_target_branch=${PR_target_branch}",
+            "code_lines_summary=${WORKSPACE}/format_scan/code_lines_summary.csv"
 
         ]) {
             sh '''
@@ -1293,6 +1303,12 @@ node( node_label ) {
                 codeScan("pyspelling")
             }
         }
+        if (COUNT_CODE_LINES) {
+            job_list["Code Lines Count"] = {
+                codeScan("cloc")
+            }
+        }
+
         if (CHECK_COPYRIGHT && PR_source_branch != '') {
             job_list["Copyright Check"] = {
                 copyrightCheck()

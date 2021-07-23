@@ -137,7 +137,7 @@ node(node_label) {
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.json,*.log', excludes: null, allowEmptyArchive: true
+            archiveArtifacts artifacts: '*.json,*.log,*.csv', excludes: null, allowEmptyArchive: true
             fingerprint: true
         }
     }

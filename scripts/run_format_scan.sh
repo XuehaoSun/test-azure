@@ -70,6 +70,7 @@ main() {
         "pylint") run_pylint;;
         "bandit") run_bandit;;
         "pyspelling") run_pyspelling;;
+        "cloc") run_cloc;;
         *)
             echo "Scan tool ${SCAN_TOOL} not supported."; exit 1;;
     esac
@@ -112,6 +113,10 @@ run_pyspelling() {
         echo "Pyspelling exited with non-zero exit code."; exit 1
     fi
     exit 0
+}
+
+run_cloc() {
+    cloc --include-lang=Python --csv --out=${WORKSPACE}/code_lines_summary.csv ${REPO_DIR}/lpot
 }
 
 main

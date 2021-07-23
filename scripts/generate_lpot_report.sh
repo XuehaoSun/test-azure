@@ -7,6 +7,7 @@
 # tuneLogLast=tuning_info.log
 # overview_log=summary_overview.log
 # coverage_summary=coverage_summary.log
+# code_lines_summary=code_lines_summary.csv
 
 lines_coverage_threshold=80
 branches_coverage_threshold=75
@@ -210,6 +211,34 @@ function createCoverageOverview {
     }' >> ${WORKSPACE}/report.html
 
     echo """
+        </tr>
+        </table>
+    """ >> ${WORKSPACE}/report.html
+}
+
+function createCodeLinesOverview {
+    echo "Generating code lines overview."
+    if [ ! -f "${code_lines_summary}" ] || [ $(wc -l ${code_lines_summary} | awk '{ print $1 }') -le 1 ]; then
+        return 0
+    fi
+    code_lines=($(grep 'Python' ${code_lines_summary} |sed 's/,/ /g'))
+
+    echo """
+        <h2>Code Lines</h2> 
+        <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;empty-cells: hide\">
+        <tr>
+            <th>Language</th>
+            <th>Files</th>
+            <th>Blank lines</th>
+            <th>Comment lines</th>
+            <th>Code lines</th>
+        </tr>
+        <tr>
+            <td>${code_lines[1]}</td>
+            <td>${code_lines[0]}</td>
+            <td>${code_lines[2]}</td>
+            <td>${code_lines[3]}</td>
+            <td>${code_lines[4]}</td>
         </tr>
         </table>
     """ >> ${WORKSPACE}/report.html
@@ -588,6 +617,7 @@ eof
 
 createOverview
 createCoverageOverview
+createCodeLinesOverview
 createFeatureTestsOverview
 
 echo "Generating benchmarks table"
