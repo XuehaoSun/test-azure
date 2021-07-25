@@ -273,6 +273,7 @@ def parseStrToList(srtingElements, delimiter=',') {
 
 def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version){
     retry(20){
+        timeout(10){
             sh """#!/bin/bash
                 bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
                     --model="${model}" \
@@ -286,6 +287,7 @@ def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxrun
                     --conda_env_name="${conda_env_name}"
             """
         }
+    }
 }
 
 def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
