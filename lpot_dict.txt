@@ -1483,6 +1483,7 @@ SQuAD
 SquadF
 squadpy
 SquadV
+squeezebert
 squeezenet
 SqueezeNet
 src
