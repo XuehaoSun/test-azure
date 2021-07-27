@@ -49,7 +49,7 @@ function tf_example1 {
     fi
     lpot_install
 
-    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/mobilenet_v1_1.0_224_frozen.pb
+    cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
     sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
 
     python test.py
@@ -86,7 +86,7 @@ function tf_example3 {
     fi
     lpot_install
 
-    wget http://download.tensorflow.org/models/inception_v1_2016_08_28.tar.gz
+    cp /tf_dataset/examples_helloworld/example3/inception_v1_2016_08_28.tar.gz .
     tar -xvf inception_v1_2016_08_28.tar.gz
     sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
 
@@ -136,7 +136,7 @@ function tf_example5 {
     if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
         cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
     else
-        wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/mobilenet_v1_1.0_224_frozen.pb
+        cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
     fi
     sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
 
@@ -157,7 +157,7 @@ function tf_example6 {
     if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
         cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
     else
-        wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/mobilenet_v1_1.0_224_frozen.pb
+        cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
     fi
     sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
 
