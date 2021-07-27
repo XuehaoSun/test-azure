@@ -45,8 +45,9 @@ function set_TF_env {
     echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
 
-    tf_version=`pip list | grep tensorflow| awk -F ' ' '{print $2}'`
-    if [ ${tf_version} == '2.6.0rc0' ]; then
+    tf_version=$(python -c "import tensorflow as tf; print(tf.__version__)")
+    echo "tf_version: \"${tf_version}\""
+    if [[ '${tf_version}' == '2.6.0'* ]]; then
         export TF_ENABLE_ONEDNN_OPTS=1
     fi
 }

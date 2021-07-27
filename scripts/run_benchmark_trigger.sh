@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
@@ -233,7 +232,7 @@ function run_benchmark {
 
     # Disable fp32 optimization for oob models on TF1.15UP1
     if [ "${topology}" == "RetinaNet50" ] || [ "${topology}" == "ssd_resnet50_v1_fpn_coco" ]; then
-        tensorflow_version=$(pip list| grep intel-tensorflow | awk -F ' ' '{print $2}')
+        tensorflow_version=$(python -c "import tensorflow as tf; print(tf.__version__)")
         if [ "${precision}" == "fp32" ] && [ "${tensorflow_version}" == "1.15.0up1" ]; then
             sed -i "/models_need_disable_optimize/a ${topology}" ${model_src_dir}/run_benchmark.sh
         fi
