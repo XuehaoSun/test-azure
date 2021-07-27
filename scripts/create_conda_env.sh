@@ -89,8 +89,6 @@ elif [ ${tensorflow_version} == '1.15UP3' ]; then
     else
         echo "!!! TF 1.15UP3 do not support ${python_version}"
     fi
-elif [ ${tensorflow_version} == '2.6.0' ]; then
-    pip install tensorflow==2.6.0rc
 elif [[ "${tensorflow_version}" == "customized"* ]]; then
     download_link=$(echo "${tensorflow_version}" | awk -F '=' '{print $2}')
     pip install "${download_link}"
