@@ -299,6 +299,49 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     def batch_size = modelConf."batch_size"
     def new_benchmark = modelConf."new_benchmark"
 
+    if ( MR_source_branch != '' ){
+        //PR test will cover different strategies, the other test mode will use the passed strategy
+        if (framework == "tensorflow"){
+            strategy = "basic"
+            if (model_src_dir == "image_recognition"){
+                dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
+                println("MR test tensorflow model_src_dir is image_recognition.")
+                println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
+            }
+            if (model_src_dir == "object_detection"){
+                // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
+                dataset_location = "/tf_dataset/tensorflow/mini-coco-100.record"
+                withEnv(["model_src_dir=${model_src_dir}"]) {
+                    sh(
+                        script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+            if (model == "inception_v1"){
+                // set kl test for inception_v1
+                algorithm='kl'
+            }
+        }else if(framework == "pytorch") {
+            if (model == "resnet18") {
+                strategy = "bayesian"
+            }
+            if (model_src_dir.contains("image_recognition/imagenet/cpu/ptq")) {
+                dataset_location = "/tf_dataset2/datasets/mini-imageraw"
+            }
+        }else if(framework == "mxnet" && model == "resnet50v1"){
+            strategy = "mse"
+        } else if (framework == "onnxrt" && model == "resnet50-v1-12") {
+            strategy = "basic"
+            dataset_location = "/tf_dataset2/datasets/mini-imageraw/val"
+        }else{
+            strategy = "basic"
+        }
+
+        // set timeout for PR test
+        timeout="timeout 5400"
+    }
+
     if (new_benchmark == true) {
         def cmd = "python ${WORKSPACE}/lpot-validation/scripts/run_new_benchmark_trigger.py \
                 --framework=${framework} \
@@ -683,6 +726,7 @@ node( sub_node_label ) {
                     dataset_location = modelConf."dataset_location"
                     input_model = modelConf."input_model"
                     yaml = modelConf."yaml"
+                    sampling_size = ""
                 } catch(e) {
                     error("Could not load parameters for ${framework} ${model}")
                 }
@@ -696,24 +740,35 @@ node( sub_node_label ) {
                             println("MR test tensorflow model_src_dir is image_recognition.")
                             println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
                         }
-                        if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
+                        if (model_src_dir == "object_detection"){
                             // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
-                            dataset_location = "/tf_dataset/tensorflow/mini-coco-500.record"
+                            dataset_location = "/tf_dataset/tensorflow/mini-coco-100.record"
                             withEnv(["model_src_dir=${model_src_dir}"]) {
                                 sh(
                                     script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
                                     returnStdout: true
                                 ).trim()
                             }
+                            if (model == "faster_rcnn_resnet101_saved") {
+                                sampling_size = "50,100"
+                            }
                         }
                         if (model == "inception_v1"){
                             // set kl test for inception_v1
                             algorithm='kl'
                         }
-                    }else if(framework == "pytorch" && model == "resnet18"){
-                        strategy = "bayesian"
+                    }else if(framework == "pytorch") {
+                        if (model == "resnet18") {
+                            strategy = "bayesian"
+                        }
+                        if (model_src_dir.contains("image_recognition/imagenet/cpu/ptq")) {
+                            dataset_location = "/tf_dataset2/datasets/mini-imageraw"
+                        }
                     }else if(framework == "mxnet" && model == "resnet50v1"){
                         strategy = "mse"
+                    } else if (framework == "onnxrt" && model == "resnet50-v1-12") {
+                        strategy = "basic"
+                        dataset_location = "/tf_dataset2/datasets/mini-imageraw/val"
                     }else{
                         strategy = "basic"
                     }
@@ -801,6 +856,7 @@ node( sub_node_label ) {
                             --strategy_token=${SIGOPT_TOKEN} \
                             --max_trials=${max_trials} \
                             --algorithm=${algorithm} \
+                            --sampling_size="${sampling_size}" \
                             --conda_env_name=${conda_env_name} \
                             2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
                     """

@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 try:
     import ruamel.yaml as yaml
 except:
@@ -212,7 +212,8 @@ def update_yaml(yaml, framework, dataset_location = None, strategy = None, max_t
 def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Optional[str] = None,
     batch_size: Optional[int] = None, iteration: Optional[int] = None,
     max_trials: Optional[int] = None, algorithm: Optional[str] = None,
-    timeout: Optional[int] = None, strategy_token: Optional[str] = None):
+    timeout: Optional[int] = None, strategy_token: Optional[str] = None,
+    sampling_size: Optional[Union[str,int]] = None):
     tuning_config = {}
     with open(yaml_file) as f:
         yaml_config = yaml.round_trip_load(f, preserve_quotes=True)
@@ -317,6 +318,15 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
 
         except Exception as e:
             print(f"[ WARNING ] {e}")
+    if sampling_size:
+        try:
+            calibration = yaml_config.get("quantization", {}).get("calibration", {})
+            prev_sampling_size = calibration.get("sampling_size", None)
+            calibration.update({"sampling_size": sampling_size})
+            print(f"Changed calibration sampling size from {prev_sampling_size} to {sampling_size}")
+        except Exception as e:
+            print(f"[ WARNING ] {e}")
+
 
     print(f"Saving yaml config back to {yaml_file}")
 

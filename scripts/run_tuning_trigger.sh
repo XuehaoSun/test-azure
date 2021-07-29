@@ -2,7 +2,7 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "11" ] ; then
+if [ $# != "12" ] ; then
     echo 'ERROR:'
     echo "Expected 11 parameters got $#"
     printf 'Please use following parameters:
@@ -16,6 +16,7 @@ if [ $# != "11" ] ; then
     --strategy_token=<token for strategy>
     --max_trials=<max tuning trials>
     --algorithm=<algorithm for quantization>
+    --sampling_size=<sampling size for calibration>
     --conda_env_name=<conda environment name>
     '
     exit 1
@@ -44,6 +45,8 @@ do
             max_trials=`echo $i | sed "s/${PATTERN}//"`;;
         --algorithm=*)
             algorithm=`echo $i | sed "s/${PATTERN}//"`;;
+        --sampling_size=*)
+            sampling_size=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         *)
@@ -377,6 +380,10 @@ function update_yaml_config {
 
     if [ "${algorithm}" != "" ]; then
         update_yaml_params="${update_yaml_params} --algorithm=${algorithm}"
+    fi
+
+    if [ "${sampling_size}" != "" ]; then
+        update_yaml_params="${update_yaml_params} --sampling_size=${sampling_size}"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then

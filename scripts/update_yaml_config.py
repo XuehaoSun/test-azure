@@ -22,6 +22,7 @@ def parse_args():
     parser.add_argument("--iteration", type=int, required=False, help="Benchmark iteration")
     parser.add_argument("--max-trials", type=int, required=False, help="Limit for tuning trials.")
     parser.add_argument("--algorithm", type=str, required=False, help="Algorithm for quantization.")
+    parser.add_argument("--sampling_size", type=str, required=False, help="Sampling size for calibration.")
     parser.add_argument("--timeout", type=int, required=False, help="Tuning timeout.")
     return parser.parse_args()
 
@@ -37,4 +38,5 @@ if __name__ == "__main__":
         algorithm=args.algorithm,
         timeout=args.timeout,
         strategy_token=args.strategy_token,
+        sampling_size=args.sampling_size,
     )
