@@ -355,10 +355,10 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                 --cpu=${cpu} \
                 --output_path=${output_path}"
         if (framework == "onnxrt") {
-            cmd += " --dataset_location=\"${dataset_location}\""
+            cmd += " --dataset_location=\"${dataset_prefix}${dataset_location}\""
         }
         if (framework == "tensorflow" && model == "bert_base_mrpc") {
-            cmd += " --dataset_location=\"${dataset_location}\""
+            cmd += " --dataset_location=\"${dataset_prefix}${dataset_location}\""
         }
         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
             sh """#!/bin/bash -x
