@@ -657,6 +657,7 @@ hyperparameter
 hyperparameters
 ICCV
 Icelake
+icx
 ide
 idx
 ie
