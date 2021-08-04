@@ -322,6 +322,9 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                 // set kl test for inception_v1
                 algorithm='kl'
             }
+            if (model == "resnet50_fashion") {
+                dataset_location = "/tf_dataset2/datasets/mnist/FashionMNIST_small"
+            }
         }else if(framework == "pytorch") {
             if (model == "resnet18") {
                 strategy = "bayesian"
@@ -756,6 +759,9 @@ node( sub_node_label ) {
                         if (model == "inception_v1"){
                             // set kl test for inception_v1
                             algorithm='kl'
+                        }
+                        if (model == "resnet50_fashion") {
+                            dataset_location = "/tf_dataset2/datasets/mnist/FashionMNIST_small"
                         }
                     }else if(framework == "pytorch") {
                         if (model == "resnet18") {
