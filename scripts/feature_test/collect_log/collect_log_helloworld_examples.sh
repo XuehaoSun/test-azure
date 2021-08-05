@@ -5,6 +5,7 @@ echo "feature_name: ${feature_name}"
 echo "summaryLog: ${summaryLog}"
 
 function main {
+    CPU_NAME=$(cat "${WORKSPACE}/${feature_name}/cpu_name.log")
     for i in `seq 6`
     do
         check_tf_example_status ${i}
@@ -48,7 +49,7 @@ function check_tf_example_status {
         test_status=${status}
     fi
 
-    echo "Helloworld_tf_example${example_number};${test_status};${BUILD_URL}artifact/${feature_name}/tf_example${example_number}.log" | tee -a ${summaryLog}
+    echo "${CPU_NAME};Helloworld_tf_example${example_number};${test_status};${BUILD_URL}artifact/${feature_name}/tf_example${example_number}.log" | tee -a ${summaryLog}
 }
 
 main

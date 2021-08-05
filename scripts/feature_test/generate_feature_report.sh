@@ -11,7 +11,7 @@ function generate_results {
     echo "summaryLog: ${summaryLog}"
     echo "lpot_branch: ${lpot_branch}"
     echo "lpot_commit: ${lpot_commit}"
-    features=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
+    features=$(sed '1d' ${summaryLog} |cut -d';' -f2 | awk '!a[$0]++')
     generate_html_head
     for feature in ${features[@]}
     do
@@ -25,11 +25,12 @@ function generate_html_core {
   feature_name=$1
   png_path="https://inteltf-jenk.sh.intel.com/static/93433cd1/images/24x24"
   result_list=($(grep ${feature_name} ${summaryLog} |sed 's/;/ /g'))
-  feature_url=${result_list[2]}
+  feature_url=${result_list[3]}
+  platform=${result_list[0]}
 
-  if [[ "${result_list[1]}" == "fail" ]];then
+  if [[ "${result_list[2]}" == "fail" ]];then
       feature_status="<img src=${png_path}/red.png></img>"
-  elif [[ "${result_list[1]}" == "pass" ]];then
+  elif [[ "${result_list[2]}" == "pass" ]];then
       feature_status="<img src=${png_path}/blue.png></img>"
   else
       feature_status="<img src=${png_path}/yellow.png></img>"
@@ -37,8 +38,9 @@ function generate_html_core {
 
   cat >> ${WORKSPACE}/report.html <<  eof
         $(
-             if [ "${result_list[1]}" != "" ];then
+             if [ "${result_list[2]}" != "" ];then
                 echo "<tr><td style=\"text-align:left\"><a href=\"${feature_url}\">${feature_name}</a></td>"
+                echo "<td style=\"text-align:center\">${platform}</td>"
                 echo "<td>${feature_status}</td></tr>"
              fi
         )
@@ -70,21 +72,21 @@ cat > ${WORKSPACE}/report.html << eof
     <style type="text/css">
         body
         {
-	        margin: 0;
-	        padding: 0;
-	        background: white no-repeat left top;
+            margin: 0;
+            padding: 0;
+            background: white no-repeat left top;
         }
         #main
         {
-	        // width: 100%;
-	        margin: 20px auto 10px auto;
-	        background: white;
-	        -moz-border-radius: 8px;
-	        -webkit-border-radius: 8px;
-	        padding: 0 30px 30px 30px;
-	        border: 1px solid #adaa9f;
-	        -moz-box-shadow: 0 2px 2px #9c9c9c;
-	        -webkit-box-shadow: 0 2px 2px #9c9c9c;
+            // width: 100%;
+            margin: 20px auto 10px auto;
+            background: white;
+            -moz-border-radius: 8px;
+            -webkit-border-radius: 8px;
+            padding: 0 30px 30px 30px;
+            border: 1px solid #adaa9f;
+            -moz-box-shadow: 0 2px 2px #9c9c9c;
+            -webkit-box-shadow: 0 2px 2px #9c9c9c;
         }
         .features-table
         {
@@ -160,24 +162,23 @@ cat > ${WORKSPACE}/report.html << eof
             [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
 
     <h2>Summary</h2>
-	    <table class="features-table">
-	        <tr>
-              <th>Platform</th>
+        <table class="features-table">
+            <tr>
               <th>Repo</th>
               ${Test_Info_Title}
-		      </tr>
-		      <tr>
-			        <td>CLX8280</td>
-			        <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">LPOT</a></td>
+              </tr>
+              <tr>
+                  <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">LPOT</a></td>
               ${Test_Info}
-			    </tr>
-	    </table>
+                </tr>
+        </table>
 
     <h2>Feature Test</h2>
         <table class="features-table" style="width: 60%;margin: 0 auto 0 0;">
         <tr>
-            <th>Task</th>
-            <th>Status</th>
+            <th style="width: 15%">Task</th>
+            <th style="width: 5%">Platform</th>
+            <th style="width: 5%">Status</th>
         </tr>
 eof
 

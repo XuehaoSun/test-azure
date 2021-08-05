@@ -5,6 +5,7 @@ echo "feature_name: ${feature_name}"
 echo "summaryLog: ${summaryLog}"
 
 function main {
+    CPU_NAME=$(cat "${WORKSPACE}/${feature_name}/cpu_name.log")
     check_graph_optimization_fp32
     check_graph_optimization_bf16
     check_graph_optimization_auto-mix
@@ -19,7 +20,7 @@ function check_graph_optimization_fp32 {
         test_status="fail"
     fi
 
-    echo "graph_optimization_fp32_cpx;${test_status};${BUILD_URL}artifact/${feature_name}/graph_optimization_fp32.log" | tee -a ${summaryLog}
+    echo "${CPU_NAME};graph_optimization_fp32_cpx;${test_status};${BUILD_URL}artifact/${feature_name}/graph_optimization_fp32.log" | tee -a ${summaryLog}
 }
 
 function check_graph_optimization_bf16 {
@@ -31,7 +32,7 @@ function check_graph_optimization_bf16 {
         test_status="fail"
     fi
 
-    echo "graph_optimization_bf16_cpx;${test_status};${BUILD_URL}artifact/${feature_name}/graph_optimization_bf16.log" | tee -a ${summaryLog}
+    echo "${CPU_NAME};graph_optimization_bf16_cpx;${test_status};${BUILD_URL}artifact/${feature_name}/graph_optimization_bf16.log" | tee -a ${summaryLog}
 }
 
 function check_graph_optimization_auto-mix {
@@ -43,7 +44,7 @@ function check_graph_optimization_auto-mix {
         test_status="fail"
     fi
 
-    echo "graph_optimization_auto-mix_cpx;${test_status};${BUILD_URL}artifact/${feature_name}/graph_optimization_auto-mix.log" | tee -a ${summaryLog}
+    echo "${CPU_NAME};graph_optimization_auto-mix_cpx;${test_status};${BUILD_URL}artifact/${feature_name}/graph_optimization_auto-mix.log" | tee -a ${summaryLog}
 }
 
 

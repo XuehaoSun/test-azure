@@ -4,6 +4,7 @@ set -x
 echo "feature_name: ${feature}"
 echo "summaryLog: ${summaryLog}"
 
+CPU_NAME=$(cat "${WORKSPACE}/${feature_name}/cpu_name.log")
 timeout_log="${WORKSPACE}/${feature_name}/test_timeout_.log"
 
 # fetch valie
@@ -19,4 +20,4 @@ if [ ${exit_label} -eq 1 ] && [ "${check_acc}" == "${best_acc_lpot}" ];then
 fi
 
 
-echo "timeout_function_test;${test_status};${BUILD_URL}artifact/${feature_name}" | tee -a ${summaryLog}
+echo "${CPU_NAME};timeout_function_test;${test_status};${BUILD_URL}artifact/${feature_name}" | tee -a ${summaryLog}

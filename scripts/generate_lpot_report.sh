@@ -255,29 +255,31 @@ function createFeatureTestsOverview {
         <table class=\"features-table\" style=\"width: auto;margin: 0 auto 0 0;\">
         <tr>
             <th style=\"padding: 5px 40px;\">Task</th>
+            <th style=\"padding: 5px 40px;\">Platform</th>
             <th style=\"padding: 5px 20px;\">Status</th>
         </tr>
     """ >> ${WORKSPACE}/report.html
 
-    features=$(sed '1d' ${feature_tests_summary} | cut -d';' -f1 | awk '!a[$0]++')
+    features=$(sed '1d' ${feature_tests_summary} | cut -d';' -f2 | awk '!a[$0]++')
 
     for feature in ${features[@]}
     do
         feature_result=($(grep ${feature} ${feature_tests_summary} |sed 's/;/ /g'))
-        feature_url=${feature_result[2]}
-
-        if [[ "${feature_result[1]}" == "fail" ]];then
+        feature_url=${feature_result[3]}
+        platform=${feature_result[0]}
+        if [[ "${feature_result[2]}" == "fail" ]];then
             feature_status=${fail_status}
-        elif [[ "${feature_result[1]}" == "pass" ]];then
+        elif [[ "${feature_result[2]}" == "pass" ]];then
             feature_status=${pass_status}
         else
             feature_status=${verify_status}
         fi
 
-        if [ "${feature_result[1]}" != "" ]; then
+        if [ "${feature_result[2]}" != "" ]; then
             echo """
             <tr>
             <td style=\"text-align:left;padding: 0 40px;\"><a href=\"${feature_url}\">${feature}</a></td>
+            <td style=\"text-align:center;padding: 0 40px;\">${platform}</td>
             ${feature_status}
             </tr>
             """ >> ${WORKSPACE}/report.html

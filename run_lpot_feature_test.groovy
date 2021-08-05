@@ -190,6 +190,9 @@ node( sub_node_label ){
                         ./lpot-validation/scripts/feature_test/test/test_${feature_name}.sh ${args}
                     '''
                 }
+                sh """#!/bin/bash
+                    echo ${CPU_NAME} > ${WORKSPACE}/cpu_name.log
+                """
             }
         }
 

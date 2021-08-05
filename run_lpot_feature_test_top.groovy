@@ -205,7 +205,7 @@ node( node_label ){
         // Setup logs path
         echo "WORKSPACE IS ${WORKSPACE}"
         SUMMARYLOG = "${WORKSPACE}/summary.log"
-        writeFile file: SUMMARYLOG, text: "FEATURE;STATUS\n"
+        writeFile file: SUMMARYLOG, text: "PLATFORM;FEATURE;STATUS;URL\n"
 
         dir('lpot-validation') {
             checkout scm
