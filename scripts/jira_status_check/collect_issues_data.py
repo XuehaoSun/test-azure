@@ -4,6 +4,7 @@ import json
 import requests
 import sys
 import argparse
+from utils import parse_priorities_string
 
 
 def main(version: str, priority: str):
@@ -14,7 +15,7 @@ def main(version: str, priority: str):
     issue_dict = {}
 
     jira_api_url = "https://jira.devtools.intel.com/rest/api/2/search"
-    jql = f"project = ILITV AND issuetype in (Feature, Bug, Sub-Feature) AND status in (New, \"In Progress\", Open, Assigned, Deferred, Implemented) AND priority in ({parse_priority(priority)})"
+    jql = f"project = ILITV AND issuetype in (Feature, Bug, Sub-Feature) AND priority in ({parse_priorities_string(priority)})"
     if version != "ALL":
         jql += f" AND affectedVersion = {version}"
     jira_request_data = {
@@ -47,6 +48,7 @@ def main(version: str, priority: str):
         issue_dict['Task'] = issue['fields']['summary'].replace(",", " ")
         issue_dict['Owner'] = issue['fields']['assignee']['displayName']. replace(",", " ") if issue['fields']['assignee'] is not None else "N/A"
         issue_dict['Priority'] = issue['fields']['priority']['name']
+        issue_dict['Labels'] = ";".join(issue['fields']['labels'])
         issue_dict['ETA'] = issue['fields']['duedate'] if issue['fields']['duedate'] is not None else "N/A"
         issue_dict['Left Days'] = "{:.2f}".format(hourstimediff("{} 0:0:0".format(issue_dict['ETA']), now)) if issue_dict['ETA'] != "N/A" else "N/A"
         issue_dict['Jira Status'] = issue['fields']['status']['name']
@@ -81,11 +83,11 @@ def main(version: str, priority: str):
     # coding=UTF-8
     today = datetime.datetime.now().strftime('%Y-%m-%d')
     filename = f"LPOT_jira_status_of_{today}.csv"
-    header = ["Jira ID", "Jira Link", "Issue Type", "Task", "Owner", "Priority", "ETA", "Left Days", "Jira Status", "Affected Version", "PR", "PR Link", "Pending Days", "Pre-ci"]
+    header = ["Jira ID", "Jira Link", "Issue Type", "Task", "Owner", "Priority", "Labels", "ETA", "Left Days", "Jira Status", "Affected Version", "PR", "PR Link", "Pending Days", "Pre-ci"]
     header_line = ",".join(header)
     csv_content = [header_line]
     for item in issue_list:
-        line = ",".join([item['Jira ID'], item['Jira Link'], item['Issue Type'], item['Task'], item['Owner'], item['Priority'], item['ETA'], item['Left Days'], item['Jira Status'], item['Affected Version'], item['PR'], item['PR Link'], item['Pending Days'], item['Pre-ci']])
+        line = ",".join([item['Jira ID'], item['Jira Link'], item['Issue Type'], item['Task'], item['Owner'], item['Priority'], item['Labels'], item['ETA'], item['Left Days'], item['Jira Status'], item['Affected Version'], item['PR'], item['PR Link'], item['Pending Days'], item['Pre-ci']])
         csv_content.append(line)
 
     with open(filename, 'w') as file:
@@ -108,23 +110,6 @@ def parse_arguments():
     parser.add_argument("--priority", type=str, default="P1")
     parser.add_argument("--affected_version", type=str, default="ALL")
     return parser.parse_args()
-
-
-def parse_priority(priority: str):
-    mapped_priorities = []
-    priority_map = {
-        "P1": "P1-Stopper",
-        "P2": "P2-High",
-        "P3": "P3-Medium",
-        "P4": "P4-Low"
-    }
-    priorities = priority.split(",")
-    for prior in priorities:
-        mapped_priority = priority_map.get(prior, None)
-        if mapped_priority is None:
-            raise Exception(f"Priority {prior} not recognized. Use one of following: {priority_map.keys()}")
-        mapped_priorities.append(mapped_priority)
-    return ",".join(mapped_priorities)
 
 
 if __name__ == "__main__":

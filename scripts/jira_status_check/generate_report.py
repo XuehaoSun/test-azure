@@ -8,8 +8,10 @@ from operator import itemgetter as ig
 from functools import cmp_to_key
 
 from typing import List
+from utils import parse_priority
 
-
+UNRESOLVED_STATUSES = ["New", "In Progress", "Open", "Assigned", "Deferred", "Implemented"]
+RESOLVED_STATUSES = ["Closed", "Done", "Resolved"]
 class JiraIssue:
     """Jira Issue interface."""
 
@@ -22,6 +24,9 @@ class JiraIssue:
         self.task = data.get("task")
         self.owner = data.get("owner")
         self.priority = data.get("priority")
+        self.labels = []
+        if data.get("labels"):
+            self.labels = data.get("labels").split(";")
         self.eta = data.get("eta")
         self.left_days = data.get("left days")
         self.affected_version = data.get("affected version")
@@ -46,8 +51,8 @@ class JiraIssue:
 class Issues:
     """Jira issues aggregator."""
 
-    def __init__(self):
-        self._issues: List[JiraIssue] = []
+    def __init__(self, issues: List[JiraIssue] = []):
+        self._issues: List[JiraIssue] = issues
 
     @property
     def issues(self) -> List[JiraIssue]:
@@ -81,12 +86,43 @@ class Issues:
                 return issue
         return None
 
-    
-    def get_issue_by_type(self, issue_types: List[str]) -> Dict[str, JiraIssue]:
+    def get_issue_by_type(self, issue_types: List[str]) -> List[JiraIssue]:
         """Search through aggregated issues for issues with specified type."""
         issues: List[JiraIssue] = []
         for issue in self.issues:
             if issue.issue_type in issue_types:
+                issues.append(issue)
+        return issues
+
+    def get_issue_by_priority(self, issue_priorities: List[str]) -> List[JiraIssue]:
+        """Search through aggregated issues for issues with specified priority."""
+        issues: List[JiraIssue] = []
+        parsed_priorities = []
+        for priority in issue_priorities:
+            parsed_priorities.append(parse_priority(priority))
+        for issue in self.issues:
+            if issue.priority in parsed_priorities:
+                issues.append(issue)
+        return issues
+
+    def get_issue_by_labels(self, issue_labels: Dict[str, List[str]]) -> List[JiraIssue]:
+        """Search through aggregated issues for issues with specified labels."""
+        issues: List[JiraIssue] = []
+        include_labels = issue_labels.get("include", [])
+        exclude_labels = issue_labels.get("exclude", [])
+        for issue in self.issues:
+            if (
+                (set(include_labels).issubset(set(issue.labels))) and
+                not (exclude_labels and set(exclude_labels).issubset(set(issue.labels)))
+            ):
+                issues.append(issue)
+        return issues
+
+    def get_issue_by_status(self, issue_statuses: List[str]) -> List[JiraIssue]:
+        """Search through aggregated issues for issues with specified statuses."""
+        issues: List[JiraIssue] = []
+        for issue in self.issues:
+            if issue.jira_status in issue_statuses:
                 issues.append(issue)
         return issues
 
@@ -108,12 +144,29 @@ def main(args: Namespace) -> None:
 
     jira_issues.sort_issues(["owner", "priority"])
 
-    feature_issues = jira_issues.get_issue_by_type(["Feature", "Sub-Feature"])
-    features_table = create_table(feature_issues)
+    customer_issues = jira_issues.get_issue_by_labels({"include": ["customer"]})
+    customer_issues_unresolved = Issues(customer_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    customer_issues_resolved = Issues(customer_issues).get_issue_by_status(RESOLVED_STATUSES)
+    customer_issues_table = create_table(customer_issues_unresolved)
 
-    bugs_issues = jira_issues.get_issue_by_type(["Bug"])
-    bugs_table = create_table(bugs_issues)
+    non_customer_issues = jira_issues.get_issue_by_labels({"exclude": ["customer"]})
 
+    feature_issues = Issues(non_customer_issues).get_issue_by_type(["Feature", "Sub-Feature"])
+
+    p1_feature_issues = Issues(feature_issues).get_issue_by_priority(["P1"])
+    p1_feature_issues_unresolved = Issues(p1_feature_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    p1_feature_issues_resolved = Issues(p1_feature_issues).get_issue_by_status(RESOLVED_STATUSES)
+    p1_feature_issues_table = create_table(p1_feature_issues_unresolved)
+
+    other_feature_issues = Issues(feature_issues).get_issue_by_priority(["P2", "P3", "P4"])
+    other_feature_issues_unresolved = Issues(other_feature_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    other_feature_issues_resolved = Issues(other_feature_issues).get_issue_by_status(RESOLVED_STATUSES)
+    other_feature_issues_table = create_table(other_feature_issues_unresolved)
+
+    bugs_issues = Issues(non_customer_issues).get_issue_by_type(["Bug"])
+    bugs_issues_unresolved = Issues(bugs_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    bugs_issues_resolved = Issues(bugs_issues).get_issue_by_status(RESOLVED_STATUSES)
+    bugs_table = create_table(bugs_issues_unresolved)
 
     html_title = "LPOT JIRA status summary"
     if args.affected_version != "" and args.affected_version != "ALL":
@@ -147,11 +200,22 @@ def main(args: Namespace) -> None:
             h1(align="center")(html_title),
             h2(align="center")(datetime.datetime.now().strftime('%Y-%m-%d')),
             br(),
-            h3("Features:"),
-            features_table,
+            h3("Features P1:"),
+            h5(f"Progress: {round(100*len(p1_feature_issues_resolved)/len(p1_feature_issues))}% [ Done tasks {len(p1_feature_issues_resolved)}/{len(p1_feature_issues)} ]"),
+            p1_feature_issues_table,
+            br(),
+            h3("Other features:"),
+            h5(f"Progress: {round(100*len(other_feature_issues_resolved)/len(other_feature_issues))}% [ Done tasks {len(other_feature_issues_resolved)}/{len(other_feature_issues)} ]"),
+            other_feature_issues_table,
             br(),
             h3("Bugs:"),
-            bugs_table
+            h5(f"Progress: {round(100*len(bugs_issues_resolved)/len(bugs_issues))}% [ Done tasks {len(bugs_issues_resolved)}/{len(bugs_issues)} ]"),
+            bugs_table,
+            br(),
+            h3("Customer:"),
+            h5(f"Progress: {round(100*len(customer_issues_resolved)/len(customer_issues))}% [ Done tasks {len(customer_issues_resolved)}/{len(customer_issues)} ]"),
+            customer_issues_table,
+            
         )
     )
 
