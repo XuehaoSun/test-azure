@@ -1,0 +1,54 @@
+{
+  "examples-PyTorch-imagenet_recognition-efficientnet": {
+    "src": "https://github.com/rwightman/gen-efficientnet-pytorch",
+    "branch": "master"
+  },
+  "examples-PyTorch-PeleeNet": {
+    "src": "https://github.com/Robert-JunWang/PeleeNet",
+    "branch": "master"
+  },
+  "examples-PyTorch-ResNest": {
+    "src": "https://github.com/zhanghang1989/ResNeSt",
+    "branch": "master"
+  },
+  "example-Tensorflow-albert": {
+    "src": "https://github.com/google-research/albert",
+    "branch": "master"
+  },
+  "example-tensorflow-bert": {
+    "src": "https://github.com/huggingface/transformers",
+    "branch": "master"
+  },
+  "IntelAI-Models": {
+    "src": "https://github.com/IntelAI/models",
+    "branch": "master"
+  },
+  "example-PyTorch-SE_ResNetx50_32x4d": {
+    "src": "https://github.com/Cadene/pretrained-models.pytorch",
+    "branch": "master"
+  },
+  "examples-PyTorch-object_detection_yolo_v3": {
+    "src": "https://github.com/eriklindernoren/PyTorch-YOLOv3",
+    "branch": "master"
+  },
+  "DLRM": {
+    "src": "https://github.com/facebookresearch/dlrm",
+    "branch": "master"
+  },
+  "blendcnn": {
+    "src": "https://github.com/kevinmtian/distill-bert",
+    "branch": "master"
+  },
+  "intel-extension-for-pytorch": {
+    "src": "https://github.com/intel/intel-extension-for-pytorch",
+    "branch": "master"
+  },
+  "mlperf-training": {
+    "src": "https://github.com/mlcommons/training.git",
+    "branch": "master"
+  },
+  "tensorflow-yolo-v3": {
+    "src": "https://github.com/mystic123/tensorflow-yolo-v3.git",
+    "branch": "master"
+  }
+}
