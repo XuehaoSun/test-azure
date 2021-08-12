@@ -31,7 +31,7 @@ echo "Running on node ${node_label}"
 
 // setting node_label
 sub_node_label = "lpot"
-if ('node_label' in params && params.sub_node_label != '') {
+if ('sub_node_label' in params && params.sub_node_label != '') {
     sub_node_label = params.sub_node_label
 }
 echo "Running on node ${node_label}"
