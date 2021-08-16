@@ -141,9 +141,13 @@ node(node_label){
                         echo "\\"deep-engine\\" not found. Exiting..."
                         exit 1
                     fi
-
+                    
+                    export PATH=/usr/local/gcc-9.4/bin:$PATH
+                    export LD_LIBRARY_PATH=/usr/local/gcc-9.4/lib64:$LD_LIBRARY_PATH
+                    export CC=/usr/local/gcc-9.4/bin/gcc
+                    export CXX=/usr/local/gcc-9.4/bin/g++
                     cd ${WORKSPACE}/deep-engine/deep_engine/executor
-                    mkdir build && cd build && cmake .. && make -j
+                    mkdir build && cd build && cmake .. && make -j 2>&1|tee $WORKSPACE/cmake_build.log
                 ''')
                 if (build_status != 0) {
                     currentBuild.result = 'FAILURE'
@@ -199,7 +203,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'summary.txt, bert*/**', excludes: null
+            archiveArtifacts artifacts: 'summary.txt, bert*/**, cmake_build.log', excludes: null
             fingerprint: true
         }
     }

@@ -120,10 +120,10 @@ node(node_label){
                     fi
                     
                     cd ${WORKSPACE}/deep-engine/deep_engine/executor
-                    mkdir build && cd build && cmake .. && make -j
+                    mkdir build && cd build && cmake .. && make -j 2>&1 | tee $WORKSPACE/cmake_build.log
                     
                     cd ${WORKSPACE}/deep-engine/deep_engine/executor/test/gtest
-                    mkdir build && cd build && cmake .. && make -j
+                    mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/cmake_build.log
                     
                     find . -name "test*" > run.sh
                     ut_log_name=$WORKSPACE/unit_test_gtest.log

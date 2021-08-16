@@ -244,6 +244,13 @@ def unitTestJobs() {
         }
 
         if (downstreamJob.result != 'SUCCESS') {
+            def sub_job_url = downstreamJob.absoluteUrl
+            withEnv(["sub_job_url=${sub_job_url}"]){
+                sh '''#!/bin/bash
+                overview_log="${WORKSPACE}/summary_overview.log"
+                echo "deep-engine_ut_gtest,${ut_status},${sub_job_url}" | tee -a ${overview_log}
+                '''
+            }
             currentBuild.result = "FAILURE"
             error("---gtest failed---")
         }
@@ -276,11 +283,14 @@ def perfJobs() {
             archiveArtifacts artifacts: "benchmark/**", allowEmptyArchive: true
         }
 
+        def sub_job_url = downstreamJob.absoluteUrl
         if (downstreamJob.result != 'SUCCESS') {
-            sh '''#!/bin/bash
+            withEnv(["sub_job_url=${sub_job_url}"]){
+                sh '''#!/bin/bash
                 overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_benchmark,FAILURE,${BUILD_URL}artifact/benchmark/summary.txt" | tee -a ${overview_log}
-            '''
+                echo "deep-engine_benchmark,FAILURE,${sub_job_url}" | tee -a ${overview_log}
+                '''
+            }
             currentBuild.result = "FAILURE"
             error("---benchmark failed---")
         }else{
@@ -302,8 +312,8 @@ def collectUTLog() {
             ut_status='FAILURE'
         else
             ut_status='SUCCESS'
-        fi
-        echo "deep-engine_ut_gtest,${ut_status},${BUILD_URL}artifact/unittest/unit_test_gtest.log" | tee -a ${overview_log}
+            echo "deep-engine_ut_gtest,${ut_status},${BUILD_URL}artifact/unittest/unit_test_gtest.log" | tee -a ${overview_log}
+        fi  
     '''
 }
 
