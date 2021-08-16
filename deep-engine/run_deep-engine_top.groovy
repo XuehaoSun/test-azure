@@ -248,7 +248,7 @@ def unitTestJobs() {
             withEnv(["sub_job_url=${sub_job_url}"]){
                 sh '''#!/bin/bash
                 overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_ut_gtest,${ut_status},${sub_job_url}" | tee -a ${overview_log}
+                echo "deep-engine_ut_gtest,FAILURE,${sub_job_url}" | tee -a ${overview_log}
                 '''
             }
             currentBuild.result = "FAILURE"
@@ -308,10 +308,12 @@ def collectUTLog() {
     sh ''' #!/bin/bash
         overview_log="${WORKSPACE}/summary_overview.log"
         ut_log_name=$WORKSPACE/unittest/unit_test_gtest.log
-        if [ ! -f ${ut_log_name} ] || [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ];then
-            ut_status='FAILURE'
-        else
-            ut_status='SUCCESS'
+        if [ ! -f ${ut_log_name} ];then
+            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ]; then
+                ut_status='FAILURE'
+            else
+                ut_status='SUCCESS'
+            fi
             echo "deep-engine_ut_gtest,${ut_status},${BUILD_URL}artifact/unittest/unit_test_gtest.log" | tee -a ${overview_log}
         fi  
     '''
