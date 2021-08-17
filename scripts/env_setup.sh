@@ -45,10 +45,10 @@ function set_TF_env {
 
     tf_version=$(python -c "import tensorflow as tf; print(tf.__version__)")
     echo "tf_version: \"${tf_version}\""
-    if [[ '${tf_version}' = '2.6.0' ]]; then
+    if [[ "${tf_version}" = "2.6.0" ]]; then
         export TF_ENABLE_ONEDNN_OPTS=1
         echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
-    elif [[ '${tf_version}' = '2.5.0' ]]; then
+    elif [[ "${tf_version}" = "2.5.0" ]]; then
         # default use block format
         export TF_ENABLE_MKL_NATIVE_FORMAT=0
         echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
