@@ -308,7 +308,7 @@ def collectUTLog() {
     sh ''' #!/bin/bash
         overview_log="${WORKSPACE}/summary_overview.log"
         ut_log_name=$WORKSPACE/unittest/unit_test_gtest.log
-        if [ ! -f ${ut_log_name} ];then
+        if [ -f ${ut_log_name} ];then
             if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ]; then
                 ut_status='FAILURE'
             else

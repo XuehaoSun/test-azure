@@ -1,3 +1,6 @@
+export PATH=/usr/local/gcc-9.4/bin:${PATH}
+export LD_LIBRARY_PATH=/usr/local/gcc-9.4/lib64:${LD_LIBRARY_PATH}
+
 export KMP_BLOCKTIME=1
 export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
 export GLOG_minloglevel=2
