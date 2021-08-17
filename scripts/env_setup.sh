@@ -38,8 +38,6 @@ function set_TF_env {
     export KMP_BLOCKTIME=1
     export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
     export TF_MKL_OPTIMIZE_PRIMITIVE_MEMUSE=false
-    # default use block format
-    export TF_ENABLE_MKL_NATIVE_FORMAT=0
 
     export PATH=${HOME}/miniconda3/bin/:$PATH
     echo "Activating ${conda_env_name} env"
@@ -47,8 +45,13 @@ function set_TF_env {
 
     tf_version=$(python -c "import tensorflow as tf; print(tf.__version__)")
     echo "tf_version: \"${tf_version}\""
-    if [[ '${tf_version}' == '2.6.0'* ]]; then
+    if [[ '${tf_version}' = '2.6.0' ]]; then
         export TF_ENABLE_ONEDNN_OPTS=1
+        echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+    elif [[ '${tf_version}' = '2.5.0' ]]; then
+        # default use block format
+        export TF_ENABLE_MKL_NATIVE_FORMAT=0
+        echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
     fi
 }
 
