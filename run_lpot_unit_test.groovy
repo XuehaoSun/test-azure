@@ -352,8 +352,13 @@ node(node_label){
                         echo "Setting SigOpt strategy env variables"
                         export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                         export SIGOPT_PROJECT_ID="lpot"
-                        if [ ${tensorflow_version} == '2.5.0' ]; then
+                        if [[ "${tensorflow_version}" = "2.6.0" ]]; then
+                            export TF_ENABLE_ONEDNN_OPTS=1
+                            echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+                        elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
+                            # default use block format
                             export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                            echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                         fi
 
                         lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
@@ -457,8 +462,13 @@ node(node_label){
                             echo "Setting SigOpt strategy env variables"
                             export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                             export SIGOPT_PROJECT_ID="lpot"
-                            if [ ${tensorflow_version} == '2.5.0' ]; then
+                            if [[ "${tensorflow_version}" = "2.6.0" ]]; then
+                                export TF_ENABLE_ONEDNN_OPTS=1
+                                echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+                            elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
+                                # default use block format
                                 export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                                echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                             fi
 
                             lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
@@ -560,8 +570,13 @@ node(node_label){
                             echo "Setting SigOpt strategy env variables"
                             export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                             export SIGOPT_PROJECT_ID="lpot"
-                            if [ ${tensorflow_version} == '2.5.0' ]; then
+                            if [[ "${tensorflow_version}" = "2.6.0" ]]; then
+                                export TF_ENABLE_ONEDNN_OPTS=1
+                                echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+                            elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
+                                # default use block format
                                 export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                                echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                             fi
                             
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh

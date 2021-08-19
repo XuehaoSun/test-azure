@@ -330,6 +330,14 @@ node(node_label){
                     fi
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
+                    if [[ "${tensorflow_version}" = "2.6.0" ]]; then
+                        export TF_ENABLE_ONEDNN_OPTS=1
+                        echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+                    elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
+                        # default use block format
+                        export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                        echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
+                    fi
                     cd ${WORKSPACE}/lpot-models/test
                     cat ${run_ut_scripts}
                     ut_log_name=${WORKSPACE}/unit_test_${test_trials}.log
@@ -355,6 +363,14 @@ node(node_label){
                         fi
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
+                        if [[ "${tensorflow_version}" = "2.6.0" ]]; then
+                            export TF_ENABLE_ONEDNN_OPTS=1
+                            echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+                        elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
+                            # default use block format
+                            export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                            echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
+                        fi
                         export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                         cd ${WORKSPACE}/lpot-models/test
                         lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
