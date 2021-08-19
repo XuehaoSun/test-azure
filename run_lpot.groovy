@@ -874,7 +874,7 @@ node( sub_node_label ) {
                             "os=${os}",
                             "cpu=${cpu}"]) {
                         sh '''#!/bin/bash -x
-                            control_phrase="Found a quantized model which meet accuracy goal."
+                            control_phrase="model which meet accuracy goal."
                             if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | wc -l) == 0 ];then
                                 exit 1
                             fi
