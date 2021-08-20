@@ -251,6 +251,7 @@ COCODemo
 COCOEval
 COCOmAP
 COCONpy
+cocoraw
 COCORaw
 COCORecord
 codalab
@@ -1023,6 +1024,7 @@ ng
 ngatang
 NGPUS
 ngram
+NHWC
 nifti
 niftis
 nii
