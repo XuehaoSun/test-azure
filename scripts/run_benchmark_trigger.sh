@@ -129,8 +129,10 @@ main() {
         topology="${model%_qat_fx}"
     fi
 
-    if [ "${framework}" == "pytorch" ] && [ "${model}" == "ssd_resnet34_fx" ]; then
-        topology="ssd-resnet34"
+    if [ "${framework}" == "pytorch" ]; then
+        if [ "${model}" == "ssd_resnet34_fx" ] || [ "${model}" == "ssd_resnet34_qat_fx" ]; then
+            topology="ssd-resnet34"
+        fi
     fi
     
     if [[ "${framework}" == "onnxrt" ]] && [[ "${model}" == "gpt2_lm_head_wikitext_model_zoo" ]]; then
