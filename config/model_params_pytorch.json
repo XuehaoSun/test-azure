@@ -558,6 +558,15 @@
       "batch_size": 1,
       "new_benchmark": false
     },
+    "ssd_resnet34_qat_fx": {
+      "model_src_dir": "fx/object_detection/ssd_resnet34/qat",
+      "dataset_location": "/tf_dataset2/datasets/coco2017/coco",
+      "input_model": "/tf_dataset2/models/pytorch/ssd_resnet34/ssd_resnet34_qat_fx.pt",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": false
+    },
     "maskrcnn_fx": {
       "model_src_dir": "fx/object_detection/maskrcnn",
       "dataset_location": "/tf_dataset/dataset/coco_dataset/raw-data",
