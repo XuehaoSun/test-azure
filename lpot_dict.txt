@@ -562,6 +562,7 @@ functionet
 functools
 Funtowicz
 fw
+FWK
 fx
 GameAI
 GANs
@@ -1271,6 +1272,7 @@ qint
 qlinear
 QLinear
 qlinearops
+QnA
 qnli
 QNLI
 qps
