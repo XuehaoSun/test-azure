@@ -68,7 +68,7 @@ function set_environment {
 
 function run_benchmark {
     # define a low iteration list to save time
-    # if latency ~ 500 ms , then set iter = 200. if latency ~ 1000 ms, then set iter = 100
+    # if latency ~ 500 ms , then set iter = 100. if latency ~ 1000 ms, then set iter = 50
     latency_high_500=("arttrack-coco-multi" "arttrack-mpii-single" "east_resnet_v1_50" \
     "DeepLab" "mask_rcnn_resnet50_atrous_coco")
 
