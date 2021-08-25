@@ -92,7 +92,7 @@
     },
     "resnet50-v1-12": {
       "model_src_dir": "onnx_model_zoo/resnet50",
-      "dataset_location": "/tf_dataset/onnx/img/val",
+      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw/val",
       "input_model": "/tf_dataset2/models/onnx/resnet50-v1-12/resnet50-v1-7-12.onnx",
       "yaml": "resnet50_v1_5.yaml",
       "strategy": "basic",
