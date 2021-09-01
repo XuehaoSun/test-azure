@@ -190,15 +190,17 @@ function run_accuracy {
 
 function run_benchmark {
     # define a low iteration list to save time
-    # if latency ~ 500 ms , then set iter = 200. if latency ~ 1000 ms, then set iter = 100
+    # if latency ~ 500 ms , then set iter = 100. if latency ~ 1000 ms, then set iter = 80
     latency_high_500=("arttrack-coco-multi" "arttrack-mpii-single" "east_resnet_v1_50" \
-    "DeepLab" "mask_rcnn_resnet50_atrous_coco")
+    "DeepLab" "mask_rcnn_resnet50_atrous_coco" "bert_large_SQuAD" "gpt_WikiText" "albert_base_MRPC" "bart_WNLI" \
+    "longformer_MRPC" "ctrl_MRPC" "ssd_resnet34_fx")
 
     latency_high_1000=("efficientnet-b7_auto_aug" "i3d-flow" "i3d-rgb" "VNet" "icnet-camvid-ava-0001" \
     "icnet-camvid-ava-sparse-30-0001" "icnet-camvid-ava-sparse-60-0001" "dilation" \
     "faster_rcnn_inception_resnet_v2_atrous_coco" "faster_rcnn_nas_coco" "faster_rcnn_nas_lowproposals_coco" \
     "gmcnn-places2" "mask_rcnn_inception_resnet_v2_atrous_coco" "Transformer-LT" "mask_rcnn_resnet101_atrous_coco" \
-    "person-vehicle-bike-detection-crossroad-yolov3-1024" "unet-3d-isensee_2017" "unet-3d-origin")
+    "person-vehicle-bike-detection-crossroad-yolov3-1024" "unet-3d-isensee_2017" "unet-3d-origin" "3dunet" \
+    "t5_WMT_en_ro" "marianmt_WMT_en_ro" "pegasus_billsum" "dialogpt_wikitext" "transfo_xl_MRPC" "")
 
     single_instance=("3dunet")
 
@@ -219,9 +221,9 @@ function run_benchmark {
         fi
         # custom iteration
         if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
-            iters=200
-        elif [[ "${latency_high_1000[@]}" =~ "${model}" ]]; then
             iters=100
+        elif [[ "${latency_high_1000[@]}" =~ "${model}" ]]; then
+            iters=80
         fi
     else
         ncores_per_instance=${ncores_per_socket}
