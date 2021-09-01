@@ -71,9 +71,11 @@ main() {
         cd ${model_src_dir}
         echo -e "\nWorking in $(pwd)..."
         if [[ "${model_src_dir}" == *"pytorch/eager/language_translation/ptq" ]]; then
+            setup_install_pypi_source
             python setup.py install
         fi
         if [[ "${model_src_dir}" == *"/huggingface_models" ]]; then
+            setup_install_pypi_source
             python setup.py install
             pip install git-python
             bash install_requirements.sh --topology=${model}
@@ -81,6 +83,7 @@ main() {
         if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
             # Install nnUnet
             cd nnUnet
+            setup_install_pypi_source
             python setup.py install
             cd ..
             # Workaround for problem with passing dataset location
@@ -147,6 +150,7 @@ main() {
             fi
             echo "Checking gcc version:"
             gcc -v
+            setup_install_pypi_source
             python setup.py install
             cd ${model_src_dir}
         fi
@@ -405,6 +409,10 @@ function copy_model {
     local_model="${WORKSPACE}/${model_name}"
     cp -r "${input_model}" "${local_model}"
     input_model=${local_model}
+}
+
+function setup_install_pypi_source {
+    echo -e "\n[easy_install]\nindex_url = https://mirrors.aliyun.com/pypi/simple/" >> setup.cfg
 }
 
 main
