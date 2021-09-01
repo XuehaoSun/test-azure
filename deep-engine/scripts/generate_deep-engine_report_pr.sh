@@ -45,13 +45,22 @@ function createOverview {
         benchmark_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    bandit_scan=($(grep 'format-scan,bandit' ${overviewLog} |sed 's/,/ /g'))
-    if [[ "${bandit_scan[2]}" == *"FAIL"* ]];then
-        bandit_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
-        bandit_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    accuracy=($(grep 'deep-engine_accuracy' ${overviewLog} |sed 's/,/ /g'))
+    if [[ "${accuracy[1]}" == *"FAIL"* ]];then
+        accuracy_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${accuracy[1]}" == *"SUCC"* ]];then
+        accuracy_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        bandit_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+        accuracy_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
+
+    cpplint_scan=($(grep 'deep-engine-code-scan,cpplint' ${overviewLog} |sed 's/,/ /g'))
+    if [[ "${cpplint_scan[2]}" == *"FAIL"* ]];then
+        cpplint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${cpplint_scan[2]}" == *"SUCC"* ]];then
+        cpplint_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        cpplint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     spellcheck_scan=($(grep 'format-scan,pyspelling' ${overviewLog} |sed 's/,/ /g'))
@@ -87,10 +96,16 @@ function createOverview {
                  echo "${benchmark_status}</tr>"
              fi
 
-             if [ "${bandit_scan[3]}" != "" ]; then
-                 echo "<tr><td>Bandit Scan</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${bandit_scan[0]}/${bandit_scan[3]}\">${bandit_scan[0]}#${bandit_scan[3]}</a></td>"
-                 echo "${bandit_scan_status}</tr>"
+             if [ "${accuracy[2]}" != "" ]; then
+                 echo "<tr><td>Accuracy</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${accuracy[2]}\">accuracy_summary</a></td>"
+                 echo "${accuracy_status}</tr>"
+             fi
+
+             if [ "${cpplint_scan[3]}" != "" ]; then
+                 echo "<tr><td>cpplint Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${cpplint_scan[0]}/${cpplint_scan[3]}\">${cpplint_scan[0]}#${cpplint_scan[3]}</a></td>"
+                 echo "${cpplint_scan_status}</tr>"
              fi
 
              if [ "${spellcheck_scan[3]}" != "" ]; then

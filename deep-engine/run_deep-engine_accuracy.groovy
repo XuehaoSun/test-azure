@@ -5,7 +5,7 @@ def jsonParse(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
 }
 
-node_label = "non-perf"
+node_label = ""
 if ('node_label' in params && params.node_label != '') {
     node_label = params.node_label
 }
@@ -31,12 +31,6 @@ echo "deepengine_branch: $deepengine_branch"
 echo "PR_source_branch: $PR_source_branch"
 echo "PR_target_branch: $PR_target_branch"
 
-benchmark_config="4:1,28:64,28:1,7:64,7:2"
-if ('benchmark_config' in params && params.benchmark_config != ''){
-    benchmark_config=params.benchmark_config
-}
-echo "benchmark_config: ${benchmark_config}"
-
 precision="int8,fp32"
 if ('precision' in params && params.precision != ''){
     precision=params.precision
@@ -49,7 +43,7 @@ if ('model_list' in params && params.model_list != ''){
 }
 echo "model_list: ${model_list}"
 
-conda_env = "deep-engine-benchmark"
+conda_env = "deep-engine-accuracy"
 if ('conda_env' in params && params.conda_env != '') {
     conda_env = params.conda_env
 }
@@ -158,41 +152,45 @@ node(node_label){
             }
         }
 
-        stage('benchmark'){
+        stage('accuracy'){
             model_list_split=model_list.split(',')
             model_list_split.each { each_model ->
                 def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/deep-engine/config/model_list.json"))."${each_model}"
-                def seq_len = modelConf."seq_len"
-                seq_len.each { each_seq_len ->
-                    benchmark_config.split(',').each { each_ben_conf ->
-                        def ncores_per_instance = each_ben_conf.split(':')[0]
-                        def bs = each_ben_conf.split(':')[1]
-                        precision.split(',').each { each_precision ->
-                            def weight = modelConf."${each_precision}"."weight"
-                            def config = modelConf."${each_precision}"."config"
-                            config="${WORKSPACE}/deep-engine/${config}"
-                            sh"""#!/bin/bash -x
-                                echo "Running ----${each_model}, ${each_seq_len}, ${weight}, ${config}, ${ncores_per_instance},${bs},${each_precision} ---- Benchmark"
-                                
-                                echo "=======cache clean======="
-                                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-                                echo "========================="
-                                cd ${WORKSPACE}/deep-engine/deep_engine/executor/build
-                                bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${each_model} ${each_seq_len} ${ncores_per_instance} ${bs} ${config} ${weight} ${each_precision}
-                            """
-                        }
+                def dataset = modelConf."dataset_location"
+                precision.split(',').each { each_precision ->
+                    def weight = modelConf."${each_precision}"."weight"
+                    def config = modelConf."${each_precision}"."config"
+                    config="${WORKSPACE}/deep-engine/${config}"
+                    sh"""#!/bin/bash -x
+                        echo "Running ----${each_model}, ${dataset}, ${weight}, ${config}, ${each_precision} ---- Benchmark"
+                        
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        source activate ${conda_env}
+                        pip install six numpy
+                        
+                        cd ${WORKSPACE}/deep-engine/deep_engine/examples/bert_base_mrpc
+                        cp ${WORKSPACE}/deep-engine/deep_engine/executor/build/deep_engine_py.*.so .
+                        cp ../mlperf_v1.1/vocab.txt .
+                        mkdir -p ${WORKSPACE}/${each_model}
+                        python run_deep_engine.py --model=${config} --weight=${weight} --data_dir=${dataset} 2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log
+                    """
+                    withEnv(["each_model=${each_model}","each_precision=${each_precision}"]){
+                        sh '''#!/bin/bash
+                            accuracy=`grep "acc:" ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log | cut -d':' -f2`
+                            echo "accuracy,${each_model},${each_precision},${accuracy}" >> ${WORKSPACE}/accuracy_summary.txt
+                        '''
                     }
                 }
             }
 
-            // check benchmark status
+            // check accuracy status
             sh'''#!/bin/bash
-                log_file='${WORKSPACE}/summary.txt'
-                for line in $(grep 'throughput' $log_file)
+                log_file='${WORKSPACE}/accuracy_summary.txt'
+                for line in $(grep 'accuracy' $log_file)
                 do 
                 echo $line
-                throughput=$(echo $line| cut -f8 -d',')
-                if [[ $throughput = '' ]]; then
+                accuracy=$(echo $line| cut -f4 -d',')
+                if [[ $accuracy = '' ]]; then
                     exit 1
                 fi
                 done
@@ -206,7 +204,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'summary.txt, bert*/**, cmake_build.log', excludes: null
+            archiveArtifacts artifacts: 'accuracy_summary.txt, bert*/**, cmake_build.log', excludes: null
             fingerprint: true
         }
     }
