@@ -1,23 +1,46 @@
 {
-  "bert_base": {
+  "bert_base_mrpc": {
     "int8": {
       "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_int8.bin",
-      "config": "../../examples/execute_bert/conf_bert_base_all_int8.yaml"
+      "config": "deep_engine/examples/execute_bert/conf_bert_base_all_int8.yaml"
     },
     "fp32": {
       "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_fp32.bin",
-      "config": "../../examples/execute_bert/conf_bert_base_all.yaml"
+      "config": "deep_engine/examples/execute_bert/conf_bert_base_all.yaml"
     },
-    "seq_len": [128]
+    "seq_len": [128],
+    "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/"
   },
-  "bert_large": {
+  "bert_large_mlperf": {
     "int8": {
       "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_int8.bin",
-      "config": "../../examples/execute_bert/conf_bert_mlperf_all_int8.yaml"
+      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all_int8.yaml"
     },
     "fp32": {
       "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_fp32.bin",
-      "config": "../../examples/execute_bert/conf_bert_mlperf_all.yaml"
+      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all.yaml"
+    },
+    "seq_len": [179,384]
+  },
+  "bert_base_mrpc_attention": {
+    "int8": {
+      "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_int8.bin",
+      "config": "deep_engine/examples/execute_bert/conf_bert_base_attention_int8.yaml"
+    },
+    "fp32": {
+      "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_fp32.bin",
+      "config": "deep_engine/examples/execute_bert/conf_bert_base_attention.yaml"
+    },
+    "seq_len": [128]
+  },
+  "bert_large_mlperf_attention": {
+    "int8": {
+      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_int8.bin",
+      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_attention_int8.yaml"
+    },
+    "fp32": {
+      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_fp32.bin",
+      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_attention.yaml"
     },
     "seq_len": [179,384]
   }

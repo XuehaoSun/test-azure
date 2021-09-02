@@ -34,6 +34,12 @@ if (params.RUN_UT != null){
 }
 echo "RUN_UT = ${RUN_UT}"
 
+RUN_CPPLINT=false
+if (params.RUN_CPPLINT != null){
+    RUN_CPPLINT=params.RUN_CPPLINT
+}
+echo "RUN_CPPLINT = ${RUN_CPPLINT}"
+
 // setting refer_build
 refer_build = "x0"
 if ('refer_build' in params && params.refer_build != '') {
@@ -87,11 +93,17 @@ if ('benchmark_config' in params && params.benchmark_config != ''){
 }
 echo "benchmark_config: ${benchmark_config}"
 
-model_list='bert_large,bert_base'
-if ('model_list' in params && params.model_list != ''){
-    model_list=params.model_list
+benchmark_model_list=''
+if ('benchmark_model_list' in params && params.benchmark_model_list != ''){
+    benchmark_model_list=params.benchmark_model_list
 }
-echo "model_list: ${model_list}"
+echo "benchmark_model_list: ${benchmark_model_list}"
+
+accuracy_model_list=''
+if ('accuracy_model_list' in params && params.accuracy_model_list != ''){
+    accuracy_model_list=params.accuracy_model_list
+}
+echo "accuracy_model_list: ${accuracy_model_list}"
 
 if ( PR_source_branch != ''){
     email_subject="PR${ghprbPullId}: ${test_title}"
@@ -268,7 +280,7 @@ def perfJobs() {
             string(name: "PR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "benchmark_config", value: "${benchmark_config}"),
-            string(name: "model_list", value: "${model_list}")
+            string(name: "model_list", value: "${benchmark_model_list}")
     ]
     perf_jobs["benchmark"] = {
         downstreamJob = build job: "deep-engine-benchmark", propagate: false, parameters: perfParams
@@ -301,6 +313,86 @@ def perfJobs() {
         }
     }
     return perf_jobs
+}
+
+def accJobs() {
+    def acc_jobs = [:]
+    List perfParams = [
+            string(name: "node_label", value: "${sub_node_label}"),
+            string(name: "deepengine_url", value: "${deepengine_url}"),
+            string(name: "deepengine_branch", value: "${deepengine_branch}"),
+            string(name: "PR_source_branch", value: "${PR_source_branch}"),
+            string(name: "PR_target_branch", value: "${PR_target_branch}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "model_list", value: "${accuracy_model_list}")
+    ]
+    acc_jobs["accuracy"] = {
+        downstreamJob = build job: "deep-engine-accuracy", propagate: false, parameters: perfParams
+        catchError {
+            copyArtifacts(
+                    projectName: "deep-engine-accuracy",
+                    selector: specific("${downstreamJob.getNumber()}"),
+                    filter: '**/*',
+                    fingerprintArtifacts: true,
+                    target: "accuracy")
+
+            archiveArtifacts artifacts: "accuracy/**", allowEmptyArchive: true
+        }
+
+        def sub_job_url = downstreamJob.absoluteUrl
+        if (downstreamJob.result != 'SUCCESS') {
+            withEnv(["sub_job_url=${sub_job_url}"]){
+                sh '''#!/bin/bash
+                overview_log="${WORKSPACE}/summary_overview.log"
+                echo "deep-engine_accuracy,FAILURE,${sub_job_url}" | tee -a ${overview_log}
+                '''
+            }
+            currentBuild.result = "FAILURE"
+            error("---accuracy failed---")
+        }else{
+            withEnv(["sub_job_url=${sub_job_url}"]) {
+                sh '''#!/bin/bash
+                overview_log="${WORKSPACE}/summary_overview.log"
+                echo "deep-engine_accuracy,SUCCESS,${sub_job_url}" | tee -a ${overview_log}
+                '''
+            }
+        }
+    }
+    return acc_jobs
+}
+
+def codeScan(tool) {
+    List codeScanParams = [
+            string(name: "TOOL", value: "${tool}"),
+            string(name: "deepengine_url", value: "${deepengine_url}"),
+            string(name: "deepengine_branch", value: "${deepengine_branch}"),
+            string(name: "PR_source_branch", value: "${PR_source_branch}"),
+            string(name: "PR_target_branch", value: "${PR_target_branch}"),
+            string(name: "val_branch", value: "${val_branch}")
+    ]
+
+    downstreamJob = build job: "deep-engine-code-scan", propagate: false, parameters: codeScanParams
+
+    copyArtifacts(
+            projectName: "deep-engine-code-scan",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.log',
+            fingerprintArtifacts: true,
+            target: "code_scan",
+            optional: true)
+
+    text_comment = readFile file: "${overview_log}"
+    writeFile file: "${overview_log}", text: text_comment + "deep-engine-code-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
+
+    // Archive in Jenkins
+    archiveArtifacts artifacts: "code_scan/**", allowEmptyArchive: true
+
+    if (downstreamJob.result != 'SUCCESS') {
+        currentBuild.result = "FAILURE"
+        if (PR_source_branch != '') {
+            error("${tool} scan failed!")
+        }
+    }
 }
 
 def collectUTLog() {
@@ -412,11 +504,23 @@ node( node_label ) {
             def ut_jobs = unitTestJobs()
             job_list = job_list + ut_jobs
         }
+        if (RUN_CPPLINT){
+            println("Add cpplint scan to job...")
+            job_list["cpplint Scan"] = {
+                codeScan("cpplint")
+            }
+        }
 
-        if (model_list != ''){
+        if (benchmark_model_list != ''){
             println("Add benchmark job...")
             def perf_jobs = perfJobs()
             job_list = job_list + perf_jobs
+        }
+
+        if (accuracy_model_list != ''){
+            println("Add accuracy job...")
+            def acc_jobs = accJobs()
+            job_list = job_list + acc_jobs
         }
 
         if (PR_source_branch != ''|| pipeline_failFast) {
