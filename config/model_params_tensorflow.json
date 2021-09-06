@@ -1826,6 +1826,15 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": true
+    },
+    "yolo_v3": {
+      "model_src_dir": "object_detection/yolo_v3",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
+      "input_model": "/tf_dataset2/models/tensorflow/yolo_v3/yolo_v3.pb",
+      "yaml": "yolo_v3.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
     }
   }
 }

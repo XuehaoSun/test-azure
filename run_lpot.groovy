@@ -895,7 +895,9 @@ node( sub_node_label ) {
                         precision_list.each { precision ->
                             echo "precision is ${precision}"
                             // oob only support dummy data
-                            if (['oob_models'].contains(model_src_dir) || model == 'style_transfer') {
+                            if (['oob_models'].contains(model_src_dir)
+                                || model == 'style_transfer' 
+                                || (framework == "tensorflow" && model == "yolo_v3")) {
                                 mode_list = mode_list - 'accuracy'
                                 echo "mode list is ${mode_list}"
                             }
