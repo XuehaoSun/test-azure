@@ -7,6 +7,7 @@ omit =
  */**/fake.py
  */lpot/ux/*
  */lpot/model/nets_factory.py
+ */lpot/experimental/benchmark.py
 exclude_lines =
  pragma: no cover
  raise NotImplementedError
