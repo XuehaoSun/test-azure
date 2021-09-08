@@ -1278,6 +1278,15 @@ node( node_label ) {
                     returnStdout: true
             ).trim()
         }
+        if (PR_source_branch != ''){
+            sh"""!#/bin/bash
+                cd lpot-models
+                echo "PR_source_branch: "
+                git show-ref -s remotes/origin/${PR_source_branch}
+                echo "PR_target_branch: "
+                git show-ref -s remotes/origin/${PR_target_branch}
+            """
+        }
 
         stage('Build wheel'){
             buildBinary()
