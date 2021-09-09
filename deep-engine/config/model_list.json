@@ -13,7 +13,7 @@
   },
   "bert_large_mlperf": {
     "int8": {
-      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_int8.bin",
+      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_int8_98.bin",
       "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all_int8.yaml"
     },
     "fp32": {
@@ -21,6 +21,16 @@
       "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all.yaml"
     },
     "seq_len": [179,384]
+  },
+  "bert_mlperf_loadgen": {
+    "int8": {
+      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_int8_98.bin",
+      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all_int8.yaml"
+    },
+    "fp32": {
+      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_fp32.bin",
+      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all.yaml"
+    }
   },
   "bert_base_mrpc_attention": {
     "int8": {
