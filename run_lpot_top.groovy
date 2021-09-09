@@ -1279,7 +1279,7 @@ node( node_label ) {
             ).trim()
         }
         if (PR_source_branch != ''){
-            sh"""!#/bin/bash
+            sh"""#!/bin/bash
                 cd lpot-models
                 echo "PR_source_branch: "
                 git show-ref -s remotes/origin/${PR_source_branch}
