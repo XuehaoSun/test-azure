@@ -143,6 +143,15 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": false
+    },
+    "vgg16_model_zoo": {
+      "model_src_dir": "onnx_model_zoo/vgg16",
+      "dataset_location": "/tf_dataset/onnx/img/val",
+      "input_model": "/tf_dataset2/models/onnx/vgg16-12/vgg16-12.onnx",
+      "yaml": "vgg16.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
     }
   }
 }
