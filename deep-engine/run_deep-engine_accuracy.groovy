@@ -161,31 +161,62 @@ node(node_label){
                     def weight = modelConf."${each_precision}"."weight"
                     def config = modelConf."${each_precision}"."config"
                     config="${WORKSPACE}/deep-engine/${config}"
-                    sh"""#!/bin/bash -x
-                        echo "Running ----${each_model}, ${dataset}, ${weight}, ${config}, ${each_precision} ---- Benchmark"
-                        
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
-                        source activate ${conda_env}
-                        pip install six numpy
-                        
-                        cd ${WORKSPACE}/deep-engine/deep_engine/examples/bert_base_mrpc
-                        cp ${WORKSPACE}/deep-engine/deep_engine/executor/build/deep_engine_py.*.so .
-                        cp ../mlperf_v1.1/vocab.txt .
-                        mkdir -p ${WORKSPACE}/${each_model}
-                        python run_deep_engine.py --model=${config} --weight=${weight} --data_dir=${dataset} 2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log
-                    """
-                    withEnv(["each_model=${each_model}","each_precision=${each_precision}"]){
-                        sh '''#!/bin/bash
+                    if (each_model == "bert_mlperf_loadgen"){
+                        sh"""#!/bin/bash -x
+                            echo "Running ----${each_model}, ${dataset}, ${weight}, ${config}, ${each_precision} ---- Accuracy"
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            source activate ${conda_env}
+                            git clone --recurse-submodules https://github.com/mlcommons/inference.git mlperf_inference 
+                            cd mlperf_inference && git checkout r1.1 && git submodule update --init --recursive && cd loadgen
+                            CFLAGS="-std=c++14" python setup.py install
+                            cd ../..
+    
+                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp37-cp37m-manylinux2010_x86_64.whl
+                            pip install transformers cmake absl-py
+                            
+                            cd ${WORKSPACE}/deep-engine/deep_engine/examples/mlperf_v1.1
+                            cp ${WORKSPACE}/deep-engine/deep_engine/executor/build/deep_engine_py.*.so .
+                            cp ${WORKSPACE}/deep-engine/deep_engine/executor/build/libdeep_engine.so .
+                            
+                            export GLOG_minloglevel=2
+                            mkdir -p ${WORKSPACE}/${each_model}
+                            python run_deep_engine.py --scenario=Offline --batch-size=64 --num-instance=2 --num-phy-cpus=56 --accuracy --model=${config} --weight=${weight} \
+                            2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log    
+                        """
+                        withEnv(["each_model=${each_model}","each_precision=${each_precision}"]) {
+                            sh '''#!/bin/bash
+                                accuracy=`grep 'f1' ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log | cut -d':' -f3 | awk -F '}' '{printf("%.3f",$1)}'`
+                                echo "accuracy,${each_model},${each_precision},${accuracy}" >> ${WORKSPACE}/summary.txt
+                            '''
+                        }
+
+                    }else{
+                        sh"""#!/bin/bash -x
+                            echo "Running ----${each_model}, ${dataset}, ${weight}, ${config}, ${each_precision} ---- Accuracy"
+                            
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            source activate ${conda_env}
+                            pip install six numpy
+                            
+                            cd ${WORKSPACE}/deep-engine/deep_engine/examples/bert_base_mrpc
+                            cp ${WORKSPACE}/deep-engine/deep_engine/executor/build/deep_engine_py.*.so .
+                            cp ../mlperf_v1.1/vocab.txt .
+                            mkdir -p ${WORKSPACE}/${each_model}
+                            python run_deep_engine.py --model=${config} --weight=${weight} --data_dir=${dataset} 2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log
+                        """
+                        withEnv(["each_model=${each_model}","each_precision=${each_precision}"]){
+                            sh '''#!/bin/bash
                             accuracy=`grep "acc:" ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log | cut -d':' -f2`
-                            echo "accuracy,${each_model},${each_precision},${accuracy}" >> ${WORKSPACE}/accuracy_summary.txt
+                            echo "accuracy,${each_model},${each_precision},${accuracy}" >> ${WORKSPACE}/summary.txt
                         '''
+                        }
                     }
                 }
             }
 
             // check accuracy status
             sh'''#!/bin/bash
-                log_file='${WORKSPACE}/accuracy_summary.txt'
+                log_file='${WORKSPACE}/summary.txt'
                 for line in $(grep 'accuracy' $log_file)
                 do 
                 echo $line
@@ -204,7 +235,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'accuracy_summary.txt, bert*/**, cmake_build.log', excludes: null
+            archiveArtifacts artifacts: 'summary.txt, bert*/**, cmake_build.log', excludes: null
             fingerprint: true
         }
     }

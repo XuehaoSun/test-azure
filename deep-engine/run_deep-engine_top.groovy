@@ -40,6 +40,24 @@ if (params.RUN_CPPLINT != null){
 }
 echo "RUN_CPPLINT = ${RUN_CPPLINT}"
 
+RUN_PYLINT=false
+if (params.RUN_PYLINT != null){
+    RUN_PYLINT=params.RUN_PYLINT
+}
+echo "RUN_PYLINT = ${RUN_PYLINT}"
+
+RUN_BANDIT=false
+if (params.RUN_BANDIT != null){
+    RUN_BANDIT=params.RUN_BANDIT
+}
+echo "RUN_BANDIT = ${RUN_BANDIT}"
+
+RUN_SPELLCHECK=false
+if (params.RUN_SPELLCHECK != null){
+    RUN_SPELLCHECK=params.RUN_SPELLCHECK
+}
+echo "RUN_SPELLCHECK = ${RUN_SPELLCHECK}"
+
 // setting refer_build
 refer_build = "x0"
 if ('refer_build' in params && params.refer_build != '') {
@@ -47,6 +65,7 @@ if ('refer_build' in params && params.refer_build != '') {
 }
 echo "Running ${refer_build}"
 
+deepengine_commit = ''
 deepengine_branch = ''
 PR_source_branch = ''
 PR_target_branch = ''
@@ -381,6 +400,8 @@ def codeScan(tool) {
             target: "code_scan",
             optional: true)
 
+    overview_log="${WORKSPACE}/summary_overview.log"
+
     text_comment = readFile file: "${overview_log}"
     writeFile file: "${overview_log}", text: text_comment + "deep-engine-code-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
 
@@ -417,7 +438,7 @@ def generateReport() {
         copyArtifacts(
                 projectName: refer_job_name,
                 selector: specific("${refer_build}"),
-                filter: 'benchmark/summary.txt',
+                filter: 'summary.txt',
                 fingerprintArtifacts: true,
                 target: "reference")
     }
@@ -430,6 +451,7 @@ def generateReport() {
         }
         withEnv([
                 "deepengine_branch=${deepengine_branch}",
+                "deepengine_commit=${deepengine_commit}",
                 "summaryLog=${summaryLog}",
                 "summaryLogLast=${summaryLogLast}",
                 "overviewLog=${overviewLog}",
@@ -487,11 +509,17 @@ node( node_label ) {
             }
         }
         download()
+        if (deepengine_branch != ''){
+            deepengine_commit = sh (
+                    script: 'cd deep-engine && git rev-parse HEAD',
+                    returnStdout: true
+            ).trim()
+        }
 
         // Setup logs path
         echo "WORKSPACE IS ${WORKSPACE}"
-        summaryLog = "${WORKSPACE}/benchmark/summary.txt"
-        summaryLogLast = "${WORKSPACE}/reference/benchmark/summary.txt"
+        summaryLog = "${WORKSPACE}/summary.txt"
+        summaryLogLast = "${WORKSPACE}/reference/summary.txt"
 
         // over view log
         overviewLog = "${WORKSPACE}/summary_overview.log"
@@ -508,6 +536,21 @@ node( node_label ) {
             println("Add cpplint scan to job...")
             job_list["cpplint Scan"] = {
                 codeScan("cpplint")
+            }
+        }
+        if (RUN_PYLINT) {
+            job_list["Pylint Scan"] = {
+                codeScan("pylint")
+            }
+        }
+        if (RUN_BANDIT) {
+            job_list["Bandit Scan"] = {
+                codeScan("bandit")
+            }
+        }
+        if (RUN_SPELLCHECK) {
+            job_list["Spellcheck Scan"] = {
+                codeScan("pyspelling")
             }
         }
 
@@ -545,6 +588,14 @@ node( node_label ) {
                 if (RUN_UT){
                     collectUTLog()
                 }
+                sh '''#!/bin/bash 
+                    if [ -f ${WORKSPACE}/benchmark/summary.txt ]; then 
+                        cat ${WORKSPACE}/benchmark/summary.txt >> ${WORKSPACE}/summary.txt
+                    fi
+                    if [ -f ${WORKSPACE}/accuracy/summary.txt ]; then 
+                        cat ${WORKSPACE}/accuracy/summary.txt >> ${WORKSPACE}/summary.txt
+                    fi
+                '''
             }
         }
 
@@ -561,7 +612,7 @@ node( node_label ) {
         }
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log, *.html, *.xlsx, *.json', excludes: null, allowEmptyArchive: true
+            archiveArtifacts artifacts: '*.log, *.html, *.xlsx, *.json, *.txt, reference/*', excludes: null, allowEmptyArchive: true
             fingerprint: true
         }
 

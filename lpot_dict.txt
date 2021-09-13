@@ -122,7 +122,6 @@ Bengio
 Benoît
 berkeleyvision
 bert
-BERT's
 BertAdam
 BertConfig
 BertForMaskedLM
@@ -133,6 +132,7 @@ BertForSequenceClassification
 BertForTokenClassification
 BertModel
 berts
+BERT's
 bertsquad
 BertTokenizer
 bfloat
@@ -168,6 +168,8 @@ BrainTumour
 BraTS
 broadcasted
 bs
+bsnone
+bsnone
 bugfix
 buildin
 BV
@@ -207,10 +209,10 @@ CFLAGS
 ChamNet
 Chaumond
 Cheng
-Cho's
+chmod
 chongruo
 Chongruo
-chmod
+Cho's
 chris
 Chuanqi
 ci
@@ -262,6 +264,7 @@ colorama
 ColorJitter
 colspan
 compat
+compilervars
 concat
 ConcatV
 cond
@@ -277,6 +280,7 @@ configs
 CoNLL
 Conneau
 const
+ConstDataLoader
 constexpr
 contaning
 conv
@@ -297,6 +301,7 @@ cpp
 cpu
 CPUs
 CPX
+cpython
 creafz
 creatis
 creativecommons
@@ -323,6 +328,7 @@ cudnn
 CUHK
 curr
 Curran
+custormer
 cv
 CvAClvFfyA
 CXX
@@ -358,6 +364,7 @@ datset
 dbmdz
 DBMDZ
 dbs
+DCMAKE
 dcn
 ddp
 DDP
@@ -444,6 +451,7 @@ dtype
 DualPathNet
 dualpathnetworks
 DualPathNetworks
+DummyDataLoader
 dunet
 DUNet
 Dupont
@@ -493,6 +501,7 @@ evel
 exemplarily
 exising
 existing
+exmaple
 expanduser
 ExperimentPlanner
 ExperimentPlanners
@@ -587,6 +596,7 @@ github
 githubusercontent
 gitmodules
 GLIBCXX
+GLOG
 GLUE
 gluebenchmark
 gluepy
@@ -602,6 +612,8 @@ googleblog
 googlenet
 googlesource
 Goyal
+gpg
+GPG
 gpt
 gpu
 gpus
@@ -617,6 +629,7 @@ Gui
 Guillaume
 Guoming
 gz
+gzY
 Haibin
 haibinlin
 Haihao
@@ -658,8 +671,10 @@ HybirdBlock
 HybridBlock
 hyperparameter
 hyperparameters
+icc
 ICCV
 Icelake
+icpc
 icx
 ide
 idx
@@ -693,6 +708,7 @@ InceptionV
 incollection
 IndexType
 indexValue
+inferencer
 informations
 init
 innersource
@@ -786,6 +802,7 @@ ld
 len
 lfaidata
 li
+libdeep
 libffi
 libglib
 libmlperf
@@ -798,6 +815,7 @@ libz
 licence
 liKE
 Limitting
+lin
 linkopt
 linoxide
 linux
@@ -812,9 +830,9 @@ ln
 loadgen
 LoadGen
 LOADGEN
-LoadGen's
 LoadgenAPI
 LoadgenAPITestSettings
+LoadGen's
 LoadgenVersion
 LoadImage
 LOC
@@ -901,6 +919,7 @@ Mingda
 minibatch
 minimalistic
 minival
+minloglevel
 minmax
 MinMaxObserver
 mins
@@ -929,6 +948,7 @@ mlpc
 mlperf
 MLperf
 MLPerf
+mlt
 mmdetection
 mmlab
 MMLAB
@@ -974,8 +994,8 @@ MultiNLI
 multiscale
 MULTISCALE
 MultiStream
-MultiStream's
 MultiStreamFree
+MultiStream's
 mutli
 mv
 mx
@@ -1106,12 +1126,13 @@ OOM
 OOQtYMH
 openai
 OpenAI
-OpenAI's
 OpenAIAdam
 OpenAIGPTModel
 OpenAIGPTTokenizer
+OpenAI's
 opencv
 OpenCV
+openmp
 openslr
 opensource
 openssl
@@ -1171,6 +1192,7 @@ PERderiv
 perf
 perftests
 PERpart
+phy
 physcpubind
 PhYUmn
 Piero
@@ -1307,7 +1329,6 @@ quickstart
 Quickstart
 QuickStart
 Quoc
-R'emi
 Radboud
 Radford
 Radu
@@ -1345,9 +1366,11 @@ relase
 relu
 Relu
 ReLU
+R'emi
 repo
-repo's
 repo’s
+repos
+repo's
 representating
 requantize
 resampled
@@ -1533,6 +1556,7 @@ Summarization
 SummaryWriter
 superseeds
 suported
+sut
 SUT
 Sutskever
 sv
@@ -1768,11 +1792,13 @@ xz
 xzvf
 yacs
 yaml
+yamls
 Yi
 Yiming
 Yinhan
 yizhu
 yjxiong
+YKd
 Yoann
 yolo
 yolov
@@ -1780,6 +1806,7 @@ YOLOv
 YOLOV
 yosinski
 Yosinski
+YqgzY
 Yuanjun
 Yue
 Yunpeng
@@ -1804,3 +1831,7 @@ Zptls
 zrelro
 zrl
 zxvf
+libengine
+sparsified
+workdir
+cpus

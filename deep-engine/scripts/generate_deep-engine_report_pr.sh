@@ -9,6 +9,7 @@ function main {
 
     generate_html_head
     generate_html_overview
+    generate_accuracy_results
     generate_benchmark_results
     generate_html_footer
 }
@@ -63,7 +64,25 @@ function createOverview {
         cpplint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    spellcheck_scan=($(grep 'format-scan,pyspelling' ${overviewLog} |sed 's/,/ /g'))
+    pylint_scan=($(grep 'deep-engine-code-scan,pylint' ${overviewLog} |sed 's/,/ /g'))
+    if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
+        pylint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${pylint_scan[2]}" == *"SUCC"* ]];then
+        pylint_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        pylint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
+
+    bandit_scan=($(grep 'deep-engine-code-scan,bandit' ${overviewLog} |sed 's/,/ /g'))
+    if [[ "${bandit_scan[2]}" == *"FAIL"* ]];then
+        bandit_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
+        bandit_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        bandit_scan_status=${verify_status}
+    fi
+
+    spellcheck_scan=($(grep 'deep-engine-code-scan,pyspelling' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${spellcheck_scan[2]}" == *"FAIL"* ]];then
         spellcheck_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${spellcheck_scan[2]}" == *"SUCC"* ]];then
@@ -106,6 +125,18 @@ function createOverview {
                  echo "<tr><td>cpplint Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${cpplint_scan[0]}/${cpplint_scan[3]}\">${cpplint_scan[0]}#${cpplint_scan[3]}</a></td>"
                  echo "${cpplint_scan_status}</tr>"
+             fi
+
+             if [ "${pylint_scan[3]}" != "" ]; then
+                 echo "<tr><td>PyLint Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${pylint_scan[0]}/${pylint_scan[3]}\">${pylint_scan[0]}#${pylint_scan[3]}</a></td>"
+                 echo "${pylint_scan_status}</tr>"
+             fi
+
+             if [ "${bandit_scan[3]}" != "" ]; then
+                 echo "<tr><td>Bandit Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${bandit_scan[0]}/${bandit_scan[3]}\">${bandit_scan[0]}#${bandit_scan[3]}</a></td>"
+                 echo "${bandit_scan_status}</tr>"
              fi
 
              if [ "${spellcheck_scan[3]}" != "" ]; then
@@ -159,6 +190,132 @@ createOverview
 
 }
 
+function generate_accuracy_results {
+cat >> ${WORKSPACE}/report.html << eof
+    <h2>Accuracy</h2>
+      <table class="features-table">
+        <tr>
+          <th rowspan="2">Model</th>
+          <th rowspan="2">VS</th>
+          <th>INT8</th>
+          <th>FP32</th>
+          <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
+        </tr>
+        <tr>
+          <th>accuracy</th>
+          <th>accuracy</th>
+          <th colspan="2" class="col-cell col-cell1"><font size="2px">(INT8-FP32)/FP32</font></th>
+        </tr>
+eof
+
+    mode='accuracy'
+    models=$(cat ${summaryLog} |grep "^${mode}" |cut -d',' -f2 |awk '!a[$0]++')
+    for model in ${models[@]}
+    do
+        accuracy_int8=$(cat ${summaryLog} |grep "^${mode},${model},int8" | cut -d',' -f4)
+        accuracy_int8_url=$(cat ${summaryLog} |grep "^${mode},${model},int8" | cut -d',' -f5)
+        accuracy_fp32=$(cat ${summaryLog} |grep "^${mode},${model},fp32" | cut -d',' -f4)
+        accuracy_fp32_url=$(cat ${summaryLog} |grep "^${mode},${model},fp32" | cut -d',' -f5)
+        if [ $(cat ${summaryLogLast} |grep -c "^${mode},${model},int8") == 0 ]; then
+            accuracy_int8_last=nan
+            accuracy_int8_url_last=nan
+            accuracy_fp32_last=nan
+            accuracy_fp32_url_last=nan
+        else
+            accuracy_int8_last=$(cat ${summaryLogLast} |grep "^${mode},${model},int8" | cut -d',' -f4)
+            accuracy_int8_url_last=$(cat ${summaryLogLast} |grep "^${mode},${model},int8" | cut -d',' -f5)
+            accuracy_fp32_last=$(cat ${summaryLogLast} |grep "^${mode},${model},fp32" | cut -d',' -f4)
+            accuracy_fp32_url_last=$(cat ${summaryLogLast} |grep "^${mode},${model},fp32" | cut -d',' -f5)
+        fi
+        generate_acc_core
+    done
+
+    cat >> ${WORKSPACE}/report.html << eof
+        <tr>
+            <td colspan="4"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+            <td colspan="2" class="col-cell col-cell1 col-cellf"></td>
+        </tr>
+    </table>
+eof
+}
+
+function generate_acc_core {
+    echo "<tr><td rowspan=3>${model}</td><td>New</td>" >> ${WORKSPACE}/report.html
+    echo | awk -v a_int8=${accuracy_int8} -v a_int8_url=${accuracy_int8_url} -v a_fp32=${accuracy_fp32} -v a_fp32_url=${accuracy_fp32_url} -v a_int8_l=${accuracy_int8_last} -v a_int8_url_l=${accuracy_int8_url_last} -v a_fp32_l=${accuracy_fp32_last} -v a_fp32_url_l=${accuracy_fp32_url_last} '
+        function show_accuracy(a,b) {
+            if(a ~/[1-9]/) {
+                if (a <= 1){
+                    printf("<td><a href=%s>%.2f %</a></td>\n",b,a*100);
+                }else{
+                    printf("<td><a href=%s>%.2f</a></td>\n",b,a);
+                }
+            }else {
+                if(a == "") {
+                    printf("<td><a href=%s>Failure</a></td>\n",b,a);
+                }else{
+                    printf("<td></td>\n");
+                }
+            }
+        }
+
+        function compare_current(a,b) {
+            if(a ~/[1-9]/ && b ~/[1-9]/) {
+                target = (a - b) / b;
+                if(target >= -0.01) {
+                   printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f %</td>", target*100);
+                }else if(target < -0.05) {
+                   printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f %</td>", target*100);
+                   job_status = "fail"
+                }else{
+                   printf("<td rowspan=3>%.2f %</td>", target*100);
+                }
+            }else{
+                printf("<td rowspan=3></td>");
+            }
+        }
+
+        function compare_new_last(a,b) {
+            target = a - b;
+            if(target > -0.00001 && target < 0.00001) {
+                status_png = "background-color:#90EE90";
+            }else {
+                status_png = "background-color:#FFD2D2";
+                job_status = "fail"
+            }
+            if (a <= 1){
+                printf("<td style=\"%s\">%.2f%</td>", status_png, target*100);
+            }else{
+                printf("<td style=\"%s\">%.2f</td>", status_png, target);
+            }
+        }
+
+        BEGIN {
+            job_status = "pass"
+        }{
+            show_accuracy(a_int8, a_int8_url)
+            show_accuracy(a_fp32, a_fp32_url)
+
+            compare_current(a_int8, a_fp32)
+
+            printf("</tr>\n<tr><td>Last</td>")
+            show_accuracy(a_int8_l, a_int8_url_l)
+            show_accuracy(a_fp32_l, a_fp32_url_l)
+
+            printf("</tr>\n<tr><td>New/Last</td>");
+            compare_new_last(a_int8,a_int8_l)
+            compare_new_last(a_fp32,a_fp32_l)
+            printf("</tr>\n");
+        } END{
+            printf("\n%s", job_status);
+        }
+    ' >> ${WORKSPACE}/report.html
+    job_state=$(tail -1 ${WORKSPACE}/report.html)
+    sed -i '$s/.*//' ${WORKSPACE}/report.html
+    if [ ${job_state} == 'fail' ]; then
+      echo "accuracy regression" >> ${WORKSPACE}/perf_regression.log
+    fi
+}
+
 function generate_benchmark_results {
 
 cat >> ${WORKSPACE}/report.html << eof
@@ -183,19 +340,19 @@ cat >> ${WORKSPACE}/report.html << eof
 eof
 
     mode='throughput'
-    models=$(cat ${summaryLog} |grep "^${mode}" |cut -d',' -f2 |awk '!a[$0]++')
+    models=$(cat ${summaryLog} |grep "^${mode}," |cut -d',' -f2 |awk '!a[$0]++')
     for model in ${models[@]}
     do
-        seq_lens=$(cat ${summaryLog} |grep "^${mode},${model}" |cut -d',' -f3 |awk '!a[$0]++')
+        seq_lens=$(cat ${summaryLog} |grep "^${mode},${model}," |cut -d',' -f3 |awk '!a[$0]++')
         for seq_len in ${seq_lens[@]}
         do
-            full_cores=$(cat ${summaryLog} |grep "^${mode},${model},${seq_len}" |cut -d',' -f4 |awk '!a[$0]++')
+            full_cores=$(cat ${summaryLog} |grep "^${mode},${model},${seq_len}," |cut -d',' -f4 |awk '!a[$0]++')
             for full_core in ${full_cores[@]}
             do
-                core_per_inss=$(cat ${summaryLog} |grep "^${mode},${model},${seq_len},${full_core}" |cut -d',' -f5 |awk '!a[$0]++')
+                core_per_inss=$(cat ${summaryLog} |grep "^${mode},${model},${seq_len},${full_core}," |cut -d',' -f5 |awk '!a[$0]++')
                 for core_per_ins in ${core_per_inss[@]}
                 do
-                    bss=$(cat ${summaryLog} |grep "^${mode},${model},${seq_len},${full_core},${core_per_ins}" |cut -d',' -f6 |awk '!a[$0]++')
+                    bss=$(cat ${summaryLog} |grep "^${mode},${model},${seq_len},${full_core},${core_per_ins}," |cut -d',' -f6 |awk '!a[$0]++')
                     for bs in ${bss[@]}
                     do
                         benchmark_pattern="^${mode},${model},${seq_len},${full_core},${core_per_ins},${bs}"
@@ -220,6 +377,15 @@ eof
             done
         done
     done
+
+    cat >> ${WORKSPACE}/report.html << eof
+        <tr>
+            <td colspan="8"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+            <td colspan="2" class="col-cell col-cell1 col-cellf"></td>
+        </tr>
+    </table>
+eof
+
 }
 
 function generate_html_core {
@@ -409,11 +575,6 @@ eof
 function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
-            <tr>
-                <td colspan="8"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
-                <td colspan="2" class="col-cell col-cell1 col-cellf"></td>
-            </tr>
-        </table>
     </div>
 </body>
 </html>

@@ -6,6 +6,12 @@ if ('node_label' in params && params.node_label != '') {
 }
 echo "Running on node ${node_label}"
 
+TOOL = "TOOL"
+if ('TOOL' in params && params.TOOL != '') {
+    TOOL = params.TOOL
+}
+echo "TOOL: ${TOOL}"
+
 deepengine_url="git@github.com:intel-innersource/frameworks.ai.deep-engine.intel-deep-engine.git"
 if ('deepengine_url' in params && params.deepengine_url != ''){
     deepengine_url = params.deepengine_url
@@ -54,8 +60,9 @@ def cleanup() {
 
 def download() {
     retry(5) {
-        checkout scm
-
+        dir('lpot-validation') {
+            checkout scm
+        }
         def deepengine_branch = deepengine_branch
         if (PR_source_branch != "") {
             deepengine_branch = PR_source_branch
@@ -81,35 +88,19 @@ def download() {
 node(node_label){
     try{
         cleanup()
-        dir('lpot-validation') {
-            checkout scm
-        }
         stage('download') {
             download()
         }
-        stage('cpplint scan'){
-            sh '''
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                    echo "${conda_env} exist!"
-                else
-                    conda create python=3.7 -y -n ${conda_env}
-                fi
-                source activate ${conda_env}
-                pip install cpplint
-                
-                if [ ! -d ${WORKSPACE}/deep-engine ]; then
-                    echo "\\"deep-engine\\" not found. Exiting..."
-                    exit 1
-                fi
-                cd ${WORKSPACE}/deep-engine
-                log_path=${WORKSPACE}/cpplint.log
-                cpplint --recursive --quiet --linelength=99 ./deep_engine/ 2>&1| tee ${log_path}
-                
-                if [ ! -f ${log_path} ] || [ grep -c "Total errors found:" ${log_path}) != 0 ]
-                    exit 1
-                fi
-            '''
+        stage("Code Scan") {
+            echo "---------------------------------------------------------"
+            echo "-----------------  Running Code Scan  -----------------"
+            echo "---------------------------------------------------------"
+            status = sh(
+                    script: "bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/run_engine_format_scan.sh  --tool=${TOOL} --repo_dir=${WORKSPACE}/deep-engine",
+                    returnStatus:true)
+            if (status != 0) {
+                throw new Exception("Found code format scan errors.")
+            }
         }
 
     }catch (e) {
@@ -119,7 +110,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log', excludes: null
+            archiveArtifacts artifacts: '*.log, *.json', excludes: null
             fingerprint: true
         }
     }
