@@ -434,13 +434,15 @@ def collectUTLog() {
 
 def generateReport() {
     if(refer_build != 'x0') {
-        def refer_job_name = currentBuild.projectName
-        copyArtifacts(
-                projectName: refer_job_name,
-                selector: specific("${refer_build}"),
-                filter: 'summary.txt',
-                fingerprintArtifacts: true,
-                target: "reference")
+        catchError {
+            def refer_job_name = currentBuild.projectName
+            copyArtifacts(
+                    projectName: refer_job_name,
+                    selector: specific("${refer_build}"),
+                    filter: 'summary.txt',
+                    fingerprintArtifacts: true,
+                    target: "reference")
+        }
     }
 
     dir(WORKSPACE) {
