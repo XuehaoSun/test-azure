@@ -1839,3 +1839,6 @@ centerNet
 retinaNet
 efficientNet
 cn
+centernet
+retinanet
+efficientnet
