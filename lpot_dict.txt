@@ -1835,3 +1835,7 @@ libengine
 sparsified
 workdir
 cpus
+centerNet
+retinaNet
+efficientNet
+cn
