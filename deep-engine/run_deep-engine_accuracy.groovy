@@ -180,7 +180,7 @@ node(node_label){
                             
                             export GLOG_minloglevel=2
                             mkdir -p ${WORKSPACE}/${each_model}
-                            python run_deep_engine.py --scenario=Offline --batch-size=64 --num-instance=2 --num-phy-cpus=56 --accuracy --model=${config} --weight=${weight} \
+                            python run_engine.py --scenario=Offline --batch-size=64 --num-instance=2 --num-phy-cpus=56 --accuracy --model=${config} --weight=${weight} \
                             2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log    
                         """
                         withEnv(["each_model=${each_model}","each_precision=${each_precision}"]) {
@@ -202,7 +202,7 @@ node(node_label){
                             cp ${WORKSPACE}/deep-engine/deep_engine/executor/build/deep_engine_py.*.so .
                             cp ../mlperf_v1.1/vocab.txt .
                             mkdir -p ${WORKSPACE}/${each_model}
-                            python run_deep_engine.py --model=${config} --weight=${weight} --data_dir=${dataset} 2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log
+                            python run_engine.py --model=${config} --weight=${weight} --data_dir=${dataset} 2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log
                         """
                         withEnv(["each_model=${each_model}","each_precision=${each_precision}"]){
                             sh '''#!/bin/bash
