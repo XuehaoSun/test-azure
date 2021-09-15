@@ -79,7 +79,7 @@ function createOverview {
     elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
         bandit_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
     else
-        accuracy_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+        bandit_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
     spellcheck_scan=($(grep 'deep-engine-code-scan,pyspelling' ${overviewLog} |sed 's/,/ /g'))
