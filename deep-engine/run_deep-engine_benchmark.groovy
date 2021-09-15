@@ -162,24 +162,38 @@ node(node_label){
             model_list_split=model_list.split(',')
             model_list_split.each { each_model ->
                 def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/deep-engine/config/model_list.json"))."${each_model}"
-                def seq_len = modelConf."seq_len"
-                seq_len.each { each_seq_len ->
-                    benchmark_config.split(',').each { each_ben_conf ->
-                        def ncores_per_instance = each_ben_conf.split(':')[0]
-                        def bs = each_ben_conf.split(':')[1]
-                        precision.split(',').each { each_precision ->
-                            def weight = modelConf."${each_precision}"."weight"
-                            def config = modelConf."${each_precision}"."config"
-                            config="${WORKSPACE}/deep-engine/${config}"
+                precision.split(',').each { each_precision ->
+                    def weight = modelConf."${each_precision}"."weight"
+                    def config = modelConf."${each_precision}"."config"
+                    config="${WORKSPACE}/deep-engine/${config}"
+                    if (each_model == "bert_mlperf_loadgen") {
+
+                        def bs = 1
+                        def ncores_per_instance = 28
+                        timeout(60){
                             sh"""#!/bin/bash -x
-                                echo "Running ----${each_model}, ${each_seq_len}, ${weight}, ${config}, ${ncores_per_instance},${bs},${each_precision} ---- Benchmark"
-                                
-                                echo "=======cache clean======="
-                                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-                                echo "========================="
-                                cd ${WORKSPACE}/deep-engine/deep_engine/executor/build
-                                bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${each_model} ${each_seq_len} ${ncores_per_instance} ${bs} ${config} ${weight} ${each_precision}
+                            echo "Running ----${each_model}, ${weight}, ${config}, ${ncores_per_instance},${bs}, ${each_precision} ---- Benchmark"
+                            bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_bert_large_loadgen.sh benchmark ${each_model} ${weight} ${config} ${ncores_per_instance} ${bs} ${each_precision}
                             """
+                        }
+                    }else{
+                        def seq_len = modelConf."seq_len"
+                        seq_len.each { each_seq_len ->
+                            benchmark_config.split(',').each { each_ben_conf ->
+                                def ncores_per_instance = each_ben_conf.split(':')[0]
+                                def bs = each_ben_conf.split(':')[1]
+                                timeout(30){
+                                    sh """#!/bin/bash -x
+                                    echo "Running ----${each_model}, ${each_seq_len}, ${weight}, ${config}, ${ncores_per_instance},${bs},${each_precision} ---- Benchmark"
+                                    
+                                    echo "=======cache clean======="
+                                    sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+                                    echo "========================="
+                                    cd ${WORKSPACE}/deep-engine/deep_engine/executor/build
+                                    bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${each_model} ${each_seq_len} ${ncores_per_instance} ${bs} ${config} ${weight} ${each_precision}
+                                    """
+                                }
+                            }
                         }
                     }
                 }

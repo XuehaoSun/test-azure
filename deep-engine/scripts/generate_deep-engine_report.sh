@@ -82,15 +82,6 @@ function createOverview {
         accuracy_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    cpplint_scan=($(grep 'deep-engine-code-scan,cpplint' ${overviewLog} |sed 's/,/ /g'))
-    if [[ "${cpplint_scan[2]}" == *"FAIL"* ]];then
-        cpplint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${cpplint_scan[2]}" == *"SUCC"* ]];then
-        cpplint_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
-    else
-        cpplint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
-    fi
-
     spellcheck_scan=($(grep 'deep-engine-code-scan,pyspelling' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${spellcheck_scan[2]}" == *"FAIL"* ]];then
         spellcheck_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
