@@ -275,17 +275,27 @@ function generate_acc_core {
         }
 
         function compare_new_last(a,b) {
-            target = a - b;
-            if(target > -0.00001 && target < 0.00001) {
-                status_png = "background-color:#90EE90";
-            }else {
-                status_png = "background-color:#FFD2D2";
-                job_status = "fail"
-            }
-            if (a <= 1){
-                printf("<td style=\"%s\">%.2f%</td>", status_png, target*100);
+            if(a ~/[1-9]/ && b ~/[1-9]/) {
+                target = a - b;
+                if(target > -0.00001 && target < 0.00001) {
+                    status_png = "background-color:#90EE90";
+                }else {
+                    status_png = "background-color:#FFD2D2";
+                    job_status = "fail"
+                }
+                if (a <= 1){
+                    printf("<td style=\"%s\">%.2f%</td>", status_png, target*100);
+                }else{
+                    printf("<td style=\"%s\">%.2f</td>", status_png, target);
+                }
             }else{
-                printf("<td style=\"%s\">%.2f</td>", status_png, target);
+                if(a == ""){
+                    job_status = "fail"
+                    status_png = "background-color:#FFD2D2";
+                    printf("<td style=\"%s\"></td>", status_png);
+                }else{
+                    printf("<td class=\"col-cell col-cell3\"></td>");
+                }
             }
         }
 
