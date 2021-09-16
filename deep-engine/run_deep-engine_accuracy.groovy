@@ -182,7 +182,7 @@ node(node_label){
                             cp ${WORKSPACE}/deep-engine/deep_engine/executor/build/engine_py.*.so .
                             cp ../mlperf_v1.1/vocab.txt .
                             mkdir -p ${WORKSPACE}/${each_model}
-                            python run_engine.py --model=${config} --weight=${weight} --data_dir=${dataset} 2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log
+                            python run_engine.py --model=${config} --weight=${weight} --data_dir=${dataset} --do_lower_case 2>&1|tee ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log
                             """
                             withEnv(["each_model=${each_model}","each_precision=${each_precision}"]){
                                 sh '''#!/bin/bash

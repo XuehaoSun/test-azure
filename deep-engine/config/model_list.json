@@ -1,7 +1,7 @@
 {
   "bert_base_mrpc": {
     "int8": {
-      "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_int8.bin",
+      "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_int8_915.bin",
       "config": "deep_engine/examples/execute_bert/conf_bert_base_all_int8.yaml"
     },
     "fp32": {
