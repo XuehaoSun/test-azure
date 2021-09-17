@@ -115,6 +115,17 @@ def download() {
                 ]
             }
         }
+
+        retry(3){
+            sh '''#!/bin/bash
+            if [ ! -d ${WORKSPACE}/lpot-models ]; then
+                echo "\\"lpot-models\\" not found. Exiting..."
+                exit 1
+            fi
+            cd ${WORKSPACE}/lpot-models
+            git submodule update --init --recursive
+        '''
+        }
     }
 }
 
