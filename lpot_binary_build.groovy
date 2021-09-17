@@ -145,6 +145,12 @@ def do_binary_build() {
                     cat version.py
                     cd -
                 fi
+                
+                export PATH=/usr/local/gcc-9.4/bin:$PATH
+                export LD_LIBRARY_PATH=/usr/local/gcc-9.4/lib64:$LD_LIBRARY_PATH
+                export CC=/usr/local/gcc-9.4/bin/gcc
+                export CXX=/usr/local/gcc-9.4/bin/g++
+                
                 python3 setup.py sdist bdist_wheel
                 cp dist/lpot*.whl ${WORKSPACE}/
                 cp dist/lpot*.tar.gz ${WORKSPACE}/
@@ -173,6 +179,12 @@ def do_binary_build() {
 
             echo "Build Pypi binary..."
             cd lpot-models
+            
+            export PATH=/usr/local/gcc-9.4/bin:$PATH
+            export LD_LIBRARY_PATH=/usr/local/gcc-9.4/lib64:$LD_LIBRARY_PATH
+            export CC=/usr/local/gcc-9.4/bin/gcc
+            export CXX=/usr/local/gcc-9.4/bin/g++
+            
             python3 setup.py sdist bdist_wheel
             cp dist/lpot*.whl ${WORKSPACE}/
             
