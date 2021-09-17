@@ -148,7 +148,7 @@ def do_binary_build() {
                 pip install -U pip
                 pip install cmake
                 cmake_path=$(which cmake)
-                ln -s ${cmake_path} ${cmake_path}3
+                ln -s ${cmake_path} ${cmake_path}3 || true
     
                 echo "Build Pypi binary..."
                 cd lpot-models
@@ -192,7 +192,7 @@ def do_binary_build() {
             pip install -U pip
             pip install cmake
             cmake_path=$(which cmake)
-            ln -s ${cmake_path} ${cmake_path}3
+            ln -s ${cmake_path} ${cmake_path}3 || true
 
             echo "Build Pypi binary..."
             cd lpot-models
