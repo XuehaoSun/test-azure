@@ -369,11 +369,11 @@ function update_yaml_config {
             if [[ "${model_src_dir}" == *"/language_translation/"* ]]; then
                 sed -i "/\/path\/to\/dataset/s|data_dir:.*|data_dir: $dataset_location|g" ${yaml}
             fi
-            if [ "${model}" == "resnet_v1_5_mlperf" ];  then
-                sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
-                sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
-                sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
-                sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+            if [[ "${model_src_dir}" == *"/image_recognition/"* ]] || [ "${model}" == "resnet50-v1-12" ] || [ "${model}" == "vgg16_model_zoo" ];  then
+                sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: ${dataset_location}|g" ${yaml}
+                sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: ${dataset_location}|g" ${yaml}
+                sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
+                sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
             fi
         fi
     fi
