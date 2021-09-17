@@ -195,6 +195,10 @@ main() {
         topology="gpt2_lm_wikitext2"
     fi
 
+    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "bert_base_MRPC_qat" ]]; then
+        topology="bert-base-cased"
+    fi
+
     q_model=${WORKSPACE}/${framework}-${model}-tune
     if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras" ]];  then
         q_model="${q_model}.pb"
@@ -243,7 +247,7 @@ main() {
     # pytorch need to use default output_model path
     if [ ${framework} != "pytorch" ]; then
       parameters="${parameters} --output_model=${q_model}"
-    elif [ "${model}" == "rnnt" ] || [ "${model}" == "ssd_resnet34_fx" ] || [ "${model}" == "ssd_resnet34_qat_fx" ]; then
+    elif [ "${model}" == "rnnt" ] || [ "${model}" == "ssd_resnet34_fx" ] || [ "${model}" == "ssd_resnet34_qat_fx" ] || [ "${model}" == "bert_base_MRPC_qat" ]; then
         parameters=" ${parameters} --output_model=${model_src_dir}/saved_results"
     fi
 
