@@ -575,6 +575,15 @@
       "strategy": "basic",
       "batch_size": 100,
       "new_benchmark": false
+    },
+    "bert_base_MRPC_qat": {
+      "model_src_dir": "fx/huggingface_models/text_classification/qat",
+      "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/",
+      "input_model": "/tf_dataset2/models/pytorch/bert_model",
+      "yaml": "conf_qat.yaml",
+      "strategy": "basic",
+      "batch_size": 8,
+      "new_benchmark": false
     }
   }
 }

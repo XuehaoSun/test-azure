@@ -2,7 +2,7 @@
   "onnxrt": {
     "resnet50_v1_5": {
       "model_src_dir": "image_recognition/resnet50",
-      "dataset_location": "/tf_dataset/onnx/img/val",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
       "input_model": "/tf_dataset2/models/onnx/resnet50_v1_5/resnet50_export.onnx",
       "yaml": "resnet50_v1_5.yaml",
       "strategy": "basic",
@@ -11,7 +11,7 @@
     },
     "mobilenet_v2": {
       "model_src_dir": "image_recognition/mobilenet_v2",
-      "dataset_location": "/tf_dataset/onnx/img/val",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
       "input_model": "/tf_dataset2/models/onnx/mobilenet_v2/mobilenet_v2.onnx",
       "yaml": "mobilenet_v2.yaml",
       "strategy": "basic",
@@ -20,7 +20,7 @@
     },
     "vgg16": {
       "model_src_dir": "image_recognition/vgg16",
-      "dataset_location": "/tf_dataset/onnx/img/val",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
       "input_model": "/tf_dataset2/models/onnx/vgg16/vgg16.onnx",
       "yaml": "vgg16.yaml",
       "strategy": "basic",
@@ -92,7 +92,7 @@
     },
     "resnet50-v1-12": {
       "model_src_dir": "onnx_model_zoo/resnet50",
-      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw/val",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
       "input_model": "/tf_dataset2/models/onnx/resnet50-v1-12/resnet50-v1-7-12.onnx",
       "yaml": "resnet50_v1_5.yaml",
       "strategy": "basic",
@@ -101,7 +101,7 @@
     },
     "resnet_v1_5_mlperf": {
       "model_src_dir": "image_recognition/resnet50",
-      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw_images",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
       "input_model": "/tf_dataset2/models/onnx/resnet50_v1_5/resnet50_v1_5_mlperf.onnx",
       "yaml": "resnet50_v1_5_mlperf.yaml",
       "strategy": "basic",
@@ -110,7 +110,7 @@
     },
     "mobilenet_v3_mlperf": {
       "model_src_dir": "image_recognition/mobilenet_v3",
-      "dataset_location": "/tf_dataset/onnx/img/val",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
       "input_model": "/tf_dataset2/models/onnx/mobilenet_v3/mobilenet_v3_mlperf.onnx",
       "yaml": "mobilenet_v3.yaml",
       "strategy": "basic",
@@ -146,7 +146,7 @@
     },
     "vgg16_model_zoo": {
       "model_src_dir": "onnx_model_zoo/vgg16",
-      "dataset_location": "/tf_dataset/pytorch/ImageNet/raw/val",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
       "input_model": "/tf_dataset2/models/onnx/vgg16-12/vgg16-12.onnx",
       "yaml": "vgg16.yaml",
       "strategy": "basic",

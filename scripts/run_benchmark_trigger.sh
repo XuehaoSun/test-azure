@@ -139,16 +139,27 @@ main() {
         topology="gpt2_lm_wikitext2"
     fi
 
+    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "bert_base_MRPC_qat" ]]; then
+        topology="bert-base-cased"
+    fi
+
     # pytorch int8 still use fp32 input_model
     if [ ${precision} == "int8" ] && [ ${framework} != "pytorch" ]; then
         input_model=${q_model}
     fi
+
     # set parameters for benchmark
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
 
     # add flag for pytorch int8
     if [ ${framework} == "pytorch" ] && [ ${precision} == "int8" ]; then
         parameters="${parameters} --int8=true"
+    fi
+
+    if [ ${framework} == "pytorch" ]; then
+        if [ ${model} == "ssd_resnet34_fx" ] || [ ${model} == "bert_base_MRPC_qat" ]; then
+            parameters="${parameters} --config=./saved_results"
+        fi
     fi
 
     # remove duplicate install for pytorch resnest

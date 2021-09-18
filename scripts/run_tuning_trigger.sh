@@ -195,6 +195,10 @@ main() {
         topology="gpt2_lm_wikitext2"
     fi
 
+    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "bert_base_MRPC_qat" ]]; then
+        topology="bert-base-cased"
+    fi
+
     q_model=${WORKSPACE}/${framework}-${model}-tune
     if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras" ]];  then
         q_model="${q_model}.pb"
@@ -243,7 +247,7 @@ main() {
     # pytorch need to use default output_model path
     if [ ${framework} != "pytorch" ]; then
       parameters="${parameters} --output_model=${q_model}"
-    elif [ "${model}" == "rnnt" ] || [ "${model}" == "ssd_resnet34_fx" ] || [ "${model}" == "ssd_resnet34_qat_fx" ]; then
+    elif [ "${model}" == "rnnt" ] || [ "${model}" == "ssd_resnet34_fx" ] || [ "${model}" == "ssd_resnet34_qat_fx" ] || [ "${model}" == "bert_base_MRPC_qat" ]; then
         parameters=" ${parameters} --output_model=${model_src_dir}/saved_results"
     fi
 
@@ -365,11 +369,11 @@ function update_yaml_config {
             if [[ "${model_src_dir}" == *"/language_translation/"* ]]; then
                 sed -i "/\/path\/to\/dataset/s|data_dir:.*|data_dir: $dataset_location|g" ${yaml}
             fi
-            if [ "${model}" == "resnet_v1_5_mlperf" ];  then
-                sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
-                sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
-                sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
-                sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: /tf_dataset/pytorch/ImageNet/raw/caffe_ilsvrc12/val.txt|g" ${yaml}
+            if [[ "${model_src_dir}" == *"/image_recognition/"* ]] || [ "${model}" == "resnet50-v1-12" ] || [ "${model}" == "vgg16_model_zoo" ];  then
+                sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: ${dataset_location}|g" ${yaml}
+                sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: ${dataset_location}|g" ${yaml}
+                sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
+                sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
             fi
         fi
     fi
