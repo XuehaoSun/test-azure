@@ -255,7 +255,7 @@ def binary_install() {
             n=0
             until [ "$n" -ge 5 ]
             do
-                python -m pip install -r requirements.txt && pip install coverage && break
+                python -m pip install --no-cache-dir -r requirements.txt && pip install coverage && break
                 n=$((n+1))
                 sleep 5
             done
