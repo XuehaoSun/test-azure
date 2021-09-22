@@ -271,7 +271,7 @@
       "new_benchmark": false
     },
     "blendcnn": {
-      "model_src_dir": "eager/blendcnn",
+      "model_src_dir": "eager/blendcnn/ptq",
       "dataset_location": "/tf_dataset/pytorch/blendcnn/MRPC/",
       "input_model": "/tf_dataset/pytorch/blendcnn/models/",
       "yaml": "blendcnn.yaml",
