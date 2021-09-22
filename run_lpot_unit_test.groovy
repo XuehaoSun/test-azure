@@ -557,7 +557,7 @@ node(node_label){
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
-                                    python -m pip install -r requirements.txt && break
+                                    python -m pip install --no-cache-dir -r requirements.txt && break
                                     n=$((n+1))
                                     sleep 5
                                 done
