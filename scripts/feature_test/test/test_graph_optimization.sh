@@ -12,7 +12,7 @@ function main {
 }
 
 function graph_optimization_fp32 {
-    python main.py \
+    numactl -m 0 -C "0-23" python main.py \
     --input-graph /tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb \
     --output-graph ${WORKSPACE}/graph_optimization_fp32.pb \
     --precision 'fp32' \
@@ -20,7 +20,7 @@ function graph_optimization_fp32 {
 }
 
 function graph_optimization_bf16 {
-    python main.py \
+    numactl -m 0 -C "0-23" python main.py \
     --input-graph /tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb \
     --output-graph ${WORKSPACE}/graph_optimization_bf16.pb \
     --precision 'bf16' \
@@ -30,7 +30,7 @@ function graph_optimization_bf16 {
 function graph_optimization_auto-mix {
     echo "Print graph_optimization_auto-mix config..."
     cat config.yaml
-    python main.py \
+    numactl -m 0 -C "0-23" python main.py \
     --input-graph /tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb \
     --output-graph ${WORKSPACE}/graph_optimization_bf16.pb \
     --config ./config.yaml \
