@@ -1843,3 +1843,6 @@ centernet
 retinanet
 efficientnet
 deepengine
+Shufflenet
+shufflenet
+shufflenetv
