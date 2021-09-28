@@ -88,7 +88,6 @@ autograd
 AutoMixPrecision
 autopep
 Autoregressive
-Autoregressive
 ava
 AverageMeter
 avgloss
@@ -122,6 +121,7 @@ Bengio
 Benoît
 berkeleyvision
 bert
+BERT's
 BertAdam
 BertConfig
 BertForMaskedLM
@@ -132,7 +132,6 @@ BertForSequenceClassification
 BertForTokenClassification
 BertModel
 berts
-BERT's
 bertsquad
 BertTokenizer
 bfloat
@@ -145,10 +144,14 @@ bicubic
 bilinear
 BilinearImagenet
 billsum
+BiLSTM
 binarize
 binarized
+biomedical
+Biomedical
 BLAS
 blendcnn
+BlendCnn
 BlendCNN
 bleu
 BLEU
@@ -169,9 +172,10 @@ BraTS
 broadcasted
 bs
 bsnone
-bsnone
 bugfix
 buildin
+builtin
+Builtin
 BV
 bzip
 cadene
@@ -195,6 +199,8 @@ cdn
 ce
 cec
 CenterCrop
+centernet
+centerNet
 centos
 CentOS
 Centre
@@ -208,11 +214,12 @@ cfg
 CFLAGS
 ChamNet
 Chaumond
+checkbox
 Cheng
 chmod
+Cho's
 chongruo
 Chongruo
-Cho's
 chris
 Chuanqi
 ci
@@ -242,6 +249,7 @@ cmake
 CMAKE
 cmd
 CMU
+cn
 cnn
 cnt
 CoCo
@@ -299,6 +307,7 @@ CoreML
 cp
 cpp
 cpu
+cpus
 CPUs
 CPX
 cpython
@@ -357,6 +366,7 @@ dataset
 Dataset
 DatasetAnalyzer
 datasets
+datatype
 datatypes
 dathath
 Dathathri
@@ -371,6 +381,7 @@ DDP
 de
 deberta
 DecodeImage
+deepengine
 deeplab
 DeepLab
 deeplabv
@@ -471,6 +482,7 @@ ee
 eer
 ef
 efficientnet
+efficientNet
 EfficientNet
 EfficientNets
 eg
@@ -497,6 +509,7 @@ eriklindernoren
 Errno
 et
 eval
+evaluator
 evel
 exemplarily
 exising
@@ -505,6 +518,7 @@ exmaple
 expanduser
 ExperimentPlanner
 ExperimentPlanners
+extractive
 EzjbRL
 fabian
 FabiansUNet
@@ -534,6 +548,8 @@ FeatureExtractor
 feedbacks
 Feng
 ffc
+filename
+filenames
 FileNotFoundError
 filesystem
 finetune
@@ -567,6 +583,7 @@ ftfy
 Fu
 fullres
 func
+functionalities
 functionet
 functools
 Funtowicz
@@ -593,6 +610,7 @@ gid
 Gimpel
 Girshick
 github
+GitHub
 githubusercontent
 gitmodules
 GLIBCXX
@@ -600,6 +618,8 @@ GLOG
 GLUE
 gluebenchmark
 gluepy
+gluon
+Gluon
 gluoncv
 GluonCV
 gluonnlp
@@ -607,6 +627,7 @@ gn
 GN
 goldsborough
 goog
+google
 googleapis
 googleblog
 googlenet
@@ -679,6 +700,7 @@ icx
 ide
 idx
 ie
+IEEE
 ILSVR
 ilsvrc
 ILSVRC
@@ -708,6 +730,7 @@ InceptionV
 incollection
 IndexType
 indexValue
+indices
 inferencer
 informations
 init
@@ -783,6 +806,7 @@ kimiyoung
 kitti
 kmp
 KMP
+KnowledgeDistillationLoss
 kriz
 kwargs
 Kyunghyun
@@ -803,6 +827,7 @@ len
 lfaidata
 li
 libdeep
+libengine
 libffi
 libglib
 libmlperf
@@ -830,9 +855,9 @@ ln
 loadgen
 LoadGen
 LOADGEN
+LoadGen's
 LoadgenAPI
 LoadgenAPITestSettings
-LoadGen's
 LoadgenVersion
 LoadImage
 LOC
@@ -842,6 +867,7 @@ LOCderiv
 LOCpart
 logdir
 logfile
+login
 logits
 LOGLEVEL
 LogSettings
@@ -912,6 +938,7 @@ membind
 mems
 messi
 metabuild
+metadata
 metamind
 MICCAI
 microsoft
@@ -966,6 +993,9 @@ mobilenetv
 Mobilenetv
 MobileNetv
 MobileNetV
+modalities
+Modalities
+modality
 ModelConversion
 modelfeatures
 modelforward
@@ -987,6 +1017,8 @@ MSE
 msvc
 mul
 mult
+multi
+Multi
 multiclass
 multilabel
 multinli
@@ -994,8 +1026,8 @@ MultiNLI
 multiscale
 MULTISCALE
 MultiStream
-MultiStreamFree
 MultiStream's
+MultiStreamFree
 mutli
 mv
 mx
@@ -1126,10 +1158,10 @@ OOM
 OOQtYMH
 openai
 OpenAI
+OpenAI's
 OpenAIAdam
 OpenAIGPTModel
 OpenAIGPTTokenizer
-OpenAI's
 opencv
 OpenCV
 openmp
@@ -1144,6 +1176,8 @@ OPs
 opset
 opsetid
 optim
+optimizations
+Optimizations
 optimizers
 Optimizers
 optypewise
@@ -1283,6 +1317,7 @@ PYTHONPATH
 pytorch
 PyTorch
 pytorchic
+PyTorchKnowledgeDistillationLoss
 pyyaml
 PZ
 qat
@@ -1329,6 +1364,7 @@ quickstart
 Quickstart
 QuickStart
 Quoc
+R'emi
 Radboud
 Radford
 Radu
@@ -1352,8 +1388,8 @@ ReadmeFAQ
 ReadmeHtmlDocs
 ReadmeTests
 readthedocs
-Realtime
 realtime
+Realtime
 rebase
 recommonmark
 RecordingObserver
@@ -1361,16 +1397,17 @@ recordio
 RecordIO
 recurse
 Redmon
+regex
 RegNet
+reinstall
 relase
 relu
 Relu
 ReLU
-R'emi
 repo
+repo's
 repo’s
 repos
-repo's
 representating
 requantize
 resampled
@@ -1378,7 +1415,11 @@ resampling
 rescale
 Rescale
 ResencUNet
+resize
+Resize
 ResizeCropImagenet
+resized
+Resizes
 ResizeWithRatio
 resnest
 ResNest
@@ -1393,6 +1434,8 @@ ResNeXt
 ressource
 reStructuredText
 RetinaMask
+retinanet
+retinaNet
 RetinaNet
 reusability
 Rewon
@@ -1448,6 +1491,7 @@ scatterFillKernel
 sched
 scikit
 scm
+screenshots
 ScriptModule
 se
 Seddah
@@ -1458,6 +1502,8 @@ segmentations
 senet
 SENet
 sentencepiece
+Sep
+SEP
 SeqDataCollator
 serializable
 ServerPool
@@ -1471,15 +1517,16 @@ sharded
 Sharma
 Shen
 Shirish
+shouldn
+shufflenet
+Shufflenet
 ShuffleNet
+shufflenetv
 Shvets
 sigmoid
 signup
-signup
-sigopt
 sigopt
 Sigopt
-SigOpt
 SigOpt
 SingleStream
 Skylake
@@ -1503,6 +1550,7 @@ spacy
 SpaCy
 SparseCategoricalAccuracy
 SparseCategoricalCrossentropy
+sparsified
 Spearman
 spearmanr
 specificities
@@ -1572,6 +1620,7 @@ sys
 SystemUnderTest
 TaskXX
 TaskXXX
+tb
 TBD
 tbe
 tbody
@@ -1615,6 +1664,8 @@ thepath
 thres
 thrs
 Tian
+timeline
+timestamps
 tl
 tlkh
 TLS
@@ -1672,7 +1723,10 @@ trigram
 tstandley
 tsv
 TuneStrategy
+tunings
 tuningusage
+tuple
+tuples
 txt
 TZ
 uber
@@ -1714,6 +1768,7 @@ VCVTNEPS
 VDPBF
 Veronika
 veronikayurchuk
+versioned
 Veselin
 vgg
 viewpage
@@ -1735,6 +1790,8 @@ wangg
 warmup
 wav
 wd
+webcam
+Webcam
 webite
 webpage
 WebText
@@ -1754,6 +1811,11 @@ WnD
 wnli
 Wnxu
 WordPiece
+workdir
+workflow
+Workflow
+workflows
+workspace
 wrt
 wwm
 www
@@ -1831,23 +1893,3 @@ Zptls
 zrelro
 zrl
 zxvf
-libengine
-sparsified
-workdir
-cpus
-centerNet
-retinaNet
-efficientNet
-cn
-centernet
-retinanet
-efficientnet
-deepengine
-Shufflenet
-shufflenet
-shufflenetv
-BiLSTM
-BlendCnn
-KnowledgeDistillationLoss
-PyTorchKnowledgeDistillationLoss
-tunings
