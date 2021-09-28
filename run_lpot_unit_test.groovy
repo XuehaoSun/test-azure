@@ -252,6 +252,7 @@ node(node_label){
         if ("${binary_build_job}" == "") {
             stage('Build binary') {
                 List binaryBuildParams = [
+                        string(name: "python_version", value: "${python_version}"),
                         string(name: "lpot_url", value: "${lpot_url}"),
                         string(name: "lpot_branch", value: "${lpot_branch}"),
                         string(name: "MR_source_branch", value: "${MR_source_branch}"),
@@ -431,6 +432,7 @@ node(node_label){
 
                             pip uninstall lpot -y
                             cd ${WORKSPACE}/lpot-models-base
+                            git submodule update --init --recursive
                             python setup.py install
                             pip list
 
