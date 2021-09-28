@@ -12,7 +12,7 @@ if ('TOOL' in params && params.TOOL != '') {
 }
 echo "TOOL: ${TOOL}"
 
-deepengine_url="git@github.com:intel-innersource/frameworks.ai.deep-engine.intel-deep-engine.git"
+deepengine_url="git@github.com:intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 if ('deepengine_url' in params && params.deepengine_url != ''){
     deepengine_url = params.deepengine_url
 }

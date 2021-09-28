@@ -980,6 +980,7 @@ def buildBinary(){
     }
 
     List binaryBuildParams = [
+            string(name: "python_version", value: "${python_version}"),
             string(name: "lpot_url", value: "${lpot_url}"),
             string(name: "lpot_branch", value: "${lpot_commit}"),
             string(name: "MR_source_branch", value: "${PR_source_branch}"),

@@ -22,17 +22,29 @@ if ('test_title' in params && params.test_title != '') {
 }
 echo "Running named ${test_title}"
 
-deepengine_url="git@github.com:intel-innersource/frameworks.ai.deep-engine.intel-deep-engine.git"
-if ('deepengine_url' in params && params.deepengine_url != ''){
-    deepengine_url = params.deepengine_url
+python_version = "3.6"
+if ('python_version' in params && params.python_version != '') {
+    python_version = params.python_version
 }
-echo "deepengine_url is ${deepengine_url}"
+echo "Python version: ${python_version}"
+
+lpot_url="git@github.com:intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
+}
+echo "lpot_url is ${lpot_url}"
 
 RUN_UT=true
 if (params.RUN_UT != null){
     RUN_UT=params.RUN_UT
 }
 echo "RUN_UT = ${RUN_UT}"
+
+RUN_COVERAGE=true
+if (params.RUN_COVERAGE != null){
+    RUN_COVERAGE=params.RUN_COVERAGE
+}
+echo "RUN_COVERAGE = ${RUN_COVERAGE}"
 
 RUN_CPPLINT=false
 if (params.RUN_CPPLINT != null){
@@ -65,17 +77,17 @@ if ('refer_build' in params && params.refer_build != '') {
 }
 echo "Running ${refer_build}"
 
-deepengine_commit = ''
-deepengine_branch = ''
+lpot_commit = ''
+lpot_branch = ''
 PR_source_branch = ''
 PR_target_branch = ''
-if ('deepengine_branch' in params && params.deepengine_branch != '') {
-    deepengine_branch = params.deepengine_branch
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
 }else{
     PR_source_branch = params.GITHUB_PR_SOURCE_BRANCH
     PR_target_branch = params.GITHUB_PR_TARGET_BRANCH
 }
-echo "deepengine_branch: $deepengine_branch"
+echo "lpot_branch: $lpot_branch"
 echo "PR_source_branch: $PR_source_branch"
 echo "PR_target_branch: $PR_target_branch"
 
@@ -137,6 +149,8 @@ if (params.pipeline_failFast != null){
 }
 echo "pipeline_failFast = ${pipeline_failFast}"
 
+binary_build_job = ""
+
 def cleanup() {
     try {
         sh '''#!/bin/bash -x
@@ -173,14 +187,14 @@ def download() {
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
                             [credentialsId: "${credential}",
-                             url          : "${deepengine_url}"]
+                             url          : "${lpot_url}"]
                     ]
             ]
         }
         else {
             checkout changelog: true, poll: true, scm: [
                     $class                           : 'GitSCM',
-                    branches                         : [[name: "${deepengine_branch}"]],
+                    branches                         : [[name: "${lpot_branch}"]],
                     browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
@@ -190,7 +204,7 @@ def download() {
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
                             [credentialsId: "${credential}",
-                             url          : "${deepengine_url}"]
+                             url          : "${lpot_url}"]
                     ]
             ]
         }
@@ -215,7 +229,7 @@ def updateGithubCommitStatus(String state, String description) {
                     -H \"Accept: application/vnd.github.v3+json\" \
                     -H \"Authorization: Bearer $LPOT_VAL_GH_TOKEN\" \
                     --proxy child-prc.intel.com:913 \
-                    https://api.github.com/repos/intel-innersource/frameworks.ai.deep-engine.intel-deep-engine/statuses/${commit_sha} \
+                    https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/statuses/${commit_sha} \
                     -d '{\"state\": \"${state}\", \"context\": \"Jenkins CI\", \"target_url\": \"${RUN_DISPLAY_URL}\", \"description\": \"${description}\"}'
                 """
             }
@@ -240,7 +254,7 @@ def createGithubIssueComment(String comment) {
                     -H \"Accept: application/vnd.github.v3+json\" \
                     -H \"Authorization: Bearer $LPOT_VAL_GH_TOKEN\" \
                     --proxy child-prc.intel.com:913 \
-                    https://api.github.com/repos/intel-innersource/frameworks.ai.deep-engine.intel-deep-engine/issues/${issueNumber}/comments \
+                    https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/statuses/${issueNumber}/comments \
                     -d '{\"body\": \"${comment}\"}'
                 """
             }
@@ -255,11 +269,13 @@ def createGithubIssueComment(String comment) {
 def unitTestJobs() {
     def ut_jobs = [:]
     List UTBuildParams = [
-            string(name: "deepengine_url", value: "${deepengine_url}"),
-            string(name: "deepengine_branch", value: "${deepengine_branch}"),
+            string(name: "deepengine_url", value: "${lpot_url}"),
+            string(name: "deepengine_branch", value: "${lpot_branch}"),
             string(name: "PR_source_branch", value: "${PR_source_branch}"),
             string(name: "PR_target_branch", value: "${PR_target_branch}"),
-            string(name: "val_branch", value: "${val_branch}")
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "binary_build_job", value: "${binary_build_job}"),
+            booleanParam(name: "run_coverage", value: RUN_COVERAGE)
     ]
     ut_jobs["gtest"] = {
         downstreamJob = build job: "deep-engine-unit-test", propagate: false, parameters: UTBuildParams
@@ -293,8 +309,8 @@ def perfJobs() {
     def perf_jobs = [:]
     List perfParams = [
             string(name: "node_label", value: "${sub_node_label}"),
-            string(name: "deepengine_url", value: "${deepengine_url}"),
-            string(name: "deepengine_branch", value: "${deepengine_branch}"),
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_branch}"),
             string(name: "PR_source_branch", value: "${PR_source_branch}"),
             string(name: "PR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
@@ -338,8 +354,8 @@ def accJobs() {
     def acc_jobs = [:]
     List perfParams = [
             string(name: "node_label", value: "${sub_node_label}"),
-            string(name: "deepengine_url", value: "${deepengine_url}"),
-            string(name: "deepengine_branch", value: "${deepengine_branch}"),
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_branch}"),
             string(name: "PR_source_branch", value: "${PR_source_branch}"),
             string(name: "PR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
@@ -383,8 +399,8 @@ def accJobs() {
 def codeScan(tool) {
     List codeScanParams = [
             string(name: "TOOL", value: "${tool}"),
-            string(name: "deepengine_url", value: "${deepengine_url}"),
-            string(name: "deepengine_branch", value: "${deepengine_branch}"),
+            string(name: "deepengine_url", value: "${lpot_url}"),
+            string(name: "deepengine_branch", value: "${lpot_branch}"),
             string(name: "PR_source_branch", value: "${PR_source_branch}"),
             string(name: "PR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}")
@@ -452,8 +468,8 @@ def generateReport() {
             Jenkins_job_status = "CHECK"
         }
         withEnv([
-                "deepengine_branch=${deepengine_branch}",
-                "deepengine_commit=${deepengine_commit}",
+                "lpot_branch=${lpot_branch}",
+                "lpot_commit=${lpot_commit}",
                 "summaryLog=${summaryLog}",
                 "summaryLogLast=${summaryLogLast}",
                 "overviewLog=${overviewLog}",
@@ -466,7 +482,7 @@ def generateReport() {
 
         ]) {
             sh '''
-                if [[ ${deepengine_branch} == '' ]]; then
+                if [[ ${lpot_branch} == '' ]]; then
                     bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/generate_deep-engine_report_pr.sh
                 else
                     bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/generate_deep-engine_report.sh
@@ -499,6 +515,30 @@ def sendReport() {
     }
 }
 
+def buildBinary(){
+    pypi_version='default'
+    List binaryBuildParams = [
+            string(name: "python_version", value: "${python_version}"),
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_commit}"),
+            string(name: "MR_source_branch", value: "${PR_source_branch}"),
+            string(name: "MR_target_branch", value: "${PR_target_branch}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "pypi_version", value: "${pypi_version}")
+    ]
+    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
+
+    binary_build_job = downstreamJob.getNumber()
+    echo "binary_build_job: ${binary_build_job}"
+    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+    if (downstreamJob.getResult() != "SUCCESS") {
+        currentBuild.result = "FAILURE"
+        failed_build_url = downstreamJob.absoluteUrl
+        echo "failed_build_url: ${failed_build_url}"
+        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+    }
+}
+
 node( node_label ) {
     if (PR_source_branch != '') {
         updateGithubCommitStatus("pending", "Waiting for status to be reported")
@@ -511,11 +551,25 @@ node( node_label ) {
             }
         }
         download()
-        if (deepengine_branch != ''){
-            deepengine_commit = sh (
+        if (lpot_branch != ''){
+            lpot_commit = sh (
                     script: 'cd deep-engine && git rev-parse HEAD',
                     returnStdout: true
             ).trim()
+        }
+
+        if (PR_source_branch != ''){
+            sh"""#!/bin/bash
+                cd lpot-models
+                echo "PR_source_branch: "
+                git show-ref -s remotes/origin/${PR_source_branch}
+                echo "PR_target_branch: "
+                git show-ref -s remotes/origin/${PR_target_branch}
+            """
+        }
+
+        stage('Build wheel'){
+            buildBinary()
         }
 
         // Setup logs path
