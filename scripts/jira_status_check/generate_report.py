@@ -10,8 +10,8 @@ from functools import cmp_to_key
 from typing import List
 from utils import parse_priority
 
-UNRESOLVED_STATUSES = ["New", "In Progress", "Open", "Assigned", "Deferred", "Implemented"]
-RESOLVED_STATUSES = ["Closed", "Done", "Resolved"]
+UNRESOLVED_STATUSES = ["New", "In Progress", "Open", "Assigned", "Deferred"]
+RESOLVED_STATUSES = ["Closed", "Done", "Resolved", "Implemented"]
 class JiraIssue:
     """Jira Issue interface."""
 
