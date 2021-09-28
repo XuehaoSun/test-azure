@@ -11,8 +11,7 @@ if ('conda_env' in params && params.conda_env != '') {
     conda_env = params.conda_env
 }
 echo "Running ut on ${conda_env}"
-
-lpot_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
+lpot_url="git@github.com:intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
