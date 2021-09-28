@@ -1846,3 +1846,8 @@ deepengine
 Shufflenet
 shufflenet
 shufflenetv
+BiLSTM
+BlendCnn
+KnowledgeDistillationLoss
+PyTorchKnowledgeDistillationLoss
+tunings
