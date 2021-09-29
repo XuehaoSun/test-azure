@@ -1894,3 +1894,9 @@ zrelro
 zrl
 zxvf
 BERTDataSet
+Adadelta
+DistributedOptimizer
+DistributedSampler
+hvd
+nll
+tLoss
