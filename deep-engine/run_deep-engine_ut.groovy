@@ -171,7 +171,7 @@ def run_pytest_with_coverage_count(repo_name){
         coverage_package='coverage_results_base'
         coverage_summary_log='coverage_summary_base.log'
     }
-    withEev(["repo_name=${repo_name}","ut_log_name=${ut_log_name}", "coverage_package=${coverage_package}", "coverage_summary_log=${coverage_summary_log}"]){
+    withEnv(["repo_name=${repo_name}","ut_log_name=${ut_log_name}", "coverage_package=${coverage_package}", "coverage_summary_log=${coverage_summary_log}"]){
         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env}
