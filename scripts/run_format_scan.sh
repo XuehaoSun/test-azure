@@ -49,15 +49,7 @@ main() {
     # Install test requirements
     cd ${REPO_DIR}/test
     if [ -f "requirements.txt" ]; then
-        sed -i '/lpot/d;/tensorflow==/d;/torch==/d;/pytorch-ignite$/d;/mxnet==/d;/mxnet-mkl==/d;/torchvision==/d;/onnx$/d;/onnx==/d;/onnxruntime$/d;/onnxruntime==/d' requirements.txt
-        python -m pip install --default-timeout=100 -r requirements.txt
-        pip list
-    else
-        echo "Not found requirements.txt file."
-    fi
-
-    cd ${REPO_DIR}
-    if [ -f "requirements.txt" ]; then
+        sed -i '/neural-compressor/d;/tensorflow==/d;/torch==/d;/pytorch-ignite$/d;/mxnet==/d;/mxnet-mkl==/d;/torchvision==/d;/onnx$/d;/onnx==/d;/onnxruntime$/d;/onnxruntime==/d' requirements.txt
         python -m pip install --default-timeout=100 -r requirements.txt
         pip list
     else
@@ -80,7 +72,7 @@ run_pylint() {
     pip install pylint
     # tf_utils.util will import some deps installed by tensorflow
     pip install intel-tensorflow
-    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime lpot > ${WORKSPACE}/lpot-pylint.json
+    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime neural_compressor > ${WORKSPACE}/lpot-pylint.json
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "PyLint exited with non-zero exit code."; exit 1
@@ -90,7 +82,7 @@ run_pylint() {
 
 run_bandit() {
     pip install bandit
-    python -m bandit -r -lll -iii lpot > ${WORKSPACE}/lpot-bandit.log
+    python -m bandit -r -lll -iii neural_compressor > ${WORKSPACE}/lpot-bandit.log
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "Bandit exited with non-zero exit code."; exit 1
@@ -116,7 +108,7 @@ run_pyspelling() {
 }
 
 run_cloc() {
-    cloc --include-lang=Python --csv --out=${WORKSPACE}/code_lines_summary.csv ${REPO_DIR}/lpot
+    cloc --include-lang=Python --csv --out=${WORKSPACE}/code_lines_summary.csv ${REPO_DIR}/neural_compressor
 }
 
 main

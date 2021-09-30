@@ -102,18 +102,18 @@ function set_environment {
     echo "Checking pip list..."
     python -V
     pip list
-    c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+    c_lpot=$(pip list | grep -c 'neural_compressor') || true  # Prevent from exiting when 'lpot' not found
     if [ ${c_lpot} != 0 ]; then
-        pip uninstall lpot -y
+        pip uninstall neural_compressor -y
         pip list
     fi
 
     cd ${WORKSPACE}
-    echo "Install lpot binary..."
+    echo "Install neural_compressor binary..."
     n=0
     until [ "$n" -ge 5 ]
     do
-        pip install lpot*.whl && break
+        pip install neural_compressor*.whl && break
         n=$((n+1))
         sleep 5
     done

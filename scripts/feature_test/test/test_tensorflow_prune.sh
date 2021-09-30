@@ -10,7 +10,7 @@ function main {
     lpot_install
 
     # Run TensorFlow Pruning test
-    cd ${WORKSPACE}/lpot-models/examples/tensorflow/pruning
+    cd ${WORKSPACE}/lpot-models/examples/tensorflow/resnet_v2/pruning
     pip install intel-tensorflow==2.5.0
     pip list
     python main.py   2>&1 | tee ${WORKSPACE}/tensorflow_prune.log
@@ -45,12 +45,12 @@ function create_conda_env {
 function lpot_install {
     echo "Checking lpot..."
     python -V
-    c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+    c_lpot=$(pip list | grep -c 'neural_compressor') || true  # Prevent from exiting when 'lpot' not found
     if [ ${c_lpot} != 0 ]; then
-        pip uninstall lpot -y
+        pip uninstall neural_compressor -y
         pip list
     fi
-    pip install ${WORKSPACE}/lpot*.whl
+    pip install ${WORKSPACE}/neural_compressor*.whl
     pip list
 }
 

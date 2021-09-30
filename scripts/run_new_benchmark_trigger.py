@@ -9,7 +9,7 @@ from typing import List
 
 import psutil
 import utils.consts as consts
-from lpot.ux.utils.workload.config import Config
+from neural_compressor.ux.utils.workload.config import Config
 from utils.utils import (
     execute_command,
     get_executable,
@@ -37,7 +37,7 @@ if not os.path.exists(args.output_path):
     os.makedirs(args.output_path)
 
 excluded_requirements = [
-    "lpot",
+    "neural-compressor",
     "tensorflow",
     "torch",
     "mxnet",

@@ -244,11 +244,9 @@ node(node_label){
                 copyArtifacts(
                         projectName: 'lpot-release-wheel-build',
                         selector: specific("${binary_build_job}"),
-                        filter: 'lpot*.whl',
+                        filter: 'neural_compressor*.whl',
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
-
-                archiveArtifacts artifacts: "lpot*.whl"
             }
         }
 
@@ -273,8 +271,8 @@ node(node_label){
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
                     cd ${WORKSPACE}
-                    pip install lpot*.whl 2>&1 | tee $WORKSPACE/binary_install.log
-                    echo "pip list after install lpot..."
+                    pip install neural_compressor*.whl 2>&1 | tee $WORKSPACE/binary_install.log
+                    echo "pip list after install neural_compressor..."
                     pip list
                 ''')
             }

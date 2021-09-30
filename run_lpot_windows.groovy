@@ -420,7 +420,7 @@ node( sub_node_label ) {
 
         }
 
-        stage("Clone LPOT repository") {
+        stage("Clone INC repository") {
             retry(5) {
                 if(MR_source_branch != ''){
                     checkout changelog: true, poll: true, scm: [
@@ -484,22 +484,19 @@ node( sub_node_label ) {
                             echo "Build wheel..."
                             cd lpot-models
                             python setup.py sdist bdist_wheel
-                            copy dist\\lpot*.whl ${WORKSPACE}\\
+                            copy dist\\neural_compressor*.whl ${WORKSPACE}\\
                         """
                     }
                 }
-                archiveArtifacts artifacts: "lpot*.whl"
             }
         } else {
             stage("Copy wheel")
             copyArtifacts(
                 projectName: 'lpot-release-wheel-build',
                 selector: specific("${binary_build_job}"),
-                filter: 'lpot*.whl',
+                filter: 'neural_compressor*.whl',
                 fingerprintArtifacts: true,
                 target: "${WORKSPACE}")
-
-            archiveArtifacts artifacts: "lpot*.whl"
         }
 
         stage("Read model config") {

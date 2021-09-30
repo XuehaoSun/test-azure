@@ -16,7 +16,7 @@ def autoCancel = false
 sys_lpot_val_credentialsId = "dcf0dff2-03fb-45b0-9e64-5b4db466bee5"
 
 // setting test_title
-test_title = "LPOT Tests"
+test_title = "Neural Compressor Tests"
 if ('test_title' in params && params.test_title != '') {
     test_title = params.test_title
 }
@@ -969,7 +969,7 @@ def buildBinary(){
     pypi_version='default'
     if (upload_nightly_binary){
         base_version=sh(
-            script: 'cd lpot-models/lpot && grep \'__version__\' version.py | awk -F \'\\"\' \'{print $(NF-1)}\'',
+            script: 'cd lpot-models/neural_compressor && grep \'__version__\' version.py | awk -F \'\\"\' \'{print $(NF-1)}\'',
             returnStdout: true
         ).trim()
         date_info=sh(

@@ -267,7 +267,7 @@ def main() {
         }
 
         // send report
-        emailext subject: "LPOT Weekly",
+        emailext subject: "Neural Compressor Weekly",
             to: "${recipient_list}",
             replyTo: "${recipient_list}",
             body: '''${FILE,path="report.html"}''',

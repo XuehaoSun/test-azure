@@ -68,7 +68,7 @@ cat > ${WORKSPACE}/report.html << eof
 <html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-    <title>LPOT - Feature tests</title>
+    <title>Neural Compressor - Feature tests</title>
     <style type="text/css">
         body
         {
@@ -158,7 +158,7 @@ cat > ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-    <h1 align="center">LPOT Feature Tests
+    <h1 align="center">Neural Compressor Feature Tests
             [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
 
     <h2>Summary</h2>
@@ -168,7 +168,7 @@ cat > ${WORKSPACE}/report.html << eof
               ${Test_Info_Title}
               </tr>
               <tr>
-                  <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">LPOT</a></td>
+                  <td><a href="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool">Neural Compressor</a></td>
               ${Test_Info}
                 </tr>
         </table>

@@ -284,7 +284,7 @@ if __name__ == "__main__":
 
     if args.tune:
         # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-        from lpot.experimental import Quantization, common
+        from neural_compressor.experimental import Quantization, common
         inputs = model_detail['input']
         outputs = model_detail['output']
         _write_inputs_outputs_to_yaml(args.yaml, "./config_tmp.yaml", list(inputs.keys()), outputs)

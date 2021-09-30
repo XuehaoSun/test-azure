@@ -151,7 +151,7 @@ node(node_label) {
                             echo "-----pip list after setup.py install..."
                             pip list 
                             cd ${WORKSPACE}
-                            lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                            lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(lpot.__file__))')
                             echo "lpot_path:  ${lpot_path}"
                             if [ ${lpot_path} == '' ]; then
                                 test_status="failed"
@@ -191,11 +191,9 @@ node(node_label) {
                     copyArtifacts(
                             projectName: 'lpot-release-wheel-build',
                             selector: specific("${binary_build_job}"),
-                            filter: 'lpot*.whl',
+                            filter: 'neural_compressor*.whl',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
-
-                    archiveArtifacts artifacts: "lpot*.whl"
                 }
             }
 
@@ -229,10 +227,10 @@ node(node_label) {
                                 exit 0
                             fi
                             
-                            pip install lpot*.whl --no-cache-dir 2>&1 | tee ${WORKSPACE}/pip_install_${python_version}.log
+                            pip install neural_compressor*.whl --no-cache-dir 2>&1 | tee ${WORKSPACE}/pip_install_${python_version}.log
                             
                             pip list 
-                            lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                            lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(lpot.__file__))')
                             echo "lpot_path:  ${lpot_path}"
                             if [ ${lpot_path} == '' ]; then
                                 test_status="failed"

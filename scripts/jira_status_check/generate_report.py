@@ -168,9 +168,9 @@ def main(args: Namespace) -> None:
     bugs_issues_resolved = Issues(bugs_issues).get_issue_by_status(RESOLVED_STATUSES)
     bugs_table = create_table(bugs_issues_unresolved)
 
-    html_title = "LPOT JIRA status summary"
+    html_title = "INC JIRA status summary"
     if args.affected_version != "" and args.affected_version != "ALL":
-        html_title = f"LPOT v{args.affected_version} JIRA status summary"
+        html_title = f"INC v{args.affected_version} JIRA status summary"
     report = html(
         head(
             title(html_title),

@@ -99,7 +99,7 @@ node(node_label) {
                     set -xe
                     supported_extensions=($(echo "${extensions}" | tr "," " "))
 
-                    git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) ./lpot > ${WORKSPACE}/diff.log
+                    git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) ./neural_compressor > ${WORKSPACE}/diff.log
                     files=$(cat $WORKSPACE/diff.log | awk '!a[$0]++')
                     for file in ${files}
                     do

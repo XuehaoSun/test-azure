@@ -210,7 +210,7 @@ node( node_label ) {
             }
         }
 
-        stage("Clone LPOT repository") {
+        stage("Clone INC repository") {
             Download()
         }
 

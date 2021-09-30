@@ -220,20 +220,20 @@ def binary_install() {
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env}
 
-        echo "Checking lpot..."
+        echo "Checking neural_compressor..."
         python -V
         pip list
-        c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+        c_lpot=$(pip list | grep -c 'neural_compressor') || true  # Prevent from exiting when 'lpot' not found
         if [ ${c_lpot} != 0 ]; then
-            pip uninstall lpot -y
+            pip uninstall neural_compressor -y
             pip list
         fi
                 
-        echo "Install lpot binary..."
+        echo "Install neural_compressor binary..."
         n=0
         until [ "$n" -ge 5 ]
         do
-            pip install lpot*.whl && break
+            pip install neural_compressor*.whl && break
             n=$((n+1))
             sleep 5
         done
@@ -246,7 +246,7 @@ def binary_install() {
         echo -e "\\nInstalling ut requirements..."
         cd ${WORKSPACE}/lpot-models/test
         if [ -f "requirements.txt" ]; then
-            sed -i '/^lpot/d' requirements.txt
+            sed -i '/^neural-compressor/d' requirements.txt
             sed -i '/^intel-tensorflow/d' requirements.txt
             sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
             sed -i '/^torch/d' requirements.txt
@@ -301,11 +301,9 @@ node(node_label){
                 copyArtifacts(
                         projectName: 'lpot-release-wheel-build',
                         selector: specific("${binary_build_job}"),
-                        filter: 'lpot*.whl',
+                        filter: 'neural_compressor*.whl',
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
-
-                archiveArtifacts artifacts: "lpot*.whl"
             }
         }
 
@@ -374,7 +372,7 @@ node(node_label){
                         fi
                         export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                         cd ${WORKSPACE}/lpot-models/test
-                        lpot_path=$(python -c 'import lpot; import os; print(os.path.dirname(lpot.__file__))')
+                        lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                         sed -i 's,python ,coverage run --source='"${lpot_path}"' --append ,g' ${run_ut_scripts}
                         cat ${run_ut_scripts}
                         coverage erase

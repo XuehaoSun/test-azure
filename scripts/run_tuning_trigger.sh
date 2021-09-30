@@ -115,7 +115,7 @@ main() {
     # ipex model shouldn't re-install dependencies.
     if [[ "${model}" != *"_ipex" ]]; then
       if [ -f "requirements.txt" ]; then
-          sed -i '/lpot/d' requirements.txt
+          sed -i '/neural-compressor/d' requirements.txt
           if [ "${framework}" == "onnxrt" ]; then
             sed -i '/onnx/d;/onnxruntime/d' requirements.txt
           fi

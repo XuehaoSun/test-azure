@@ -10,4 +10,4 @@ matrix:
   - ${LPOT_REPO}/docs/*
   - ${LPOT_REPO}/*.md
   - ${LPOT_REPO}/examples/**/*.md|!${LPOT_REPO}/examples/pytorch/**/huggingface_models/**/*.md
-  - ${LPOT_REPO}/lpot/**/*.md
+  - ${LPOT_REPO}/neural_compressor/**/*.md

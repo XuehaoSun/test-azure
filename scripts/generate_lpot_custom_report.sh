@@ -351,7 +351,7 @@ cat >> ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-        <h1 align="center">LPOT Results Comparison
+        <h1 align="center">Neural Compressor Results Comparison
         [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
 eof
 

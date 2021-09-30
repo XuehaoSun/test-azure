@@ -59,12 +59,12 @@ function create_conda_env {
 function lpot_install {
     echo "Checking lpot..."
     python -V
-    c_lpot=$(pip list | grep -c 'lpot') || true  # Prevent from exiting when 'lpot' not found
+    c_lpot=$(pip list | grep -c 'neural_compressor') || true  # Prevent from exiting when 'lpot' not found
     if [ ${c_lpot} != 0 ]; then
-        pip uninstall lpot -y
+        pip uninstall neural_compressor -y
         pip list
     fi
-    pip install ${WORKSPACE}/lpot*.whl
+    pip install ${WORKSPACE}/neural_compressor*.whl
     pip list
 }
 

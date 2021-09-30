@@ -685,6 +685,7 @@ node( sub_node_label ) {
             if ("${binary_build_job}" == "") {
                 stage('Build binary') {
                     List binaryBuildParams = [
+                            string(name: "python_version", value: "${python_version}"),
                             string(name: "lpot_url", value: "${lpot_url}"),
                             string(name: "lpot_branch", value: "${lpot_branch}"),
                             string(name: "MR_source_branch", value: "${MR_source_branch}"),
@@ -710,11 +711,9 @@ node( sub_node_label ) {
                     copyArtifacts(
                             projectName: 'lpot-release-wheel-build',
                             selector: specific("${binary_build_job}"),
-                            filter: 'lpot*.whl',
+                            filter: 'neural_compressor*.whl',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
-
-                    archiveArtifacts artifacts: "lpot*.whl"
                 }
             }
 

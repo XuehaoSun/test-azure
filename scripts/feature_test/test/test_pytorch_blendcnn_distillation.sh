@@ -35,6 +35,10 @@ function create_conda_env {
 
     # install lpot
     pip install -r requirements.txt
+    git submodule update --init --recursive
+    pip install cmake
+    cmake_path=$(which cmake)
+    ln -s ${cmake_path} ${cmake_path}3 || true
     python setup.py install
 
 }

@@ -50,6 +50,12 @@ if ('val_branch' in params && params.val_branch != ''){
 }
 echo "val_branch: ${val_branch}"
 
+python_version="3.6"
+if ('python_version' in params && params.python_version != ''){
+    python_version = params.python_version
+}
+echo "python_version is ${python_version}"
+
 def cleanup() {
 
     try {
@@ -137,10 +143,15 @@ def do_binary_build() {
                 echo "Create conda env..."
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                    echo "${conda_env} exist!"
-                else
-                    conda create python=3.6.9 -y -n ${conda_env}
+                    conda remove --name ${conda_env} --all -y
                 fi
+                
+                conda_dir=$(dirname $(dirname $(which conda)))
+                if [ -d ${conda_dir}/envs/${conda_env} ]; then
+                    rm -rf ${conda_dir}/envs/${conda_env}
+                fi
+                
+                conda create python=${python_version} -y -n ${conda_env}
     
                 source activate ${conda_env}
     
@@ -153,7 +164,7 @@ def do_binary_build() {
                 echo "Build Pypi binary..."
                 cd lpot-models
                 if [ "${pypi_version}" != "default" ]; then
-                    cd lpot
+                    cd neural_compressor
                     sed -i '/__version__ =/d' version.py
                     sed -i '$a\\__version__ = \\"'$pypi_version'\\"' version.py
                     cat version.py
@@ -161,8 +172,8 @@ def do_binary_build() {
                 fi
                 
                 python3 setup.py sdist bdist_wheel
-                cp dist/lpot*.whl ${WORKSPACE}/
-                cp dist/lpot*.tar.gz ${WORKSPACE}/
+                cp dist/neural_compressor*.whl ${WORKSPACE}/
+                cp dist/neural_compressor*.tar.gz ${WORKSPACE}/
             '''
         }
     } else if (binary_class == 'conda') {
@@ -193,17 +204,17 @@ def do_binary_build() {
             cd lpot-models
             
             python3 setup.py sdist bdist_wheel
-            cp dist/lpot*.whl ${WORKSPACE}/
+            cp dist/neural_compressor*.whl ${WORKSPACE}/
             
             echo "Build Conda binary..."
             conda clean -a -y
-            export LPOT_WHL=${WORKSPACE}/lpot*.whl
+            export NC_WHL=${WORKSPACE}/neural_compressor*.whl
             pip install pyyaml six 
             conda install patchelf conda-build conda-verify -y
             conda config --add channels conda-forge
             conda config --add channels fastai
             conda build meta.yaml
-            cp /home/tensorflow/miniconda3/envs/${conda_env}/conda-bld/noarch/lpot-*-py_0.tar.bz2 ${WORKSPACE}/
+            cp /home/tensorflow/miniconda3/envs/${conda_env}/conda-bld/noarch/neural_compressor-*.tar.bz2 ${WORKSPACE}/
         '''
 
     } else {
@@ -229,7 +240,7 @@ node(node_label){
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'lpot*.whl, lpot-*-py_0.tar.bz2, lpot-*.tar.gz', excludes: null
+            archiveArtifacts artifacts: 'neural_compressor*.whl, neural_compressor-*.tar.bz2, neural_compressor-*.tar.gz', excludes: null
             fingerprint: true
         }
     }

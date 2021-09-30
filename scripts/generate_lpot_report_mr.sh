@@ -532,7 +532,7 @@ cat >> ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-        <h1 align="center">LPOT Tuning Tests ${MR_TITLE}
+        <h1 align="center">Neural Compressor Tuning Tests ${MR_TITLE}
         [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
       <h1 align="center">Test Status: ${Jenkins_job_status}</h1>
         <h2>Summary</h2>
@@ -542,7 +542,7 @@ cat >> ${WORKSPACE}/report.html << eof
               ${Test_Info_Title}
               </tr>
               <tr>
-                    <td><a href="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot">LPOT</a></td>
+                    <td><a href="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot">neural-compressor</a></td>
               ${Test_Info}
                 </tr>
         </table>

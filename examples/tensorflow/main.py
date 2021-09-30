@@ -54,7 +54,7 @@ class eval_classifier_optimized_graph:
         """ This is lpot function include tuning and benchmark option """
 
         if self.args.tune:
-            from lpot.experimental import Graph_Optimization, common
+            from neural_compressor.experimental import Graph_Optimization, common
             if self.args.config:
                 graph_optimizer = Graph_Optimization(self.args.config)
             else:
@@ -66,7 +66,7 @@ class eval_classifier_optimized_graph:
             q_model.save(self.args.output_graph)
 
         if self.args.benchmark:
-            from lpot.experimental import Benchmark, common
+            from neural_compressor.experimental import Benchmark, common
             evaluator = Benchmark(self.args.config)
             evaluator.model = common.Model(self.args.input_graph)
             evaluator(self.args.mode)

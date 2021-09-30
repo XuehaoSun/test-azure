@@ -1,6 +1,6 @@
 import argparse
 
-from lpot.adaptor.tf_utils.util import read_graph, write_graph
+from neural_compressor.adaptor.tf_utils.util import read_graph, write_graph
 
 def parse_args():
     parser = argparse.ArgumentParser()

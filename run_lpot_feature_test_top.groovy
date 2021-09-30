@@ -32,7 +32,7 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
-binary_build_job="lastSuccessfulBuild"
+binary_build_job=""
 if ('binary_build_job' in params && params.binary_build_job != ''){
     binary_build_job = params.binary_build_job
 }
@@ -162,8 +162,10 @@ def parallel_jobs() {
 
 def buildBinary(){
     List binaryBuildParams = [
+            string(name: "python_version", value: "${python_version}"),
             string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}")
+            string(name: "lpot_branch", value: "${lpot_branch}"),
+            string(name: "val_branch", value: "${val_branch}")
     ]
     def downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
 
@@ -214,7 +216,11 @@ node( node_label ){
             download()
         }
         stage('Build wheel'){
-            buildBinary()
+            if ("${binary_build_job}" == "") {
+                buildBinary()
+            }else{
+                echo "use the binary build job pass by....."
+            }
         }
         stage("feature test") {
             parallel_jobs()
@@ -226,17 +232,19 @@ node( node_label ){
     } finally {
         stage("result check"){
             job_features = feature_list.split(',')
-            job_features.each { feature ->
-                echo "-------- ${feature} --------"
-                dir(WORKSPACE){
-                    withEnv([
-                            "feature_name=${feature}",
-                            "summaryLog=${SUMMARYLOG}"
-                    ]) {
-                        sh '''
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                job_features.each { feature ->
+                    echo "-------- ${feature} --------"
+                    dir(WORKSPACE) {
+                        withEnv([
+                                "feature_name=${feature}",
+                                "summaryLog=${SUMMARYLOG}"
+                        ]) {
+                            sh '''
                         chmod 775 ./lpot-validation/scripts/feature_test/collect_log/collect_log_${feature_name}.sh
                         ./lpot-validation/scripts/feature_test/collect_log/collect_log_${feature_name}.sh
                     '''
+                        }
                     }
                 }
             }
