@@ -187,6 +187,7 @@ def run_pytest_with_coverage_count(repo_name){
         coverage erase
         bash run.sh 2>&1 | tee ${ut_log_name}
         coverage report -m --rcfile=${COVERAGE_RCFILE}
+        coverage html -d ${WORKSPACE}/${coverage_package}/htmlcov --rcfile=${COVERAGE_RCFILE}
         coverage xml -o ${WORKSPACE}/${coverage_package}/coverage.xml --rcfile=${COVERAGE_RCFILE}
 
         python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
