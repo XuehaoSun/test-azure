@@ -10,7 +10,7 @@ function main {
     lpot_install
 
     # Run TensorFlow Pruning test
-    cd ${WORKSPACE}/lpot-models/examples/tensorflow/resnet_v2/pruning
+    cd ${WORKSPACE}/lpot-models/examples/tensorflow/pruning/resnet_v2
     pip install intel-tensorflow==2.5.0
     pip list
     python main.py   2>&1 | tee ${WORKSPACE}/tensorflow_prune.log
