@@ -277,6 +277,10 @@ main() {
         if [[ " ${onnxrt_ds_location_models[@]} " =~ " ${model} " ]]; then
             parameters="${parameters} --dataset_location=${dataset_location}"
         fi
+
+        if [[ "${model}" == "googlenet-12" ]]; then
+            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../val.txt"
+        fi
     fi
 
     update_yaml_config
@@ -369,7 +373,8 @@ function update_yaml_config {
             if [[ "${model_src_dir}" == *"/language_translation/"* ]]; then
                 sed -i "/\/path\/to\/dataset/s|data_dir:.*|data_dir: $dataset_location|g" ${yaml}
             fi
-            if [[ "${model_src_dir}" == *"/image_recognition/"* ]] || [ "${model}" == "resnet50-v1-12" ] || [ "${model}" == "vgg16_model_zoo" ];  then
+            image_raw_models=("resnet50-v1-12" "vgg16_model_zoo" "mobilenetv2-12" "googlenet-12" "shufflenet-v2-12")
+            if [[ "${model_src_dir}" == *"/image_recognition/"* ]] || [[ "${image_raw_models[@]}" =~ "${model}" ]];  then
                 sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: ${dataset_location}|g" ${yaml}
                 sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: ${dataset_location}|g" ${yaml}
                 sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
