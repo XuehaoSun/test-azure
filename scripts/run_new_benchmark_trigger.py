@@ -145,6 +145,13 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
                 f"--dataset_location={args.dataset_location}"
             ]
 
+    # Workaround for ONNXRT googlenet-12
+    if args.framework == "onnxrt" and args.model == "googlenet-12":
+        parameters.extend([
+            f"--data_path={args.dataset_location}",
+            f"--label_path={args.dataset_location}/../val.txt"
+        ])
+
 
     cmd = get_executable("benchmark")
     cmd.extend(parameters)
@@ -219,13 +226,20 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
 
     # Workaround for ONNXRT LT models
     if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
-            onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
-            parameters = [
-                f"--config={yaml_path}",
-                f"--input_model={input_model}",
-                f"--mode={onnxrt_lt_mode}",
-                f"--dataset_location={args.dataset_location}"
-            ]
+        onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
+        parameters = [
+            f"--config={yaml_path}",
+            f"--input_model={input_model}",
+            f"--mode={onnxrt_lt_mode}",
+            f"--dataset_location={args.dataset_location}"
+        ]
+
+    # Workaround for ONNXRT googlenet-12
+    if args.framework == "onnxrt" and args.model == "googlenet-12":
+        parameters.extend([
+            f"--data_path={args.dataset_location}",
+            f"--label_path={args.dataset_location}/../val.txt"
+        ])
 
     cmd = get_executable("benchmark")
     cmd.extend(parameters)

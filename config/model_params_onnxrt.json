@@ -152,6 +152,33 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": true
+    },
+    "mobilenetv2-12": {
+      "model_src_dir": "onnx_model_zoo/mobilenet",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset2/models/onnx/mobilenetv2-12/mobilenetv2-12.onnx",
+      "yaml": "mobilenetv2.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
+    "googlenet-12": {
+      "model_src_dir": "onnx_model_zoo/googlenet",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset2/models/onnx/googlenet-12/googlenet-12.onnx",
+      "yaml": "googlenet.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
+    "shufflenet-v2-12": {
+      "model_src_dir": "onnx_model_zoo/shufflenet",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset2/models/onnx/shufflenet-v2-12/shufflenet-v2-12.onnx",
+      "yaml": "shufflenetv2.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
     }
   }
 }
