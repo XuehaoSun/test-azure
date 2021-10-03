@@ -52,7 +52,7 @@ node(LABEL) {
             if (REPORT_RECIPIENTS.size() <= 0) {
                 print("Report recipients not specified.")
             } else {
-                emailext subject: "LPOT JIRA status report",
+                emailext subject: "INC JIRA status report",
                 to: "${REPORT_RECIPIENTS}",
                 body: '''${FILE,path="jira_status_report.html"}''',
                 mimeType: 'text/html'
