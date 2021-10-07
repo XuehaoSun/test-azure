@@ -141,19 +141,9 @@ main() {
       fi
     fi
 
-    if [[ "${framework}" == "pytorch" ]]; then
-        if [[ "${model}" == "rnnt" ]] || [[ "${model}" == "ssd_resnet34_fx" ]] || [[ "${model}" == "ssd_resnet34_qat_fx" ]]; then
-            if [ ${model} == "rnnt" ];then
-                cd ${model_src_dir}/../../../utils/MLPerf/loadgen
-            else
-                cd ${model_src_dir}/../../../../utils/MLPerf/loadgen
-            fi
-            echo "Checking gcc version:"
-            gcc -v
-            setup_install_pypi_source
-            python setup.py install
-            cd ${model_src_dir}
-        fi
+    
+    if [[ -f "prepare_loadgen.sh" ]]; then
+        bash prepare_loadgen.sh
     fi
 
     echo -e "\nGetting git information..."
