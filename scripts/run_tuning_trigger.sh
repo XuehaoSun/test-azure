@@ -57,7 +57,7 @@ done
 # Run auto tune
 main() {
     # Import common functions
-    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --model_src_dir=${model_src_dir} --conda_env_name=${conda_env_name}
+    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
 
     echo -e "\nSetting environment..."
     set_environment
@@ -141,7 +141,7 @@ main() {
       fi
     fi
 
-    
+
     if [[ -f "prepare_loadgen.sh" ]]; then
         bash prepare_loadgen.sh
     fi
@@ -181,6 +181,10 @@ main() {
         topology="${model%_qat_fx}"
     fi
 
+    if [[ "${model}" == *"-oob_fx" ]]; then
+        topology="${model%-oob_fx}"
+    fi
+
     if [[ "${framework}" == "onnxrt" ]] && [[ "${model}" == "gpt2_lm_head_wikitext_model_zoo" ]]; then
         topology="gpt2_lm_wikitext2"
     fi
@@ -201,7 +205,7 @@ main() {
         if [ ${model} == "maskrcnn_fx" ]; then
             q_model="${q_model}.pth"
         else
-            q_model=""
+            q_model="${model_src_dir}/saved_results"
         fi
     fi
 
@@ -359,7 +363,7 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/pascal_voc_seg\/tfrecord/s|root:.*|root: $dataset_location|g" ${yaml}
             fi
         fi
-        if [ "${framework}" == "onnxrt" ]; then 
+        if [ "${framework}" == "onnxrt" ]; then
             if [[ "${model_src_dir}" == *"/language_translation/"* ]]; then
                 sed -i "/\/path\/to\/dataset/s|data_dir:.*|data_dir: $dataset_location|g" ${yaml}
             fi

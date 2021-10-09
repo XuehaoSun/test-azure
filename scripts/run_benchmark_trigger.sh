@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
@@ -71,7 +72,7 @@ fi
 main() {
 
     # Import common functions
-    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --model_src_dir=${model_src_dir} --conda_env_name=${conda_env_name}
+    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
 
     echo -e "\nSetting environment..."
     set_environment
@@ -127,6 +128,10 @@ main() {
 
     if [[ "${model}" == *"_qat_fx" ]]; then
         topology="${model%_qat_fx}"
+    fi
+
+    if [[ "${model}" == *"-oob_fx" ]]; then
+        topology="${model%-oob_fx}"
     fi
 
     if [ "${framework}" == "pytorch" ]; then

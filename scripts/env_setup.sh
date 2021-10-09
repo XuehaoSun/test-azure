@@ -3,13 +3,12 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "4" ] ; then
+if [ $# != "3" ] ; then
     echo 'ERROR:'
-    echo "Expected 4 parameters got $#"
+    echo "Expected 3 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
-    --model_src_dir=<path to model tuning script>
     --conda_env_name=<conda environment name>
     '
     exit 1
@@ -22,8 +21,6 @@ do
             framework=`echo $i | sed "s/${PATTERN}//"`;;
         --model=*)
             model=`echo $i | sed "s/${PATTERN}//"`;;
-        --model_src_dir=*)
-            model_src_dir=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         *)
@@ -119,12 +116,6 @@ function set_environment {
     done
     echo "Checking lpot..."
     pip list
-
-    if [ ! -d ${WORKSPACE}/lpot-models ]; then
-        echo "\"lpot-model\" not found. Exiting..."
-        exit 1
-    fi
-    cd ${WORKSPACE}/lpot-models
 
     export LOGLEVEL=DEBUG
 }

@@ -1,0 +1,72 @@
+#!/bin/bash
+set -x
+
+function main {
+
+  init_params "$@"
+  run_benchmark
+
+}
+
+# init params
+function init_params {
+  iters=100
+  batch_size=1
+  tuned_checkpoint=saved_results
+  for var in "$@"
+  do
+    case $var in
+      --topology=*)
+          topology=$(echo $var |cut -f2 -d=)
+      ;;
+      --dataset_location=*)
+          dataset_location=$(echo $var |cut -f2 -d=)
+      ;;
+      --input_model=*)
+          input_model=$(echo $var |cut -f2 -d=)
+      ;;
+      --mode=*)
+          mode=$(echo $var |cut -f2 -d=)
+      ;;
+      --batch_size=*)
+          batch_size=$(echo $var |cut -f2 -d=)
+      ;;
+      --iters=*)
+          iters=$(echo ${var} |cut -f2 -d=)
+      ;;
+      --int8=*)
+          int8=$(echo ${var} |cut -f2 -d=)
+      ;;
+      --config=*)
+          tuned_checkpoint=$(echo $var |cut -f2 -d=)
+      ;;
+      *)
+          echo "Error: No such parameter: ${var}"
+          exit 1
+      ;;
+    esac
+  done
+
+}
+
+# run_tuning
+function run_benchmark {
+    if [[ ${int8} == "true" ]]; then
+        extra_cmd="--precision int8"
+    else
+        extra_cmd=""
+    fi
+
+    if [ "${topology}" = "hbonet-1.0-224x224" ];then
+        width_mult=1
+    elif [ "${topology}" = "hbonet-0.5-224x224" ];then
+        width_mult=0.5
+    elif [ "${topology}" = "hbonet-0.25-224x224" ];then
+        width_mult=0.25
+    fi
+    python imagenet.py --dummy -b 1 \
+    -a hbonet -e --max_iters 100 --weight ${input_model} \
+    --width-mult ${width_mult} ${extra_cmd}
+}
+
+main "$@"

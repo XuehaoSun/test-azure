@@ -92,6 +92,13 @@ if ('pytorch_models' in params && params.pytorch_models != '') {
 }
 echo "pytorch_models: ${pytorch_models}"
 
+// setting pytorch oob models
+pytorch_oob_models = ""
+if ('pytorch_oob_models' in params && params.pytorch_oob_models != '') {
+    pytorch_oob_models = params.pytorch_oob_models
+}
+echo "pytorch_oob_models: ${pytorch_oob_models}"
+
 // setting onnx_version
 onnx_version = '1.7.0'
 if ('onnx_version' in params && params.onnx_version != '') {
@@ -584,10 +591,13 @@ def getPerfJobs() {
                     job_models = job_models.plus(tf_oob_models)
 
                 }else if (job_framework == 'pytorch'){
+                    pt_oob_models = parseStrToList(pytorch_oob_models)
                     job_models = parseStrToList(pytorch_models)
                     if (system == "windows") {
                         job_models = parseStrToList(pytorch_models_windows)
                     }
+                    job_models = job_models.plus(pt_oob_models)
+
                 }else if (job_framework == 'mxnet'){
                     job_models = parseStrToList(mxnet_models)
                     if (system == "windows") {
@@ -796,10 +806,12 @@ def collectLog() {
                     }
                     job_models = job_models.plus(tf_oob_models)
                 }else if (job_framework == 'pytorch'){
+                    pt_oob_models = parseStrToList(pytorch_oob_models)
                     job_models = parseStrToList(pytorch_models)
                      if (system == "windows") {
                         job_models = parseStrToList(pytorch_models_windows)
                     }
+                    job_models = job_models.plus(pt_oob_models)
                 }else if (job_framework == 'mxnet'){
                     job_models = parseStrToList(mxnet_models)
                     if (system == "windows") {

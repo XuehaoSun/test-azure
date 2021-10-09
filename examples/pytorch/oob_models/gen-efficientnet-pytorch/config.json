@@ -1,0 +1,30 @@
+{
+    "framework": "PyTorch",
+    "model": "EfficientNet",
+    "requirement": "requirements.txt",
+    
+    "benchmark": [
+        {
+            "basecommit": "",
+            "patch": "gen-efficientnet-pytorch.diff",
+            "precision": "fp32",
+            "mode": "throughput",
+            "batch_size": "8,16,32,64,128,256",
+            "cores_per_instance": "24",
+            "checkpoint": "",
+            "dataset": "/mnt/local_disk/jenkins/pytorch/ImageNet",
+            "script_path": "run_EfficientNet.sh"
+        },
+        {
+            "basecommit": "",
+            "patch": "gen-efficientnet-pytorch.diff",
+            "precision": "fp32",
+            "mode": "realtime",
+            "batch_size": "1",
+            "cores_per_instance": "4",
+            "checkpoint": "",
+            "dataset": "/mnt/local_disk/jenkins/pytorch/ImageNet",
+            "script_path": "run_EfficientNet.sh"
+        }
+    ]
+}
