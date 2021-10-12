@@ -156,7 +156,7 @@ function createOverview {
 
             if [ "${copyright_check[2]}" != "" ]; then
                  echo "<tr><td>Copyright Check</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${copyright_check[0]}/${copyright_check[2]}/artifact/copyright_issue_summary.log\">${copyright_check[0]}#${copyright_check[2]}</a></td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${copyright_check[0]}/${copyright_check[2]}/artifact\">${copyright_check[0]}#${copyright_check[2]}</a></td>"
                  echo "${copyright_check_status}</tr>"
             fi
         )
