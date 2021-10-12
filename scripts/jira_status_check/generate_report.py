@@ -171,6 +171,58 @@ def main(args: Namespace) -> None:
     html_title = "INC JIRA status summary"
     if args.affected_version != "" and args.affected_version != "ALL":
         html_title = f"INC v{args.affected_version} JIRA status summary"
+
+
+    # Initialize sections
+    p1_features_section = (
+        h3("Features P1:"),
+        h5("None")
+    )
+    other_features_section = (
+        h3("Other features:"),
+        h5("None")
+    )
+    bugs_section = (
+        h3("Bugs:"),
+        h5("None")
+    )
+    customer_section = (
+        h3("Customer:"),
+        h5("None")
+    )
+
+    if len(p1_feature_issues) > 0:
+        p1_features_section = (
+            h3("Features P1:"),
+            h5(f"Progress: {round(100*len(p1_feature_issues_resolved)/len(p1_feature_issues))}% [ Done tasks {len(p1_feature_issues_resolved)}/{len(p1_feature_issues)} ]"),
+            p1_feature_issues_table,
+            br()
+        )
+
+    if len(other_feature_issues) > 0:
+        other_features_section = (
+            h3("Other features:"),
+            h5(f"Progress: {round(100*len(other_feature_issues_resolved)/len(other_feature_issues))}% [ Done tasks {len(other_feature_issues_resolved)}/{len(other_feature_issues)} ]"),
+            other_feature_issues_table,
+            br()
+        )
+
+    
+    if len(bugs_issues) > 0:
+        bugs_section = (
+            h3("Bugs:"),
+            h5(f"Progress: {round(100*len(bugs_issues_resolved)/len(bugs_issues))}% [ Done tasks {len(bugs_issues_resolved)}/{len(bugs_issues)} ]"),
+            bugs_table,
+            br(),
+        )
+    if len(customer_issues) > 0:
+        customer_section = (
+            h3("Customer:"),
+            h5(f"Progress: {round(100*len(customer_issues_resolved)/len(customer_issues))}% [ Done tasks {len(customer_issues_resolved)}/{len(customer_issues)} ]"),
+            customer_issues_table,
+        )
+
+    
     report = html(
         head(
             title(html_title),
@@ -200,22 +252,10 @@ def main(args: Namespace) -> None:
             h1(align="center")(html_title),
             h2(align="center")(datetime.datetime.now().strftime('%Y-%m-%d')),
             br(),
-            h3("Features P1:"),
-            h5(f"Progress: {round(100*len(p1_feature_issues_resolved)/len(p1_feature_issues))}% [ Done tasks {len(p1_feature_issues_resolved)}/{len(p1_feature_issues)} ]"),
-            p1_feature_issues_table,
-            br(),
-            h3("Other features:"),
-            h5(f"Progress: {round(100*len(other_feature_issues_resolved)/len(other_feature_issues))}% [ Done tasks {len(other_feature_issues_resolved)}/{len(other_feature_issues)} ]"),
-            other_feature_issues_table,
-            br(),
-            h3("Bugs:"),
-            h5(f"Progress: {round(100*len(bugs_issues_resolved)/len(bugs_issues))}% [ Done tasks {len(bugs_issues_resolved)}/{len(bugs_issues)} ]"),
-            bugs_table,
-            br(),
-            h3("Customer:"),
-            h5(f"Progress: {round(100*len(customer_issues_resolved)/len(customer_issues))}% [ Done tasks {len(customer_issues_resolved)}/{len(customer_issues)} ]"),
-            customer_issues_table,
-            
+            p1_features_section,
+            other_features_section,
+            bugs_section,
+            customer_section,
         )
     )
 
