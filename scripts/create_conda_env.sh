@@ -48,7 +48,7 @@ function update_conda_env {
         rm -rf ${conda_dir}/envs/${conda_env_name}
     fi
 
-    conda config --add channels default
+    conda config --add channels defaults
     conda create python=${python_version} -y -n ${conda_env_name}
 
     source activate ${conda_env_name}
