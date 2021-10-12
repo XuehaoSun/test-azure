@@ -36,6 +36,15 @@
       "batch_size": 100,
       "new_benchmark": false
     },
+    "rnnt_ipex": {
+      "model_src_dir": "ipex/speech_recognition/rnnt",
+      "dataset_location": "/tf_dataset/pytorch/rnnt/convert_dataset/",
+      "input_model": "/tf_dataset/pytorch/rnnt/rnnt.pt",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": false
+    },
     "resnet50_gpu": {
       "model_src_dir": "eager/image_recognition/imagenet/gpu",
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw",

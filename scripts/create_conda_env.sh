@@ -23,6 +23,8 @@ do
             onnxruntime_version=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
+        --install_ipex=*)
+            install_ipex=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -62,7 +64,7 @@ echo -e "\nUpdate conda env... "
 update_conda_env
 
 # Install TF
-if [ ${tensorflow_version} == '1.15UP1' ]; then
+if [ "${tensorflow_version}" == '1.15UP1' ]; then
     if [ ${python_version} == '3.6' ]; then
         pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl
     elif [ ${python_version} == '3.7' ]; then
@@ -72,7 +74,7 @@ if [ ${tensorflow_version} == '1.15UP1' ]; then
     else
         echo "!!! TF 1.15UP1 do not support ${python_version}"
     fi
-elif [ ${tensorflow_version} == '1.15UP2' ]; then
+elif [ "${tensorflow_version}" == '1.15UP2' ]; then
     if [ ${python_version} == '3.6' ]; then
         pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp36-cp36m-manylinux2010_x86_64.whl
     elif [ ${python_version} == '3.7' ]; then
@@ -82,7 +84,7 @@ elif [ ${tensorflow_version} == '1.15UP2' ]; then
     else
         echo "!!! TF 1.15UP2 do not support ${python_version}"
     fi
-elif [ ${tensorflow_version} == '1.15UP3' ]; then
+elif [ "${tensorflow_version}" == '1.15UP3' ]; then
     if [ ${python_version} == '3.6' ]; then
         pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up3-cp36-cp36m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
     elif [ ${python_version} == '3.7' ]; then
@@ -124,22 +126,41 @@ else
     echo "Won't install PyTorch!"
 fi
 
+if [[ "${install_ipex}" == "true" ]]; then
+    case "${pytorch_version}" in
+        1.8.0*)
+            case "${python_version}" in
+                3.6)
+                    install_params="/tf_dataset/pytorch/torch_ipex-1.8.0-cp36-cp36m-linux_x86_64.whl";;
+                3.7)
+                    install_params="torch_ipex==1.8.0 -f https://software.intel.com/ipex-whl-stable";;
+                3.8)
+                    install_params="/tf_dataset/pytorch/torch_ipex-1.8.0-cp38-cp38-linux_x86_64.whl";;
+            esac;;
+        1.9.0*)
+            install_params="torch_ipex==1.9.0 -f https://software.intel.com/ipex-whl-stable";;
+    esac
+    if [[ ! -z ${install_params} ]]; then
+        pip install ${install_params}
+    fi
+fi
+
 # Install MXNet
-if [ ${mxnet_version} == '1.6.0' ]; then
+if [ "${mxnet_version}" == '1.6.0' ]; then
     pip install mxnet-mkl==${mxnet_version}
-elif [ ${mxnet_version} == '1.7.0' ]; then
+elif [ "${mxnet_version}" == '1.7.0' ]; then
     pip install mxnet==${mxnet_version}.post2
-elif [ ${mxnet_version} != '' ]; then
+elif [ "${mxnet_version}" != '' ]; then
     pip install mxnet==${mxnet_version}
 else
     echo "Won't install MXNet!"
 fi
 
 # Install ONNX
-if [ ${onnxruntime_version} != '' ]; then
+if [ "${onnxruntime_version}" != '' ]; then
     pip install onnx==${onnx_version}
     # if onnxrt==nightly then use requirements to install
-    if [ ${onnxruntime_version} != "nightly" ]; then
+    if [ "${onnxruntime_version}" != "nightly" ]; then
         pip install onnxruntime==${onnxruntime_version}
     fi
 else
