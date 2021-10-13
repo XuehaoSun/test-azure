@@ -271,20 +271,26 @@ def parseStrToList(srtingElements, delimiter=',') {
     return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
 
-def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version){
+def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, install_ipex){
+
+    def cmd = "bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
+                    --model=\"${model}\" \
+                    --python_version=\"${python_version}\" \
+                    --tensorflow_version=\"${tensorflow_version}\" \
+                    --pytorch_version=\"${pytorch_version}\" \
+                    --torchvision_version=\"${torchvision_version}\" \
+                    --mxnet_version=\"${mxnet_version}\" \
+                    --onnx_version=\"${onnx_version}\" \
+                    --onnxruntime_version=\"${onnxruntime_version}\" \
+                    --conda_env_name=\"${conda_env_name}\""
+
+    if (install_ipex) {
+        cmd += " --install_ipex=\"true\""
+    }
     retry(20){
         timeout(10){
             sh """#!/bin/bash
-                bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
-                    --model="${model}" \
-                    --python_version="${python_version}" \
-                    --tensorflow_version="${tensorflow_version}" \
-                    --pytorch_version="${pytorch_version}" \
-                    --torchvision_version="${torchvision_version}" \
-                    --mxnet_version="${mxnet_version}" \
-                    --onnx_version="${onnx_version}" \
-                    --onnxruntime_version="${onnxruntime_version}" \
-                    --conda_env_name="${conda_env_name}"
+                ${cmd}
             """
         }
     }
@@ -790,7 +796,8 @@ node( sub_node_label ) {
 
             stage("Build Conda Env"){
                 // specify conda env
-                def new_conda_env=true
+                def new_conda_env = true
+                def install_ipex = false
                 if(framework == 'pytorch'){
                     label=model_src_dir.split('/')
                     if(label[1] == 'language_translation' && framework_version == '1.5.0+cpu'){
@@ -798,8 +805,8 @@ node( sub_node_label ) {
                         conda_env_name='pytorch-bert-1.6'
                     }
                     if(label[0] == 'ipex'){
-                        new_conda_env=false
-                        conda_env_name='pt-ipex-3.6'
+                        conda_env_name="pt-ipex-${framework_version}-${python_version}"
+                        install_ipex = true
                     }
                     if(label[-1] == 'qat'&& framework_version == '1.5.0+cpu'){
                         framework_version='1.8.0+cpu'
@@ -839,7 +846,7 @@ node( sub_node_label ) {
                     }else if(framework=='onnxrt'){
                         onnxruntime_version=framework_version
                     }
-                    create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version)
+                    create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, install_ipex)
                 }else{
                     println("Test need a special local conda env, DO NOT create again!!!")
                 }
@@ -902,7 +909,7 @@ node( sub_node_label ) {
             
             if (!tune_only) {
                 println("==========nightly benchmark========")
-                timeout(360) {
+                timeout(720) {
                     stage("Performance") {
                         precision_list.each { precision ->
                             echo "precision is ${precision}"

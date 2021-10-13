@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -eox pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
 if [ $# != "12" ] ; then
@@ -141,11 +141,14 @@ main() {
       fi
     fi
 
-
     if [[ -f "prepare_loadgen.sh" ]]; then
-        bash prepare_loadgen.sh
+        if [[ "${model}" == "rnnt_ipex" ]]; then
+            bash prepare_env.sh
+        else
+            echo "\nInstalling loadgen..."
+            bash prepare_loadgen.sh "$(pwd)"
+        fi
     fi
-
     echo -e "\nGetting git information..."
     echo "$(git remote -v)"
     echo "$(git branch)"
