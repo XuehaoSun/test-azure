@@ -68,7 +68,7 @@ run_pylint() {
     # tf_utils.util will import some deps installed by tensorflow
     pip install intel-tensorflow
 
-    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=onnx,onnxruntime,tensorflow,neural_compressor,engine_py ./deep_engine > ${WORKSPACE}/engine-pylint.json
+    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=99 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=onnx,onnxruntime,tensorflow,neural_compressor,engine_py ./engine > ${WORKSPACE}/engine-pylint.json
 
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
