@@ -57,6 +57,7 @@ main() {
     fi
 
     echo "Executing code scan on branch: $(git name-rev --name-only HEAD)."
+    cd ${REPO_DIR}
 
     case ${SCAN_TOOL} in
         "pylint") run_pylint;;
