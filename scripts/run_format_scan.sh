@@ -58,6 +58,7 @@ main() {
 
     echo "Executing code scan on branch: $(git name-rev --name-only HEAD)."
     cd ${REPO_DIR}
+    echo "Code scan working path ${REPO_DIR} ..."
 
     case ${SCAN_TOOL} in
         "pylint") run_pylint;;
