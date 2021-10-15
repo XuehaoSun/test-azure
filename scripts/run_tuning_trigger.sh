@@ -275,7 +275,8 @@ main() {
             parameters="${parameters} --dataset_location=${dataset_location}"
         fi
 
-        if [[ "${model}" == "googlenet-12" ]]; then
+        onnxrt_ds_full_input_models=("googlenet-12" "squeezenet" "caffenet" "alexnet")
+        if [[ " ${onnxrt_ds_full_input_models[@]} " =~ " ${model} " ]]; then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../val.txt"
         fi
     fi

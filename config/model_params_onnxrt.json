@@ -179,6 +179,33 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": true
+    },
+    "squeezenet": {
+      "model_src_dir": "onnx_model_zoo/squeezenet",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset2/models/onnx/squeezenet/squeezenet1.0-12.onnx",
+      "yaml": "squeezenet.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
+    "caffenet": {
+      "model_src_dir": "onnx_model_zoo/caffenet",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset2/models/onnx/caffenet/caffenet-12.onnx",
+      "yaml": "caffenet.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
+    "alexnet": {
+      "model_src_dir": "onnx_model_zoo/alexnet",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset2/models/onnx/alexnet/bvlcalexnet-12.onnx",
+      "yaml": "alexnet.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
     }
   }
 }

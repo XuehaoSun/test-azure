@@ -145,13 +145,12 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
                 f"--dataset_location={args.dataset_location}"
             ]
 
-    # Workaround for ONNXRT googlenet-12
-    if args.framework == "onnxrt" and args.model == "googlenet-12":
+    # Workaround for ONNXRT googlenet-12,squeezenet,caffenet,alexnet
+    if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "caffenet", "alexnet"]:
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
         ])
-
 
     cmd = get_executable("benchmark")
     cmd.extend(parameters)
@@ -234,8 +233,8 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
             f"--dataset_location={args.dataset_location}"
         ]
 
-    # Workaround for ONNXRT googlenet-12
-    if args.framework == "onnxrt" and args.model == "googlenet-12":
+    # Workaround for ONNXRT googlenet-12,squeezenet,caffenet,alexnet
+    if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "caffenet", "alexnet"]:
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
