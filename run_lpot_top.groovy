@@ -388,6 +388,12 @@ if ('precision' in params && params.precision != '') {
 }
 echo "Precision: ${precision}"
 
+format_scan_only=false
+if (params.format_scan_only != null){
+    format_scan_only=params.format_scan_only
+}
+echo "format_scan_only = ${format_scan_only}"
+
 def updateGithubCommitStatus(String state, String description) {
     try {
         supportedStatuses = ["error", "failure", "pending", "success"]
@@ -1302,7 +1308,11 @@ node( node_label ) {
         }
 
         stage('Build wheel'){
-            buildBinary()
+            if (!format_scan_only){
+                buildBinary()
+            }else{
+                echo "Format scan only, don't need to build binary!"
+            }
         }
 
         def job_list = [:]
