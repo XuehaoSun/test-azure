@@ -1911,3 +1911,4 @@ Caffenet
 caffenet
 bvlcalexnet
 sed
+skx
