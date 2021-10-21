@@ -414,8 +414,10 @@ def adaptive_avgmax_pool2d(x, pool_type='avg', padding=0, count_include_pad=Fals
             F.max_pool2d(x, kernel_size=(x.size(2), x.size(3)), padding=padding)
         ], dim=1)
     elif pool_type == 'avgmax':
+        # replace kernel_size=(x.size(2), x.size(3)) with (1, 1)
+        # PT1.9: TypeError: avg_pool2d(): argument 'kernel_size' must be tuple of ints, not tuple 
         x_avg = F.avg_pool2d(
-                x, kernel_size=(x.size(2), x.size(3)), padding=padding, count_include_pad=count_include_pad)
+                x, kernel_size=(1, 1), padding=padding, count_include_pad=count_include_pad)
         x_max = F.max_pool2d(x, kernel_size=(x.size(2), x.size(3)), padding=padding)
         x = 0.5 * (x_avg + x_max)
     elif pool_type == 'max':

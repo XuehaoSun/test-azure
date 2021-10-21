@@ -202,6 +202,7 @@ def main():
             scripted_model = torch.jit.script(model.eval())
             validate(val_loader, scripted_model, criterion, args)
         else:
+            model.eval()
             if args.tune:
                 from neural_compressor.experimental import Quantization, common
                 quantizer = Quantization('../conf.yaml')
