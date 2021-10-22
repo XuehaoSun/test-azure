@@ -157,6 +157,7 @@ def do_binary_build() {
                 echo "Build Pypi binary..."
                 cd lpot-models
                 git clean -df
+                rm -rf build
                 if [ "${pypi_version}" != "default" ]; then
                     cd neural_compressor
                     sed -i '/__version__ =/d' version.py
@@ -198,6 +199,7 @@ def do_binary_build() {
                 echo "Build Pypi binary..."
                 cd lpot-models
                 git clean -df
+                rm -rf build
                 
                 python3 setup.py sdist bdist_wheel
                 pip install auditwheel
@@ -206,7 +208,7 @@ def do_binary_build() {
                 cp dist/neural_compressor*.tar.gz ${WORKSPACE}/
                 
                 echo "Build Conda binary..."
-                conda clean -a -y
+                conda clean -i
                 conda_py=$(echo ${python_version} | tr -d '.')
                 nc_whl_path=${WORKSPACE}/lpot-models/wheelhouse/neural_compressor*.whl
                 export NC_WHL=${nc_whl_path}
