@@ -33,7 +33,7 @@ def main(version: str, priority: str):
         ]
     }
     jira_request_headers = {
-        "Authorization": "Basic c3V5dWVjaGU6QHlzZHkxODgxOA==",
+        "Authorization": "Basic c3V5dWVjaGU6QG5seHgxODgxOA==",
         "Accept": "application/json",
         "Content-Type": "application/json",
     }
