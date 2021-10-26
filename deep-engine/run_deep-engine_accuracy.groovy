@@ -187,7 +187,7 @@ node(node_label){
                             withEnv(["each_model=${each_model}","each_precision=${each_precision}"]){
                                 sh '''#!/bin/bash
                                 accuracy=`grep "acc:" ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log | cut -d':' -f2`
-                                echo "accuracy,${each_model},${each_precision},${accuracy}" >> ${WORKSPACE}/summary.txt
+                                echo "accuracy,${each_model},${each_precision},${accuracy}" >> ${WORKSPACE}/summary.log
                                 '''
                             }
                         }
@@ -197,7 +197,7 @@ node(node_label){
 
             // check accuracy status
             sh'''#!/bin/bash
-                log_file='${WORKSPACE}/summary.txt'
+                log_file='${WORKSPACE}/summary.log'
                 for line in $(grep 'accuracy' $log_file)
                 do 
                 echo $line
@@ -216,7 +216,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'summary.txt, bert*/**, cmake_build.log', excludes: null
+            archiveArtifacts artifacts: 'summary.log, bert*/**, cmake_build.log', excludes: null
             fingerprint: true
         }
     }

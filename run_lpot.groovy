@@ -271,7 +271,7 @@ def parseStrToList(srtingElements, delimiter=',') {
     return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
 
-def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, install_ipex){
+def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, engine_version, install_ipex){
 
     def cmd = "bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
                     --model=\"${model}\" \
@@ -282,6 +282,7 @@ def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxrun
                     --mxnet_version=\"${mxnet_version}\" \
                     --onnx_version=\"${onnx_version}\" \
                     --onnxruntime_version=\"${onnxruntime_version}\" \
+                    --engine_version=\"${engine_version}\" \
                     --conda_env_name=\"${conda_env_name}\""
 
     if (install_ipex) {
@@ -370,7 +371,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                 --yaml=${yaml} \
                 --cpu=${cpu} \
                 --output_path=${output_path}"
-        if (framework == "onnxrt") {
+        if (framework == "onnxrt" || framework == "engine") {
             cmd += " --dataset_location=\"${dataset_prefix}${dataset_location}\""
         }
         if (framework == "tensorflow" && model == "bert_base_mrpc") {
@@ -837,6 +838,7 @@ node( sub_node_label ) {
                     def pytorch_version=''
                     def mxnet_version=''
                     def onnxruntime_version=''
+                    def engine_version=''
                     if (framework=='tensorflow'){
                         tensorflow_version=framework_version
                     }else if(framework=='pytorch'){
@@ -845,8 +847,10 @@ node( sub_node_label ) {
                         mxnet_version=framework_version
                     }else if(framework=='onnxrt'){
                         onnxruntime_version=framework_version
+                    }else if(framework=='engine'){
+                        engine_version=framework_version
                     }
-                    create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, install_ipex)
+                    create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, engine_version, install_ipex)
                 }else{
                     println("Test need a special local conda env, DO NOT create again!!!")
                 }

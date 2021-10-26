@@ -41,6 +41,12 @@ main() {
 
     cd ${REPO_DIR}
     echo "Executing code scan on branch: $(git name-rev --name-only HEAD)."
+    if [ -f "requirements.txt" ]; then
+        python -m pip install --default-timeout=100 -r requirements.txt
+        pip list
+    else
+        echo "Not found requirements.txt file."
+    fi
 
     case ${SCAN_TOOL} in
         "cpplint") run_cpplint;;

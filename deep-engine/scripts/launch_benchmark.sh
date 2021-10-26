@@ -31,7 +31,7 @@ done
 wait
 
 throughput=$(find . -name "${cores}_${ncores_per_instance}_${bs}_${precision}*" | xargs grep -nRH "Through" | awk '{print $NF}' | awk '{ SUM += $1} END { print SUM }')
-echo "throughput,${model},${seq_len},${cores},${ncores_per_instance},${bs},${precision},${throughput}" >> ${WORKSPACE}/summary.txt
+echo "throughput,${model},${seq_len},${cores},${ncores_per_instance},${bs},${precision},${throughput}" >> ${WORKSPACE}/summary.log
 
 log_dir=${WORKSPACE}/${model}/${seq_len}/${cores}_${ncores_per_instance}_${bs}
 mkdir -p ${log_dir}

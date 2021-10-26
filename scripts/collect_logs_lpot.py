@@ -244,7 +244,7 @@ def get_framework_version(framework: str) -> None:
     }
     fw_module_name = fw_modules.get(framework, None)
     if fw_module_name is None:
-        return
+        return 'na'
     import importlib
     fw_module = importlib.import_module(fw_module_name)
     version = fw_module.__version__

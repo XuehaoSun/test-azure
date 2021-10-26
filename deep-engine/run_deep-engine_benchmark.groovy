@@ -201,7 +201,7 @@ node(node_label){
 
             // check benchmark status
             sh'''#!/bin/bash
-                log_file='${WORKSPACE}/summary.txt'
+                log_file='${WORKSPACE}/summary.log'
                 for line in $(grep 'throughput' $log_file)
                 do 
                 echo $line
@@ -220,7 +220,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'summary.txt, bert*/**, cmake_build.log', excludes: null
+            archiveArtifacts artifacts: 'summary.log, bert*/**, cmake_build.log', excludes: null
             fingerprint: true
         }
     }

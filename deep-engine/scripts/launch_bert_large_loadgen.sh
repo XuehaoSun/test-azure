@@ -46,5 +46,5 @@ if [ ${test_mode} = 'benchmark' ]; then
   echo "benchmark log operate"
 else
   accuracy=`grep 'f1' ${WORKSPACE}/${each_model}/${each_model}_accuracy_${each_precision}.log | cut -d':' -f3 | awk -F '}' '{printf("%.3f",$1)}'`
-  echo "accuracy,${each_model},${each_precision},${accuracy}" >> ${WORKSPACE}/summary.txt
+  echo "accuracy,${each_model},${each_precision},${accuracy}" >> ${WORKSPACE}/summary.log
 fi

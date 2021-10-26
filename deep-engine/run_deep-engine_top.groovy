@@ -136,6 +136,47 @@ if ('accuracy_model_list' in params && params.accuracy_model_list != ''){
 }
 echo "accuracy_model_list: ${accuracy_model_list}"
 
+inc_model_list=''
+if ('inc_model_list' in params && params.inc_model_list != ''){
+    inc_model_list=params.inc_model_list
+}
+echo "inc_model_list: ${inc_model_list}"
+
+inc_mode  = 'accuracy,latency'
+if ('inc_mode' in params && params.inc_mode != '') {
+    inc_mode = params.inc_mode
+}
+echo "inc_mode: ${inc_mode}"
+
+test_mode = 'engine'
+if ('test_mode' in params && params.test_mode != ''){
+    test_mode = params.test_mode
+}
+
+tuning_timeout="10800"
+if ('tuning_timeout' in params && params.tuning_timeout != ''){
+    tuning_timeout=params.tuning_timeout
+}
+echo "tuning_timeout: ${tuning_timeout}"
+
+max_trials=""
+if ('max_trials' in params && params.max_trials != ''){
+    max_trials=params.max_trials
+}
+echo "max_trials: ${max_trials}"
+
+tune_only=false
+if (params.tune_only != null){
+    tune_only=params.tune_only
+}
+echo "tune_only = ${tune_only}"
+
+precision = 'int8,fp32'
+if ('precision' in params && params.precision != '') {
+    precision = params.precision
+}
+echo "Precision: ${precision}"
+
 if ( PR_source_branch != ''){
     email_subject="PR${ghprbPullId}: ${test_title}"
 }else{
@@ -266,7 +307,7 @@ def createGithubIssueComment(String comment) {
     }
 }
 
-def unitTestJobs() {
+def unitTestJobs(unit_test_mode) {
     def ut_jobs = [:]
     List UTBuildParams = [
             string(name: "deepengine_url", value: "${lpot_url}"),
@@ -275,9 +316,10 @@ def unitTestJobs() {
             string(name: "PR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "binary_build_job", value: "${binary_build_job}"),
-            booleanParam(name: "run_coverage", value: RUN_COVERAGE)
+            booleanParam(name: "run_coverage", value: RUN_COVERAGE),
+            string(name: "unit_test_mode", value: "${unit_test_mode}")
     ]
-    ut_jobs["gtest"] = {
+    ut_jobs[unit_test_mode] = {
         downstreamJob = build job: "deep-engine-unit-test", propagate: false, parameters: UTBuildParams
         catchError {
             copyArtifacts(
@@ -292,14 +334,14 @@ def unitTestJobs() {
 
         if (downstreamJob.result != 'SUCCESS') {
             def sub_job_url = downstreamJob.absoluteUrl
-            withEnv(["sub_job_url=${sub_job_url}"]){
+            withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
                 sh '''#!/bin/bash
                 overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_ut_gtest,FAILURE,${sub_job_url}" | tee -a ${overview_log}
+                echo "deep-engine_ut_${ut_mode},FAILURE,${sub_job_url}" | tee -a ${overview_log}
                 '''
             }
             currentBuild.result = "FAILURE"
-            error("---gtest failed---")
+            error("---${unit_test_mode} test failed---")
         }
     }
     return ut_jobs
@@ -330,6 +372,12 @@ def perfJobs() {
             archiveArtifacts artifacts: "benchmark/**", allowEmptyArchive: true
         }
 
+        sh '''#!/bin/bash 
+            if [ -f ${WORKSPACE}/benchmark/summary.log ]; then 
+                cat ${WORKSPACE}/benchmark/summary.log >> ${WORKSPACE}/summary.log
+            fi
+        '''
+
         def sub_job_url = downstreamJob.absoluteUrl
         if (downstreamJob.result != 'SUCCESS') {
             withEnv(["sub_job_url=${sub_job_url}"]){
@@ -343,7 +391,7 @@ def perfJobs() {
         }else{
             sh '''#!/bin/bash
                 overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_benchmark,SUCCESS,${BUILD_URL}artifact/benchmark/summary.txt" | tee -a ${overview_log}
+                echo "deep-engine_benchmark,SUCCESS,${BUILD_URL}artifact/benchmark/summary.log" | tee -a ${overview_log}
             '''
         }
     }
@@ -374,6 +422,12 @@ def accJobs() {
             archiveArtifacts artifacts: "accuracy/**", allowEmptyArchive: true
         }
 
+        sh '''#!/bin/bash 
+            if [ -f ${WORKSPACE}/accuracy/summary.log ]; then 
+                cat ${WORKSPACE}/accuracy/summary.log >> ${WORKSPACE}/summary.log
+            fi
+        '''
+
         def sub_job_url = downstreamJob.absoluteUrl
         if (downstreamJob.result != 'SUCCESS') {
             withEnv(["sub_job_url=${sub_job_url}"]){
@@ -394,6 +448,113 @@ def accJobs() {
         }
     }
     return acc_jobs
+}
+
+def incParams(job_framework, job_model, python_version, strategy, cpu, os){
+
+    framework_version = 'na'
+
+    println("llsu-----> ${cpu} : ${os} : ${job_framework} : ${framework_version}: ${inc_mode}")
+
+    def subnode_label = sub_node_label + " && " + os;
+
+    if (!['any', '*'].contains(cpu)) {
+        subnode_label += " && " + cpu
+    }
+
+    List ParamsPerJob = []
+
+    ParamsPerJob += string(name: "sub_node_label", value: "${subnode_label}")
+    ParamsPerJob += string(name: "framework", value: "${job_framework}")
+    ParamsPerJob += string(name: "framework_version", value: "${framework_version}")
+    ParamsPerJob += string(name: "model", value: "${job_model}")
+    ParamsPerJob += string(name: "lpot_url", value: "${lpot_url}")
+    ParamsPerJob += string(name: "lpot_branch", value: "${lpot_commit}")
+    ParamsPerJob += string(name: "MR_source_branch", value: "${PR_source_branch}")
+    ParamsPerJob += string(name: "MR_target_branch", value: "${PR_target_branch}")
+    ParamsPerJob += string(name: "python_version", value: "${python_version}")
+    ParamsPerJob += string(name: "strategy", value: "${strategy}")
+    ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
+    ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
+    ParamsPerJob += string(name: "mode", value: "${inc_mode}")
+    ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
+    ParamsPerJob += string(name: "max_trials", value: "${max_trials}")
+    ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
+    ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
+    ParamsPerJob += string(name: "cpu", value: "${cpu}")
+    ParamsPerJob += string(name: "os", value: "${os}")
+    ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
+    ParamsPerJob += string(name: "precision", value: "${precision}")
+
+    return ParamsPerJob
+}
+
+def incJobs() {
+    def jobs = [:]
+
+    // Get models list
+    def job_models = []
+    job_models = inc_model_list.split(',')
+
+    job_models.each { job_model ->
+        jobs["${job_model}_engine"] = {
+
+            // execute build
+            println("Current engine model is --> "+"${job_model}")
+            sub_jenkins_job = "deep-engine-inc"
+            job_framework = "engine"
+            downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: incParams(job_framework, job_model, python_version, 'basic', 'clx8280', 'linux')
+
+            catchError {
+                copyArtifacts(
+                        projectName: sub_jenkins_job,
+                        selector: specific("${downstreamJob.getNumber()}"),
+                        filter: "*.log, tuning_config.yaml, ${job_framework}*.json",
+                        fingerprintArtifacts: true,
+                        target: "${job_framework}/${job_model}",
+                        optional: true)
+
+                // Archive in Jenkins
+                archiveArtifacts artifacts: "${job_framework}/${job_model}/**", allowEmptyArchive: true
+            }
+
+            downstreamJobStatus = downstreamJob.result
+            def failed_build_result = downstreamJob.result
+            def failed_build_url = downstreamJob.absoluteUrl
+
+            if (failed_build_result != 'SUCCESS') {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+                    currentBuild.result = "FAILURE"
+                    sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                    failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
+                    error("---- ${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                }
+            }
+
+            echo "Getting results for ${job_framework} - ${job_model}"
+            sh """#!/bin/bash -x
+                if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/tuning_info.log ]]; then
+                    cat ${WORKSPACE}/${job_framework}/${job_model}/tuning_info.log >> ${WORKSPACE}/tuning_info.log
+                else
+                    echo "linux;Unknown;${job_framework};N/A;${job_model};basic;;;${RUN_DISPLAY_URL};;;" >> ${WORKSPACE}/tuning_info.log
+                fi
+            """
+            sh """#!/bin/bash -x
+                if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/summary.log ]]; then
+                    cat ${WORKSPACE}/${job_framework}/${job_model}/summary.log >> ${WORKSPACE}/summary.log
+                else
+                    echo "Unknown;Unknown;${job_framework};N/A;INT8;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                    echo "Unknown;Unknown;${job_framework};N/A;FP32;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                fi
+            """
+        }
+    }
+
+    if (PR_source_branch != ''|| pipeline_failFast) {
+        echo "enable failFast"
+        jobs.failFast = true
+    }
+    return jobs
 }
 
 def codeScan(tool) {
@@ -438,13 +599,24 @@ def collectUTLog() {
         overview_log="${WORKSPACE}/summary_overview.log"
         ut_log_name=$WORKSPACE/unittest/unit_test_gtest.log
         if [ -f ${ut_log_name} ];then
+            sed -i '/deep-engine_ut_gtest/d' ${overview_log}
             if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ]; then
                 ut_status='FAILURE'
             else
                 ut_status='SUCCESS'
             fi
             echo "deep-engine_ut_gtest,${ut_status},${BUILD_URL}artifact/unittest/unit_test_gtest.log" | tee -a ${overview_log}
-        fi  
+        fi
+        ut_log_name=$WORKSPACE/unittest/unit_test_pytest.log
+        if [ -f ${ut_log_name} ];then
+            sed -i '/deep-engine_ut_pytest/d' ${overview_log}
+            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                ut_status='FAILURE'
+            else
+                ut_status='SUCCESS'
+            fi
+            echo "deep-engine_ut_pytest,${ut_status},${BUILD_URL}artifact/unittest/unit_test_pytest.log" | tee -a ${overview_log}
+        fi
     '''
 }
 
@@ -455,7 +627,7 @@ def generateReport() {
             copyArtifacts(
                     projectName: refer_job_name,
                     selector: specific("${refer_build}"),
-                    filter: 'summary.txt',
+                    filter: 'summary.log,tuning_info.log',
                     fingerprintArtifacts: true,
                     target: "reference")
         }
@@ -472,13 +644,17 @@ def generateReport() {
                 "lpot_commit=${lpot_commit}",
                 "summaryLog=${summaryLog}",
                 "summaryLogLast=${summaryLogLast}",
+                "tuneLog=${tuneLog}",
+                "tuneLogLast=${tuneLogLast}",
                 "overviewLog=${overviewLog}",
                 "Jenkins_job_status=${Jenkins_job_status}",
                 "ghprbActualCommit=${ghprbActualCommit}",
                 "ghprbPullLink=${ghprbPullLink}",
                 "ghprbPullId=${ghprbPullId}",
                 "PR_source_branch=${PR_source_branch}",
-                "PR_target_branch=${PR_target_branch}"
+                "PR_target_branch=${PR_target_branch}",
+                "coverage_summary=${coverage_summary}",
+                "coverage_summary_base=${coverage_summary_base}",
 
         ]) {
             sh '''
@@ -574,19 +750,29 @@ node( node_label ) {
 
         // Setup logs path
         echo "WORKSPACE IS ${WORKSPACE}"
-        summaryLog = "${WORKSPACE}/summary.txt"
-        summaryLogLast = "${WORKSPACE}/reference/summary.txt"
+        summaryLog = "${WORKSPACE}/summary.log"
+        writeFile file: summaryLog, text: "OS;Platform;Framework;Version;Precision;Model;Mode;Type;BS;Value;Url\n"
+        summaryLogLast = "${WORKSPACE}/reference/summary.log"
+
+        tuneLog = "${WORKSPACE}/tuning_info.log"
+        writeFile file: tuneLog, text: "OS;Platform;Framework;Version;Model;Strategy;Tune_time\n"
+        tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
 
         // over view log
         overviewLog = "${WORKSPACE}/summary_overview.log"
         writeFile file: overviewLog, text: "Jenkins Job, Build Status, Build ID\n"
 
+        // coverage summary
+        coverage_summary = "${WORKSPACE}/unittest/coverage_summary.log"
+        coverage_summary_base = "${WORKSPACE}/unittest/coverage_summary_base.log"
+
 
         def job_list = [:]
         if (RUN_UT) {
             println("Add ut job...")
-            def ut_jobs = unitTestJobs()
-            job_list = job_list + ut_jobs
+            def gtest_ut_job = unitTestJobs('gtest')
+            def pytest_ut_job = unitTestJobs('pytest')
+            job_list = job_list + gtest_ut_job + pytest_ut_job
         }
         if (RUN_CPPLINT){
             println("Add cpplint scan to job...")
@@ -622,6 +808,12 @@ node( node_label ) {
             job_list = job_list + acc_jobs
         }
 
+        if (inc_model_list != ''){
+            println("Add INC job...")
+            def inc_jobs = incJobs()
+            job_list = job_list + inc_jobs
+        }
+
         if (PR_source_branch != ''|| pipeline_failFast) {
             echo "enable failFast"
             job_list.failFast = true
@@ -644,14 +836,6 @@ node( node_label ) {
                 if (RUN_UT){
                     collectUTLog()
                 }
-                sh '''#!/bin/bash 
-                    if [ -f ${WORKSPACE}/benchmark/summary.txt ]; then 
-                        cat ${WORKSPACE}/benchmark/summary.txt >> ${WORKSPACE}/summary.txt
-                    fi
-                    if [ -f ${WORKSPACE}/accuracy/summary.txt ]; then 
-                        cat ${WORKSPACE}/accuracy/summary.txt >> ${WORKSPACE}/summary.txt
-                    fi
-                '''
             }
         }
 

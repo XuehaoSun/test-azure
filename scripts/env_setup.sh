@@ -82,6 +82,12 @@ function set_ONNXRT_env {
     source activate ${conda_env_name}
 }
 
+function set_ENGINE_env {
+    export PATH=${HOME}/miniconda3/bin/:$PATH
+    echo "Activating ${conda_env_name} env"
+    source activate ${conda_env_name}
+}
+
 function set_environment {
     case "${framework}" in
         tensorflow)
@@ -92,6 +98,8 @@ function set_environment {
             set_PT_env;;
         onnxrt)
             set_ONNXRT_env;;
+        engine)
+            set_ENGINE_env;;
         *)
             echo "Framework ${framework} not recognized."; exit 1;;
     esac

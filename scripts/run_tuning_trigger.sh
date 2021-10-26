@@ -256,6 +256,9 @@ main() {
                 break
             fi
         done
+        if [ "${model}" == "bert_base_mrpc" ]; then
+            parameters="${parameters} --dataset_location=${dataset_location}"
+        fi
     fi
 
     if [ "${framework}" == "onnxrt" ] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
@@ -263,10 +266,6 @@ main() {
         if [[ "${model_src_dir}" == *"language_translation"* ]]; then
             ln -s ${input_model} ${model_src_dir}/
         fi
-    fi
-
-    if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
-        parameters="${parameters} --dataset_location=${dataset_location}"
     fi
 
     if [ "${framework}" == "onnxrt" ]; then
@@ -279,6 +278,10 @@ main() {
         if [[ " ${onnxrt_ds_full_input_models[@]} " =~ " ${model} " ]]; then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../val.txt"
         fi
+    fi
+
+    if [ "${framework}" == "engine" ]; then
+        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --dataset_location=${dataset_location}"
     fi
 
     update_yaml_config
@@ -378,6 +381,10 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
                 sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
             fi
+        fi
+        if [ "${framework}" == "engine" ]; then
+            sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
+            sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
         fi
     fi
 

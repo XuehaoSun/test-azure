@@ -21,6 +21,8 @@ do
             onnx_version=`echo $i | sed "s/${PATTERN}//"`;;
         --onnxruntime_version=*)
             onnxruntime_version=`echo $i | sed "s/${PATTERN}//"`;;
+        --engine_version=*)
+            engine_version=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         --install_ipex=*)
@@ -165,6 +167,19 @@ if [ "${onnxruntime_version}" != '' ]; then
     fi
 else
     echo "Won't install ONNXRT!"
+fi
+
+# Engine env setup with TF
+if [ ${engine_version} != '' ]; then
+    if [ ${python_version} == '3.6' ]; then
+        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp36-cp36m-manylinux2010_x86_64.whl
+    elif [ ${python_version} == '3.7' ]; then
+        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp37-cp37m-manylinux2010_x86_64.whl
+    elif [ ${python_version} == '3.5' ]; then
+        pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp35-cp35m-manylinux2010_x86_64.whl
+    else
+        echo "!!! TF 1.15UP2 do not support ${python_version}"
+    fi
 fi
 
 if [ -f "${WORKSPACE}/lpot-validation/requirements.txt" ]; then

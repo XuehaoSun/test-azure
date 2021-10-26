@@ -109,7 +109,8 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
     lpot_config.load(yaml_path)
 
     try:
-        lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
+        if lpot_config.evaluation.accuracy.dataloader:
+            lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
         lpot_config.evaluation.accuracy.configs = None
         # walk around for anno_path yaml format issue.
         if ( lpot_config.evaluation.accuracy.metric.name == 'COCOmAP' ):
@@ -150,6 +151,13 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
+        ])
+
+    # Workaround for engine
+    if args.framework == "engine":
+        parameters.extend([
+            f"--dataset_location={args.dataset_location}",
+            f"--batch_size={args.batch_size}"
         ])
 
     cmd = get_executable("benchmark")
@@ -238,6 +246,13 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
+        ])
+
+    # Workaround for engine
+    if args.framework == "engine":
+        parameters.extend([
+            f"--dataset_location={args.dataset_location}",
+            f"--batch_size={batch_size}"
         ])
 
     cmd = get_executable("benchmark")

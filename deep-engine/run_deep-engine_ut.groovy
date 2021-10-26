@@ -162,12 +162,12 @@ def download() {
 
 def run_pytest_with_coverage_count(repo_name){
     if (repo_name == 'deep-engine'){
-        ut_log_name="${WORKSPACE}/unit_test.log"
+        ut_log_name="${WORKSPACE}/unit_test_pytest.log"
         coverage_package='coverage_results'
         coverage_summary_log='coverage_summary.log'
     }
     if (repo_name == 'deep-engine-base'){
-        ut_log_name="${WORKSPACE}/unit_test_base.log"
+        ut_log_name="${WORKSPACE}/unit_test_pytest_base.log"
         coverage_package='coverage_results_base'
         coverage_summary_log='coverage_summary_base.log'
     }

@@ -82,8 +82,8 @@ def run(args: List[Any],
                             stderr=subprocess.STDOUT,
                             shell=shell)
     with open(filename, "w", 1, encoding="utf-8") as log_file:
-        log_file.write(f"[ COMMAND ] {cmd}")
-        print(f"[ COMMAND ] {cmd}")
+        log_file.write(f"[ COMMAND ] {cmd} \n")
+        print(f"[ COMMAND ] {cmd} \n")
         for line in proc.stdout:
             decoded_line = line.decode("utf-8", errors="ignore").strip()
             log_file.write(decoded_line + "\n")
