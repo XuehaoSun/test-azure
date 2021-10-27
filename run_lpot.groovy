@@ -343,7 +343,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
             strategy = "mse"
         } else if (framework == "onnxrt" && model == "resnet50-v1-12") {
             strategy = "basic"
-            dataset_location = "/tf_dataset2/datasets/mini-imageraw/val"
+            dataset_location = "/tf_dataset2/datasets/imagenet/ImagenetRaw/ImagenetRaw_small_5000/ILSVRC2012_img_val"
         }else{
             strategy = "basic"
         }
