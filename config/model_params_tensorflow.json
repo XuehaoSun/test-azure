@@ -398,7 +398,7 @@
     },
     "ssd_resnet34": {
       "model_src_dir": "object_detection",
-      "dataset_location": "/tf_dataset/dataset/coco_dataset/raw-data",
+      "dataset_location": "/tf_dataset/tensorflow/coco_val.record",
       "input_model": "/tf_dataset/pre-trained-models/ssd_resnet34/fp32/ssd_resnet34_fp32_1200x1200_pretrained_model.pb",
       "yaml": "ssd_resnet34.yaml",
       "strategy": "basic",
