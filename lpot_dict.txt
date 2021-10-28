@@ -1917,3 +1917,4 @@ miguelgrinberg
 palletsprojects
 finbert
 phrasebank
+WideResNet
