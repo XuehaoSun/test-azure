@@ -97,6 +97,9 @@ elif [ "${tensorflow_version}" == '1.15UP3' ]; then
 elif [[ "${tensorflow_version}" == "customized"* ]]; then
     download_link=$(echo "${tensorflow_version}" | awk -F '=' '{print $2}')
     pip install "${download_link}"
+elif [[ "${tensorflow_version}" == '2.6.0' ]]; then
+    pip install intel-tensorflow==${tensorflow_version}
+    pip install tensorflow-estimator==2.6.0
 elif [[ "${tensorflow_version}" != "" ]]; then
     pip install intel-tensorflow==${tensorflow_version}
 else
