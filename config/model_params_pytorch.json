@@ -263,8 +263,8 @@
     },
     "dlrm": {
       "model_src_dir": "eager/recommendation",
-      "dataset_location": "/mnt/local_disk3/dataset/dlrm/terabyte_input",
-      "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/tb00_40M.pt",
+      "dataset_location": "/mnt/local_disk3/dataset/dlrm/dlrm/input",
+      "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm/dlrm_weight/tb00_40M.pt",
       "yaml": "conf.yaml",
       "strategy": "basic",
       "batch_size": 16384,
@@ -272,8 +272,8 @@
     },
     "dlrm_fx": {
       "model_src_dir": "fx/recommendation",
-      "dataset_location": "/mnt/local_disk3/dataset/dlrm/terabyte_input",
-      "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm_weight/tb00_40M.pt",
+      "dataset_location": "/mnt/local_disk3/dataset/dlrm/dlrm/input",
+      "input_model": "/mnt/local_disk3/dataset/dlrm/dlrm/dlrm_weight/tb00_40M.pt",
       "yaml": "conf.yaml",
       "strategy": "basic",
       "batch_size": 16384,
