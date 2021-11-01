@@ -9,8 +9,8 @@
       "batch_size": 1,
       "new_benchmark": true
     },
-    "bert_large": {
-      "model_src_dir": "nlp/bert_large",
+    "bert_large_squad": {
+      "model_src_dir": "nlp/bert_large_squad",
       "dataset_location": "/tf_dataset2/models/deep-engine/bert_large",
       "input_model": "/tf_dataset2/models/deep-engine/bert_large/model.pb",
       "yaml": "bert.yaml",
@@ -49,6 +49,15 @@
       "model_src_dir": "nlp/finbert_financial_phrasebank",
       "dataset_location": "/tf_dataset2/datasets/sentences_50agree",
       "input_model": "/tf_dataset2/models/deep-engine/finbert_financial_phrasebank/finbert_financial_phrasebank.onnx",
+      "yaml": "bert.yaml",
+      "strategy": "basic",
+      "batch_size": 8,
+      "new_benchmark": true
+    },
+    "roberta_base_mrpc": {
+      "model_src_dir": "nlp/roberta_base_mrpc",
+      "dataset_location": "./data",
+      "input_model": "/tf_dataset2/models/deep-engine/roberta_base_mrpc/roberta_base_mrpc.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
       "batch_size": 8,
