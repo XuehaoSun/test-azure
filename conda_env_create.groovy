@@ -87,6 +87,7 @@ node(node_label){
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 # pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
                 conda_env_name=${framework}-${framework_version}-${python_version}
+                conda config --add channels defaults
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                     if [ ${refresh_env} = true ]; then
                         conda remove --name ${conda_env_name} --all -y
