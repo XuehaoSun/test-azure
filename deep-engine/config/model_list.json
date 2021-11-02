@@ -1,57 +1,26 @@
 {
   "bert_base_mrpc": {
     "int8": {
-      "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_int8_915.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_base_all_int8.yaml"
+      "weight": "/tf_dataset2/models/deep-engine/inferencer/bert_base_mrpc/int8.bin",
+      "config": "engine/examples/nlp/bert_base_mrpc/conf_int8.yaml",
+      "conf_latency": "engine/examples/nlp/bert_base_mrpc/conf_int8_latency.yaml"
     },
     "fp32": {
-      "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_fp32.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_base_all.yaml"
-    },
-    "seq_len": [128],
-    "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC/"
-  },
-  "bert_large_mlperf": {
-    "int8": {
-      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_int8_98.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all_int8.yaml"
-    },
-    "fp32": {
-      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_fp32.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all.yaml"
-    },
-    "seq_len": [179,384]
-  },
-  "bert_mlperf_loadgen": {
-    "int8": {
-      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_int8_98.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all_int8.yaml"
-    },
-    "fp32": {
-      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_fp32.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_all.yaml"
-    }
-  },
-  "bert_base_mrpc_attention": {
-    "int8": {
-      "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_int8.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_base_attention_int8.yaml"
-    },
-    "fp32": {
-      "weight": "/tf_dataset2/models/deep-engine/bert_base_mrpc_fp32.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_base_attention.yaml"
+      "weight": "/tf_dataset2/models/deep-engine/inferencer/bert_base_mrpc/fp32.bin",
+      "config": "engine/examples/nlp/bert_base_mrpc/conf_fp32.yaml"
     },
     "seq_len": [128]
   },
-  "bert_large_mlperf_attention": {
+  "bert_large_mlperf": {
     "int8": {
-      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_int8.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_attention_int8.yaml"
+      "weight": "/tf_dataset2/models/deep-engine/inferencer/bert_large_mlperf/int8.bin",
+      "config": "engine/examples/nlp/bert_large_mlperf/conf_int8.yaml",
+      "conf_latency": "engine/examples/nlp/bert_large_mlperf/conf_int8_latency.yaml"
     },
     "fp32": {
-      "weight": "/tf_dataset2/models/deep-engine/mlperf_bert_large_fp32.bin",
-      "config": "deep_engine/examples/execute_bert/conf_bert_mlperf_attention.yaml"
+      "weight": "/tf_dataset2/models/deep-engine/inferencer/bert_large_mlperf/fp32.bin",
+      "config": "engine/examples/nlp/bert_large_mlperf/conf_fp32.yaml"
     },
-    "seq_len": [179,384]
+    "seq_len": [384]
   }
 }

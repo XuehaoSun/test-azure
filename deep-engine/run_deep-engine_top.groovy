@@ -1,6 +1,7 @@
 credential = 'c09d6555-5e41-4b99-bf90-50f518319b49'
 sys_lpot_val_credentialsId = "dcf0dff2-03fb-45b0-9e64-5b4db466bee5"
 
+def autoCancel = false
 // setting node_label
 node_label = "master"
 if ('node_label' in params && params.node_label != '') {
@@ -278,6 +279,11 @@ def updateGithubCommitStatus(String state, String description) {
     } catch (e) {
         println("Could not set status \"${state}\" for ${env.GITHUB_PR_HEAD_SHA} commit.")
         currentBuild.result = "FAILURE"
+        if (e.toString() == "org.jenkinsci.plugins.workflow.steps.FlowInterruptedException" && e.getCauses().size() == 0) {
+            println("Setting autoCancel flag to true.")
+            autoCancel = true
+            println("autoCancel: ${autoCancel}")
+        }
         error(e.toString())
     }
 }
@@ -289,13 +295,13 @@ def createGithubIssueComment(String comment) {
                     "issueNumber=${env.GITHUB_PR_NUMBER}",
                     "comment=${comment}",
             ]) {
-                sh """
+                sh """#!/bin/bash -x
                     curl \
                     -X POST \
                     -H \"Accept: application/vnd.github.v3+json\" \
                     -H \"Authorization: Bearer $LPOT_VAL_GH_TOKEN\" \
                     --proxy child-prc.intel.com:913 \
-                    https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/statuses/${issueNumber}/comments \
+                    https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/issues/${issueNumber}/comments \
                     -d '{\"body\": \"${comment}\"}'
                 """
             }
@@ -303,6 +309,7 @@ def createGithubIssueComment(String comment) {
     } catch (e) {
         println("Could not add comment for PR #${env.GITHUB_PR_NUMBER}")
         currentBuild.result = "FAILURE"
+        println("ERROR\n" + e.toString())
         error(e.toString())
     }
 }
@@ -349,15 +356,18 @@ def unitTestJobs(unit_test_mode) {
 
 def perfJobs() {
     def perf_jobs = [:]
+    def subnode_label = sub_node_label + " && linux";
     List perfParams = [
-            string(name: "node_label", value: "${sub_node_label}"),
-            string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}"),
+            string(name: "node_label", value: "${subnode_label}"),
+            string(name: "deepengine_url", value: "${lpot_url}"),
+            string(name: "deepengine_branch", value: "${lpot_branch}"),
             string(name: "PR_source_branch", value: "${PR_source_branch}"),
             string(name: "PR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "benchmark_config", value: "${benchmark_config}"),
-            string(name: "model_list", value: "${benchmark_model_list}")
+            string(name: "model_list", value: "${benchmark_model_list}"),
+            string(name: "binary_build_job", value: "${binary_build_job}"),
+            string(name: "python_version", value: "${python_version}")
     ]
     perf_jobs["benchmark"] = {
         downstreamJob = build job: "deep-engine-benchmark", propagate: false, parameters: perfParams
@@ -373,8 +383,8 @@ def perfJobs() {
         }
 
         sh '''#!/bin/bash 
-            if [ -f ${WORKSPACE}/benchmark/summary.log ]; then 
-                cat ${WORKSPACE}/benchmark/summary.log >> ${WORKSPACE}/summary.log
+            if [ -f ${WORKSPACE}/benchmark/summary ]; then 
+                cat ${WORKSPACE}/benchmark/summary >> ${WORKSPACE}/summary.log
             fi
         '''
 
@@ -400,10 +410,11 @@ def perfJobs() {
 
 def accJobs() {
     def acc_jobs = [:]
+    def subnode_label = sub_node_label + " && linux";
     List perfParams = [
-            string(name: "node_label", value: "${sub_node_label}"),
-            string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}"),
+            string(name: "node_label", value: "${subnode_label}"),
+            string(name: "deepengine_url", value: "${lpot_url}"),
+            string(name: "deepengine_branch", value: "${lpot_branch}"),
             string(name: "PR_source_branch", value: "${PR_source_branch}"),
             string(name: "PR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
@@ -736,7 +747,7 @@ node( node_label ) {
 
         if (PR_source_branch != ''){
             sh"""#!/bin/bash
-                cd lpot-models
+                cd deep-engine
                 echo "PR_source_branch: "
                 git show-ref -s remotes/origin/${PR_source_branch}
                 echo "PR_target_branch: "
@@ -865,13 +876,16 @@ node( node_label ) {
             }
             if (currentBuild.result == 'FAILURE' || currentBuild.result == 'ABORTED') {
                 echo "pipeline failed"
-                // githubPRComment comment: "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
+                echo "autoCancel: ${autoCancel}"
+                if (PR_source_branch != '' && autoCancel) {
+                    echo "Build was auto cancelled. Skipping sending status and comment to GitHub."
+                    return
+                }
                 updateGithubCommitStatus("failure", "Pipeline failed!")
                 comment = "Pipeline failed! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
                 createGithubIssueComment(comment)
             } else {
                 echo "pipeline success"
-                // githubPRComment comment: "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
                 updateGithubCommitStatus("success", "Pipeline success!")
                 comment = "Pipeline success! [Job-${BUILD_NUMBER}](${BUILD_URL}) [Test Report](${BUILD_URL}artifact/report.html)"
                 createGithubIssueComment(comment)

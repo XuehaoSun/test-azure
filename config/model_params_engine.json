@@ -38,7 +38,7 @@
     },
     "distilbert_base_uncased_sst2": {
       "model_src_dir": "nlp/distilbert_base_uncased_sst2",
-      "dataset_location": "/tf_dataset2/datasets/sst2_data",
+      "dataset_location": "./data",
       "input_model": "/tf_dataset2/models/deep-engine/distilbert_base_uncased_sst2/distilbert_base_uncased_sst2.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
@@ -47,7 +47,7 @@
     },
     "finbert_financial_phrasebank": {
       "model_src_dir": "nlp/finbert_financial_phrasebank",
-      "dataset_location": "/tf_dataset2/datasets/sentences_50agree",
+      "dataset_location": "./data",
       "input_model": "/tf_dataset2/models/deep-engine/finbert_financial_phrasebank/finbert_financial_phrasebank.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",

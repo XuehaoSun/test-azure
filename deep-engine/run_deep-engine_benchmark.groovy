@@ -55,6 +55,18 @@ if ('conda_env' in params && params.conda_env != '') {
 }
 echo "Running ut on ${conda_env}"
 
+binary_build_job=""
+if ('binary_build_job' in params && params.binary_build_job != ''){
+    binary_build_job = params.binary_build_job
+}
+echo "binary_build_job is ${binary_build_job}"
+
+python_version = "3.6"
+if ('python_version' in params && params.python_version != '') {
+    python_version = params.python_version
+}
+echo "Python version: ${python_version}"
+
 def cleanup() {
     try {
         sh '''#!/bin/bash -x
@@ -117,6 +129,34 @@ def download() {
     }
 }
 
+def build_env() {
+    catchError {
+        copyArtifacts(
+                projectName: 'lpot-release-wheel-build',
+                selector: specific("${binary_build_job}"),
+                filter: 'neural_compressor*.whl',
+                fingerprintArtifacts: true,
+                target: "${WORKSPACE}")
+    }
+    timeout(10){
+        sh(returnStatus: true, script: '''#!/bin/bash
+            export PATH=${HOME}/miniconda3/bin/:$PATH
+            if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
+               conda remove --name ${conda_env} --all -y  
+            fi
+            conda_dir=$(dirname $(dirname $(which conda)))
+            if [ -d ${conda_dir}/envs/${conda_env} ]; then
+                rm -rf ${conda_dir}/envs/${conda_env}
+            fi
+            conda create python=${python_version} -y -n ${conda_env}
+            source activate ${conda_env}
+            pip install ${WORKSPACE}/neural_compressor*.whl
+            echo "Print components list after install inc..."
+            pip list
+        ''')
+    }
+}
+
 node(node_label){
     try{
         cleanup()
@@ -126,73 +166,42 @@ node(node_label){
         stage('download') {
             download()
         }
-        stage('build'){
-            timeout(30){
-                echo "+---------------- CMake build ----------------+"
-                build_status = sh(returnStatus: true, script: '''#!/bin/bash
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                        echo "${conda_env} exist!"
-                    else
-                        conda create python=3.7 -y -n ${conda_env}
-                    fi
-                    source activate ${conda_env}
-                    pip install cmake
-
-                    if [ ! -d ${WORKSPACE}/deep-engine ]; then
-                        echo "\\"deep-engine\\" not found. Exiting..."
-                        exit 1
-                    fi
-                    
-                    export PATH=/usr/local/gcc-9.4/bin:$PATH
-                    export LD_LIBRARY_PATH=/usr/local/gcc-9.4/lib64:$LD_LIBRARY_PATH
-                    export CC=/usr/local/gcc-9.4/bin/gcc
-                    export CXX=/usr/local/gcc-9.4/bin/g++
-                    cd ${WORKSPACE}/deep-engine/deep_engine/executor
-                    mkdir build && cd build && cmake .. && make -j 2>&1|tee $WORKSPACE/cmake_build.log
-                ''')
-                if (build_status != 0) {
-                    currentBuild.result = 'FAILURE'
-                    error("CMake build failed!")
-                }
+        stage('Env setup'){
+            retry(3){
+                build_env()
             }
         }
-
         stage('benchmark'){
             model_list_split=model_list.split(',')
             model_list_split.each { each_model ->
-                def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/deep-engine/config/model_list.json"))."${each_model}"
-                precision.split(',').each { each_precision ->
-                    def weight = modelConf."${each_precision}"."weight"
-                    def config = modelConf."${each_precision}"."config"
-                    config="${WORKSPACE}/deep-engine/${config}"
-                    if (each_model == "bert_mlperf_loadgen") {
-
-                        def bs = 1
-                        def ncores_per_instance = 28
-                        timeout(60){
-                            sh"""#!/bin/bash -x
-                            echo "Running ----${each_model}, ${weight}, ${config}, ${ncores_per_instance},${bs}, ${each_precision} ---- Benchmark"
-                            bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_bert_large_loadgen.sh benchmark ${each_model} ${weight} ${config} ${ncores_per_instance} ${bs} ${each_precision}
-                            """
-                        }
-                    }else{
-                        def seq_len = modelConf."seq_len"
-                        seq_len.each { each_seq_len ->
-                            benchmark_config.split(',').each { each_ben_conf ->
-                                def ncores_per_instance = each_ben_conf.split(':')[0]
-                                def bs = each_ben_conf.split(':')[1]
-                                timeout(30){
-                                    sh """#!/bin/bash -x
-                                    echo "Running ----${each_model}, ${each_seq_len}, ${weight}, ${config}, ${ncores_per_instance},${bs},${each_precision} ---- Benchmark"
-                                    
-                                    echo "=======cache clean======="
-                                    sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-                                    echo "========================="
-                                    cd ${WORKSPACE}/deep-engine/deep_engine/executor/build
-                                    bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${each_model} ${each_seq_len} ${ncores_per_instance} ${bs} ${config} ${weight} ${each_precision}
-                                    """
+                def modelConf = jsonParse(readFile("$WORKSPACE/lpot-validation/deep-engine/config/model_list.json"))."${each_model}"
+                def seq_len = modelConf."seq_len"
+                seq_len.each { each_seq_len ->
+                    benchmark_config.split(',').each { each_ben_conf ->
+                        def ncores_per_instance = each_ben_conf.split(':')[0]
+                        def bs = each_ben_conf.split(':')[1]
+                        precision.split(',').each { each_precision ->
+                            def weight = modelConf."${each_precision}"."weight"
+                            def config = modelConf."${each_precision}"."config"
+                            if (bs==1){
+                                if (each_precision=='int8'){
+                                    config = modelConf."${each_precision}"."config_latency"
+                                }else{
+                                    return
                                 }
+                            }
+                            config = "${WORKSPACE}/deep-engine/${config}"
+                            timeout(120) {
+                                sh """#!/bin/bash -x
+                                echo "Running ----${each_model}, ${each_seq_len}, ${weight}, ${config}, ${ncores_per_instance},${bs},${each_precision} ---- Benchmark"
+                                
+                                echo "=======cache clean======="
+                                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+                                echo "========================="
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env}
+                                bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${each_model} ${each_seq_len} ${ncores_per_instance} ${bs} ${config} ${weight} ${each_precision}
+                                """
                             }
                         }
                     }
@@ -201,7 +210,7 @@ node(node_label){
 
             // check benchmark status
             sh'''#!/bin/bash
-                log_file='${WORKSPACE}/summary.log'
+                log_file='${WORKSPACE}/summary'
                 for line in $(grep 'throughput' $log_file)
                 do 
                 echo $line
@@ -220,7 +229,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'summary.log, bert*/**, cmake_build.log', excludes: null
+            archiveArtifacts artifacts: 'summary, bert*/**, cmake_build.log', excludes: null
             fingerprint: true
         }
     }
