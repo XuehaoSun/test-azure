@@ -1918,3 +1918,12 @@ palletsprojects
 finbert
 phrasebank
 WideResNet
+ZFNet
+zfnet
+SavedModel
+GraphModule
+bboxes
+dbox
+dlabel
+dscore
+probs
