@@ -54,6 +54,24 @@
       "batch_size": 8,
       "new_benchmark": true
     },
+    "distilroberta_base_wnli": {
+      "model_src_dir": "nlp/distilroberta_base_wnli",
+      "dataset_location": "./data",
+      "input_model": "/tf_dataset2/models/deep-engine/distilroberta_base_wnli/distilroberta_base_wnli.onnx",
+      "yaml": "bert.yaml",
+      "strategy": "basic",
+      "batch_size": 71,
+      "new_benchmark": true
+    },
+    "paraphrase_xlm_r_multilingual_v1_stsb": {
+      "model_src_dir": "nlp/paraphrase_xlm_r_multilingual_v1_stsb",
+      "dataset_location": "./data",
+      "input_model": "/tf_dataset2/models/deep-engine/paraphrase_xlm_r_multilingual_v1_stsb/paraphrase_xlm_r_multilingual_v1_stsb.onnx",
+      "yaml": "bert.yaml",
+      "strategy": "basic",
+      "batch_size": 8,
+      "new_benchmark": true
+    }
     "roberta_base_mrpc": {
       "model_src_dir": "nlp/roberta_base_mrpc",
       "dataset_location": "./data",
