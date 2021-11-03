@@ -901,6 +901,9 @@ node( sub_node_label ) {
                             if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | wc -l) == 0 ];then
                                 exit 1
                             fi
+                            if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | grep "Not found" | wc -l) == 1 ];then
+                                exit 1
+                            fi
                         '''
                     }
                 }
