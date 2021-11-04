@@ -109,7 +109,7 @@ def download() {
             doGenerateSubmoduleConfigurations: false,
             extensions                       : [
                     [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                    [$class: 'CloneOption', timeout: 10]
+                    [$class: 'CloneOption', timeout: 5]
             ],
             submoduleCfg                     : [],
             userRemoteConfigs                : [

@@ -67,7 +67,7 @@ node(node_label){
                         doGenerateSubmoduleConfigurations: false,
                         extensions                       : [
                                 [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot"],
-                                [$class: 'CloneOption', timeout: 10]
+                                [$class: 'CloneOption', timeout: 5]
                         ],
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
