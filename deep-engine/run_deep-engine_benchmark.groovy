@@ -99,7 +99,7 @@ def download() {
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
                             [$class: 'RelativeTargetDirectory', relativeTargetDir: "deep-engine"],
-                            [$class: 'CloneOption', timeout: 60],
+                            [$class: 'CloneOption', timeout: 10],
                             [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${PR_target_branch}"]]
                     ],
                     submoduleCfg                     : [],
@@ -117,7 +117,7 @@ def download() {
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
                             [$class: 'RelativeTargetDirectory', relativeTargetDir: "deep-engine"],
-                            [$class: 'CloneOption', timeout: 60]
+                            [$class: 'CloneOption', timeout: 10]
                     ],
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [

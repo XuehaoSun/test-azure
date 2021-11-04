@@ -74,7 +74,7 @@ def download() {
                 doGenerateSubmoduleConfigurations: false,
                 extensions                       : [
                         [$class: 'RelativeTargetDirectory', relativeTargetDir: "deep-engine"],
-                        [$class: 'CloneOption', timeout: 60]
+                        [$class: 'CloneOption', timeout: 10]
                 ],
                 submoduleCfg                     : [],
                 userRemoteConfigs                : [

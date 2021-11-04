@@ -164,7 +164,7 @@ def main() {
                 doGenerateSubmoduleConfigurations: false,
                 extensions                       : [
                         [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-lpot"],
-                        [$class: 'CloneOption', timeout: 60]
+                        [$class: 'CloneOption', timeout: 10]
                 ],
                 submoduleCfg                     : [],
                 userRemoteConfigs                : [

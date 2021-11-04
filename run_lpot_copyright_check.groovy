@@ -67,7 +67,7 @@ def download() {
                         doGenerateSubmoduleConfigurations: false,
                         extensions                       : [
                                 [$class: 'RelativeTargetDirectory', relativeTargetDir: "LPOT"],
-                                [$class: 'CloneOption', timeout: 60],
+                                [$class: 'CloneOption', timeout: 10],
                                 [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                         ],
                         submoduleCfg                     : [],
