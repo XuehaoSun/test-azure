@@ -84,7 +84,8 @@ def download() {
             dir('lpot-validation') {
                 checkout scm
             }
-
+        }
+        retry(5) {
             if(MR_source_branch != ''){
                 checkout changelog: true, poll: true, scm: [
                         $class                           : 'GitSCM',
@@ -99,7 +100,7 @@ def download() {
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
                                 [credentialsId: "${credential}",
-                                url          : "${lpot_url}"]
+                                 url          : "${lpot_url}"]
                         ]
                 ]
             }
@@ -116,22 +117,22 @@ def download() {
                         submoduleCfg                     : [],
                         userRemoteConfigs                : [
                                 [credentialsId: "${credential}",
-                                url          : "${lpot_url}"]
+                                 url          : "${lpot_url}"]
                         ]
                 ]
             }
         }
+    }
 
-        retry(3){
-            sh '''#!/bin/bash
-            if [ ! -d ${WORKSPACE}/lpot-models ]; then
-                echo "\\"lpot-models\\" not found. Exiting..."
-                exit 1
-            fi
-            cd ${WORKSPACE}/lpot-models
-            git submodule update --init --recursive
-            '''
-        }
+    retry(3){
+        sh '''#!/bin/bash
+        if [ ! -d ${WORKSPACE}/lpot-models ]; then
+            echo "\\"lpot-models\\" not found. Exiting..."
+            exit 1
+        fi
+        cd ${WORKSPACE}/lpot-models
+        git submodule update --init --recursive
+        '''
     }
 }
 

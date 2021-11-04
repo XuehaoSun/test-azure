@@ -72,7 +72,8 @@ def download() {
             dir('lpot-validation') {
                 checkout scm
             }
-
+        }
+        retry(5){
             if(MR_source_branch != ''){
                 checkout changelog: true, poll: true, scm: [
                         $class                           : 'GitSCM',
