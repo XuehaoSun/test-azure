@@ -1929,3 +1929,8 @@ dlabel
 dscore
 probs
 stsb
+AMX
+DNNL
+ISA
+Preload
+libiomp
