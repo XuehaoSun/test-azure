@@ -71,7 +71,7 @@
       "strategy": "basic",
       "batch_size": 8,
       "new_benchmark": true
-    }
+    },
     "roberta_base_mrpc": {
       "model_src_dir": "nlp/roberta_base_mrpc",
       "dataset_location": "./data",
