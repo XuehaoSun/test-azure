@@ -206,6 +206,15 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": true
+    },
+    "zfnet": {
+      "model_src_dir": "onnx_model_zoo/zfnet",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset2/models/onnx/zfnet/zfnet512-12.onnx",
+      "yaml": "zfnet512.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
     }
   }
 }
