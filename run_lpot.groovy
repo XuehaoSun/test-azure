@@ -138,6 +138,7 @@ if (params.collect_tuned_model != null){
 echo "collect_tuned_model = ${collect_tuned_model}"
 
 torchvision_versions = [
+        "1.10.0": "0.11.0",
         "1.9.0": "0.10.0",
         "1.8.0": "0.9.0",
         "1.7.0": "0.8.0",
@@ -816,6 +817,11 @@ node( sub_node_label ) {
                     }
                     label=model.split('_')
                     if(label[-1] == 'fx' && framework_version == '1.5.0+cpu'){
+                        framework_version = '1.8.0+cpu'
+                        torchvision_version='0.9.0+cpu'
+                        conda_env_name="${framework}-${framework_version}-${python_version}"
+                    }
+                    if(model == "bert_base_MRPC_qat"){
                         framework_version = '1.8.0+cpu'
                         torchvision_version='0.9.0+cpu'
                         conda_env_name="${framework}-${framework_version}-${python_version}"

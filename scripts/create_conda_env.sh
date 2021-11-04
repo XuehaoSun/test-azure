@@ -144,6 +144,8 @@ if [[ "${install_ipex}" == "true" ]]; then
             esac;;
         1.9.0*)
             install_params="torch_ipex==1.9.0 -f https://software.intel.com/ipex-whl-stable";;
+        1.10.0*)
+            echo "not ready for torch_ipex 1.10.0"
     esac
     if [[ ! -z ${install_params} ]]; then
         pip install ${install_params}
