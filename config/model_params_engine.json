@@ -69,7 +69,7 @@
       "input_model": "/tf_dataset2/models/deep-engine/paraphrase_xlm_r_multilingual_v1_stsb/paraphrase_xlm_r_multilingual_v1_stsb.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
-      "batch_size": 8,
+      "batch_size": 4,
       "new_benchmark": true
     },
     "roberta_base_mrpc": {
