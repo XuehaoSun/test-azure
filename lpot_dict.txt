@@ -1934,3 +1934,6 @@ DNNL
 ISA
 Preload
 libiomp
+CMake
+PyObject
+libGL
