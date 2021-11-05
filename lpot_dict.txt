@@ -1937,3 +1937,7 @@ libiomp
 CMake
 PyObject
 libGL
+ROC
+ailab
+kaggleAdDisplayChallenge
+ressources
