@@ -100,6 +100,7 @@ elif [[ "${tensorflow_version}" == "customized"* ]]; then
 elif [[ "${tensorflow_version}" == '2.6.0' ]]; then
     pip install intel-tensorflow==${tensorflow_version}
     pip install tensorflow-estimator==2.6.0
+    pip install keras==2.6.0
 elif [[ "${tensorflow_version}" != "" ]]; then
     pip install intel-tensorflow==${tensorflow_version}
 else
