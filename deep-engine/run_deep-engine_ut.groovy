@@ -182,7 +182,7 @@ def run_pytest_with_coverage_count(repo_name){
         export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/deep-engine/.coveragerc
         cat ${COVERAGE_RCFILE}
         
-        engine_path=$(python -c 'import engine.converter as engine; import os; print(os.path.dirname(engine.__file__))')
+        engine_path=$(python -c 'import engine.compile as engine; import os; print(os.path.dirname(engine.__file__))')
         find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${engine_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
         coverage erase
         bash run.sh 2>&1 | tee ${ut_log_name}
