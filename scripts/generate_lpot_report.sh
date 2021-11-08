@@ -7,7 +7,8 @@
 # tuneLogLast=tuning_info.log
 # overview_log=summary_overview.log
 # coverage_summary=coverage_summary.log
-# code_lines_summary=code_lines_summary.csv
+# nc_code_lines_summary=nc_code_lines_summary.csv
+# engine_code_lines_summary=engine_code_lines_summary.csv
 
 lines_coverage_threshold=80
 branches_coverage_threshold=75
@@ -37,7 +38,7 @@ function createOverview {
     if [ ! -f "${overview_log}" ] || [ $(wc -l ${overview_log} | awk '{ print $1 }') -le 1 ]; then
         return 0
     fi
-    
+
 
     jenkins_job_url="https://inteltf-jenk.sh.intel.com/job/"
 
@@ -170,7 +171,7 @@ function createCoverageOverview {
     branches_coverage=($(grep 'branches_coverage' ${coverage_summary} |sed 's/,/ /g'))
 
     echo """
-        <h2>Code Coverage</h2> 
+        <h2>Code Coverage</h2>
         <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;empty-cells: hide\">
         <tr>
             <th></th>
@@ -217,14 +218,15 @@ function createCoverageOverview {
 }
 
 function createCodeLinesOverview {
+    code_lines_summary=$1
+    module_name=$2
     echo "Generating code lines overview."
     if [ ! -f "${code_lines_summary}" ] || [ $(wc -l ${code_lines_summary} | awk '{ print $1 }') -le 1 ]; then
         return 0
     fi
-    code_lines=($(grep 'Python' ${code_lines_summary} |sed 's/,/ /g'))
 
     echo """
-        <h2>Code Lines</h2> 
+        <h2>${module_name} Code Lines</h2>
         <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;empty-cells: hide\">
         <tr>
             <th>Language</th>
@@ -233,15 +235,23 @@ function createCodeLinesOverview {
             <th>Comment lines</th>
             <th>Code lines</th>
         </tr>
-        <tr>
-            <td>${code_lines[1]}</td>
-            <td>${code_lines[0]}</td>
-            <td>${code_lines[2]}</td>
-            <td>${code_lines[3]}</td>
-            <td>${code_lines[4]}</td>
-        </tr>
-        </table>
     """ >> ${WORKSPACE}/report.html
+
+
+
+    cat ${code_lines_summary} | tail -n +2 | while IFS=, read -r files language blank comment code; do
+        echo """
+        <tr>
+            <td>${language}</td>
+            <td>${files}</td>
+            <td>${blank}</td>
+            <td>${comment}</td>
+            <td>${code}</td>
+        </tr>
+    """ >> ${WORKSPACE}/report.html
+    done
+
+    echo "</table>" >> ${WORKSPACE}/report.html
 }
 
 function createFeatureTestsOverview {
@@ -301,7 +311,7 @@ function generate_inference {
             fp32_acc_bs = "nan";
             fp32_acc_value = "nan";
             fp32_acc_url = "nan";
-            
+
             int8_ms_bs = "nan";
             int8_ms_value = "nan";
             int8_ms_url = "nan";
@@ -334,7 +344,7 @@ function generate_inference {
                         fp32_acc_url = $11;
                     }
                 }
-                
+
                 // INT8
                 if($5 == "INT8") {
                     // Latency
@@ -450,9 +460,9 @@ function generate_html_core {
                 printf("<td rowspan=3></td>");
             }
         }
-        
+
         function compare_result(a,b,c) {
-                
+
             if(a ~/[1-9]/ && b ~/[1-9]/) {
                 if(c == "acc") {
                     target = a - b;
@@ -516,12 +526,12 @@ function generate_html_core {
             show_new_last(current_value[7],current_value[16],current_value[8],"ms");
             show_new_last(current_value[9],current_value[17],current_value[10],"fps");
             show_new_last(current_value[11],current_value[18],current_value[12],"acc");
-            
+
             // Compare Current
             compare_current(current_value[8],current_value[2],"ms");
             compare_current(current_value[4],current_value[10],"fps");
             compare_current(current_value[6],current_value[12],"acc");
-            
+
             // Last values
             split(last_values,last_value,";");
 
@@ -539,7 +549,7 @@ function generate_html_core {
             show_new_last(last_value[9],last_value[17],last_value[10],"fps");
             show_new_last(last_value[11],last_value[18],last_value[12],"acc");
             printf("</tr>")
-            
+
             // current vs last
             printf("</tr>\n<tr><td>New/Last</td><td colspan=4>Mem Peak:%s</td>", pb_size_[3]);
 
@@ -550,14 +560,14 @@ function generate_html_core {
             compare_result(current_value[10],last_value[10],"fps");
             compare_result(current_value[12],last_value[12],"acc");
             printf("</tr>\n");
-          
+
         }
     ' >> ${WORKSPACE}/report.html
 }
 
 function generate_results {
     oses=$(sed '1d' ${summaryLog} |cut -d';' -f1 | awk '!a[$0]++')
-    
+
     for os in ${oses[@]}
     do
         platforms=$(sed '1d' ${summaryLog} |grep "^${os}" |cut -d';' -f2 | awk '!a[$0]++')
@@ -599,33 +609,34 @@ cat >> ${WORKSPACE}/report.html << eof
 
 <body>
     <div id="main">
-	    <h1 align="center">Neural Compressor Tuning Tests ${MR_TITLE}
+        <h1 align="center">Neural Compressor Tuning Tests ${MR_TITLE}
         [ <a href="${RUN_DISPLAY_URL}">Job-${BUILD_NUMBER}</a> ]</h1>
 
         <h2>Summary</h2>
-	    <table class="features-table">
-	        <tr>
+        <table class="features-table">
+            <tr>
               <th>Python</th>
               <th>Repo</th>
               ${Test_Info_Title}
-		      </tr>
-		      <tr>
-			        <td>${python_version}</td>
-			        <td><a href="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot">neural-compressor</a></td>
+              </tr>
+              <tr>
+                    <td>${python_version}</td>
+                    <td><a href="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot">neural-compressor</a></td>
               ${Test_Info}
-			    </tr>
-	    </table>
+                </tr>
+        </table>
 eof
 
 createOverview
 createCoverageOverview
-createCodeLinesOverview
+createCodeLinesOverview ${nc_code_lines_summary} "Neural Compressor"
+createCodeLinesOverview ${engine_code_lines_summary} "Deep Engine"
 createFeatureTestsOverview
 
 echo "Generating benchmarks table"
 cat >> ${WORKSPACE}/report.html << eof
-	    <h2>Benchmark</h2>
-		  <table class="features-table">
+        <h2>Benchmark</h2>
+          <table class="features-table">
             <tr>
                 <th rowspan="2">Platform</th>
                 <th rowspan="2">System</th>
@@ -637,11 +648,11 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
                 <th rowspan="2">Models Size<br>FP32/INT8</th>
-			          <th colspan="6">INT8</th>
-			          <th colspan="6">FP32</th>
-			          <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
-		        </tr>
-		        <tr>
+                      <th colspan="6">INT8</th>
+                      <th colspan="6">FP32</th>
+                      <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
+                </tr>
+                <tr>
                 <th>bs</th>
                 <th>ms</th>
                 <th>bs</th>
@@ -657,19 +668,19 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th class="col-cell col-cell1">Latency<br><font size="2px">FP32/INT8>=1.5</font></th>
                 <th class="col-cell col-cell1">Throughput<br><font size="2px">INT8/FP32>=2</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
-		        </tr>
+                </tr>
 eof
 }
 
 function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
-		    <tr>
-			    <td colspan="22"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
-			    <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
-		    </tr>
-	    </table>
-	</div>
+            <tr>
+                <td colspan="22"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+                <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>
 eof
@@ -682,27 +693,27 @@ cat > ${WORKSPACE}/report.html << eof
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">  
-    <title>Daily Tests - TensorFlow - Jenkins</title> 
-    <style type="text/css">    
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>Daily Tests - TensorFlow - Jenkins</title>
+    <style type="text/css">
         body
         {
-	        margin: 0;
-	        padding: 0;
-	        background: white no-repeat left top;
+            margin: 0;
+            padding: 0;
+            background: white no-repeat left top;
             min-width: 1920px;
         }
         #main
         {
-	        // width: 100%;
-	        margin: 20px auto 10px auto;
-	        background: white;
-	        -moz-border-radius: 8px;
-	        -webkit-border-radius: 8px;
-	        padding: 0 30px 30px 30px;
-	        border: 1px solid #adaa9f;
-	        -moz-box-shadow: 0 2px 2px #9c9c9c;
-	        -webkit-box-shadow: 0 2px 2px #9c9c9c;
+            // width: 100%;
+            margin: 20px auto 10px auto;
+            background: white;
+            -moz-border-radius: 8px;
+            -webkit-border-radius: 8px;
+            padding: 0 30px 30px 30px;
+            border: 1px solid #adaa9f;
+            -moz-box-shadow: 0 2px 2px #9c9c9c;
+            -webkit-box-shadow: 0 2px 2px #9c9c9c;
         }
         .features-table
         {
@@ -712,9 +723,9 @@ cat > ${WORKSPACE}/report.html << eof
           border-spacing: 0;
           text-shadow: 0 1px 0 #fff;
           color: #2a2a2a;
-          background: #fafafa;  
+          background: #fafafa;
           background-image: -moz-linear-gradient(top, #fff, #eaeaea, #fff); /* Firefox 3.6 */
-          background-image: -webkit-gradient(linear,center bottom,center top,from(#fff),color-stop(0.5, #eaeaea),to(#fff)); 
+          background-image: -webkit-gradient(linear,center bottom,center top,from(#fff),color-stop(0.5, #eaeaea),to(#fff));
           font-family: Verdana,Arial,Helvetica
         }
         .features-table th,td
@@ -733,13 +744,13 @@ cat > ${WORKSPACE}/report.html << eof
         {
           box-shadow: none;
           -moz-box-shadow: none;
-          -webkit-box-shadow: none;     
+          -webkit-box-shadow: none;
         }
         .col-cell
         {
           text-align: center;
           width: 150px;
-          font: normal 1em Verdana, Arial, Helvetica;  
+          font: normal 1em Verdana, Arial, Helvetica;
         }
         .col-cell3
         {
@@ -748,23 +759,23 @@ cat > ${WORKSPACE}/report.html << eof
         }
         .col-cell1, .col-cell2
         {
-          background: #B0C4DE;  
+          background: #B0C4DE;
           background: rgba(176,196,222,0.3);
         }
         .col-cellh
         {
-          font: bold 1.3em 'trebuchet MS', 'Lucida Sans', Arial;  
+          font: bold 1.3em 'trebuchet MS', 'Lucida Sans', Arial;
           -moz-border-radius-topright: 10px;
-          -moz-border-radius-topleft: 10px; 
+          -moz-border-radius-topleft: 10px;
           border-top-right-radius: 10px;
           border-top-left-radius: 10px;
-          border-top: 1px solid #eaeaea !important; 
+          border-top: 1px solid #eaeaea !important;
         }
         .col-cellf
         {
-          font: bold 1.4em Georgia;   
+          font: bold 1.4em Georgia;
           -moz-border-radius-bottomright: 10px;
-          -moz-border-radius-bottomleft: 10px; 
+          -moz-border-radius-bottomleft: 10px;
           border-bottom-right-radius: 10px;
           border-bottom-left-radius: 10px;
           border-bottom: 1px solid #dadada !important;

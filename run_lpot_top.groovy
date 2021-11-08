@@ -1058,7 +1058,8 @@ def generateReport() {
             "ghprbPullId=${ghprbPullId}",
             "MR_source_branch=${PR_source_branch}",
             "MR_target_branch=${PR_target_branch}",
-            "code_lines_summary=${WORKSPACE}/format_scan/code_lines_summary.csv"
+            "nc_code_lines_summary=${WORKSPACE}/format_scan/nc_code_lines_summary.csv",
+            "engine_code_lines_summary=${WORKSPACE}/format_scan/engine_code_lines_summary.csv"
 
         ]) {
             sh '''

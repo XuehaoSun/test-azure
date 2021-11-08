@@ -111,7 +111,7 @@ run_pyspelling() {
 }
 
 run_cloc() {
-    cloc --include-lang=Python --csv --out=${WORKSPACE}/code_lines_summary.csv ${REPO_DIR}/neural_compressor
+    cloc --include-lang=Python,C++ --csv --out=${WORKSPACE}/engine_code_lines_summary.csv ${REPO_DIR}/neural_compressor
 }
 
 main
