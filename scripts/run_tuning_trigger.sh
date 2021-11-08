@@ -249,7 +249,7 @@ main() {
     fi
 
     if [ "${framework}" == "tensorflow" ]; then
-        new_config_dirs=("image_recognition" "object_detection" "nlp/bert" "semantic_image_segmentation" "keras")
+        new_config_dirs=("image_recognition" "object_detection" "nlp/bert" "semantic_image_segmentation" "keras" "SavedModel")
         for model_dir in ${new_config_dirs[*]}; do
             if [[ "${model_src_dir}" == *"${model_dir}"* ]]; then
                 parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
@@ -359,7 +359,7 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
                 sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
             fi
-            if [ "${model}" == "efficientnet_b0" ]; then
+            if [[ "${model}" == "efficientnet_b0" ]] || [[ "${model}" == "efficientnet_v2_b0" ]]; then
                 echo "Updating imagenet dataset in ${yaml} yaml"
                 sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}
                 sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: $dataset_location|g" ${yaml}

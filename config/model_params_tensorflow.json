@@ -324,6 +324,24 @@
       "batch_size": 100,
       "new_benchmark": true
     },
+    "mobilenetv1_saved": {
+      "model_src_dir": "SavedModel",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/tensorflow/saved_model/mobilenet_v1",
+      "yaml": "mobilenet_v1.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": true
+    },
+    "mobilenetv2_saved": {
+      "model_src_dir": "SavedModel",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset/tensorflow/saved_model/mobilenet_v2",
+      "yaml": "mobilenet_v2.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": true
+    },
     "nasnet_mobile": {
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
@@ -338,6 +356,15 @@
       "dataset_location": "/tf_dataset/pytorch/ImageNet/raw_images",
       "input_model": "/tf_dataset/pre-trained-models/efficientnet-b0",
       "yaml": "efficientnet-b0.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": true
+    },
+    "efficientnet_v2_b0": {
+      "model_src_dir": "SavedModel",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset/tensorflow/saved_model/efficientnet_v2",
+      "yaml": "efficientnet_v2_b0.yaml",
       "strategy": "basic",
       "batch_size": 100,
       "new_benchmark": true
