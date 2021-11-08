@@ -162,6 +162,24 @@
       "batch_size": 100,
       "new_benchmark": true
     },
+    "vgg16_keras": {
+      "model_src_dir": "keras/vgg16",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset2/models/tensorflow/vgg16_keras/vgg16",
+      "yaml": "vgg16.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": true
+    },
+    "vgg16_keras_h5": {
+      "model_src_dir": "keras/vgg16",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset2/models/tensorflow/vgg16_keras/vgg16.h5",
+      "yaml": "vgg16.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": true
+    },
     "vgg19": {
       "model_src_dir": "image_recognition",
       "dataset_location": "/tf_dataset/dataset/imagenet",
@@ -176,6 +194,24 @@
       "dataset_location": "/tf_dataset/dataset/imagenet",
       "input_model": "/tf_dataset/tensorflow/slim/vgg_19.ckpt",
       "yaml": "../vgg19.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": true
+    },
+    "vgg19_keras": {
+      "model_src_dir": "keras/vgg19",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset2/models/tensorflow/vgg19_keras/vgg19",
+      "yaml": "vgg19.yaml",
+      "strategy": "basic",
+      "batch_size": 100,
+      "new_benchmark": true
+    },
+    "vgg19_keras_h5": {
+      "model_src_dir": "keras/vgg19",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset2/models/tensorflow/vgg19_keras/vgg19.h5",
+      "yaml": "vgg19.yaml",
       "strategy": "basic",
       "batch_size": 100,
       "new_benchmark": true
@@ -1810,10 +1846,28 @@
       "new_benchmark": false
     },
     "resnet50_fashion": {
-      "model_src_dir": "keras",
+      "model_src_dir": "keras/resnet50_fashion",
       "dataset_location": "/tf_dataset2/datasets/mnist/FashionMNIST",
       "input_model": "/tf_dataset2/models/tensorflow/resnet50_fashion",
       "yaml": "resnet50_fashion.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
+    "resnet50_keras": {
+      "model_src_dir": "keras/resnet50",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset2/models/tensorflow/resnet50_keras/resnet50",
+      "yaml": "resnet50.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
+    "resnet50_keras_h5": {
+      "model_src_dir": "keras/resnet50",
+      "dataset_location": "/tf_dataset/dataset/imagenet",
+      "input_model": "/tf_dataset2/models/tensorflow/resnet50_keras/resnet50.h5",
+      "yaml": "resnet50.yaml",
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": true

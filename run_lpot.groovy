@@ -924,12 +924,17 @@ node( sub_node_label ) {
                 println("==========nightly benchmark========")
                 timeout(720) {
                     stage("Performance") {
+                        tf_perf_only_list = ['style_transfer', 'yolo_v3',
+                                             'vgg16_keras', 'vgg16_keras_h5',
+                                             'vgg19_keras', 'vgg19_keras_h5',
+                                             'resnet50_keras', 'resnet50_keras_h5',
+                                             'mobilenetv1_saved', 'mobilenetv2_saved',
+                                             'efficientnet_v2_b0']
                         precision_list.each { precision ->
                             echo "precision is ${precision}"
                             // oob only support dummy data
                             if ((model_src_dir=~'oob_models').find()
-                                 || model == 'style_transfer'
-                                    || (framework == "tensorflow" && model == "yolo_v3")) {
+                                 || (framework == "tensorflow" && tf_perf_only_list.contains(model))) {
                                 mode_list = mode_list - 'accuracy'
                                 echo "mode list is ${mode_list}"
                             }
