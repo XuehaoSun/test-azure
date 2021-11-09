@@ -80,6 +80,24 @@
       "strategy": "basic",
       "batch_size": 8,
       "new_benchmark": true
+    },
+    "distilbert_base_uncased_emotion": {
+      "model_src_dir": "nlp/distilbert_base_uncased_emotion",
+      "dataset_location": "./data",
+      "input_model": "/tf_dataset2/models/deep-engine/distilbert_base_uncased_emotion/distilbert_base_uncased_emotion.onnx",
+      "yaml": "bert.yaml",
+      "strategy": "basic",
+      "batch_size": 8,
+      "new_benchmark": true
+    },
+    "roberta_large_cola": {
+      "model_src_dir": "nlp/cola/roberta_large",
+      "dataset_location": "./data",
+      "input_model": "/tf_dataset2/models/deep-engine/roberta_large_cola/roberta_large_cola.onnx",
+      "yaml": "bert.yaml",
+      "strategy": "basic",
+      "batch_size": 7,
+      "new_benchmark": true
     }
   }
 }
