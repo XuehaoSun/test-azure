@@ -47,6 +47,11 @@ function set_TF_env {
         export TF_ENABLE_MKL_NATIVE_FORMAT=0
         echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
     fi
+    if [[ "${tf_version}" = "2.6.1" ]] || [[ "${tf_version}" = "2.6.2" ]]; then
+        # default use block format
+        export TF_ENABLE_ONEDNN_OPTS=1
+        echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+    fi
 }
 
 function set_MXNet_env {
