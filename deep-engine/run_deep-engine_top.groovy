@@ -149,7 +149,7 @@ if ('inc_mode' in params && params.inc_mode != '') {
 }
 echo "inc_mode: ${inc_mode}"
 
-test_mode = 'engine'
+test_mode = 'nightly'
 if ('test_mode' in params && params.test_mode != ''){
     test_mode = params.test_mode
 }
@@ -634,7 +634,12 @@ def collectUTLog() {
 def generateReport() {
     if(refer_build != 'x0') {
         catchError {
-            def refer_job_name = currentBuild.projectName
+            def refer_job_name
+            if(test_mode == "extension"){
+                refer_job_name="intel-deep-engine-validation-top-nightly"
+            }else{
+                refer_job_name=currentBuild.projectName
+            }
             copyArtifacts(
                     projectName: refer_job_name,
                     selector: specific("${refer_build}"),
