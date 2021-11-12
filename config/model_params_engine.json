@@ -38,7 +38,7 @@
     },
     "distilbert_base_uncased_sst2": {
       "model_src_dir": "nlp/sst2/distilbert_base_uncased",
-      "dataset_location": "./data",
+      "dataset_location": "/tf_dataset2/datasets/sst2_data",
       "input_model": "/tf_dataset2/models/deep-engine/distilbert_base_uncased_sst2/distilbert_base_uncased_sst2.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
@@ -47,7 +47,7 @@
     },
     "finbert_financial_phrasebank": {
       "model_src_dir": "nlp/financial_phrasebank/finbert",
-      "dataset_location": "./data",
+      "dataset_location": "/tf_dataset2/datasets/financial_phrasebank_data",
       "input_model": "/tf_dataset2/models/deep-engine/finbert_financial_phrasebank/finbert_financial_phrasebank.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
@@ -56,7 +56,7 @@
     },
     "distilroberta_base_wnli": {
       "model_src_dir": "nlp/wnli/distilroberta_base",
-      "dataset_location": "./data",
+      "dataset_location": "/tf_dataset2/datasets/wnli_data",
       "input_model": "/tf_dataset2/models/deep-engine/distilroberta_base_wnli/distilroberta_base_wnli.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
@@ -65,7 +65,7 @@
     },
     "paraphrase_xlm_r_multilingual_v1_stsb": {
       "model_src_dir": "nlp/stsb/paraphrase_xlm_r_multilingual_v1",
-      "dataset_location": "./data",
+      "dataset_location": "/tf_dataset2/datasets/stsb_data",
       "input_model": "/tf_dataset2/models/deep-engine/paraphrase_xlm_r_multilingual_v1_stsb/paraphrase_xlm_r_multilingual_v1_stsb.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
@@ -74,7 +74,7 @@
     },
     "roberta_base_mrpc": {
       "model_src_dir": "nlp/mrpc/roberta_base",
-      "dataset_location": "./data",
+      "dataset_location": "/tf_dataset2/datasets/mrpc_data",
       "input_model": "/tf_dataset2/models/deep-engine/roberta_base_mrpc/roberta_base_mrpc.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
@@ -83,7 +83,7 @@
     },
     "distilbert_base_uncased_emotion": {
       "model_src_dir": "nlp/emotion/distilbert_base_uncased",
-      "dataset_location": "./data",
+      "dataset_location": "/tf_dataset2/datasets/emotion_data",
       "input_model": "/tf_dataset2/models/deep-engine/distilbert_base_uncased_emotion/distilbert_base_uncased_emotion.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
@@ -92,7 +92,7 @@
     },
     "roberta_large_cola": {
       "model_src_dir": "nlp/cola/roberta_large",
-      "dataset_location": "./data",
+      "dataset_location": "/tf_dataset2/datasets/cola_data",
       "input_model": "/tf_dataset2/models/deep-engine/roberta_large_cola/roberta_large_cola.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",

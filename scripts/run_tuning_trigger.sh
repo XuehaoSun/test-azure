@@ -281,7 +281,9 @@ main() {
     fi
 
     if [ "${framework}" == "engine" ]; then
-        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --dataset_location=${dataset_location}"
+        copy_dataset
+        tokenizer_dir=$(dirname ${input_model})
+        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --dataset_location=${dataset_location} --tokenizer_dir=${tokenizer_dir}/test_tokenizer"
     fi
 
     update_yaml_config
@@ -425,6 +427,13 @@ function copy_model {
     local_model="${WORKSPACE}/${model_name}"
     cp -r "${input_model}" "${local_model}"
     input_model=${local_model}
+}
+
+function copy_dataset {
+    echo "Copying dataset to workspace."
+    local_dataset="${WORKSPACE}/data"
+    cp -r "${dataset_location}" "${local_dataset}"
+    dataset_location=${local_dataset}
 }
 
 function setup_install_pypi_source {
