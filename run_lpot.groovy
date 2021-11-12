@@ -447,7 +447,11 @@ def getReferenceData() {
             def refer_job_name = "${JOB_NAME}"
 
             if (test_mode == "extension") {
-                refer_job_name="intel-lpot-validation-top-nightly"
+                if (framework=="engine"){
+                    refer_job_name="intel-deep-engine-validation-top-nightly"
+                }else{
+                    refer_job_name="intel-lpot-validation-top-nightly"
+                }
             } else {
                 if (upstreamJobName) {
                     refer_job_name = upstreamJobName
