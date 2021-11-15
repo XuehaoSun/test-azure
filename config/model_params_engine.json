@@ -98,6 +98,15 @@
       "strategy": "basic",
       "batch_size": 7,
       "new_benchmark": true
+    },
+    "dlrm": {
+      "model_src_dir": "recommendation/DLRM",
+      "dataset_location": "/tf_dataset2/datasets/dlrm_data",
+      "input_model": "/tf_dataset2/models/deep-engine/dlrm/dlrm_s_pytorch.onnx",
+      "yaml": "conf.yaml",
+      "strategy": "basic",
+      "batch_size": 32,
+      "new_benchmark": true
     }
   }
 }
