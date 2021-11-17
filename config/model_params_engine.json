@@ -74,7 +74,7 @@
     },
     "roberta_base_mrpc": {
       "model_src_dir": "nlp/mrpc/roberta_base",
-      "dataset_location": "/tf_dataset2/datasets/mrpc_data",
+      "dataset_location": "/tf_dataset2/models/deep-engine/roberta_base_mrpc/data",
       "input_model": "/tf_dataset2/models/deep-engine/roberta_base_mrpc/roberta_base_mrpc.onnx",
       "yaml": "bert.yaml",
       "strategy": "basic",
