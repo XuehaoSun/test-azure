@@ -450,7 +450,7 @@ def getReferenceData() {
                 if (framework=="engine"){
                     refer_job_name="intel-deep-engine-validation-top-nightly"
                 }else{
-                    refer_job_name="intel-lpot-validation-top-nightly"
+                    refer_job_name="intel-lpot-validation-top-weekly"
                 }
             } else {
                 if (upstreamJobName) {

@@ -1023,7 +1023,7 @@ def generateReport() {
     if(refer_build != 'x0') {
         def refer_job_name
         if(test_mode == "extension"){
-            refer_job_name="intel-lpot-validation-top-nightly"
+            refer_job_name="intel-lpot-validation-top-weekly"
         }else{
             refer_job_name=currentBuild.projectName
         }
