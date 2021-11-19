@@ -11,13 +11,7 @@ function main {
 
     # Run Pytorch Prune test
     cd ${WORKSPACE}/lpot-models/examples/pytorch/eager/image_recognition/imagenet/cpu/prune
-
-    # Temporary workaround for config - can be removed inf config will be fixed in LPOT repository
-    config_path=${WORKSPACE}/lpot-models/examples/pytorch/eager/image_recognition/imagenet/cpu/prune/conf.yaml
-    sed -i "/\/path\/to\/imagenet\/train/s|root:.*|root: \/tf_dataset\/pytorch\/ImageNet\/raw\/train|g" ${config_path}
-    sed -i "/\/path\/to\/imagenet\/val/s|root:.*|root: \/tf_dataset\/pytorch\/ImageNet\/raw\/val|g" ${config_path}
-
-    python main.py --prune --config ${config_path} --pretrained --output-model=./model_prune 2>&1 | tee ${WORKSPACE}/pytorch_prune_resnet.log
+    python main.py /tf_dataset/pytorch/ImageNet/raw --topology resnet18 --prune --config conf.yaml --pretrained --output-model model_final.pth --batch-size 256 --keep-batch-size --lr 0.001 --iteration 30 --epochs 3 2>&1 | tee ${WORKSPACE}/pytorch_prune_resnet.log
 
 }
 
