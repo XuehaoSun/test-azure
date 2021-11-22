@@ -83,7 +83,8 @@ main() {
         if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
             # Install nnUnet
             cd nnUnet
-            setup_install_pypi_source
+            #setup_install_pypi_source
+            pip install pywavelets
             python setup.py install
             cd ..
             # Workaround for problem with passing dataset location
