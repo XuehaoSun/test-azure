@@ -6,6 +6,22 @@ def Exception(String step, def e) {
 }
 
 
+def cleanup() {
+    try {
+        stage("Cleanup") {
+            dir(WORKSPACE) {
+                sh """
+                    sudo rm -rf *
+                    sudo rm -rf .git
+                """
+            }
+        }
+    } catch(e) {
+        Exception("Cleanup", e)
+        throw e
+    }
+}
+
 def getConfigurationsTree() {
     try {
         stage("Get configurations tree") {
@@ -153,6 +169,7 @@ def archiveArtifacts() {
 
 def main() {
     try {
+        cleanup()
         configurationsTree = getConfigurationsTree()
         def jobsList = getJobsList(configurationsTree)
         runJobs(jobsList)
