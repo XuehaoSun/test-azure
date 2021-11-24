@@ -66,82 +66,79 @@ main() {
     if [ "${model}" == "helloworld_keras" ]; then
         model_src_dir="${WORKSPACE}/lpot-models/examples/helloworld"
     fi
-    
+
+    echo -e "\nInstalling model requirements..."
     if [ -d ${model_src_dir} ]; then
         cd ${model_src_dir}
         echo -e "\nWorking in $(pwd)..."
-        if [[ "${model_src_dir}" == *"pytorch/eager/language_translation/ptq" ]]; then
-            setup_install_pypi_source
-            python setup.py install
-        fi
-        if [[ "${model_src_dir}" == *"/huggingface_models" ]]; then
-            setup_install_pypi_source
-            python setup.py install
-            pip install git-python
-            bash install_requirements.sh --topology=${model}
-        fi
-        if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
-            # Install nnUnet
-            cd nnUnet
-            #setup_install_pypi_source
-            pip install pywavelets
-            python setup.py install
-            cd ..
-            # Workaround for problem with passing dataset location
-            mkdir ${model_src_dir}/build
-            for dirname in `ls ${dataset_location}`
+        if [ -f "requirements.txt" ]; then
+            sed -i '/neural-compressor/d' requirements.txt
+            if [ "${framework}" == "onnxrt" ]; then
+              sed -i '/onnx/d;/onnxruntime/d' requirements.txt
+            fi
+            if [ "${framework}" == "tensorflow" ]; then
+              sed -i '/tensorflow==/d;/tensorflow$/d' requirements.txt
+            fi
+            if [ "${framework}" == "mxnet" ]; then
+              sed -i '/mxnet==/d;/mxnet$/d;/mxnet-mkl==/d;/mxnet-mkl$/d' requirements.txt
+            fi
+            if [ "${framework}" == "pytorch" ]; then
+              sed -i '/torch==/d;/torch$/d;/torchvision==/d;/torchvision$/d' requirements.txt
+            fi
+            n=0
+            until [ "$n" -ge 5 ]
             do
-                ln -s ${dataset_location}/${dirname} ${model_src_dir}/build/${dirname}
+                python -m pip install -r requirements.txt && break
+                n=$((n+1))
+                sleep 5
             done
-            mkdir ${model_src_dir}/build/postprocessed_data
-            mkdir ${model_src_dir}/build/logs
-            dataset_location=${model_src_dir}/build/preprocessed_data
-
-            # Export variables required for nnUnet
-            export nnUNet_raw_data_base=${model_src_dir}/build/raw_data
-            export nnUNet_preprocessed=${dataset_location}
-            export RESULTS_FOLDER=${model_src_dir}/build/result
-        fi
-        if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "maskrcnn"* ]]; then
-            echo "Checking gcc version:"
-            gcc -v
-            bash install.sh
+            pip list
+        else
+            echo "Not found requirements.txt file."
         fi
     else
         echo "[ERROR] model_src_dir \"${model_src_dir}\" not exists."
         exit 1
     fi
 
-    echo -e "\nInstalling model requirements..."
-    # ipex model shouldn't re-install dependencies.
-    if [[ "${model}" != *"_ipex" ]]; then
-      if [ -f "requirements.txt" ]; then
-          sed -i '/neural-compressor/d' requirements.txt
-          if [ "${framework}" == "onnxrt" ]; then
-            sed -i '/onnx/d;/onnxruntime/d' requirements.txt
-          fi
-          if [ "${framework}" == "tensorflow" ]; then
-            sed -i '/tensorflow==/d;/tensorflow$/d' requirements.txt
-          fi
-          if [ "${framework}" == "mxnet" ]; then
-            sed -i '/mxnet==/d;/mxnet$/d;/mxnet-mkl==/d;/mxnet-mkl$/d' requirements.txt
-          fi
-          if [ "${framework}" == "pytorch" ]; then
-            sed -i '/torch==/d;/torch$/d;/torchvision==/d;/torchvision$/d' requirements.txt
-          fi
-          n=0
-          until [ "$n" -ge 5 ]
-          do
-              python -m pip install -r requirements.txt && break
-              n=$((n+1))
-              sleep 5
-          done
-          pip list
-      else
-          echo "Not found requirements.txt file."
-      fi
+    # specific ENV setting for some models
+    if [[ "${model_src_dir}" == *"pytorch/eager/language_translation/ptq" ]]; then
+        setup_install_pypi_source
+        python setup.py install
     fi
+    if [[ "${model_src_dir}" == *"/huggingface_models" ]]; then
+        pip install git-python
+        bash install_requirements.sh --topology=${model}
+        setup_install_pypi_source
+        python setup.py install
+    fi
+    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
+        # Install nnUnet
+        cd nnUnet
+        pip install pywavelets
+        setup_install_pypi_source
+        python setup.py install
+        cd ..
+        # Workaround for problem with passing dataset location
+        mkdir ${model_src_dir}/build
+        for dirname in `ls ${dataset_location}`
+        do
+            ln -s ${dataset_location}/${dirname} ${model_src_dir}/build/${dirname}
+        done
+        mkdir ${model_src_dir}/build/postprocessed_data
+        mkdir ${model_src_dir}/build/logs
+        dataset_location=${model_src_dir}/build/preprocessed_data
 
+        # Export variables required for nnUnet
+        export nnUNet_raw_data_base=${model_src_dir}/build/raw_data
+        export nnUNet_preprocessed=${dataset_location}
+        export RESULTS_FOLDER=${model_src_dir}/build/result
+    fi
+    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "maskrcnn"* ]]; then
+        echo "Checking gcc version:"
+        gcc -v
+        bash install.sh
+    fi
     if [[ -f "prepare_loadgen.sh" ]]; then
         if [[ "${model}" == "rnnt_ipex" ]]; then
             bash prepare_env.sh
@@ -150,6 +147,8 @@ main() {
             bash prepare_loadgen.sh "$(pwd)"
         fi
     fi
+
+
     echo -e "\nGetting git information..."
     echo "$(git remote -v)"
     echo "$(git branch)"
