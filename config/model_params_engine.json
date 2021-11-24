@@ -107,6 +107,15 @@
       "strategy": "basic",
       "batch_size": 32,
       "new_benchmark": true
+    },
+    "minilm_l6_h384_uncased_sst2": {
+      "model_src_dir": "nlp/sst2/minilm_l6_h384_uncased",
+      "dataset_location": "/tf_dataset2/datasets/sst2_data",
+      "input_model": "/tf_dataset2/models/deep-engine/minilm_l6_h384_uncased_sst2/minilm_l6_h384_uncased_sst2.onnx",
+      "yaml": "bert.yaml",
+      "strategy": "basic",
+      "batch_size": 8,
+      "new_benchmark": true
     }
   }
 }
