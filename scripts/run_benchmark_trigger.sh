@@ -200,8 +200,14 @@ function run_accuracy {
     fi
 
     logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log
-    echo "RUNCMD: $run_cmd " >& ${logFile}
+    echo "ACCURACY BENCHMARK RUNCMD: $run_cmd " >& ${logFile}
     eval "${run_cmd}" >> ${logFile}
+    status=$?
+    echo "Benchmark process status: ${status}"
+    if [ ${status} != 0 ]; then
+        echo "Benchmark process returned non-zero exit code."
+        exit 1
+    fi
 }
 
 function run_benchmark {
@@ -268,7 +274,7 @@ function run_benchmark {
         exit 1
     fi
 
-    echo "BENCHMARK RUNCMD: $run_cmd "
+    echo "PERFORMANCE BENCHMARK RUNCMD: $run_cmd "
     logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}
 
     if [ "${profiling}" == "true" ]; then
@@ -276,8 +282,11 @@ function run_benchmark {
         export RUN_PROFILING=1
     fi
 
+    benchmark_pids=()
+
     if [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
         ${run_cmd} 2>&1|tee ${logFile}.log &
+        benchmark_pids+=($!)
     else
         for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
         do
@@ -287,10 +296,29 @@ function run_benchmark {
         fi
         numactl -m 0 -C "$j-$end_core_num" \
             ${run_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
+            benchmark_pids+=($!)
         done
     fi
 
-    wait
+    status="SUCCESS"
+
+    for pid in "${benchmark_pids[@]}"; do
+        wait $pid
+        exit_code=$?
+        echo "Detected exit code: ${exit_code}"
+        if [ ${exit_code} == 0 ]; then
+            echo "Process ${pid} succeeded"
+        else
+            echo "Process ${pid} failed"
+            status="FAILURE"
+        fi
+    done
+
+    echo "Benchmark process status: ${status}"
+    if [ ${status} == "FAILURE" ]; then
+        echo "Benchmark process returned non-zero exit code."
+        exit 1
+    fi
 
     if [ "${profiling}" == "true" ] && [ "${precision}" == "fp32" ]; then
         # copy profiling to /tmp
