@@ -291,7 +291,7 @@ node(node_label){
         if (run_coverage){
             stage('unit test') {
                 // ut test
-                timeout(50) {
+                timeout(60) {
                     withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                         echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
                         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
