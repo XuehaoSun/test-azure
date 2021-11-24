@@ -10,3 +10,4 @@ matrix:
   - ${SCAN_REPO}/docs/*
   - ${SCAN_REPO}/*.md
   - ${SCAN_REPO}/deep_engine/**/*.md
+  - ${LPOT_REPO}/examples/engine/**/*.md
