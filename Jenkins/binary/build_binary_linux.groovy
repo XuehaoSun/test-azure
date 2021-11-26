@@ -170,9 +170,10 @@ def do_binary_build() {
                     cat version.py
                     cd -
                 fi
-                
                 python3 setup.py sdist bdist_wheel
-                cp dist/neural_compressor*.whl ${WORKSPACE}/
+                pip install auditwheel
+                auditwheel repair dist/neural_compressor*.whl
+                cp wheelhouse/neural_compressor*.whl ${WORKSPACE}/
                 cp dist/neural_compressor*.tar.gz ${WORKSPACE}/
             '''
         }
@@ -204,17 +205,21 @@ def do_binary_build() {
             cd lpot-models
             
             python3 setup.py sdist bdist_wheel
-            cp dist/neural_compressor*.whl ${WORKSPACE}/
+            pip install auditwheel
+            auditwheel repair dist/neural_compressor*.whl
+            cp wheelhouse/neural_compressor*.whl ${WORKSPACE}/
+            cp dist/neural_compressor*.tar.gz ${WORKSPACE}/
             
             echo "Build Conda binary..."
-            conda clean -a -y
-            export NC_WHL=${WORKSPACE}/neural_compressor*.whl
-            pip install pyyaml six 
+            conda clean -i
+            conda_py=$(echo ${python_version} | tr -d '.')
+            nc_whl_path=${WORKSPACE}/lpot-models/wheelhouse/neural_compressor*.whl
+            export NC_WHL=${nc_whl_path}
             conda install patchelf conda-build conda-verify -y
             conda config --add channels conda-forge
             conda config --add channels fastai
-            conda build meta.yaml
-            cp /home/tensorflow/miniconda3/envs/${conda_env}/conda-bld/noarch/neural_compressor-*.tar.bz2 ${WORKSPACE}/
+            conda build meta.yaml --python=${conda_py}
+            cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/linux-64/neural-compressor-*.tar.bz2 ${WORKSPACE}/
         '''
 
     } else {
