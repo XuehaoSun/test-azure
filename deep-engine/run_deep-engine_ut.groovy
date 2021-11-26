@@ -374,7 +374,18 @@ node(node_label){
                                 writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
                             }
                         }else{
-                            echo "+---------------- PR pytest coverage ----------------+"
+                            echo "+---------------- PR pytest coverage basic ----------------+"
+                            sh '''#!/bin/bash
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env}
+    
+                                pip uninstall neural_compressor -y
+                                cd ${WORKSPACE}/deep-engine-base
+                                git submodule update --init --recursive
+                                python setup.py install
+                                pip list
+                            '''
+
                             run_pytest_with_coverage_count('deep-engine-base')
                             lines_coverage_base = Float.parseFloat(sh(
                                     script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
