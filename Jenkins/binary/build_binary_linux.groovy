@@ -61,8 +61,8 @@ def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
-        sudo rm -rf *
-        sudo rm -rf .git
+        rm -rf *
+        rm -rf .git
         git config --global user.email "sys_lpot_val@intel.com"
         git config --global user.name "sys-lpot-val" 
         '''
