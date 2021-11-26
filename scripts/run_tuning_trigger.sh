@@ -308,9 +308,8 @@ main() {
     if [ -z ${q_model} ]; then
         return
     fi
-    if [[ "${model}" == "dlrm"* ]];then
-        rm -rf /tmp/pytorch-"${model}"-tune*
-    fi
+
+    rm -rf /tmp/"${framework}-${model}-tune"*
     save_path=/tmp/${framework}-${model}-tune-$(date +%s)
     echo "!!!tune model save path is ${HOSTNAME}:${save_path}/* !!!"
     mkdir -p "${save_path}"
