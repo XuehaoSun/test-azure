@@ -137,6 +137,12 @@ if (params.collect_tuned_model != null){
 }
 echo "collect_tuned_model = ${collect_tuned_model}"
 
+inferencer_config="4:64,4:128,24:1"
+if ('inferencer_config' in params && params.inferencer_config != ''){
+    inferencer_config=params.inferencer_config
+}
+echo "inferencer_config: ${inferencer_config}"
+
 torchvision_versions = [
         "1.10.0": "0.11.0",
         "1.9.0": "0.10.0",
@@ -900,9 +906,7 @@ node( sub_node_label ) {
                             2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
                     """
                 }
-            }
-
-            stage("Check tuning status") {
+                // Check tuning status
                 dir("${WORKSPACE}"){
                     withEnv([
                             "framework=${framework}",
@@ -925,12 +929,11 @@ node( sub_node_label ) {
             if (lpot_branch == '' && MR_source_branch != '') {
                 mode_list = ["latency"]
             }
-
             
             if (!tune_only) {
-                println("==========nightly benchmark========")
                 timeout(720) {
                     stage("Performance") {
+                        println("==========run benchmark========")
                         tf_perf_only_list = ['style_transfer', 'yolo_v3',
                                              'vgg16_keras', 'vgg16_keras_h5',
                                              'vgg19_keras', 'vgg19_keras_h5',
@@ -952,6 +955,42 @@ node( sub_node_label ) {
                     }
                 }
             }
+
+            if (framework == 'engine' && (model_src_dir=~'nlp').find()){
+                stage("Inferencer Benchmark"){
+                    println("==========run inferencer benchmark========")
+                    precision_list.each { precision ->
+                        def ir_path = ''
+                        if(precision == 'fp32'){
+                            sh """#!/bin/bash -x
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            source activate ${conda_env_name}
+                            python ${WORKSPACE}/lpot-validation/deep-engine/scripts/convert_ir.py --fp32_models=${input_model}
+                            """
+                            ir_path = "${WORKSPACE}/ir"
+                        }else{
+                            ir_path = "${WORKSPACE}/engine-${model}-tune"
+                        }
+                        inferencer_config.split(',').each { each_ben_conf ->
+                            def ncores_per_instance = each_ben_conf.split(':')[0]
+                            def bs = each_ben_conf.split(':')[1]
+
+                            timeout(120) {
+                                sh """#!/bin/bash -x
+                                echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
+                                
+                                echo "=======cache clean======="
+                                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+                                echo "========================="
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env_name}
+                                bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${model} ${ir_path} ${ncores_per_instance} ${bs} ${precision}
+                            """
+                            }
+                        }
+                    }
+                }
+            }
         } catch(e) {
             currentBuild.result = "FAILURE"
             throw e
@@ -965,7 +1004,7 @@ node( sub_node_label ) {
     } finally {
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,summary.log,tuning_info.log,reference_data.json", excludes: null
+            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,inferencer_summary.log,summary.log,tuning_info.log,reference_data.json", excludes: null
             fingerprint: true
             if (collect_tuned_model){
                 archiveArtifacts artifacts: "${framework}-${model}-tune*", excludes: null

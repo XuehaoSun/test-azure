@@ -119,23 +119,11 @@ if ('val_branch' in params && params.val_branch != ''){
 echo "val_branch: ${val_branch}"
 
 // ncores_per_instance:bs
-benchmark_config="4:1,28:64,28:1,7:64,7:2"
-if ('benchmark_config' in params && params.benchmark_config != ''){
-    benchmark_config=params.benchmark_config
+inferencer_config="4:64,4:128,24:1"
+if ('inferencer_config' in params && params.inferencer_config != ''){
+    inferencer_config=params.inferencer_config
 }
-echo "benchmark_config: ${benchmark_config}"
-
-benchmark_model_list=''
-if ('benchmark_model_list' in params && params.benchmark_model_list != ''){
-    benchmark_model_list=params.benchmark_model_list
-}
-echo "benchmark_model_list: ${benchmark_model_list}"
-
-accuracy_model_list=''
-if ('accuracy_model_list' in params && params.accuracy_model_list != ''){
-    accuracy_model_list=params.accuracy_model_list
-}
-echo "accuracy_model_list: ${accuracy_model_list}"
+echo "inferencer_config: ${inferencer_config}"
 
 inc_model_list=''
 if ('inc_model_list' in params && params.inc_model_list != ''){
@@ -354,113 +342,6 @@ def unitTestJobs(unit_test_mode) {
     return ut_jobs
 }
 
-def perfJobs() {
-    def perf_jobs = [:]
-    def subnode_label = sub_node_label + " && linux";
-    List perfParams = [
-            string(name: "node_label", value: "${subnode_label}"),
-            string(name: "deepengine_url", value: "${lpot_url}"),
-            string(name: "deepengine_branch", value: "${lpot_branch}"),
-            string(name: "PR_source_branch", value: "${PR_source_branch}"),
-            string(name: "PR_target_branch", value: "${PR_target_branch}"),
-            string(name: "val_branch", value: "${val_branch}"),
-            string(name: "benchmark_config", value: "${benchmark_config}"),
-            string(name: "model_list", value: "${benchmark_model_list}"),
-            string(name: "binary_build_job", value: "${binary_build_job}"),
-            string(name: "python_version", value: "${python_version}")
-    ]
-    perf_jobs["benchmark"] = {
-        downstreamJob = build job: "deep-engine-benchmark", propagate: false, parameters: perfParams
-        catchError {
-            copyArtifacts(
-                    projectName: "deep-engine-benchmark",
-                    selector: specific("${downstreamJob.getNumber()}"),
-                    filter: '**/*',
-                    fingerprintArtifacts: true,
-                    target: "benchmark")
-
-            archiveArtifacts artifacts: "benchmark/**", allowEmptyArchive: true
-        }
-
-        sh '''#!/bin/bash 
-            if [ -f ${WORKSPACE}/benchmark/summary ]; then 
-                cat ${WORKSPACE}/benchmark/summary >> ${WORKSPACE}/summary.log
-            fi
-        '''
-
-        def sub_job_url = downstreamJob.absoluteUrl
-        if (downstreamJob.result != 'SUCCESS') {
-            withEnv(["sub_job_url=${sub_job_url}"]){
-                sh '''#!/bin/bash
-                overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_benchmark,FAILURE,${sub_job_url}" | tee -a ${overview_log}
-                '''
-            }
-            currentBuild.result = "FAILURE"
-            error("---benchmark failed---")
-        }else{
-            sh '''#!/bin/bash
-                overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_benchmark,SUCCESS,${BUILD_URL}artifact/benchmark/summary.log" | tee -a ${overview_log}
-            '''
-        }
-    }
-    return perf_jobs
-}
-
-def accJobs() {
-    def acc_jobs = [:]
-    def subnode_label = sub_node_label + " && linux";
-    List perfParams = [
-            string(name: "node_label", value: "${subnode_label}"),
-            string(name: "deepengine_url", value: "${lpot_url}"),
-            string(name: "deepengine_branch", value: "${lpot_branch}"),
-            string(name: "PR_source_branch", value: "${PR_source_branch}"),
-            string(name: "PR_target_branch", value: "${PR_target_branch}"),
-            string(name: "val_branch", value: "${val_branch}"),
-            string(name: "model_list", value: "${accuracy_model_list}")
-    ]
-    acc_jobs["accuracy"] = {
-        downstreamJob = build job: "deep-engine-accuracy", propagate: false, parameters: perfParams
-        catchError {
-            copyArtifacts(
-                    projectName: "deep-engine-accuracy",
-                    selector: specific("${downstreamJob.getNumber()}"),
-                    filter: '**/*',
-                    fingerprintArtifacts: true,
-                    target: "accuracy")
-
-            archiveArtifacts artifacts: "accuracy/**", allowEmptyArchive: true
-        }
-
-        sh '''#!/bin/bash 
-            if [ -f ${WORKSPACE}/accuracy/summary.log ]; then 
-                cat ${WORKSPACE}/accuracy/summary.log >> ${WORKSPACE}/summary.log
-            fi
-        '''
-
-        def sub_job_url = downstreamJob.absoluteUrl
-        if (downstreamJob.result != 'SUCCESS') {
-            withEnv(["sub_job_url=${sub_job_url}"]){
-                sh '''#!/bin/bash
-                overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_accuracy,FAILURE,${sub_job_url}" | tee -a ${overview_log}
-                '''
-            }
-            currentBuild.result = "FAILURE"
-            error("---accuracy failed---")
-        }else{
-            withEnv(["sub_job_url=${sub_job_url}"]) {
-                sh '''#!/bin/bash
-                overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_accuracy,SUCCESS,${sub_job_url}" | tee -a ${overview_log}
-                '''
-            }
-        }
-    }
-    return acc_jobs
-}
-
 def incParams(job_framework, job_model, python_version, strategy, cpu, os){
 
     framework_version = 'na'
@@ -496,6 +377,7 @@ def incParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "os", value: "${os}")
     ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
     ParamsPerJob += string(name: "precision", value: "${precision}")
+    ParamsPerJob += string(name: "inferencer_config", value: "${inferencer_config}")
 
     return ParamsPerJob
 }
@@ -556,6 +438,13 @@ def incJobs() {
                 else
                     echo "Unknown;Unknown;${job_framework};N/A;INT8;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                     echo "Unknown;Unknown;${job_framework};N/A;FP32;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                fi
+            """
+            sh """#!/bin/bash -x
+                if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/inferencer_summary.log ]]; then
+                    cat ${WORKSPACE}/${job_framework}/${job_model}/inferencer_summary.log >> ${WORKSPACE}/inferencer_summary.log
+                else
+                    TODO
                 fi
             """
         }
@@ -643,7 +532,7 @@ def generateReport() {
             copyArtifacts(
                     projectName: refer_job_name,
                     selector: specific("${refer_build}"),
-                    filter: 'summary.log,tuning_info.log',
+                    filter: 'summary.log,tuning_info.log,inferencer_summary.log',
                     fingerprintArtifacts: true,
                     target: "reference")
         }
@@ -660,6 +549,8 @@ def generateReport() {
                 "lpot_commit=${lpot_commit}",
                 "summaryLog=${summaryLog}",
                 "summaryLogLast=${summaryLogLast}",
+                "inferencerSummaryLog=${inferencerSummaryLog}",
+                "inferencerSummaryLogLast=${inferencerSummaryLogLast}",
                 "tuneLog=${tuneLog}",
                 "tuneLogLast=${tuneLogLast}",
                 "overviewLog=${overviewLog}",
@@ -774,6 +665,9 @@ node( node_label ) {
         writeFile file: tuneLog, text: "OS;Platform;Framework;Version;Model;Strategy;Tune_time\n"
         tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
 
+        inferencerSummaryLog = "${WORKSPACE}/inferencer_summary.log"
+        inferencerSummaryLogLast = "${WORKSPACE}/reference/inferencer_summary.log"
+
         // over view log
         overviewLog = "${WORKSPACE}/summary_overview.log"
         writeFile file: overviewLog, text: "Jenkins Job, Build Status, Build ID\n"
@@ -810,18 +704,6 @@ node( node_label ) {
             job_list["Spellcheck Scan"] = {
                 codeScan("pyspelling")
             }
-        }
-
-        if (benchmark_model_list != ''){
-            println("Add benchmark job...")
-            def perf_jobs = perfJobs()
-            job_list = job_list + perf_jobs
-        }
-
-        if (accuracy_model_list != ''){
-            println("Add accuracy job...")
-            def acc_jobs = accJobs()
-            job_list = job_list + acc_jobs
         }
 
         if (inc_model_list != ''){
