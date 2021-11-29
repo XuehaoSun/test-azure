@@ -444,7 +444,7 @@ def incJobs() {
                 if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/inferencer_summary.log ]]; then
                     cat ${WORKSPACE}/${job_framework}/${job_model}/inferencer_summary.log >> ${WORKSPACE}/inferencer_summary.log
                 else
-                    TODO
+                    echo "TODO..."
                 fi
             """
         }
