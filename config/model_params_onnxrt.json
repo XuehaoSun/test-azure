@@ -215,6 +215,15 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": true
+    },
+    "inception_v1": {
+      "model_src_dir": "onnx_model_zoo/inception",
+      "dataset_location": "/tf_dataset2/datasets/imagenet/ImagenetRaw/ILSVRC2012_img_val",
+      "input_model": "/tf_dataset2/models/onnx/inception_v1/inception-v1-12.onnx",
+      "yaml": "inception_v1.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
     }
   }
 }
