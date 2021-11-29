@@ -2,8 +2,6 @@
 
 export GLOG_minloglevel=2
 export DNNL_MAX_CPU_ISA=AVX512_CORE_AMX
-# cp /tf_dataset2/models/deep-engine/libiomp5.so .
-# export LD_PRELOAD=${WORKSPACE}/libiomp5.so
 
 model=$1
 ir_path=$2
@@ -22,6 +20,8 @@ ncores_per_socket=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs ech
 cores=$(($sockets*$ncores_per_socket))
 if [ "$bs" = "1" ]; then
     iteration=1000
+    cp /tf_dataset2/models/deep-engine/libiomp5.so .
+    export LD_PRELOAD=${WORKSPACE}/libiomp5.so
 fi
 
 export OMP_NUM_THREADS=${ncores_per_instance}
