@@ -15,7 +15,7 @@ function main {
 function check_tf_example_status {
     example_number=${1}
     test_status="check"
-    test_phrase="Tune [0-9]* result is: \[accuracy: [0-9]*\.[0-9]*\, duration (seconds): [0-9]*\.[0-9]*\], Best tune result is: \[accuracy: [0-9]*\.[0-9]*\, duration (seconds): [0-9]*\.[0-9]*\]"
+    test_phrase="Tune [1-9]* result is: \[Accuracy.*: [0-9]*.[0-9]*|[0-9]*\.[0-9]*, Duration.*: [0-9]*\.[0-9]*|[0-9]*\.[0-9]*\], Best tune result is: \[Accuracy: [0-9]*\.[0-9]*, Duration.*: [0-9]*\.[0-9]*\]"
     if [[ ${example_number} == 2 ]]; then
         test_phrase="Inference is done."
     fi
@@ -28,8 +28,8 @@ function check_tf_example_status {
 
     if [[ "${example_number}" == 5 ]]; then
         accuracy_count=$(grep -c 'Accuracy is [0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
-        latency_count=$(grep -c 'Latency: [0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
-        if [[ ${status} == "pass" ]] && [[ ${accuracy_count} == 1 ]] && [[ ${latency_count} == 1 ]]; then
+        #latency_count=$(grep -c 'Latency: [0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
+        if [[ ${status} == "pass" ]] && [[ ${accuracy_count} == 1 ]]; then
             test_status="pass"
         else
             test_status="fail"

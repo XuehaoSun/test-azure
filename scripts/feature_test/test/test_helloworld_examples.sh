@@ -24,67 +24,38 @@ done
 
 function main {
     export PATH=${HOME}/miniconda3/bin/:$PATH
-    create_conda_env 2.3.0
-
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    python train.py
 
     for i in `seq 6`
     do
+        create_conda_env "tf_example${i}"
+        lpot_install
         tf_example${i} 2>&1 | tee ${WORKSPACE}/tf_example${i}.log
     done
 }
 
 function tf_example1 {
-    cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d models ]; then
-        echo " frozen pb not generated. Exiting..."
-        exit 1
-    fi
-
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1 || return
-    if [ -f "requirements.txt" ]; then
-        python -m pip install -r requirements.txt
-        pip list
-    fi
-    lpot_install
-
     cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
     sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
-
     python test.py
 }
 
 function tf_example2 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
+    python train.py
+
     if [ ! -d models ]; then
         echo " frozen pb not generated. Exiting..."
         exit 1
     fi
-
-    cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example2 || return
-    if [ -f "requirements.txt" ]; then
-        python -m pip install -r requirements.txt
-        pip list
-    fi
-    lpot_install
-
+    
+    cd ./tf_example2
     python test.py
 }
 
 function tf_example3 {
-    cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d models ]; then
-        echo " frozen pb not generated. Exiting..."
-        exit 1
-    fi
-
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example3 || return
-    if [ -f "requirements.txt" ]; then
-        python -m pip install -r requirements.txt
-        pip list
-    fi
-    lpot_install
 
     cp /tf_dataset/examples_helloworld/example3/inception_v1_2016_08_28.tar.gz .
     tar -xvf inception_v1_2016_08_28.tar.gz
@@ -100,38 +71,16 @@ function tf_example3 {
 }
 
 function tf_example4 {
-    cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d models ]; then
-        echo " frozen pb not generated. Exiting..."
-        exit 1
-    fi
-
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example4 || return
-    if [ -f "requirements.txt" ]; then
-        python -m pip install -r requirements.txt
-        pip list
-    fi
-    lpot_install
 
-    git clone https://github.com/openvinotoolkit/open_model_zoo.git
+    git clone -b 2021.4 https://github.com/openvinotoolkit/open_model_zoo.git
     python ./open_model_zoo/tools/downloader/downloader.py --name rfcn-resnet101-coco-tf --output_dir model
 
     python test.py
 }
 
 function tf_example5 {
-    cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d models ]; then
-        echo " frozen pb not generated. Exiting..."
-        exit 1
-    fi
-
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example5 || return
-    if [ -f "requirements.txt" ]; then
-        python -m pip install -r requirements.txt
-        pip list
-    fi
-    lpot_install
 
     if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
         cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
@@ -145,14 +94,7 @@ function tf_example5 {
 }
 
 function tf_example6 {
-    cd ${WORKSPACE}/lpot-models/examples/helloworld || return
-    if [ ! -d models ]; then
-        echo " frozen pb not generated. Exiting..."
-        exit 1
-    fi
-
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example6 || return
-    lpot_install
 
     if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
         cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
@@ -166,26 +108,34 @@ function tf_example6 {
 }
 
 function create_conda_env {
-    tensorflow_version=$1
-    python_version=3.6
-    conda_env_name=lpot-py${python_version}-helloworld_examples
-
-    if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-        conda create python=${python_version} -y -n ${conda_env_name}
+    example_name=$1
+    python_version=3.7
+    conda_env_name=lpot-py${python_version}-helloworld_${example_name}
+    conda_dir=$(dirname $(dirname $(which conda)))
+    if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
+        rm -rf ${conda_dir}/envs/${conda_env_name}
     fi
-    # make sure no more conda nested
-    conda deactivate || source deactivate
-    conda deactivate || source deactivate
-    source activate ${conda_env_name}
-    pip install intel-tensorflow==${tensorflow_version}
-    pip install ruamel.yaml==0.17.4
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        conda create python=${python_version} -y -n ${conda_env_name}
+        conda deactivate || source deactivate
+        source activate ${conda_env_name} && break
+        n=$((n+1))
+        sleep 5
+    done
+    
     pip list
 
     if [ ! -d ${WORKSPACE}/lpot-models ]; then
         echo "\"lpot-model\" not found. Exiting..."
         exit 1
     fi
-    cd ${WORKSPACE}/lpot-models || return
+    cd ${WORKSPACE}/lpot-models/examples/helloworld/${example_name} || return
+    if [ -f "requirements.txt" ]; then
+        python -m pip install -r requirements.txt
+        pip list
+    fi
 }
 
 function lpot_install {
