@@ -148,6 +148,10 @@ main() {
         fi
     fi
 
+    # re-install pycocotools resolve the issue with numpy
+    echo "re-install pycocotools resolve the issue with numpy..."
+    pip uninstall pycocotools -y
+    pip install --no-cache-dir pycocotools
 
     echo -e "\nGetting git information..."
     echo "$(git remote -v)"
