@@ -115,7 +115,7 @@ main() {
     if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
         # Install nnUnet
         cd nnUnet
-        pip install pywavelets
+        pip install -r requirements.txt
         setup_install_pypi_source
         python setup.py install
         cd ..
