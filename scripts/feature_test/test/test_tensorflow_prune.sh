@@ -20,7 +20,7 @@ function main {
 function create_conda_env {
 
     if [[ -z ${python_version} ]]; then
-        python_version=3.6  # Set python 3.6 as default
+        python_version=3.7  # Set python 3.7 as default
     fi
 
     conda_env_name=tensorflow_prune-py${python_version}

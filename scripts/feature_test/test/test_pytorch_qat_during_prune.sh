@@ -32,7 +32,7 @@ function create_conda_env {
     fi
 
     if [[ -z ${python_version} ]]; then
-        python_version=3.6  # Set python 3.6 as default
+        python_version=3.7  # Set python 3.7 as default
     fi
 
     conda_env_name=pytorch_qat_during_prune-py${python_version}
