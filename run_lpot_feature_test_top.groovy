@@ -119,6 +119,7 @@ def parallel_jobs() {
                     }
 
                     List featureParams = [
+                            string(name: "python_version", value: "${python_version}"),
                             string(name: "sub_node_label", value: "${subnode_label}"),
                             string(name: "binary_build_job", value: "${binary_build_job}"),
                             string(name: "lpot_url", value: "${lpot_url}"),
