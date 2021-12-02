@@ -396,7 +396,7 @@ def incJobs() {
             println("Current engine model is --> "+"${job_model}")
             sub_jenkins_job = "deep-engine-inc"
             job_framework = "engine"
-            downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: incParams(job_framework, job_model, python_version, 'basic', 'clx8280', 'linux')
+            downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: incParams(job_framework, job_model, python_version, 'basic', '*', 'linux')
 
             catchError {
                 copyArtifacts(
