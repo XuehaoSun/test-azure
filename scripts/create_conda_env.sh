@@ -33,7 +33,7 @@ do
 done
 
 # step 0: export conda
-if [[ ${model} = "dlrm"* ]]; then
+if [[ ${model} = "dlrm"* ]] && [[ "${pytorch_version}" != "" ]]; then
     export PATH=${HOME}/anaconda3/bin/:$PATH
     export https_proxy=http://child-prc.intel.com:913
     export http_proxy=http://child-prc.intel.com:913
