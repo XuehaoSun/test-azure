@@ -12,6 +12,10 @@ function main {
     # Run TensorFlow Pruning test
     cd ${WORKSPACE}/lpot-models/examples/tensorflow/pruning/resnet_v2
     pip install intel-tensorflow==2.5.0
+    # re-install pycocotools resolve the issue with numpy
+    echo "re-install pycocotools resolve the issue with numpy..."
+    pip uninstall pycocotools -y
+    pip install --no-cache-dir pycocotools
     pip list
     python main.py   2>&1 | tee ${WORKSPACE}/tensorflow_prune.log
 
