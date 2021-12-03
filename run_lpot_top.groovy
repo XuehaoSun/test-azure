@@ -240,6 +240,7 @@ if ('onnxrt_models_windows' in params && params.onnxrt_models_windows != '') {
 }
 echo "onnxrt_models_windows: ${onnxrt_models_windows}"
 
+pypi_version='default'
 lpot_branch = ''
 // pass down commit instead of branch, the unify the test commit.
 lpot_commit = ''
@@ -984,18 +985,6 @@ def unitTestJobs() {
 }
 
 def buildBinary(){
-    pypi_version='default'
-    if (upload_nightly_binary){
-        base_version=sh(
-            script: 'cd lpot-models/neural_compressor && grep \'__version__\' version.py | awk -F \'\\"\' \'{print $(NF-1)}\'',
-            returnStdout: true
-        ).trim()
-        date_info=sh(
-            script: 'date +%Y-%m-%d | tr -cd "[0-9]"',
-            returnStdout: true
-        ).trim()
-        pypi_version = base_version +'dev'+date_info
-    }
 
     List binaryBuildParams = [
             string(name: "python_version", value: "${python_version}"),
@@ -1228,8 +1217,10 @@ def cancelPreviousBuilds() {
 
 def uploadNightlyBinary(){
     List binaryBuildParams = [
-        string(name: "binary_build_job", value: "${binary_build_job}"),
-        string(name: "val_branch", value: "${val_branch}")
+        string(name: "lpot_url", value: "${lpot_url}"),
+        string(name: "val_branch", value: "${val_branch}"),
+        string(name: "lpot_branch", value: "${lpot_commit}"),
+        string(name: "pypi_version", value: "${pypi_version}")
     ]
     downstreamJob = build job: "lpot-nightly-binary-upload", propagate: false, parameters: binaryBuildParams
 
@@ -1298,6 +1289,19 @@ node( node_label ) {
                     returnStdout: true
             ).trim()
         }
+
+        if (upload_nightly_binary){
+            base_version=sh(
+                    script: 'cd lpot-models/neural_compressor && grep \'__version__\' version.py | awk -F \'\\"\' \'{print $(NF-1)}\'',
+                    returnStdout: true
+            ).trim()
+            date_info=sh(
+                    script: 'date +%Y-%m-%d | tr -cd "[0-9]"',
+                    returnStdout: true
+            ).trim()
+            pypi_version = base_version +'dev'+date_info
+        }
+
         if (PR_source_branch != ''){
             sh"""#!/bin/bash
                 cd lpot-models

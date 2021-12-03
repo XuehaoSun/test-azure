@@ -44,6 +44,13 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
+lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
+}
+echo "lpot_url is ${lpot_url}"
+
+
 def cleanup() {
 
     try {

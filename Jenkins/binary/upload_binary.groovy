@@ -22,6 +22,24 @@ if ('val_branch' in params && params.val_branch != ''){
 }
 echo "val_branch: ${val_branch}"
 
+lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot"
+if ('lpot_url' in params && params.lpot_url != ''){
+    lpot_url = params.lpot_url
+}
+echo "lpot_url is ${lpot_url}"
+
+lpot_branch = ''
+if ('lpot_branch' in params && params.lpot_branch != '') {
+    lpot_branch = params.lpot_branch
+}
+echo "lpot_branch: $lpot_branch"
+
+pypi_version = ''
+if ('pypi_version' in params && params.pypi_version != '') {
+    pypi_version = params.pypi_version
+}
+echo "pypi_version: $pypi_version"
+
 def cleanup() {
 
     try {
@@ -50,10 +68,32 @@ node(node_label) {
             checkout scm
         }
 
+        stage('Build binary') {
+
+            List binaryBuildParams = [
+                    string(name: "lpot_url", value: "${lpot_url}"),
+                    string(name: "lpot_branch", value: "${lpot_branch}"),
+                    string(name: "val_branch", value: "${val_branch}"),
+                    string(name: "pypi_version", value: "${pypi_version}")
+            ]
+            downstreamJob = build job: "lpot-nightly-release-wheel-build", propagate: false, parameters: binaryBuildParams
+
+            binary_build_job = downstreamJob.getNumber()
+            echo "binary_build_job: ${binary_build_job}"
+            echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+            if (downstreamJob.getResult() != "SUCCESS") {
+                currentBuild.result = "FAILURE"
+                failed_build_url = downstreamJob.absoluteUrl
+                echo "failed_build_url: ${failed_build_url}"
+                error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+            }
+        }
+
+
         stage('Copy binary') {
             catchError {
                 copyArtifacts(
-                        projectName: 'lpot-release-wheel-build',
+                        projectName: 'lpot-nightly-release-wheel-build',
                         selector: specific("${binary_build_job}"),
                         filter: 'neural_compressor*.whl, neural_compressor*.tar.gz',
                         fingerprintArtifacts: true,
