@@ -65,6 +65,7 @@ main() {
         "bandit") run_bandit;;
         "pyspelling") run_pyspelling;;
         "cloc") run_cloc;;
+        "pydocstyle") run_pydocstyle;;
         *)
             echo "Scan tool ${SCAN_TOOL} not supported."; exit 1;;
     esac
@@ -112,6 +113,11 @@ run_pyspelling() {
 run_cloc() {
     cloc --include-lang=Python --csv --out=${WORKSPACE}/nc_code_lines_summary.csv ${REPO_DIR}/neural_compressor
     cloc --include-lang=Python,C++ --csv --out=${WORKSPACE}/engine_code_lines_summary.csv ${REPO_DIR}/engine
+}
+
+run_pydocstyle() {
+    pip install pydocstyle
+    pydocstyle --convention=google ${REPO_DIR}/neural_compressor > ${WORKSPACE}/docstring.log
 }
 
 main

@@ -54,6 +54,7 @@ main() {
         "bandit") run_bandit;;
         "pyspelling") run_pyspelling;;
         "cloc") run_cloc;;
+        "pydocstyle") run_pydocstyle;;
         *)
             echo "Scan tool ${SCAN_TOOL} not supported."; exit 1;;
     esac
@@ -62,7 +63,7 @@ main() {
 run_cpplint() {
     pip install cpplint
     log_path=${WORKSPACE}/engine_cpplint.log
-    cpplint --recursive --quiet --linelength=99 ./deep_engine/ 2>&1| tee ${log_path}
+    cpplint --recursive --quiet --linelength=120 ./engine/ 2>&1| tee ${log_path}
     if [[ ! -f ${log_path} ]] || [[ $(grep -c "Total errors found:" ${log_path}) != 0 ]]; then
         exit 1
     fi
@@ -85,7 +86,7 @@ run_pylint() {
 
 run_bandit() {
     pip install bandit
-    python -m bandit -r -lll -iii ./deep_engine/ > ${WORKSPACE}/engine-bandit.log
+    python -m bandit -r -lll -iii ./engine/ > ${WORKSPACE}/engine-bandit.log
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "Bandit exited with non-zero exit code."; exit 1
@@ -111,7 +112,12 @@ run_pyspelling() {
 }
 
 run_cloc() {
-    cloc --include-lang=Python,C++ --csv --out=${WORKSPACE}/engine_code_lines_summary.csv ${REPO_DIR}/neural_compressor
+    cloc --include-lang=Python,C++ --csv --out=${WORKSPACE}/engine_code_lines_summary.csv ${REPO_DIR}/engine
+}
+
+run_pydocstyle() {
+    pip install pydocstyle
+    pydocstyle --convention=google ${REPO_DIR}/engine > ${WORKSPACE}/docstring.log
 }
 
 main

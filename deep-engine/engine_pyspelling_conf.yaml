@@ -9,5 +9,5 @@ matrix:
   sources:
   - ${SCAN_REPO}/docs/*
   - ${SCAN_REPO}/*.md
-  - ${SCAN_REPO}/deep_engine/**/*.md
+  - ${SCAN_REPO}/engine/**/*.md
   - ${LPOT_REPO}/examples/engine/**/*.md
