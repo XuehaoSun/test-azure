@@ -314,7 +314,8 @@ main() {
     fi
 
     rm -rf /tmp/"${framework}-${model}-tune"*
-    save_path=/tmp/${framework}-${model}-tune-$(date +%s)
+    rm -rf /tmp/inc/"${framework}-${model}-tune"*
+    save_path=/tmp/inc/${framework}-${model}-tune-$(date +%s)
     echo "!!!tune model save path is ${HOSTNAME}:${save_path}/* !!!"
     mkdir -p "${save_path}"
     echo "Copying \"${q_model}*\" to \"${save_path}\""
