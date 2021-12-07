@@ -107,7 +107,15 @@ main() {
         python setup.py install
     fi
     if [[ "${model_src_dir}" == *"/huggingface_models" ]]; then
-        pip install git-python
+        echo -e "\nInstalling pytorch-huggingface requirements..."
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+            python -m pip install -r ${WORKSPACE}/lpot-validation/requirement_pytorch_huggingface.txt && break
+            n=$((n+1))
+            sleep 5
+        done
+        pip list
         bash install_requirements.sh --topology=${model}
         setup_install_pypi_source
         python setup.py install
