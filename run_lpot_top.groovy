@@ -160,12 +160,19 @@ if ('COUNT_CODE_LINES' in params && params.COUNT_CODE_LINES){
 }
 echo "COUNT_CODE_LINES = ${COUNT_CODE_LINES}"
 
-// set ut extension test
+// set ut extension test for tensorflow
 ut_extension_tensorflows='1.15.2,1.15UP2'
 if (params.ut_extension_tensorflows != null) {
     ut_extension_tensorflows = params.ut_extension_tensorflows
 }
 echo "ut_extension_tensorflows: ${ut_extension_tensorflows}"
+
+// set ut extension test for pytorch
+ut_extension_pytorch='1.7,1.8,1.10'
+if (params.ut_extension_pytorch != null) {
+    ut_extension_pytorch = params.ut_extension_pytorch
+}
+echo "ut_extension_pytorch: ${ut_extension_pytorch}"
 
 RUN_COVERAGE=true
 if (params.RUN_COVERAGE != null){
@@ -877,29 +884,55 @@ def collectUTLog() {
     echo "------------  running collectUTLog  -------------"
     dir("$WORKSPACE/unittest"){
         def ut_tfs = ["${tensorflow_version}"]
+        def ut_pts = ["${pytorch_version}"]
         ut_ext_tfs = parseStrToList(ut_extension_tensorflows)
+        ut_ext_pts = parseStrToList(ut_extension_pytorch)
         ut_tfs = ut_tfs.plus(ut_ext_tfs)
+        ut_pts = ut_pts.plus(ut_ext_pts)
         ut_tfs.unique()
+        ut_pts.unique()
         ut_tfs.each { tf_version ->
             withEnv(["tf_version=${tf_version}"]){
                 sh ''' #!/bin/bash
                    overview_log="${WORKSPACE}/summary_overview.log"
                    if [ $(ls -l | grep -c ${tf_version}) != 0 ]; then
-                     ut_log_name=$WORKSPACE/unittest/unit_test_${tf_version}.log
+                     ut_log_name=ut_tf_${tf_version}_pt_${pytorch_version}.log
+                     [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_${tf_version}_pt_([0-9]+.){2}[0-9]+(.cpu)?.log" | head -1`
+                     pt_version=`echo -e "${ut_log_name}" | grep -Po "pt_([0-9]+.){2}[0-9]+(.cpu)?" | awk -F "_" '{print $2}'`
                      if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                        ut_status='FAILURE'
                      else
                        ut_status='SUCCESS'
                      fi
-                     echo "unit_test_with_TF${tf_version},${ut_status},${BUILD_URL}artifact/unittest/unit_test_${tf_version}.log" | tee -a ${overview_log}
+                     echo "unit_test_with_TF${tf_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}.log" | tee -a ${overview_log}
                    fi
                 '''
             }
         }
+        ut_pts.each { pt_version ->
+            withEnv(["pt_version=${pt_version}"]){
+                sh ''' #!/bin/bash
+                   overview_log="${WORKSPACE}/summary_overview.log"
+                   if [ $(ls -l | grep -c ${pt_version}) != 0 ]; then
+                     pt_version_tmp=${pt_version%+*}
+                     ut_log_name=ut_tf_${tensorflow_version}_pt_${pt_version}.log
+                     [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_.*_pt_${pt_version_tmp}.*log" | head -1`
+                     tf_version=`echo -e "${ut_log_name}" | grep -Po "tf_.*_" | awk -F "_" '{print $2}'`
+                     if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                       ut_status='FAILURE'
+                     else
+                       ut_status='SUCCESS'
+                     fi
+                     echo "unit_test_with_PT${pt_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}.log" | tee -a ${overview_log}
+                   fi
+                '''
+            }
+        }
+
     }
 }
 
-def UTBuildParams(tf_version, run_coverage){
+def UTBuildParams(tf_version, pt_version, run_coverage){
 
     List ParamsPerJob = []
 
@@ -911,7 +944,7 @@ def UTBuildParams(tf_version, run_coverage){
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
     ParamsPerJob += string(name: "tensorflow_version", value: "${tf_version}")
     ParamsPerJob += string(name: "mxnet_version", value: "${mxnet_version}")
-    ParamsPerJob += string(name: "pytorch_version", value: "${pytorch_version}")
+    ParamsPerJob += string(name: "pytorch_version", value: "${pt_version}")
     ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
     ParamsPerJob += string(name: "onnxruntime_version", value: "${onnxruntime_version}")
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
@@ -924,9 +957,10 @@ def unitTestJobs() {
 
     def ut_jobs = [:]
     def ut_extension_tfs = parseStrToList(ut_extension_tensorflows)
+    def ut_extension_pts = parseStrToList(ut_extension_pytorch)
 
     ut_jobs["main_ut"] = {
-        downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(tensorflow_version, RUN_COVERAGE)
+        downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(tensorflow_version, pytorch_version, RUN_COVERAGE)
         catchError {
             copyArtifacts(
                     projectName: "lpot-unit-test",
@@ -959,10 +993,37 @@ def unitTestJobs() {
             }
         }
     }
-    if (ut_extension_tensorflows != ''){
-        ut_extension_tfs.each{ ut_extension_tf ->
-            ut_jobs["${ut_extension_tf}_extension_ut"] = {
-                downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(ut_extension_tf, false)
+    if (ut_extension_tensorflows != '' ){
+        ut_extension_tfs.eachWithIndex{ ut_extension_tf, i ->
+            if (ut_extension_pytorch != '' && i < ut_extension_pts.size()){
+                    pt_version = ut_extension_pts[i]    
+            } else {
+                    pt_version = pytorch_version
+            }
+            ut_jobs["${ut_extension_tf}_tf_${pt_version}_pt_extension_ut"] = {
+                downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(ut_extension_tf, pt_version, false)
+                catchError {
+                    copyArtifacts(
+                            projectName: "lpot-unit-test",
+                            selector: specific("${downstreamJob.getNumber()}"),
+                            filter: '*.log, *.txt',
+                            fingerprintArtifacts: true,
+                            target: "unittest")
+
+                    archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+                }
+
+                if (downstreamJob.result != 'SUCCESS'){
+                    currentBuild.result = "FAILURE"
+                }
+            }
+        }
+    }
+    if (ut_extension_pts.size() > ut_extension_tfs.size()) {
+        for (int i = ut_extension_tfs.size(); i < ut_extension_pts.size(); i++ ){
+            ut_extension_pt = ut_extension_pts[i]
+            ut_jobs["${tensorflow_version}_tf_${ut_extension_pt}_pt_extension_ut"] = {
+                downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(tensorflow_version, ut_extension_pt, false)
                 catchError {
                     copyArtifacts(
                             projectName: "lpot-unit-test",

@@ -293,7 +293,7 @@ node(node_label){
                 // ut test
                 timeout(60) {
                     withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
-                        echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
+                        echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
                         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
@@ -362,7 +362,7 @@ node(node_label){
 
                         lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                         find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
-                        ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
+                        ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
                         coverage erase
                         bash run.sh 2>&1 | tee ${ut_log_name}
                         coverage report -m --rcfile=${COVERAGE_RCFILE}
@@ -513,8 +513,8 @@ node(node_label){
             }
         }else {
             stage("unit test") {
-                echo "+---------------- unit test For TF ${tensorflow_version} ----------------+"
-                withEnv(["tensorflow_version=${tensorflow_version}"]){
+                echo "+---------------- unit test For TF ${tensorflow_version} PT ${pytorch_version} ----------------+"
+                withEnv(["ext_version=${tensorflow_version}_${pytorch_version}"]){
                     timeout(50) {
                         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
@@ -580,7 +580,7 @@ node(node_label){
                             fi
                             
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
-                            ut_log_name=${WORKSPACE}/unit_test_${tensorflow_version}.log
+                            ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
                             bash run.sh 2>&1 | tee ${ut_log_name}
                             if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                                 exit 1
