@@ -317,6 +317,11 @@ node(node_label){
                             sleep 5
                         done
                         
+                        # re-install pycocotools resolve the issue with numpy
+                        echo "re-install pycocotools resolve the issue with numpy..."
+                        pip uninstall pycocotools -y
+                        pip install --no-cache-dir pycocotools
+                        
                         if [ ! -d ${WORKSPACE}/lpot-models ]; then
                             echo "\\"lpot-model\\" not found. Exiting..."
                             exit 1
@@ -433,6 +438,11 @@ node(node_label){
                             git submodule update --init --recursive
                             python setup.py install
                             pip list
+                            
+                            # re-install pycocotools resolve the issue with numpy
+                            echo "re-install pycocotools resolve the issue with numpy..."
+                            pip uninstall pycocotools -y
+                            pip install --no-cache-dir pycocotools
 
                             cd ${WORKSPACE}/lpot-models-base/test
                             if [ -f "requirements.txt" ]; then
@@ -538,6 +548,10 @@ node(node_label){
                                 n=$((n+1))
                                 sleep 5
                             done
+                            
+                            echo "re-install pycocotools resolve the issue with numpy..."
+                            pip uninstall pycocotools -y
+                            pip install --no-cache-dir pycocotools
                     
                             if [ ! -d ${WORKSPACE}/lpot-models ]; then
                                 echo "\\"lpot-model\\" not found. Exiting..."
