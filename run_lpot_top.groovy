@@ -168,7 +168,7 @@ if (params.ut_extension_tensorflows != null) {
 echo "ut_extension_tensorflows: ${ut_extension_tensorflows}"
 
 // set ut extension test for pytorch
-ut_extension_pytorch='1.7,1.8,1.10'
+ut_extension_pytorch=''
 if (params.ut_extension_pytorch != null) {
     ut_extension_pytorch = params.ut_extension_pytorch
 }
@@ -949,7 +949,6 @@ def UTBuildParams(tf_version, pt_version, run_coverage){
     ParamsPerJob += string(name: "onnxruntime_version", value: "${onnxruntime_version}")
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
     ParamsPerJob += booleanParam(name: "run_coverage", value: run_coverage)
-
     return ParamsPerJob
 }
 
@@ -995,11 +994,9 @@ def unitTestJobs() {
     }
     if (ut_extension_tensorflows != '' ){
         ut_extension_tfs.eachWithIndex{ ut_extension_tf, i ->
+            def pt_version = pytorch_version
             if (ut_extension_pytorch != '' && i < ut_extension_pts.size()){
-                    pt_version = ut_extension_pts[i]    
-            } else {
-                    pt_version = pytorch_version
-            }
+                    pt_version = ut_extension_pts[i] }
             ut_jobs["${ut_extension_tf}_tf_${pt_version}_pt_extension_ut"] = {
                 downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(ut_extension_tf, pt_version, false)
                 catchError {
@@ -1021,7 +1018,7 @@ def unitTestJobs() {
     }
     if (ut_extension_pts.size() > ut_extension_tfs.size()) {
         for (int i = ut_extension_tfs.size(); i < ut_extension_pts.size(); i++ ){
-            ut_extension_pt = ut_extension_pts[i]
+            def ut_extension_pt = ut_extension_pts[i]
             ut_jobs["${tensorflow_version}_tf_${ut_extension_pt}_pt_extension_ut"] = {
                 downstreamJob = build job: "lpot-unit-test", propagate: false, parameters: UTBuildParams(tensorflow_version, ut_extension_pt, false)
                 catchError {
