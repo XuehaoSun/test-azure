@@ -1069,10 +1069,12 @@ def buildBinary(){
 def generateReport() {
     if(refer_build != 'x0') {
         def refer_job_name
-        if(test_mode == "extension"){
-            refer_job_name="intel-lpot-validation-top-weekly"
+        if(test_mode == "extension") {
+            refer_job_name = "intel-lpot-validation-top-weekly"
+        }else if(test_mode == "mr"){
+            refer_job_name = "intel-lpot-validation-top-PR"
         }else{
-            refer_job_name=currentBuild.projectName
+            refer_job_name = currentBuild.projectName
         }
         copyArtifacts(
                 projectName: refer_job_name,
