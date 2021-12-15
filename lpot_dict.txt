@@ -2008,3 +2008,5 @@ PyYAML
 ViT
 filepath
 uncomment
+DistilBERT
+TinyBERT
