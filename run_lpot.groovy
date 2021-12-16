@@ -182,17 +182,8 @@ println("torchvision_version: " + torchvision_version)
 
 // specify sub node label for pytorch models
 if(framework == 'pytorch') {
-    label = model.split('_')
-    if (framework_version == '1.5.0+cpu'){
-        if (label[0] == 'bert' || model == 'gpt_WikiText' || model == 'ctrl_WikiText' || model == 'xlnet_base_cased_MRPC' || model == 'roberta_base_MRPC' || model == 'camembert_base_MRPC' ) {
-            sub_node_label = 'py-bert'
-        }
-    }
     if (model == 'dlrm' || model == 'dlrm_fx') {
         sub_node_label = 'dlrm'
-    }
-    if (label[-1] == 'ipex') {
-        sub_node_label = 'py-ipex'
     }
 }
 
