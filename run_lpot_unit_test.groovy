@@ -302,9 +302,9 @@ node(node_label){
                         echo "Checking lpot..."
                         python -V
                         pip list
-                        c_lpot=$(pip list | grep -c 'neural_compressor') || true  # Prevent from exiting when 'lpot' not found
+                        c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
                         if [ ${c_lpot} != 0 ]; then
-                            pip uninstall neural_compressor -y
+                            pip uninstall neural-compressor -y
                             pip list
                         fi
                                         
@@ -534,9 +534,9 @@ node(node_label){
                             echo "Checking neural_compressor..."
                             python -V
                             pip list
-                            c_lpot=$(pip list | grep -c 'neural_compressor') || true  # Prevent from exiting when 'neural_compressor' not found
+                            c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'neural_compressor' not found
                             if [ ${c_lpot} != 0 ]; then
-                                pip uninstall neural_compressor -y
+                                pip uninstall neural-compressor -y
                                 pip list
                             fi
                                     
