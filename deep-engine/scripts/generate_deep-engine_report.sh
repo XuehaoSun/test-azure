@@ -50,15 +50,6 @@ function createOverview {
         pytest_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    benchmark=($(grep 'deep-engine_benchmark' ${overviewLog} |sed 's/,/ /g'))
-    if [[ "${benchmark[1]}" == *"FAIL"* ]];then
-        benchmark_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${benchmark[1]}" == *"SUCC"* ]];then
-        benchmark_status="<td style=\"background-color:#90EE90\">Pass</td>"
-    else
-        benchmark_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
-    fi
-
     cpplint_scan=($(grep 'deep-engine-code-scan,cpplint' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${cpplint_scan[2]}" == *"FAIL"* ]];then
         cpplint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
@@ -117,12 +108,6 @@ function createOverview {
                  echo "<tr><td>pytest</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${pytest[2]}\">ut_link</a></td>"
                  echo "${pytest_status}</tr>"
-             fi
-
-             if [ "${benchmark[2]}" != "" ]; then
-                 echo "<tr><td>Benchmark</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${benchmark[2]}\">benchmark_summary</a></td>"
-                 echo "${benchmark_status}</tr>"
              fi
 
              if [ "${cpplint_scan[3]}" != "" ]; then
