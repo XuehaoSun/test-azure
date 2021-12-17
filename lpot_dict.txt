@@ -2010,3 +2010,6 @@ filepath
 uncomment
 DistilBERT
 TinyBERT
+FCN
+fcn
+rn
