@@ -152,7 +152,12 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
         ])
-
+        
+    if args.framework == "onnxrt" and args.model == "fcn":
+        parameters.extend([
+            f"--data_path={args.dataset_location}",
+            f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
+        ])
     # Workaround for engine
     if args.framework == "engine":
         tokenizer_dir=os.path.dirname(args.input_model)
@@ -248,6 +253,12 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
+        ])
+
+    if args.framework == "onnxrt" and args.model == "fcn":
+        parameters.extend([
+            f"--data_path={args.dataset_location}",
+            f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
         ])
 
     # Workaround for engine
