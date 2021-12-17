@@ -449,6 +449,8 @@ def getReferenceData() {
                 }else{
                     refer_job_name="intel-lpot-validation-top-weekly"
                 }
+            }else if(test_mode == "mr" && framework != "engine"){
+                refer_job_name = "intel-lpot-validation-top-PR"
             } else {
                 if (upstreamJobName) {
                     refer_job_name = upstreamJobName
