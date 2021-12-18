@@ -452,7 +452,7 @@ function copy_dataset {
 }
 
 function setup_install_pypi_source {
-    echo -e "\n[easy_install]\nindex_url = https://mirrors.aliyun.com/pypi/simple/" >> setup.cfg
+    echo -e "\n[easy_install]\nindex_url = https://pypi.tuna.tsinghua.edu.cn/simple" >> setup.cfg
 }
 
 main

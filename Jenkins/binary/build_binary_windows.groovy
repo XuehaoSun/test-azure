@@ -243,7 +243,7 @@ def create_conda_env() {
         retry(5){
 
             bat '''
-                CALL pip config set global.index-url http://mirrors.aliyun.com/pypi/simple
+                CALL pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
                 CALL pip config set global.trusted-host "mirrors.aliyun.com test.pypi.org pypi.org pypi.python.org"
                 CALL pip config set global.timeout 900
 
