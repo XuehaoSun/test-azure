@@ -108,6 +108,15 @@
       "batch_size": 32,
       "new_benchmark": true
     },
+    "dlrm_bf16": {
+      "model_src_dir": "recommendation/DLRM",
+      "dataset_location": "/tf_dataset2/datasets/dlrm_data",
+      "input_model": "/tf_dataset2/models/deep-engine/dlrm_bf16/dlrm_s_pytorch.onnx",
+      "yaml": "conf_bf16.yaml",
+      "strategy": "basic",
+      "batch_size": 32,
+      "new_benchmark": true
+    },
     "minilm_l6_h384_uncased_sst2": {
       "model_src_dir": "nlp/sst2/minilm_l6_h384_uncased",
       "dataset_location": "/tf_dataset2/datasets/sst2_data",

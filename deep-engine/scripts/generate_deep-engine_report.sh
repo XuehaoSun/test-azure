@@ -403,7 +403,7 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
                 <th rowspan="2">Models Size<br>FP32/INT8</th>
-			          <th colspan="6">INT8</th>
+			          <th colspan="6">INT8(BF16)</th>
 			          <th colspan="6">FP32</th>
 			          <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
 		        </tr>
