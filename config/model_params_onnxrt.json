@@ -225,6 +225,15 @@
       "batch_size": 1,
       "new_benchmark": true
     },
+    "ssd-12": {
+      "model_src_dir": "onnx_model_zoo/ssd",
+      "dataset_location": "/tf_dataset/dataset/coco_dataset/raw-data",
+      "input_model": "/tf_dataset2/models/onnx/ssd/ssd-12.onnx",
+      "yaml": "ssd.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
+    },
     "fcn": {
       "model_src_dir": "onnx_model_zoo/fcn",
       "dataset_location": "/tf_dataset2/datasets/coco2017/coco/val2017",

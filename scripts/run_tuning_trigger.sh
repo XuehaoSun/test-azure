@@ -398,6 +398,10 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
                 sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
             fi
+            if [ "${model}" == "ssd-12" ]; then
+                echo "annotation path is "${WORKSPACE}"/lpot-models/examples/tensorflow/object_detection/label_map.yaml"
+                sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: ${WORKSPACE}/lpot-models/examples/tensorflow/object_detection/label_map.yaml |g" ${yaml}
+            fi
         fi
         if [ "${framework}" == "engine" ]; then
             sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
