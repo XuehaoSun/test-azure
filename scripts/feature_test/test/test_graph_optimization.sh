@@ -39,7 +39,7 @@ function graph_optimization_auto-mix {
 
 function create_conda_env {
     tensorflow_version=$1
-    python_version=3.6
+    python_version=3.7
     conda_env_name=lpot-py${python_version}-graph_optimization
 
     if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
