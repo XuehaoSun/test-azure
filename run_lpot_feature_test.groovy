@@ -185,7 +185,7 @@ node( sub_node_label ){
                         #!/bin/bash
                         set -xe
                         chmod 775 ./lpot-validation/scripts/feature_test/test/test_${feature_name}.sh
-                        ./lpot-validation/scripts/feature_test/test/test_${feature_name}.sh ${args}
+                        ./lpot-validation/scripts/feature_test/test/test_${feature_name}.sh --python_version=${python_version} ${args}
                     '''
                 }
                 sh """#!/bin/bash

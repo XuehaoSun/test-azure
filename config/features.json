@@ -4,5 +4,8 @@
     },
     "helloworld_examples": {
         "dataset_location": "/tf_dataset/dataset/TF_mini_imagenet"
+    },
+    "pytorch_blendcnn_distillation": {
+        "dataset_location": "/tf_dataset2/datasets/blendcnn-distilling"
     }
 }

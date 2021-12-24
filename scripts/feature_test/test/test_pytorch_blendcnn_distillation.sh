@@ -1,16 +1,22 @@
 #!/bin/bash
 set -xe
 
-# example
-cd ${WORKSPACE}/lpot-models/
-
-# proxy
-export http_proxy='http://child-prc.intel.com:913'
-export https_proxy='http://child-prc.intel.com:913'
+PATTERN='[-a-zA-Z0-9_]*='
+for i in "$@"
+do
+    case $i in
+        --dataset_location=*)
+            dataset_location=`echo $i | sed "s/${PATTERN}//"`;;
+        --python_version=*)
+            python_version=`echo $i | sed "s/${PATTERN}//"`;;
+    esac
+done
 
 function main {
     # conda env
     create_conda_env
+    # example
+    cd ${WORKSPACE}/lpot-models/
     # execution
     blendcnn_distilling_log="${WORKSPACE}/blendcnn-distilling-test.log"
     distilling 2>&1 |tee ${blendcnn_distilling_log}
@@ -25,7 +31,7 @@ function create_conda_env {
         export PATH="${HOME}/miniconda3/bin:$PATH"
     fi
     conda remove --all -y -n ${conda_env_name}
-    conda create python=3.6 -y -n ${conda_env_name}
+    conda create python=${python_version} -y -n ${conda_env_name}
     conda activate ${conda_env_name}
     pip install -U pip
 
@@ -33,21 +39,22 @@ function create_conda_env {
     pip install fire tqdm tensorflow==2.6.0
     pip install torch==1.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
-    # install lpot
-    pip install -r requirements.txt
-    git submodule update --init --recursive
-    pip install cmake
-    cmake_path=$(which cmake)
-    ln -s ${cmake_path} ${cmake_path}3 || true
-    python setup.py install
+    # install inc
+    pip install ${WORKSPACE}/neural_compressor*.whl
+
+    # re-install pycocotools resolve the issue with numpy
+    echo "re-install pycocotools resolve the issue with numpy..."
+    pip uninstall pycocotools -y
+    pip install --no-cache-dir pycocotools
+
+    pip list
 
 }
 
 function distilling {
     cd examples/pytorch/eager/blendcnn/distillation
     # model and MRPC
-    dataset_dir="/tf_dataset2/datasets/blendcnn-distilling"
-    rsync -avz ${dataset_dir}/ ./
+    rsync -avz ${dataset_location}/ ./
 
     # fine-tune the pretrained BERT-Base model
     mkdir -p models/bert/mrpc

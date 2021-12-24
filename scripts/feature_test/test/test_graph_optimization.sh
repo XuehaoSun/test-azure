@@ -1,9 +1,19 @@
 #!/bin/bash
 set -x
 
+PATTERN='[-a-zA-Z0-9_]*='
+
+for i in "$@"
+do
+    case $i in
+        --python_version=*)
+            python_version=`echo $i | sed "s/${PATTERN}//"`;;
+    esac
+done
+
 function main {
     export PATH=${HOME}/miniconda3/bin/:$PATH
-    create_conda_env 2.4.0
+    create_conda_env 2.7.0
 
     cd ${WORKSPACE}/lpot-validation/examples/tensorflow || return
     graph_optimization_fp32 2>&1 | tee ${WORKSPACE}/graph_optimization_fp32.log
@@ -39,31 +49,30 @@ function graph_optimization_auto-mix {
 
 function create_conda_env {
     tensorflow_version=$1
-    python_version=3.7
     conda_env_name=lpot-py${python_version}-graph_optimization
 
-    if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-        conda create python=${python_version} -y -n ${conda_env_name}
+    conda_dir=$(dirname $(dirname $(which conda)))
+    if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
+        rm -rf ${conda_dir}/envs/${conda_env_name}
     fi
-    # make sure no more conda nested
-    conda deactivate || source deactivate
-    conda deactivate || source deactivate
-    source activate ${conda_env_name}
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        conda create python=${python_version} -y -n ${conda_env_name}
+        conda deactivate || source deactivate
+        source activate ${conda_env_name} && break
+        n=$((n+1))
+        sleep 5
+    done
     pip install intel-tensorflow==${tensorflow_version}
     pip list
 
     lpot_install
-    pip list
 }
 
 function lpot_install {
-    echo "Checking lpot..."
+    echo "Checking INC..."
     python -V
-    c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
-    if [ ${c_lpot} != 0 ]; then
-        pip uninstall neural-compressor -y
-        pip list
-    fi
     pip install ${WORKSPACE}/neural_compressor*.whl
     pip list
 }

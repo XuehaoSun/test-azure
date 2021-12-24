@@ -6,7 +6,7 @@ echo "summaryLog: ${summaryLog}"
 
 function main {
     CPU_NAME=$(cat "${WORKSPACE}/${feature_name}/cpu_name.log")
-    for i in `seq 6`
+    for i in `seq 7`
     do
         check_tf_example_status ${i}
     done

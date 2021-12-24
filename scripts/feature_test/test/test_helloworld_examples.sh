@@ -1,22 +1,15 @@
 #!/bin/bash
-
 set -x
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "1" ] ; then
-    echo 'ERROR:'
-    echo "Expected 1 parameter got $#"
-    printf 'Please use following parameters:
-    --dataset_location=<path to raw imagenet dataset>
-    '
-    exit 1
-fi
 
 for i in "$@"
 do
     case $i in
         --dataset_location=*)
             dataset_location=`echo $i | sed "s/${PATTERN}//"`;;
+        --python_version=*)
+            python_version=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -26,7 +19,7 @@ function main {
     export PATH=${HOME}/miniconda3/bin/:$PATH
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
 
-    for i in `seq 6`
+    for i in `seq 7`
     do
         create_conda_env "tf_example${i}"
         lpot_install
@@ -107,9 +100,13 @@ function tf_example6 {
     python test.py --benchmark
 }
 
+function tf_example7 {
+    cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example7 || return
+    python test.py
+}
+
 function create_conda_env {
     example_name=$1
-    python_version=3.7
     conda_env_name=lpot-py${python_version}-helloworld_${example_name}
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then

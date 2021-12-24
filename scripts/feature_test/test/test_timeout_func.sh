@@ -6,6 +6,17 @@
 # 3. test timeout for resnet50_v1.5 running
 ###########################################################################################################
 
+PATTERN='[-a-zA-Z0-9_]*='
+for i in "$@"
+do
+    case $i in
+        --python_version=*)
+            python_version=`echo $i | sed "s/${PATTERN}//"`;;
+        *)
+            echo "Parameter $i not recognized."; exit 1;;
+    esac
+done
+
 function main {
   # 1. create conda env
   # export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -15,7 +26,7 @@ function main {
       export PATH="${HOME}/miniconda3/bin:$PATH"
   fi
   # pip config set global.index-url https://pypi.douban.com/simple/
-  create_conda_env 2.3.0
+  create_conda_env 2.7.0
   lpot_install
 
   # 2. prepare
@@ -30,28 +41,26 @@ function main {
 }
 
 function test_timeout {
-  # update yaml
-  sed -i "s+root:.*+root: ${dataset}+g" ${yaml}
-  python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=300
-  echo "yaml after update timeout $1 ...."
-  cat ${yaml}
-  # run
-  ./run_tuning.sh --input_model=${input_model} --output_model=${quantized_model} --config=${yaml}
-  if [ -f ${quantized_model} ];then
-    ./run_benchmark.sh --config=${yaml} --mode=accuracy --input_model=${quantized_model}
-  fi
+    # update yaml
+    sed -i "s+root:.*+root: ${dataset}+g" ${yaml}
+    python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=300
+    echo "yaml after update timeout $1 ...."
+    cat ${yaml}
+    # run
+    bash run_tuning.sh --input_model=${input_model} --output_model=${quantized_model} --config=${yaml}
+    if [ -f ${quantized_model} ];then
+       bash run_benchmark.sh --config=${yaml} --mode=accuracy --input_model=${quantized_model}
+    fi
 }
 
 function create_conda_env {
   tensorflow_version=$1
-  python_version=3.6
   conda_env_name=tf${tensorflow_version}-py${python_version}-timeout
 
   if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
       conda create python=${python_version} -y -n ${conda_env_name}
   fi
   # make sure no more conda nested
-  conda deactivate
   conda deactivate
   conda activate ${conda_env_name}
   conda info -e

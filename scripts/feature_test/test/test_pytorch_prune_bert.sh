@@ -1,6 +1,16 @@
 #!/bin/bash -x
-
 set -eo pipefail
+
+PATTERN='[-a-zA-Z0-9_]*='
+for i in "$@"
+do
+    case $i in
+        --python_version=*)
+            python_version=`echo $i | sed "s/${PATTERN}//"`;;
+        *)
+            echo "Parameter $i not recognized."; exit 1;;
+    esac
+done
 
 function main {
     export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -31,13 +41,19 @@ function create_conda_env {
 
     conda_env_name=pytorch_prune_bert-py${python_version}
 
-    if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
-        conda create python=${python_version} -y -n ${conda_env_name}
+    conda_dir=$(dirname $(dirname $(which conda)))
+    if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
+        rm -rf ${conda_dir}/envs/${conda_env_name}
     fi
-    # make sure no more conda nested
-    conda deactivate || source deactivate
-    conda deactivate || source deactivate
-    source activate ${conda_env_name}
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        conda create python=${python_version} -y -n ${conda_env_name}
+        conda deactivate || source deactivate
+        source activate ${conda_env_name} && break
+        n=$((n+1))
+        sleep 5
+    done
 
     pip list
 
