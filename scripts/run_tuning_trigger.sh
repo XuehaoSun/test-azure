@@ -391,7 +391,7 @@ function update_yaml_config {
             if [[ "${model_src_dir}" == *"/language_translation/"* ]]; then
                 sed -i "/\/path\/to\/dataset/s|data_dir:.*|data_dir: $dataset_location|g" ${yaml}
             fi
-            image_raw_models=("resnet50-v1-12" "vgg16_model_zoo" "mobilenetv2-12" "googlenet-12" "shufflenet-v2-12")
+            image_raw_models=("resnet50-v1-12" "vgg16_model_zoo" "mobilenetv2-12" "googlenet-12" "shufflenet-v2-12" "efficientnet")
             if [[ "${model_src_dir}" == *"/image_recognition/"* ]] || [[ "${image_raw_models[@]}" =~ "${model}" ]];  then
                 sed -i "/\/path\/to\/calibration\/dataset/s|data_path:.*|data_path: ${dataset_location}|g" ${yaml}
                 sed -i "/\/path\/to\/evaluation\/dataset/s|data_path:.*|data_path: ${dataset_location}|g" ${yaml}
