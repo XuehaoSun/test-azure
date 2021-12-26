@@ -188,9 +188,9 @@ echo "CHECK_COPYRIGHT = ${CHECK_COPYRIGHT}"
 
 EXCEL_REPORT=false
 if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
-    echo "EXCEL_REPORT is true"
     EXCEL_REPORT=params.EXCEL_REPORT
 }
+echo "EXCEL_REPORT is ${EXCEL_REPORT}"
 
 ABORT_DUPLICATE_TEST = false
 if ('ABORT_DUPLICATE_TEST' in params && params.ABORT_DUPLICATE_TEST){
@@ -322,7 +322,7 @@ if ('strategy' in params && params.strategy != '') {
 }
 echo "Strategy: ${strategy}"
 
-mode  = 'accuracy,latency'
+mode  = 'accuracy,throughput'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
@@ -401,6 +401,19 @@ if (params.format_scan_only != null){
     format_scan_only=params.format_scan_only
 }
 echo "format_scan_only = ${format_scan_only}"
+
+perf_bs = "1"
+if ('perf_bs' in params && params.perf_bs != '') {
+    perf_bs = params.perf_bs
+}
+echo "Performance batch size: ${perf_bs}"
+
+multi_instance=true
+if (params.multi_instance != null){
+    multi_instance = params.multi_instance
+}
+echo "Multi instance: ${multi_instance}"
+
 
 def updateGithubCommitStatus(String state, String description) {
     try {
@@ -521,7 +534,7 @@ def download() {
     }
 }
 
-def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
+def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu, os){
 
     framework_version = ''
     if (job_framework == 'tensorflow'){
@@ -562,6 +575,8 @@ def BuildParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
     ParamsPerJob += string(name: "mode", value: "${pass_mode}")
+    ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
+    ParamsPerJob += booleanParam(name: "multi_instance", value: multi_instance)
     ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
     ParamsPerJob += string(name: "max_trials", value: "${max_trials}")
     ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
@@ -636,7 +651,7 @@ def getPerfJobs() {
                         // execute build
                         println("${cpu}, ${system}, ${job_framework}, ${job_model}")
 
-                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, python_version, strategy, cpu, system)
+                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu, system)
 
                         catchError {
                             copyArtifacts(
@@ -867,8 +882,8 @@ def collectLog() {
                         if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/summary.log ]]; then
                             cat ${WORKSPACE}/${job_framework}/${job_model}/summary.log >> ${WORKSPACE}/summary.log
                         else
-                            echo "${system};Unknown;${job_framework};N/A;INT8;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
-                            echo "${system};Unknown;${job_framework};N/A;FP32;${job_model};Inference;Latency;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                            echo "${system};Unknown;${job_framework};N/A;INT8;${job_model};Inference;Throughput;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                            echo "${system};Unknown;${job_framework};N/A;FP32;${job_model};Inference;Throughput;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                         fi
                     """
                 }
@@ -1139,7 +1154,7 @@ def generateExcelReport() {
             source ${WORKSPACE}/.lpot-report-generator/bin/activate
 
             set +e
-            python -m pip install --index-url https://pypi.douban.com/simple -r ./lpot-validation/scripts/report_generator/requirements.txt
+            python -m pip install -r ./lpot-validation/scripts/report_generator/requirements.txt
             exit_code=$?
             set -e
 
@@ -1483,7 +1498,7 @@ node( node_label ) {
         if (EXCEL_REPORT) {
             stage("Generate excel report") {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    retry(5) {
+                    retry(3) {
                         generateExcelReport()
                     }
                 }

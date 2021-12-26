@@ -235,7 +235,7 @@ def summarize_values(key: str, value: list):
 
 
 def get_framework_version(framework: str) -> None:
-    print(f"Checking {framework} version")
+    print(f"Checking {framework} version...")
     fw_modules = {
         "tensorflow": "tensorflow",
         "onnxrt": "onnxruntime",
@@ -248,7 +248,7 @@ def get_framework_version(framework: str) -> None:
     import importlib
     fw_module = importlib.import_module(fw_module_name)
     version = fw_module.__version__
-    print("Framework version is {version}")
+    print(f"Framework version is {version}")
     return version
 
 if __name__ == "__main__":

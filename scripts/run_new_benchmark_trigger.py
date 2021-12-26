@@ -25,6 +25,7 @@ parser.add_argument("--input_model", type=str, required=True)
 parser.add_argument("--precision", type=str, choices=consts.SUPPORTED_DATATYPES, required=True)
 parser.add_argument("--mode", type=str, choices=consts.SUPPORTED_MODES, required=True)
 parser.add_argument("--batch_size", type=int, required=True)
+parser.add_argument("--multi_instance", action='store_true')
 parser.add_argument("--yaml", type=str, required=True)
 parser.add_argument("--cpu", type=str, required=True)
 parser.add_argument("--output_path", type=str, default=os.environ.get("WORKSPACE"))
@@ -185,15 +186,12 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
     num_benchmark_cores = ncores_per_socket * num_sockets
 
     batch_size = args.batch_size
+    ncores_per_instance = ncores_per_socket
+    iters = 100
 
-    if mode == "latency":
+    if args.multi_instance:
         ncores_per_instance = 4
-        batch_size = 1
         iters = 500
-    else:
-        # Use whole socket per instance
-        ncores_per_instance = ncores_per_socket
-        iters = 100
 
     env_vars = {
         "LOGLEVEL": "DEBUG",
@@ -213,6 +211,8 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         lpot_config.evaluation.performance.configs.intra_num_of_threads = None
         lpot_config.evaluation.performance.configs.inter_num_of_threads = None
         lpot_config.evaluation.performance.configs.kmp_blocktime = None
+        
+        print(lpot_config.evaluation.performance.configs.serialize())
 
         # walk around for anno_path yaml format issue.
         if ( lpot_config.evaluation.accuracy.metric.name == 'COCOmAP' ):

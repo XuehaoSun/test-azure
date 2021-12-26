@@ -1,11 +1,12 @@
 #!/bin/bash
 
 set -eo pipefail
+set -x
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# -lt 13 ] || [ $# -gt 14 ]; then
+if [ $# -lt 14 ] || [ $# -gt 15 ]; then
     echo 'ERROR:'
-    echo "Expected 13 parameters got $#"
+    echo "Expected 14 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
@@ -58,6 +59,8 @@ do
             cpu=`echo $i | sed "s/${PATTERN}//"`;;
         --output_path=*)
             output_path=`echo $i | sed "s/${PATTERN}//"`;;
+        --multi_instance=*)
+            multi_instance=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -229,30 +232,24 @@ function run_benchmark {
     # get cpu information for multi-instance
     ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
 
-    if [[ ${mode} == "latency" ]] && [[ "${model}" != "dlrm"* ]]; then
-        ncores_per_instance=4
-        batch_size=1
-        iters=500
-        if [ "${model}" == "wide_deep_large_ds" ]; then
-            batch_size=100
-        fi
+    ncores_per_instance=${ncores_per_socket}
+    iters=100
 
-        # walk around for pytorch yolov3 model, failed in load 194 iteration.
-        if [ "${model}" == "yolo_v3" ] && [ "${framework}" == "pytorch" ]; then
-            iters=150
-        fi
-        # custom iteration
-        if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
-            iters=100
-        elif [[ "${latency_high_1000[@]}" =~ "${model}" ]]; then
-            iters=80
-        fi
-    else
-        ncores_per_instance=${ncores_per_socket}
-        iters=100
+    if [ "${multi_instance}" == "true" ]; then
+        ncores_per_instance=4
+        iters=500
     fi
 
-    export OMP_NUM_THREADS=${ncores_per_instance}
+    # walk around for pytorch yolov3 model, failed in load 194 iteration.
+    if [ "${model}" == "yolo_v3" ] && [ "${framework}" == "pytorch" ]; then
+        iters=150
+    fi
+    # custom iteration
+    if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
+        iters=100
+    elif [[ "${latency_high_1000[@]}" =~ "${model}" ]]; then
+        iters=80
+    fi
 
     parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
 
@@ -284,10 +281,13 @@ function run_benchmark {
 
     benchmark_pids=()
 
-    if [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
+    export OMP_NUM_THREADS=${ncores_per_instance}
+    if [ "${multi_instance}" == "false" ] || [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
+        echo "Executing single instance benchmark"
         ${run_cmd} 2>&1|tee ${logFile}.log &
         benchmark_pids+=($!)
     else
+        echo "Executing multi instance benchmark"
         for((j=0;$j<${ncores_per_socket};j=$(($j + ${ncores_per_instance}))));
         do
         end_core_num=$((j + ncores_per_instance -1))

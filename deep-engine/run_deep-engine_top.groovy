@@ -71,6 +71,12 @@ if (params.RUN_SPELLCHECK != null){
 }
 echo "RUN_SPELLCHECK = ${RUN_SPELLCHECK}"
 
+EXCEL_REPORT=false
+if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
+    EXCEL_REPORT=params.EXCEL_REPORT
+}
+echo "EXCEL_REPORT is ${EXCEL_REPORT}"
+
 // setting refer_build
 refer_build = "x0"
 if ('refer_build' in params && params.refer_build != '') {
@@ -575,6 +581,45 @@ def generateReport() {
     }
 }
 
+def generateExcelReport() {
+    withEnv([
+            "summaryLog=${summaryLog}",
+            "tuneLog=${tuneLog}",
+    ]) {
+        sh '''#!/bin/bash
+            set -x
+
+            if [ ! -d "${WORKSPACE}/.lpot-report-generator" ]; then
+                python3 -m venv ${WORKSPACE}/.lpot-report-generator
+            fi
+
+            source ${WORKSPACE}/.lpot-report-generator/bin/activate
+
+            set +e
+            python -m pip install -r ./lpot-validation/scripts/report_generator/requirements.txt
+            exit_code=$?
+            set -e
+
+            if [ $exit_code -ne 0 ]; then
+                for requirement in `cat ./lpot-validation/scripts/report_generator/requirements.txt`
+                do
+                    requirement_whl=$(find ${HOME}/whls  -iname "${requirement}*.whl")
+                    if [ ! -z ${requirement_whl} ]; then
+                        python -m pip install ${requirement_whl}
+                    else
+                        echo "Could not found whl file for ${requirement}"
+                        exit 1
+                    fi
+                done
+            fi
+
+            python ./lpot-validation/scripts/report_generator/generate_excel_report.py \
+                --tuning-log="${tuneLog}" \
+                --summary-log="${summaryLog}"
+        '''
+    }
+}
+
 def sendReport() {
     dir("$WORKSPACE") {
         if (PR_source_branch != '') {
@@ -740,6 +785,16 @@ node( node_label ) {
         stage("Generate report") {
             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                 generateReport()
+            }
+        }
+
+        if (EXCEL_REPORT) {
+            stage("Generate excel report") {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    retry(3) {
+                        generateExcelReport()
+                    }
+                }
             }
         }
 

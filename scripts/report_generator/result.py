@@ -29,8 +29,7 @@ class PerformanceData(JsonSerializer):
     def __init__(self) -> None:
         """Initialize PerformanceData class."""
         super().__init__()
-        self.latency = {}
-        self.throughput = {}
+        self.performance = {}
 
 
 class Result(JsonSerializer):

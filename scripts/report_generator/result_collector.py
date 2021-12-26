@@ -23,7 +23,7 @@ class ResultCollector(JsonSerializer):
                     new_config = False
                     result = search_result
 
-                if mode in ["latency", "throughput"]:
+                if mode in ["performance"]:
                     result.update_perf_data(mode, precision, value, url)
                 elif mode == "accuracy":
                     result.update_accuracy_data(precision, value, url)

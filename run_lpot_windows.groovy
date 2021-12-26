@@ -163,6 +163,18 @@ if ('os' in params && params.os != ''){
 }
 echo "os: ${os}"
 
+perf_bs = "1"
+if ('perf_bs' in params && params.perf_bs != '') {
+    perf_bs = params.perf_bs
+}
+echo "Performance batch size: ${perf_bs}"
+
+multi_instance=true
+if (params.multi_instance != null){
+    multi_instance = params.multi_instance
+}
+echo "Multi instance: ${multi_instance}"
+
 
 def cleanup() {
 
@@ -631,7 +643,9 @@ node( sub_node_label ) {
 
             if (!tune_only && model != "helloworld_keras") {
                 println("========== Benchmark ========")
-                batch_size = modelConf."${framework}"."${model}"."batch_size"
+                if (perf_bs == "default") {
+                    perf_bs = modelConf."${framework}"."${model}"."batch_size"
+                }
                 timeout(360) {
                     withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
                         precision_list.each { precision ->
@@ -662,7 +676,7 @@ node( sub_node_label ) {
                                         exit 1
                                     )
 
-                                    CALL python ${WORKSPACE}%\\lpot-validation\\scripts\\run_benchmark_trigger.py ^
+                                    SET cmd=python ${WORKSPACE}%\\lpot-validation\\scripts\\run_benchmark_trigger.py ^
                                         --framework=${framework} ^
                                         --model=${model} ^
                                         --model_src_dir=${model_src_dir} ^
@@ -670,9 +684,15 @@ node( sub_node_label ) {
                                         --input_model=${input_model} ^
                                         --precision=${precision} ^
                                         --mode=${mode} ^
-                                        --batch_size=${batch_size} ^
+                                        --batch_size=${perf_bs} ^
                                         --yaml=${yaml} ^
-                                        --cpu=${cpu}
+                                        --cpu=${cpu} ^
+                                    
+                                    IF "${multi_instance}" == "true" (
+                                        SET cmd=%cmd% --multi_instance=${multi_instance}
+                                    )
+
+                                    CALL %cmd%
 
                                     IF %ERRORLEVEL% NEQ 0 (
                                         echo "Error while executing benchmark."

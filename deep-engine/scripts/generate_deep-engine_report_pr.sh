@@ -408,16 +408,12 @@ cat >> ${WORKSPACE}/report.html << eof
                 <tr>
 
                 <th>bs</th>
-                <th>ms</th>
-                <th>bs</th>
                 <th>top1</th>
 
                 <th>bs</th>
-                <th>ms</th>
-                <th>bs</th>
                 <th>top1</th>
 
-                <th class="col-cell col-cell1">Latency<br><font size="2px">FP32/INT8>=1.5</font></th>
+                <th class="col-cell col-cell1">Throughput<br><font size="2px">INT8/FP32>=2</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
                 </tr>
 eof
@@ -459,22 +455,16 @@ eof
 function generate_inference {
     awk -v framework="${framework}" -v fw_version="${fw_version}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
         BEGINE {
-            fp32_ms_bs = "nan";
-            fp32_ms_value = "nan";
-            fp32_ms_url = "nan";
-            fp32_fps_bs = "nan";
-            fp32_fps_value = "nan";
-            fp32_fps_url = "nan";
+            fp32_perf_bs = "nan";
+            fp32_perf_value = "nan";
+            fp32_perf_url = "nan";
             fp32_acc_bs = "nan";
             fp32_acc_value = "nan";
             fp32_acc_url = "nan";
 
-            int8_ms_bs = "nan";
-            int8_ms_value = "nan";
-            int8_ms_url = "nan";
-            int8_fps_bs = "nan";
-            int8_fps_value = "nan";
-            int8_fps_url = "nan";
+            int8_perf_bs = "nan";
+            int8_perf_value = "nan";
+            int8_perf_url = "nan";
             int8_acc_bs = "nan";
             int8_acc_value = "nan";
             int8_acc_url = "nan";
@@ -482,17 +472,11 @@ function generate_inference {
             if($1 == os && $2 == platform && $3 == framework && $4 == fw_version && $6 == model) {
                 // FP32
                 if($5 == "FP32") {
-                    // Latency
-                    if($8 == "Latency") {
-                        fp32_ms_bs = $9;
-                        fp32_ms_value = $10;
-                        fp32_ms_url = $11;
-                    }
-                    // Throughput
-                    if($8 == "Throughput") {
-                        fp32_fps_bs = $9;
-                        fp32_fps_value = $10;
-                        fp32_fps_url = $11;
+                    // Performance
+                    if($8 == "Performance") {
+                        fp32_perf_bs = $9;
+                        fp32_perf_value = $10;
+                        fp32_perf_url = $11;
                     }
                     // Accuracy
                     if($8 == "Accuracy") {
@@ -504,17 +488,11 @@ function generate_inference {
 
                 // INT8
                 if($5 == "INT8") {
-                    // Latency
-                    if($8 == "Latency") {
-                        int8_ms_bs = $9;
-                        int8_ms_value = $10;
-                        int8_ms_url = $11;
-                    }
-                    // Throughput
-                    if($8 == "Throughput") {
-                        int8_fps_bs = $9;
-                        int8_fps_value = $10;
-                        int8_fps_url = $11;
+                    // Performance
+                    if($8 == "Performance") {
+                        int8_perf_bs = $9;
+                        int8_perf_value = $10;
+                        int8_perf_url = $11;
                     }
                     // Accuracy
                     if($8 == "Accuracy") {
@@ -525,9 +503,9 @@ function generate_inference {
                 }
             }
         }END {
-            printf("%s;%s;%s;%s;%s;%s;", int8_ms_bs,int8_ms_value,int8_fps_bs,int8_fps_value,int8_acc_bs,int8_acc_value);
-            printf("%s;%s;%s;%s;%s;%s;", fp32_ms_bs,fp32_ms_value,fp32_fps_bs,fp32_fps_value,fp32_acc_bs,fp32_acc_value);
-            printf("%s;%s;%s;%s;%s;%s;", int8_ms_url,int8_fps_url,int8_acc_url,fp32_ms_url,fp32_fps_url,fp32_acc_url);
+            printf("%s;%s;%s;%s;", int8_perf_bs,int8_perf_value,int8_acc_bs,int8_acc_value);
+            printf("%s;%s;%s;%s;", fp32_perf_bs,fp32_perf_value,fp32_acc_bs,fp32_acc_value);
+            printf("%s;%s;%s;%s;", int8_perf_url,int8_acc_url,fp32_perf_url,fp32_acc_url);
         }
     ' $1
 }
@@ -546,17 +524,17 @@ function generate_tuning_core {
     tuning_count=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
     tuning_log=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $9}')
 
-    echo |awk -v current_values=${current_values} -v last_values=${last_values} -v ts=${tuning_strategy} -v tt=${tuning_time} -v tc="${tuning_count}" -v tl=${tuning_log} -F ';' '
+    echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
+              -v tuning_strategy="${tuning_strategy}" -v tuning_time="${tuning_time}" \
+              -v tuning_count="${tuning_count}" -v tuning_log="${tuning_log}" '
 
         function abs(x) { return x < 0 ? -x : x }
 
-        function show_new_last(batch,link,value,metric) {
+        function show_new_last(batch, link, value, metric) {
             if(value ~/[1-9]/) {
-                if (metric == "ms") {
+                if (metric == "perf") {
                     printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",batch,link,value);
-                }else if(metric == "fps") {
-                    printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",batch,link,value);
-                }else {
+                } else {
                     if (value <= 1){
                         printf("<td>%s</td> <td><a href=%s>%.2f%</a></td>\n",batch,link,value*100);
                     }else{
@@ -573,39 +551,34 @@ function generate_tuning_core {
             }
         }
 
-        function compare_current(a,b,c) {
+        function compare_current(int8_result, fp32_result, metric) {
 
-            if(a ~/[1-9]/ && b ~/[1-9]/) {
-                if(c == "acc") {
-                    target = (a - b) / b;
+            if(int8_result ~/[1-9]/ && fp32_result ~/[1-9]/) {
+                if (metric == "acc") {
+                    target = (int8_result - fp32_result) / fp32_result;
                     if(target >= -0.01) {
                        printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f%</td>", target*100);
-                    }else if(target < -0.05) {
+                    } else if(target < -0.05) {
                        printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f%</td>", target*100);
-                       job_status = "fail"
-                    }else{
-                       printf("<td rowspan=3>%.2f %</td>", target*100);
+                    } else {
+                       printf("<td rowspan=3>%.2f%</td>", target*100);
                     }
-                }else if(c == "ms") {
-                    target = a / b;
-                    if(target >= 1.5) {
+                 } else if(metric == "perf") {
+                    target = int8_result / fp32_result;
+                    if (target >= 2) {
                        printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
-                    }else if(target < 1) {
-                       printf("<td  rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
-                       job_status = "fail"
-                    }else{
-                       printf("<td rowspan=3>%.2f</td>", target);
-                    }
-                }
-                else {
-                    target = a / b;
-                    if(target >= 2) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
-                    }else if(target < 1) {
+                    } else if (target < 1) {
                        printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
-                       job_status = "fail"
-                    }else{
+                    } else {
                        printf("<td rowspan=3>%.2f</td>", target);
+                    }
+                } else {
+                    // Compare model size
+                    target = int8_result / fp32_result;
+                    if (target > 1) {
+                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%s/%s/%s</td>", int8_result, fp32_result, metric);
+                    } else {
+                       printf("<td rowspan=3>%s/%s/%s</td>", int8_result, fp32_result, metric);
                     }
                 }
             }else {
@@ -613,21 +586,25 @@ function generate_tuning_core {
             }
         }
 
-        function compare_result(a,b,c) {
+        function compare_result(new_result, previous_result, metric) {
 
-            if(a ~/[1-9]/ && b ~/[1-9]/) {
-                if(c == "acc") {
-                    target = a - b;
-                    if(target > -0.00001 && target < 0.00001) {
+            if(new_result ~/[1-9]/ && previous_result ~/[1-9]/) {
+                if(metric == "acc") {
+                    target = new_result - previous_result;
+                    if(target >= -0.0001 && target <= 0.0001) {
                         status_png = "background-color:#90EE90";
                     }else {
                         status_png = "background-color:#FFD2D2";
                         job_status = "fail"
                     }
-                    printf("<td style=\"%s\" colspan=2>%.2f %</td>", status_png, target*100);
+                    if (new_result <= 1){
+                        printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
+                    }else{
+                        printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
+                    }
                 }else {
-                    target = a / b;
-                    if(target >= 0.945) {
+                    target = new_result / previous_result;
+                    if(target >= 0.95) {
                         status_png = "background-color:#90EE90";
                     }else {
                         status_png = "background-color:#FFD2D2";
@@ -636,19 +613,10 @@ function generate_tuning_core {
                     printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
                 }
             }else {
-              if(a == nan && b == nan){
-                printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
-              }else{
-                if(c == "acc") {
-                  if(a == nan){
-                    job_status = "fail"
-                    status_png = "background-color:#FFD2D2";
-                    printf("<td style=\"%s\" colspan=2></td>", status_png);
-                  }else{
+                if(new_result == "nan" && previous_result == "nan") {
                     printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
-                  }
                 }else{
-                  if(b == nan){
+                  if(new_result == nan){
                     job_status = "fail"
                     status_png = "background-color:#FFD2D2";
                     printf("<td style=\"%s\" colspan=2></td>", status_png);
@@ -671,38 +639,79 @@ function generate_tuning_core {
             split(current_values,current_value,";");
 
             // current
-            show_new_last(current_value[1],current_value[13],current_value[2],"ms");
-            show_new_last(current_value[5],current_value[15],current_value[6],"acc");
+            // INT8 Performance results
+            int8_perf_batch=current_value[1]
+            int8_perf_value=current_value[2]
+            int8_perf_url=current_value[9]
+            show_new_last(int8_perf_batch, int8_perf_url, int8_perf_value, "perf");
 
-            show_new_last(current_value[7],current_value[16],current_value[8],"ms");
-            show_new_last(current_value[11],current_value[18],current_value[12],"acc");
+            // INT8 Accuracy results
+            int8_acc_batch=current_value[3]
+            int8_acc_value=current_value[4]
+            int8_acc_url=current_value[10]
+            show_new_last(int8_acc_batch, int8_acc_url, int8_acc_value, "acc");
+
+            // FP32 Performance results
+            fp32_perf_batch=current_value[5]
+            fp32_perf_value=current_value[6]
+            fp32_perf_url=current_value[11]
+            show_new_last(fp32_perf_batch, fp32_perf_url, fp32_perf_value, "perf");
+
+            // FP32 Accuracy results
+            fp32_acc_batch=current_value[7]
+            fp32_acc_value=current_value[8]
+            fp32_acc_url=current_value[12]
+            show_new_last(fp32_acc_batch, fp32_acc_url, fp32_acc_value, "acc");
 
             // Compare Current
-
-            compare_current(current_value[8],current_value[2],"ms");
-            compare_current(current_value[6],current_value[12],"acc");
+            compare_current(int8_perf_value, fp32_perf_value, "perf");
+            compare_current(int8_acc_value, fp32_acc_value, "acc");
 
             // Last values
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td>Last</td><td><a href=%4$s>%1$s</a></td><td><a href=%4$s>%2$s</a></td><td><a href=%4$s>%3$s</a></td>", ts, tt, tc, tl);
+            // Show last INT8 Performance results
+            last_int8_perf_batch=last_value[1]
+            last_int8_perf_value=last_value[2]
+            last_int8_perf_url=last_value[9]
+            show_new_last(last_int8_perf_batch, last_int8_perf_url, last_int8_perf_value, "perf");
 
-            show_new_last(last_value[1],last_value[13],last_value[2],"ms");
-            show_new_last(last_value[5],last_value[15],last_value[6],"acc");
+            // Show last INT8 Accuracy results
+            last_int8_acc_batch=last_value[3]
+            last_int8_acc_value=last_value[4]
+            last_int8_acc_url=last_value[10]
+            show_new_last(last_int8_acc_batch, last_int8_acc_url, last_int8_acc_value, "acc");
 
-            show_new_last(last_value[7],last_value[16],last_value[8],"ms");
-            show_new_last(last_value[11],last_value[18],last_value[12],"acc");
+            // Show last FP32 Performance results
+            last_fp32_perf_batch=last_value[5]
+            last_fp32_perf_value=last_value[6]
+            last_fp32_perf_url=last_value[11]
+            show_new_last(last_fp32_perf_batch, last_fp32_perf_url, last_fp32_perf_value, "perf");
+
+            // Show last FP32 Accuracy results
+            last_fp32_acc_batch=last_value[7]
+            last_fp32_acc_value=last_value[8]
+            last_fp32_acc_url=last_value[12]
+            show_new_last(last_fp32_acc_batch, last_fp32_acc_url, last_fp32_acc_value, "acc");
+            
             printf("</tr>")
 
             // current vs last
             printf("</tr>\n<tr><td>New/Last</td><td colspan=3 class=\"col-cell3\"></td>");
 
-            compare_result(last_value[2],current_value[2],"ms");
-            compare_result(current_value[6],last_value[6],"acc");
+            // Compare INT8 Performance results
+            compare_result(int8_perf_value, last_int8_perf_value,"perf");
+            
+            // Compare INT8 Accuracy results
+            compare_result(int8_acc_value, last_int8_acc_value, "acc");
 
-            compare_result(last_value[8],current_value[8],"ms");
-            compare_result(current_value[12],last_value[12],"acc");
+            // Compare FP32 Performance results
+            compare_result(fp32_perf_value, last_fp32_perf_value, "perf");
+
+            // Compare Fp32 Accuracy results
+            compare_result(fp32_acc_value, last_fp32_acc_value, "acc");
+
             printf("</tr>\n");
 
         } END{

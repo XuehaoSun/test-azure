@@ -29,6 +29,7 @@ parser.add_argument("--mode", type=str,
 parser.add_argument("--batch_size", type=int, required=True)
 parser.add_argument("--yaml", type=str, required=True)
 parser.add_argument("--cpu", type=str, required=True)
+parser.add_argument("--multi_instance", action="store_true")
 
 args = parser.parse_args()
 
@@ -240,14 +241,20 @@ def run_benchmark(parameters, mode, topology, yaml_path):
     num_instances = (ncores_per_socket * num_sockets) // ncores_per_instance
 
     print(f"Execute command: {cmd}")
-    execute_multi_instance(cmd=cmd,
-                          cwd=args.model_src_dir,
-                          instances=num_instances,
-                          sockets=num_sockets,
-                          output_prefix=log_prefix,
-                          use_ht=False,
-                          shell=True,
-                          env=env_vars)
+    if args.multi_instance:
+        execute_multi_instance(cmd=cmd,
+                            cwd=args.model_src_dir,
+                            instances=num_instances,
+                            sockets=num_sockets,
+                            output_prefix=log_prefix,
+                            use_ht=False,
+                            shell=True,
+                            env=env_vars)
+    else:
+        execute_command(args=cmd,
+                        cwd=args.model_src_dir,
+                        shell=True,
+                        file=f"{log_prefix}.log")
 
 
 def update_yaml(yaml_path, batch_size=None, iters=None):

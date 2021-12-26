@@ -45,6 +45,13 @@ class Measurement(JsonSerializer):
         self.value = data.get("value")
         self.log = data.get("log")
 
+    @property
+    def simple_mode(self) -> str:
+        """Get simplified mode name."""
+        if self.mode.lower() in ["throughput", "latency"]:
+            return "Performance"
+        return "Accuracy"
+
 class Result(JsonSerializer):
     def __init__(self) -> None:
         super().__init__()
@@ -85,7 +92,7 @@ class Result(JsonSerializer):
                     benchmark.precision.upper(),
                     self.model,
                     "Inference",
-                    benchmark.mode.capitalize(),
+                    benchmark.simple_mode,
                     benchmark.batch_size,
                     benchmark.value,
                     benchmark.log

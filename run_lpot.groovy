@@ -50,7 +50,7 @@ if ('precision' in params && params.precision != '') {
 precision_list = parseStrToList(precision)
 echo "Precision: ${precision}"
 
-mode = 'accuracy,latency'
+mode = 'accuracy,throughput'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
@@ -180,6 +180,18 @@ if (framework == "pytorch") {
 }
 println("torchvision_version: " + torchvision_version)
 
+perf_bs = "1"
+if ('perf_bs' in params && params.perf_bs != '') {
+    perf_bs = params.perf_bs
+}
+echo "Performance batch size: ${perf_bs}"
+
+multi_instance=true
+if (params.multi_instance != null){
+    multi_instance = params.multi_instance
+}
+echo "Multi instance: ${multi_instance}"
+
 // specify sub node label for pytorch models
 if(framework == 'pytorch') {
     if (model == 'dlrm' || model == 'dlrm_fx') {
@@ -301,8 +313,11 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     def dataset_location = modelConf."dataset_location"
     def input_model = modelConf."input_model"
     def yaml = modelConf."yaml"
-    def batch_size = modelConf."batch_size"
     def new_benchmark = modelConf."new_benchmark"
+    def batch_size = modelConf."batch_size"
+    if (perf_bs != "default" && mode == "throughput") {
+        batch_size = perf_bs
+    }
 
     if ( MR_source_branch != '' ){
         //PR test will cover different strategies, the other test mode will use the passed strategy
@@ -378,6 +393,11 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
         if (framework == "engine") {
             cmd += " --dataset_location=\"${WORKSPACE}/data\""
         }
+
+        if (multi_instance) {
+            cmd += " --multi_instance"
+        }
+
         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
             sh """#!/bin/bash -x
                 echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking - New"
@@ -426,6 +446,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --precision=${precision} \
                     --mode=${mode} \
                     --batch_size=${batch_size} \
+                    --multi_instance=${multi_instance} \
                     --conda_env_name=${conda_env_name} \
                     --yaml=${yaml} \
                     --os=${os} \
@@ -918,9 +939,9 @@ node( sub_node_label ) {
                     }
                 }
             }
-            // Set Latency mode for MR tests
+            // Set Throughput mode for MR tests
             if (lpot_branch == '' && MR_source_branch != '') {
-                mode_list = ["latency"]
+                mode_list = ["throughput"]
             }
             
             if (!tune_only) {
