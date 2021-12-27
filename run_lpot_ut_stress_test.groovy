@@ -238,6 +238,11 @@ def binary_install() {
             n=$((n+1))
             sleep 5
         done
+        
+        # re-install pycocotools resolve the issue with numpy
+        echo "re-install pycocotools resolve the issue with numpy..."
+        pip uninstall pycocotools -y
+        pip install --no-cache-dir pycocotools
 
         if [ ! -d ${WORKSPACE}/lpot-models ]; then
             echo "\\"lpot-model\\" not found. Exiting..."
