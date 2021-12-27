@@ -315,7 +315,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     def yaml = modelConf."yaml"
     def new_benchmark = modelConf."new_benchmark"
     def batch_size = modelConf."batch_size"
-    if (perf_bs != "default" && mode == "throughput") {
+    if (perf_bs != "default" && mode != "accuracy") {
         batch_size = perf_bs
     }
 
