@@ -71,7 +71,7 @@ run_cpplint() {
 }
 
 run_pylint() {
-    pip install pylint
+    pip install pylint==2.12.1
     # tf_utils.util will import some deps installed by tensorflow
     pip install intel-tensorflow
 
