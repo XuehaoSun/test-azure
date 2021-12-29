@@ -105,7 +105,7 @@ main() {
     q_model=${WORKSPACE}/${framework}-${model}-tune
     if [ ${framework} == "tensorflow" ]; then
         q_model="${q_model}.pb"
-    elif [ ${framework} == "mxnet" ] && [[ ${model_src_dir} == *"object_detection" ]]; then
+    elif [ ${framework} == "mxnet" ] && [[ ${model_src_dir} == *"object_detection"* ]]; then
         q_model="${q_model}/${model}"
     elif [ ${framework} == "onnxrt" ]; then
         q_model="${q_model}.onnx"

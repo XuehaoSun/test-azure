@@ -20,7 +20,7 @@ function main {
     lpot_install
 
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/pytorch/eager/language_translation/prune
+    cd ${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager
     n=0
     until [ "$n" -ge 5 ]
     do

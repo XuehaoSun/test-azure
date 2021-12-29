@@ -401,7 +401,7 @@ def incJobs() {
             // execute build
             println("Current engine model is --> "+"${job_model}")
             sub_jenkins_job = "deep-engine-inc"
-            job_framework = "engine"
+            job_framework = "baremetal"
             downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: incParams(job_framework, job_model, python_version, 'basic', '*', 'linux')
 
             catchError {

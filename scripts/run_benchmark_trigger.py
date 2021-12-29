@@ -69,7 +69,7 @@ def main():
 
     if args.framework == "tensorflow":
         q_model = f"{q_model}.pb"
-    if args.framework == "mxnet" and args.model_src_dir.endswith("object_detection"):
+    if args.framework == "mxnet" and "object_detection" in args.model_src_dir:
         q_model = os.path.join(q_model, args.model)
     if args.framework == "onnxrt":
         q_model = f"{q_model}.onnx"
@@ -104,7 +104,7 @@ def run_accuracy(parameters, yaml_path):
     }
 
     if args.framework == "tensorflow":
-        if any(args.model_src_dir in model_dir for model_dir in ["image_recognition", "object_detection"]):
+        if any(args.model_src_dir in model_dir for model_dir in ["image_recognition/tensorflow_models/quantization/ptq", "object_detection/tensorflow_models/quantization/ptq"]):
             iters = -1
             yaml_update_parameters.update({"iters": iters})
 
@@ -215,7 +215,7 @@ def run_benchmark(parameters, mode, topology, yaml_path):
                         string=topology)
 
     if args.framework == "tensorflow":
-        if any(args.model_src_dir in model_dir for model_dir in ["image_recognition", "object_detection"]):
+        if any(args.model_src_dir in model_dir for model_dir in ["image_recognition/tensorflow_models/quantization/ptq", "object_detection/tensorflow_models/quantization/ptq"]):
             parameters=[
                 f"--config=benchmark.yaml",
                 f"--input_model={args.input_model}"

@@ -21,7 +21,7 @@ function main {
     lpot_install
 
     # Run TensorFlow Pruning test
-    cd ${WORKSPACE}/lpot-models/examples/tensorflow/pruning/resnet_v2
+    cd ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/resnet_v2/pruning/magnitude
     pip install intel-tensorflow==2.5.0
     # re-install pycocotools resolve the issue with numpy
     echo "re-install pycocotools resolve the issue with numpy..."

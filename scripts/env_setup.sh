@@ -103,7 +103,7 @@ function set_environment {
             set_PT_env;;
         onnxrt)
             set_ONNXRT_env;;
-        engine)
+        baremetal)
             set_ENGINE_env;;
         *)
             echo "Framework ${framework} not recognized."; exit 1;;

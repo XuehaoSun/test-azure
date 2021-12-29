@@ -102,11 +102,13 @@ main() {
     fi
 
     # specific ENV setting for some models
-    if [[ "${model_src_dir}" == *"pytorch/eager/language_translation/ptq" ]]; then
+    if [[ "${model_src_dir}" == *"text-classification/quantization/ptq_static/eager" ]] || [[ "${model_src_dir}" == *"language-modeling/quantization/ptq_static/eager" ]]; then
         setup_install_pypi_source
+        cd ../../../../common
         python setup.py install
+        cd -
     fi
-    if [[ "${model_src_dir}" == *"/huggingface_models" ]]; then
+    if [[ "${model_src_dir}" == *"/huggingface_models"* ]]; then
         echo -e "\nInstalling pytorch-huggingface requirements..."
         n=0
         until [ "$n" -ge 5 ]
@@ -116,9 +118,6 @@ main() {
             sleep 5
         done
         pip list
-        bash install_requirements.sh --topology=${model}
-        setup_install_pypi_source
-        python setup.py install
     fi
     if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
         # Install nnUnet
@@ -295,7 +294,7 @@ main() {
         fi
     fi
 
-    if [ "${framework}" == "engine" ]; then
+    if [ "${framework}" == "baremetal" ]; then
         copy_dataset
         tokenizer_dir=$(dirname ${input_model})
         parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --dataset_location=${dataset_location} --tokenizer_dir=${tokenizer_dir}/test_tokenizer"
@@ -399,11 +398,11 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
             fi
             if [ "${model}" == "ssd-12" ]; then
-                echo "annotation path is "${WORKSPACE}"/lpot-models/examples/tensorflow/object_detection/label_map.yaml"
-                sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: ${WORKSPACE}/lpot-models/examples/tensorflow/object_detection/label_map.yaml |g" ${yaml}
+                echo "annotation path is "${WORKSPACE}"/lpot-models/examples/tensorflow/object_detection/tensorflow_models/quantization/ptq/label_map.yaml"
+                sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: ${WORKSPACE}/lpot-models/examples/tensorflow/object_detection/tensorflow_models/quantization/ptq/label_map.yaml |g" ${yaml}
             fi
         fi
-        if [ "${framework}" == "engine" ]; then
+        if [ "${framework}" == "baremetal" ]; then
             sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
             sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
         fi

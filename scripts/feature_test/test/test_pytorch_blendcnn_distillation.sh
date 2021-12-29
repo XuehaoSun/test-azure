@@ -52,7 +52,7 @@ function create_conda_env {
 }
 
 function distilling {
-    cd examples/pytorch/eager/blendcnn/distillation
+    cd examples/pytorch/nlp/blendcnn/distillation/eager
     # model and MRPC
     rsync -avz ${dataset_location}/ ./
 

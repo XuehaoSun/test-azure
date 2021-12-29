@@ -1,5 +1,5 @@
 {
-  "engine": {
+  "baremetal": {
     "bert_base_mrpc": {
       "model_src_dir": "nlp/mrpc/bert_base",
       "dataset_location": "/tf_dataset2/datasets/mrpc_data",

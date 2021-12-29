@@ -160,7 +160,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
             f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
         ])
     # Workaround for engine
-    if args.framework == "engine":
+    if args.framework == "baremetal":
         tokenizer_dir=os.path.dirname(args.input_model)
         parameters.extend([
             f"--dataset_location={args.dataset_location}",
@@ -262,7 +262,7 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         ])
 
     # Workaround for engine
-    if args.framework == "engine":
+    if args.framework == "baremetal":
         tokenizer_dir=os.path.dirname(args.input_model)
         parameters.extend([
             f"--dataset_location={args.dataset_location}",

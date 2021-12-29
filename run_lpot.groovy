@@ -390,7 +390,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
         if (framework == "tensorflow" && model == "bert_base_mrpc") {
             cmd += " --dataset_location=\"${dataset_prefix}${dataset_location}\""
         }
-        if (framework == "engine") {
+        if (framework == "baremetal") {
             cmd += " --dataset_location=\"${WORKSPACE}/data\""
         }
 
@@ -465,12 +465,12 @@ def getReferenceData() {
             def refer_job_name = "${JOB_NAME}"
 
             if (test_mode == "extension") {
-                if (framework=="engine"){
+                if (framework=="baremetal"){
                     refer_job_name="intel-deep-engine-validation-top-nightly"
                 }else{
                     refer_job_name="intel-lpot-validation-top-weekly"
                 }
-            }else if(test_mode == "mr" && framework != "engine"){
+            }else if(test_mode == "mr" && framework != "baremetal"){
                 refer_job_name = "intel-lpot-validation-top-PR"
             } else {
                 if (upstreamJobName) {
@@ -833,7 +833,7 @@ node( sub_node_label ) {
                         new_conda_env=false
                         conda_env_name='pytorch-bert-1.6'
                     }
-                    if(label[0] == 'ipex'){
+                    if(label[-1] == 'ipex'){
                         conda_env_name="pt-ipex-${framework_version}-${python_version}"
                         install_ipex = true
                     }
@@ -880,7 +880,7 @@ node( sub_node_label ) {
                         mxnet_version=framework_version
                     }else if(framework=='onnxrt'){
                         onnxruntime_version=framework_version
-                    }else if(framework=='engine'){
+                    }else if(framework=='baremetal'){
                         engine_version=framework_version
                     }
                     create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, engine_version, install_ipex)
@@ -970,7 +970,7 @@ node( sub_node_label ) {
                 }
             }
 
-            if (framework == 'engine' && (model_src_dir=~'nlp').find()){
+            if (framework == 'baremetal' && (model_src_dir=~'nlp').find()){
                 stage("Inferencer Benchmark"){
                     println("==========run inferencer benchmark========")
                     precision_list.each { precision ->
@@ -983,7 +983,7 @@ node( sub_node_label ) {
                             """
                             ir_path = "${WORKSPACE}/ir"
                         }else{
-                            ir_path = "${WORKSPACE}/engine-${model}-tune"
+                            ir_path = "${WORKSPACE}/${framework}-${model}-tune"
                         }
                         inferencer_config.split(',').each { each_ben_conf ->
                             def ncores_per_instance = each_ben_conf.split(':')[0]

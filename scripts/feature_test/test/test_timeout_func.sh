@@ -30,7 +30,7 @@ function main {
   lpot_install
 
   # 2. prepare
-  cd ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition || return
+  cd ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq || return
   input_model="/tf_dataset/sh_models/PB_dir/resnet50_v15/resnet50_v1.pb"
   quantized_model="./models/quantized_resnet50_v1.pb"
   yaml="resnet50_v1_5.yaml"

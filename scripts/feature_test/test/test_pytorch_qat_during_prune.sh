@@ -20,7 +20,7 @@ function main {
     lpot_install
 
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/pytorch/eager/image_recognition/imagenet/cpu/qat_during_prune
+    cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager
 
     # Update prune_conf.yaml
     sed -i "/\/path\/to\/imagenet\/train/s|root:.*|root: \/tf_dataset\/pytorch\/ImageNet\/raw\/train|g" prune_conf.yaml
