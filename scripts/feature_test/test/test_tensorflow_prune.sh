@@ -28,6 +28,7 @@ function main {
     pip uninstall pycocotools -y
     pip install --no-cache-dir pycocotools
     pip list
+    cp -r /tf_dataset2/models/tensorflow/resnet_v2/baseline_model .
     python main.py   2>&1 | tee ${WORKSPACE}/tensorflow_prune.log
 
 }
