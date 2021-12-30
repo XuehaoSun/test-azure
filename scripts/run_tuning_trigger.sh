@@ -398,8 +398,10 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
             fi
             if [ "${model}" == "ssd-12" ]; then
-                echo "annotation path is "${WORKSPACE}"/lpot-models/examples/tensorflow/object_detection/tensorflow_models/quantization/ptq/label_map.yaml"
                 sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: ${WORKSPACE}/lpot-models/examples/tensorflow/object_detection/tensorflow_models/quantization/ptq/label_map.yaml |g" ${yaml}
+            elif [ "${model}" == "ssd_mobilenet_v1-2" ]; then
+                echo "annotation path is ${model_src_dir}/label_map.yaml"
+                sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: ${model_src_dir}/label_map.yaml |g" ${yaml}
             fi
         fi
         if [ "${framework}" == "baremetal" ]; then

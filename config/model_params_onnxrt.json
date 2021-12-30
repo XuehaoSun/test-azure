@@ -251,6 +251,15 @@
       "strategy": "basic",
       "batch_size": 1,
       "new_benchmark": true
+    },
+    "ssd_mobilenet_v1-2": {
+      "model_src_dir": "object_detection/onnx_model_zoo/ssd_mobilenet_v1/quantization/ptq",
+      "dataset_location": "/tf_dataset/dataset/coco_dataset/raw-data",
+      "input_model": "/tf_dataset2/models/onnx/ssdmb/ssd_mobilenet_v1_12.onnx",
+      "yaml": "ssd_mobilenet_v1.yaml",
+      "strategy": "basic",
+      "batch_size": 1,
+      "new_benchmark": true
     }
   }
 }
