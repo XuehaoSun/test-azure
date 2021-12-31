@@ -402,7 +402,7 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Tuning<br>Strategy</th>
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
-                <th colspan="4">INT8</th>
+                <th colspan="4">INT8/BF16</th>
                 <th colspan="4">FP32</th>
                 <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
           </tr>

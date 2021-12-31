@@ -401,15 +401,19 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">Tuning<br>Strategy</th>
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
-                      <th colspan="4">INT8</th>
+                      <th colspan="4">INT8/BF16</th>
                       <th colspan="4">FP32</th>
                       <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
                 </tr>
                 <tr>
 
                 <th>bs</th>
+                <th>imgs/s</th>
+                <th>bs</th>
                 <th>top1</th>
 
+                <th>bs</th>
+                <th>imgs/s</th>
                 <th>bs</th>
                 <th>top1</th>
 
@@ -524,9 +528,9 @@ function generate_tuning_core {
     tuning_count=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
     tuning_log=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLogLast} |awk -F';' '{print $9}')
 
-    echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
+    echo |awk -v current_values=${current_values} -v last_values=${last_values} \
               -v tuning_strategy="${tuning_strategy}" -v tuning_time="${tuning_time}" \
-              -v tuning_count="${tuning_count}" -v tuning_log="${tuning_log}" '
+              -v tuning_count="${tuning_count}" -v tuning_log="${tuning_log}" -F ';' '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -535,17 +539,12 @@ function generate_tuning_core {
                 if (metric == "perf") {
                     printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",batch,link,value);
                 } else {
-                    if (value <= 1){
-                        printf("<td>%s</td> <td><a href=%s>%.2f%</a></td>\n",batch,link,value*100);
-                    }else{
-                        printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",batch,link,value);
-                    }
+                    printf("<td>%s</td> <td><a href=%s>%.2f%</a></td>\n",batch,link,value*100);
                 }
-            }else {
+            } else {
                 if(link == "" || value == "N/A") {
                     printf("<td></td> <td></td>\n");
-                }else
-                {
+                } else {
                     printf("<td>%s</td> <td><a href=%s>Failure</a></td>\n",batch,link);
                 }
             }
@@ -554,31 +553,36 @@ function generate_tuning_core {
         function compare_current(int8_result, fp32_result, metric) {
 
             if(int8_result ~/[1-9]/ && fp32_result ~/[1-9]/) {
-                if (metric == "acc") {
+                if(metric == "acc") {
                     target = (int8_result - fp32_result) / fp32_result;
                     if(target >= -0.01) {
-                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f%</td>", target*100);
-                    } else if(target < -0.05) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f%</td>", target*100);
-                    } else {
-                       printf("<td rowspan=3>%.2f%</td>", target*100);
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f %</td>", target*100);
+                    }else if(target < -0.05) {
+                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f %</td>", target*100);
+                       job_status = "fail"
+                    }else{
+                       printf("<td rowspan=3>%.2f %</td>", target*100);
                     }
-                 } else if(metric == "perf") {
+                }else if(metric == "perf") {
                     target = int8_result / fp32_result;
-                    if (target >= 2) {
+                    if(target >= 1.5) {
                        printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
-                    } else if (target < 1) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
-                    } else {
+                    }else if(target < 1) {
+                       printf("<td  rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
+                       job_status = "fail"
+                    }else{
                        printf("<td rowspan=3>%.2f</td>", target);
                     }
-                } else {
-                    // Compare model size
+                }
+                else {
                     target = int8_result / fp32_result;
-                    if (target > 1) {
-                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%s/%s/%s</td>", int8_result, fp32_result, metric);
-                    } else {
-                       printf("<td rowspan=3>%s/%s/%s</td>", int8_result, fp32_result, metric);
+                    if(target >= 2) {
+                       printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
+                    }else if(target < 1) {
+                       printf("<td rowspan=3 style=\"background-color:#FFD2D2\">%.2f</td>", target);
+                       job_status = "fail"
+                    }else{
+                       printf("<td rowspan=3>%.2f</td>", target);
                     }
                 }
             }else {
@@ -588,35 +592,40 @@ function generate_tuning_core {
 
         function compare_result(new_result, previous_result, metric) {
 
-            if(new_result ~/[1-9]/ && previous_result ~/[1-9]/) {
+            if (new_result ~/[1-9]/ && previous_result ~/[1-9]/) {
                 if(metric == "acc") {
                     target = new_result - previous_result;
-                    if(target >= -0.0001 && target <= 0.0001) {
+                    if(target > -0.00001 && target < 0.00001) {
                         status_png = "background-color:#90EE90";
-                    }else {
+                    } else {
                         status_png = "background-color:#FFD2D2";
                         job_status = "fail"
                     }
-                    if (new_result <= 1){
-                        printf("<td style=\"%s\" colspan=2>%.2f%</td>", status_png, target*100);
-                    }else{
-                        printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
-                    }
-                }else {
+                    printf("<td style=\"%s\" colspan=2>%.2f %</td>", status_png, target*100);
+                } else {
                     target = new_result / previous_result;
-                    if(target >= 0.95) {
+                    if(target >= 0.945) {
                         status_png = "background-color:#90EE90";
-                    }else {
+                    } else {
                         status_png = "background-color:#FFD2D2";
                         job_status = "fail"
                     }
                     printf("<td style=\"%s\" colspan=2>%.2f</td>", status_png, target);
                 }
-            }else {
-                if(new_result == "nan" && previous_result == "nan") {
+            } else {
+              if(new_result == nan && previous_result == nan){
+                printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
+              } else{
+                if (metric == "acc") {
+                  if(new_result == nan) {
+                    job_status = "fail"
+                    status_png = "background-color:#FFD2D2";
+                    printf("<td style=\"%s\" colspan=2></td>", status_png);
+                  } else{
                     printf("<td class=\"col-cell col-cell3\" colspan=2></td>");
-                }else{
-                  if(new_result == nan){
+                  }
+                } else {
+                  if (previous_result == nan) {
                     job_status = "fail"
                     status_png = "background-color:#FFD2D2";
                     printf("<td style=\"%s\" colspan=2></td>", status_png);
@@ -638,7 +647,8 @@ function generate_tuning_core {
             // Current values
             split(current_values,current_value,";");
 
-            // current
+            // Current
+
             // INT8 Performance results
             int8_perf_batch=current_value[1]
             int8_perf_value=current_value[2]
@@ -651,7 +661,7 @@ function generate_tuning_core {
             int8_acc_url=current_value[10]
             show_new_last(int8_acc_batch, int8_acc_url, int8_acc_value, "acc");
 
-            // FP32 Performance results
+             // FP32 Performance results
             fp32_perf_batch=current_value[5]
             fp32_perf_value=current_value[6]
             fp32_perf_url=current_value[11]
@@ -664,6 +674,7 @@ function generate_tuning_core {
             show_new_last(fp32_acc_batch, fp32_acc_url, fp32_acc_value, "acc");
 
             // Compare Current
+
             compare_current(int8_perf_value, fp32_perf_value, "perf");
             compare_current(int8_acc_value, fp32_acc_value, "acc");
 
@@ -671,7 +682,9 @@ function generate_tuning_core {
             split(last_values,last_value,";");
 
             // Last
-            // Show last INT8 Performance results
+            printf("</tr>\n<tr><td>Last</td><td><a href=%4$s>%1$s</a></td><td><a href=%4$s>%2$s</a></td><td><a href=%4$s>%3$s</a></td>", tuning_strategy, tuning_time, tuning_count, tuning_log);
+
+             // Show last INT8 Performance results
             last_int8_perf_batch=last_value[1]
             last_int8_perf_value=last_value[2]
             last_int8_perf_url=last_value[9]
@@ -694,7 +707,7 @@ function generate_tuning_core {
             last_fp32_acc_value=last_value[8]
             last_fp32_acc_url=last_value[12]
             show_new_last(last_fp32_acc_batch, last_fp32_acc_url, last_fp32_acc_value, "acc");
-            
+
             printf("</tr>")
 
             // current vs last
@@ -702,14 +715,14 @@ function generate_tuning_core {
 
             // Compare INT8 Performance results
             compare_result(int8_perf_value, last_int8_perf_value,"perf");
-            
+
             // Compare INT8 Accuracy results
             compare_result(int8_acc_value, last_int8_acc_value, "acc");
 
             // Compare FP32 Performance results
             compare_result(fp32_perf_value, last_fp32_perf_value, "perf");
 
-            // Compare Fp32 Accuracy results
+            // Compare INT8 Performance results
             compare_result(fp32_acc_value, last_fp32_acc_value, "acc");
 
             printf("</tr>\n");
