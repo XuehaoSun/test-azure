@@ -319,7 +319,7 @@
       "model_src_dir": "nlp/huggingface_models/text-classification/quantization/ptq_static/eager",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
       "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/roberta_output",
-      "yaml": "roberta-base.yaml",
+      "yaml": "conf.yaml",
       "strategy": "basic",
       "batch_size": 64,
       "new_benchmark": false
@@ -328,7 +328,7 @@
       "model_src_dir": "nlp/huggingface_models/text-classification/quantization/ptq_static/eager",
       "dataset_location": "/tf_dataset/pytorch/glue_data/MRPC",
       "input_model": "/tf_dataset/pytorch/huggingface/language_translation_pt/camembert_output",
-      "yaml": "camembert-base.yaml",
+      "yaml": "conf.yaml",
       "strategy": "basic",
       "batch_size": 64,
       "new_benchmark": false
