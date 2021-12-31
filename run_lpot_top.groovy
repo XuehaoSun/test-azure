@@ -882,8 +882,8 @@ def collectLog() {
                         if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/summary.log ]]; then
                             cat ${WORKSPACE}/${job_framework}/${job_model}/summary.log >> ${WORKSPACE}/summary.log
                         else
-                            echo "${system};Unknown;${job_framework};N/A;INT8;${job_model};Inference;Throughput;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
-                            echo "${system};Unknown;${job_framework};N/A;FP32;${job_model};Inference;Throughput;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                            echo "${system};Unknown;${job_framework};N/A;INT8;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                            echo "${system};Unknown;${job_framework};N/A;FP32;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                         fi
                     """
                 }
