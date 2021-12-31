@@ -2013,3 +2013,5 @@ TinyBERT
 FCN
 fcn
 rn
+zh
+ResNetV
