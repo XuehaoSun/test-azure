@@ -658,6 +658,16 @@ def collectLogs() {
     }
 }
 
+def syncConfigFile(){
+    sh '''#!/bin/bash
+        set -x
+        inc_config_path="${WORKSPACE}/lpot-models/examples/.config"
+        if [ -d "${inc_config_path}" ]; then
+            cp ${inc_config_path}/* ${WORKSPACE}/lpot-validation/config
+        fi
+    '''
+}
+
 node( sub_node_label ) {
     // Get CPU name
     if (['unknown','any', '*'].contains(cpu)) {
@@ -757,6 +767,9 @@ node( sub_node_label ) {
                             target: "${WORKSPACE}")
                 }
             }
+
+            // sync config json file
+            syncConfigFile()
 
             getReferenceData()
 
