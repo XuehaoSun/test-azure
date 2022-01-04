@@ -791,12 +791,12 @@ node( sub_node_label ) {
                     //PR test will cover different strategies, the other test mode will use the passed strategy
                     if (framework == "tensorflow"){
                         strategy = "basic"
-                        if (model_src_dir == "image_recognition"){
+                        if (model_src_dir == "image_recognition/tensorflow_models/quantization/ptq"){
                             dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
                             println("PR test tensorflow model_src_dir is image_recognition.")
                             println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
                         }
-                        if (model_src_dir == "object_detection"){
+                        if (model_src_dir == "object_detection/tensorflow_models/quantization/ptq"){
                             // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
                             dataset_location = "/tf_dataset/tensorflow/mini-coco-100.record"
                             withEnv(["model_src_dir=${model_src_dir}"]) {
@@ -820,7 +820,7 @@ node( sub_node_label ) {
                         if (model == "resnet18") {
                             strategy = "bayesian"
                         }
-                        if (model_src_dir.contains("image_recognition/imagenet/cpu/ptq")) {
+                        if (model_src_dir.contains("image_recognition/torchvision_models/quantization")) {
                             dataset_location = "/tf_dataset2/datasets/mini-imageraw"
                         }
                     }else if(framework == "mxnet" && model == "resnet50v1"){
