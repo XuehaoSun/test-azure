@@ -630,8 +630,9 @@ def collectLogs() {
         --logs_prefix_url=\"${logs_prefix_url}\" \
         --job_url=\"${BUILD_URL}/consoleText\""
 
-        if (MR_source_branch != "") {
-            cmd += " --mr"
+        println("--------mode--------->" + mode)
+        if (MR_source_branch != "" || mode == "throughput") {
+            cmd += " --tune_acc"
         }
 
         required = "["

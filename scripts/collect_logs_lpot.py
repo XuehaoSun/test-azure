@@ -12,8 +12,7 @@ parser = argparse.ArgumentParser(allow_abbrev = False)
 parser.add_argument("--framework", type=str, required=True)
 parser.add_argument("--python_version", type=str, default="")
 parser.add_argument("--model", type=str, required=True)
-parser.add_argument("--mr", action="store_true")
-parser.add_argument("--perf_steps", action="store_true")
+parser.add_argument("--tune_acc", action="store_true")
 parser.add_argument("--logs_dir", type=str, default=".")
 parser.add_argument("--output_dir", type=str, default=".")
 parser.add_argument("--required", type=ast.literal_eval)
@@ -80,7 +79,7 @@ def read_tuning_log(tuning_file):
     with open(tuning_file, "r") as f:
         for line in f:
             parse_tuning_line(line)
-    if args.mr:
+    if args.tune_acc:
         # Read accuracy from tuning
         result.benchmarks.append(Measurement({
             "mode": "accuracy",
@@ -154,8 +153,6 @@ def read_perf_logs(precision, mode):
             for line in f:
                 parse_result = parse_perf_line(mode, line)
                 partial = update_partial(partial, parse_result)
-        if args.mr and args.perf_steps:
-            partial.update({"latency": get_average_latency(log, 200, 200, s_to_ms=True)})
 
         partial, num_instances = normalize_partial(partial)
         partials.append(partial)
