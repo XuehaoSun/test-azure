@@ -245,7 +245,7 @@ node(node_label){
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'neural_compressor*.whl, neural_compressor-*.tar.bz2, neural_compressor-*.tar.gz', excludes: null
+            archiveArtifacts artifacts: 'neural_compressor*.whl, neural-compressor-*.tar.bz2, neural_compressor-*.tar.gz', excludes: null
             fingerprint: true
         }
     }
