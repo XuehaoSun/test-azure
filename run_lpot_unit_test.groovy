@@ -291,7 +291,7 @@ node(node_label){
         if (run_coverage){
             stage('unit test') {
                 // ut test
-                timeout(60) {
+                timeout(80) {
                     withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                         echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
                         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
@@ -384,7 +384,7 @@ node(node_label){
                     }
                 }
                 // Coverage status check
-                timeout(60) {
+                timeout(80) {
                     branch = lpot_branch
                     if (MR_source_branch != "") {
                         branch = MR_source_branch
@@ -525,7 +525,7 @@ node(node_label){
             stage("unit test") {
                 echo "+---------------- unit test For TF ${tensorflow_version} PT ${pytorch_version} ----------------+"
                 withEnv(["ext_version=${tensorflow_version}_${pytorch_version}"]){
-                    timeout(60) {
+                    timeout(80) {
                         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH
