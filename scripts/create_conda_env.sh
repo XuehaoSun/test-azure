@@ -146,7 +146,15 @@ if [[ "${install_ipex}" == "true" ]]; then
                     install_params="/tf_dataset/pytorch/torch_ipex-1.8.0-cp38-cp38-linux_x86_64.whl";;
             esac;;
         1.9.0*)
-            install_params="torch_ipex==1.9.0 -f https://software.intel.com/ipex-whl-stable";;
+            case "${python_version}" in
+                3.6)
+                    ipex_whl="/tf_dataset/pytorch/torch_ipex-1.9.0-cp36-cp36m-linux_x86_64.whl";;
+                3.7)
+                    ipex_whl="/tf_dataset/pytorch/torch_ipex-1.9.0-cp37-cp37m-linux_x86_64.whl";;
+                3.8)
+                    ipex_whl="/tf_dataset/pytorch/torch_ipex-1.9.0-cp38-cp38-linux_x86_64.whl";;
+            esac
+            [[ -f ${ipex_whl} ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.9.0 -f https://software.intel.com/ipex-whl-stable";;
         1.10.0*)
             install_params="intel_extension_for_pytorch==1.10.0 -f https://software.intel.com/ipex-whl-stable";;
     esac
