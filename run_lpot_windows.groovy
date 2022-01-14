@@ -209,8 +209,8 @@ def create_virtual_env() {
         retry(5) {
             bat '''
 
-                CALL pip config set global.index-url http://pypi.douban.com/simple/
-                CALL pip config set global.trusted-host "pypi.douban.com test.pypi.org pypi.org pypi.python.org"
+                # CALL pip config set global.index-url http://pypi.douban.com/simple/
+                # CALL pip config set global.trusted-host "pypi.douban.com test.pypi.org pypi.org pypi.python.org"
 
                 SET env_name=%framework%-%framework_version%-%python_version%
 
@@ -295,8 +295,8 @@ def create_conda_env() {
         retry(5){
 
             bat '''
-                CALL pip config set global.index-url http://pypi.douban.com/simple/
-                CALL pip config set global.trusted-host "pypi.douban.com test.pypi.org pypi.org pypi.python.org"
+                # CALL pip config set global.index-url http://pypi.douban.com/simple/
+                # CALL pip config set global.trusted-host "pypi.douban.com test.pypi.org pypi.org pypi.python.org"
 
                 SET conda_env_name=%framework%-%framework_version%-%python_version%
 
