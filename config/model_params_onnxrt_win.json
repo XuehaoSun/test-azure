@@ -1,7 +1,7 @@
 {
     "onnxrt": {
         "resnet50_v1_5": {
-            "model_src_dir": "image_recognition/resnet50",
+            "model_src_dir": "image_recognition/resnet50/quantization/ptq",
             "dataset_location": "imagenet/img_256_resize/val",
             "input_model": "models/onnx/resnet50_export.onnx",
             "yaml": "resnet50_v1_5.yaml",
@@ -9,17 +9,17 @@
             "batch_size": 100,
             "new_benchmark": false
         },
-        "bert_base_MRPC": {
-            "model_src_dir": "language_translation/bert",
+        "bert_base_MRPC_static": {
+            "model_src_dir": "language_translation/bert/quantization/ptq",
             "dataset_location": "glue_data/MRPC",
             "input_model": "models/onnx/bert.onnx",
-            "yaml": "bert.yaml",
+            "yaml": "bert_static.yaml",
             "strategy": "basic",
-            "batch_size": 64,
+            "batch_size": 8,
             "new_benchmark": false
         },
         "mobilenet_v2": {
-            "model_src_dir": "image_recognition/mobilenet_v2",
+            "model_src_dir": "image_recognition/mobilenet_v2/quantization/ptq",
             "dataset_location": "imagenet/img_256_resize/val",
             "input_model": "models/onnx/mobilenet_v2.onnx",
             "yaml": "mobilenet_v2.yaml",
