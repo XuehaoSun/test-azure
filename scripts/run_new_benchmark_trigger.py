@@ -113,10 +113,10 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         if lpot_config.evaluation.accuracy.dataloader:
             lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
         lpot_config.evaluation.accuracy.configs = None
-
-        if lpot_config.evaluation.accuracy == None:
-            lpot_config.evaluation.accuracy = {}
-
+        # walk around for anno_path yaml format issue.
+        if ( lpot_config.evaluation.accuracy.metric.name == 'COCOmAP' ):
+            if (lpot_config.evaluation.accuracy.metric.param == {}):
+                lpot_config.evaluation.accuracy.metric = {'COCOmAP': {}}
     except AttributeError:
         print("[ WARNING ] Could not update accuracy config.")
 
@@ -211,12 +211,13 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         lpot_config.evaluation.performance.configs.intra_num_of_threads = None
         lpot_config.evaluation.performance.configs.inter_num_of_threads = None
         lpot_config.evaluation.performance.configs.kmp_blocktime = None
-
-        if lpot_config.evaluation.performance == None:
-            lpot_config.evaluation.performance = {}
         
         print(lpot_config.evaluation.performance.configs.serialize())
 
+        # walk around for anno_path yaml format issue.
+        if ( lpot_config.evaluation.accuracy.metric.name == 'COCOmAP' ):
+            if (lpot_config.evaluation.accuracy.metric.param == {}):
+                lpot_config.evaluation.accuracy.metric = {'COCOmAP': {}}
     except:
         print("[ WARNING ] Could not update performance config.")
 
