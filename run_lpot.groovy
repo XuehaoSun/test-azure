@@ -478,12 +478,14 @@ def getReferenceData() {
                 }
             }
             println("Copying artifacts from ${refer_job_name} job")
-            copyArtifacts(
-                projectName: refer_job_name,
-                selector: specific("${refer_build}"),
-                filter: 'summary.log,',
-                fingerprintArtifacts: true,
-                target: "reference")
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+                copyArtifacts(
+                        projectName: refer_job_name,
+                        selector: specific("${refer_build}"),
+                        filter: 'summary.log,',
+                        fingerprintArtifacts: true,
+                        target: "reference")
+            }
 
             sh"""#!/bin/bash
                 set -x
