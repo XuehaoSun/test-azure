@@ -103,12 +103,6 @@ main() {
 
     # specific ENV setting for some models
     if [[ "${model_src_dir}" == *"text-classification/quantization/ptq_static/eager" ]] || [[ "${model_src_dir}" == *"language-modeling/quantization/ptq_static/eager" ]]; then
-        setup_install_pypi_source
-        cd ../../../../common
-        python setup.py install
-        cd -
-    fi
-    if [[ "${model_src_dir}" == *"/huggingface_models"* ]]; then
         echo -e "\nInstalling pytorch-huggingface requirements..."
         n=0
         until [ "$n" -ge 5 ]
@@ -118,7 +112,12 @@ main() {
             sleep 5
         done
         pip list
+        setup_install_pypi_source
+        cd ../../../../common
+        python setup.py install
+        cd -
     fi
+    
     if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
         # Install nnUnet
         cd nnUnet

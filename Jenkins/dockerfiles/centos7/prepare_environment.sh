@@ -113,7 +113,7 @@ function install_tensorflow {
     elif [[ "${tensorflow_version}" == "customized"* ]]; then
         install_params=$(echo "${tensorflow_version}" | awk -F '=' '{print $2}')
     elif [[ "${tensorflow_version}" == "2.6.0"* ]]; then
-        install_params="tensorflow==${tensorflow_version} -i https://pypi.douban.com/simple"
+        install_params="tensorflow==${tensorflow_version}"
     elif [[ "${tensorflow_version}" != "" ]]; then
         install_params="intel-tensorflow==${tensorflow_version}"
     else

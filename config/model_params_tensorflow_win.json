@@ -1,7 +1,7 @@
 {
   "tensorflow": {
     "resnet50v1.0": {
-      "model_src_dir": "image_recognition",
+      "model_src_dir": "image_recognition/tensorflow_models/quantization/ptq",
       "dataset_location": "imagenet/TF_mini_imagenet",
       "input_model": "models/tensorflow/freezed_resnet50.pb",
       "yaml": "resnet50_v1.yaml",
@@ -10,7 +10,7 @@
       "new_benchmark": true
     },
     "inception_v3": {
-      "model_src_dir": "image_recognition",
+      "model_src_dir": "image_recognition/tensorflow_models/quantization/ptq",
       "dataset_location": "imagenet/TF_mini_imagenet",
       "input_model": "models/tensorflow/freezed_inceptionv3.pb",
       "yaml": "inception_v3.yaml",
@@ -19,7 +19,7 @@
       "new_benchmark": true
     },
     "mobilenetv1": {
-      "model_src_dir": "image_recognition",
+      "model_src_dir": "image_recognition/tensorflow_models/quantization/ptq",
       "dataset_location": "imagenet/TF_mini_imagenet",
       "input_model": "models/tensorflow/frozen_mobilenet_v1.pb",
       "yaml": "mobilenet_v1.yaml",

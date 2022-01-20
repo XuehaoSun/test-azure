@@ -193,7 +193,7 @@ if ('EXCEL_REPORT' in params && params.EXCEL_REPORT){
 echo "EXCEL_REPORT is ${EXCEL_REPORT}"
 
 ABORT_DUPLICATE_TEST = false
-if ('ABORT_DUPLICATE_TEST' in params && params.ABORT_DUPLICATE_TEST){
+if (params.ABORT_DUPLICATE_TEST != null){
     ABORT_DUPLICATE_TEST=params.ABORT_DUPLICATE_TEST
 }
 echo "ABORT_DUPLICATE_TEST is ${ABORT_DUPLICATE_TEST}"
@@ -1363,6 +1363,18 @@ node( node_label ) {
                     script: 'cd lpot-models && git rev-parse HEAD',
                     returnStdout: true
             ).trim()
+
+            // set env to close duplicate nightly build
+            env.INC_COMMIT = lpot_commit
+            println("INC_COMMIT = " + env.INC_COMMIT)
+
+            if (ABORT_DUPLICATE_TEST){
+                previous_INC_COMMIT = currentBuild.previousBuiltBuild.buildVariables.INC_COMMIT
+                if ( env.INC_COMMIT == previous_INC_COMMIT){
+                    println("Kill the current Buils --> " + currentBuild.rawBuild.getFullDisplayName())
+                    currentBuild.rawBuild.doKill()
+                }
+            }
         }
 
         if (upload_nightly_binary){

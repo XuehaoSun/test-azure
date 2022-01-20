@@ -185,6 +185,12 @@ if (params.pipeline_failFast != null){
 }
 echo "pipeline_failFast = ${pipeline_failFast}"
 
+ABORT_DUPLICATE_TEST = false
+if (params.ABORT_DUPLICATE_TEST != null){
+    ABORT_DUPLICATE_TEST=params.ABORT_DUPLICATE_TEST
+}
+echo "ABORT_DUPLICATE_TEST is ${ABORT_DUPLICATE_TEST}"
+
 binary_build_job = ""
 
 def cleanup() {
@@ -684,6 +690,17 @@ node( node_label ) {
                     script: 'cd deep-engine && git rev-parse HEAD',
                     returnStdout: true
             ).trim()
+            // set env to close duplicate nightly build
+            env.INC_COMMIT = lpot_commit
+            println("INC_COMMIT = " + env.INC_COMMIT)
+
+            if (ABORT_DUPLICATE_TEST){
+                previous_INC_COMMIT = currentBuild.previousBuiltBuild.buildVariables.INC_COMMIT
+                if ( env.INC_COMMIT == previous_INC_COMMIT){
+                    println("Kill the current Buils --> " + currentBuild.rawBuild.getFullDisplayName())
+                    currentBuild.rawBuild.doKill()
+                }
+            }
         }
 
         if (PR_source_branch != ''){
