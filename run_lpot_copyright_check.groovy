@@ -105,7 +105,7 @@ node(node_label) {
                     do
                         if [[ " ${supported_extensions[@]} " =~ " ${file##*.} " ]]; then
                             echo "Checking license in ${file}"
-                            if [ $(grep -c "Copyright (c) 2021 Intel Corporation" ${file}) = 0 ]; then
+                            if [ $(grep -E -c "Copyright \\(c\\) ([0-9]{4})(-[0-9]{4})? Intel Corporation" ${file}) = 0 ]; then
                                 echo ${file} >> ${WORKSPACE}/copyright_issue_summary.log
                             fi
                         else
