@@ -227,13 +227,17 @@ function run_benchmark {
     "person-vehicle-bike-detection-crossroad-yolov3-1024" "unet-3d-isensee_2017" "unet-3d-origin" "3dunet" \
     "t5_WMT_en_ro" "marianmt_WMT_en_ro" "pegasus_billsum" "dialogpt_wikitext" "transfo_xl_MRPC" "")
 
-    single_instance=("3dunet")
-
     # get cpu information for multi-instance
     ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
 
     ncores_per_instance=${ncores_per_socket}
     iters=100
+
+    single_instance=("3dunet" "centernet_hg104")
+    if [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
+        multi_instance="false"
+    fi
+
 
     if [ "${multi_instance}" == "true" ]; then
         ncores_per_instance=4
@@ -248,7 +252,7 @@ function run_benchmark {
     if [[ "${latency_high_500[@]}" =~ "${model}" ]]; then
         iters=100
     elif [[ "${latency_high_1000[@]}" =~ "${model}" ]]; then
-        iters=80
+        iters=50
     fi
 
     parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
@@ -282,7 +286,7 @@ function run_benchmark {
     benchmark_pids=()
 
     export OMP_NUM_THREADS=${ncores_per_instance}
-    if [ "${multi_instance}" == "false" ] || [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
+    if [ "${multi_instance}" == "false" ]; then
         echo "Executing single instance benchmark"
         ${run_cmd} 2>&1|tee ${logFile}.log &
         benchmark_pids+=($!)
