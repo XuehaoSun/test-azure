@@ -2025,3 +2025,7 @@ seid
 showEvent
 spm
 meetup
+hubert
+infos
+torchaudio
+vec
