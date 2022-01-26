@@ -22,12 +22,6 @@ if ('test_title' in params && params.test_title != '') {
 }
 echo "Running named ${test_title}"
 
-conda_env_mode = "pypi"
-if ('conda_env_mode' in params && params.conda_env_mode != '') {
-    conda_env_mode = params.conda_env_mode
-}
-echo "Running test on ${conda_env_mode}"
-
 // setting node_label
 node_label = "clx8280"
 if ('node_label' in params && params.node_label != '') {
@@ -126,7 +120,7 @@ if ('onnxrt_models' in params && params.onnxrt_models != '') {
 }
 echo "onnxrt_models: ${onnxrt_models}"
 
-lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -594,7 +588,6 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu
     ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
     ParamsPerJob += booleanParam(name: "collect_tuned_model", value: collect_tuned_model)
     ParamsPerJob += string(name: "precision", value: "${precision}")
-    ParamsPerJob += string(name: "conda_env_mode", value: "${conda_env_mode}")
 
     return ParamsPerJob
 }
@@ -971,8 +964,6 @@ def UTBuildParams(tf_version, pt_version, run_coverage){
     ParamsPerJob += string(name: "onnxruntime_version", value: "${onnxruntime_version}")
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
     ParamsPerJob += booleanParam(name: "run_coverage", value: run_coverage)
-    ParamsPerJob += string(name: "conda_env_mode", value: "${conda_env_mode}")
-
     return ParamsPerJob
 }
 
@@ -1077,10 +1068,6 @@ def buildBinary(){
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "pypi_version", value: "${pypi_version}")
     ]
-    if(conda_env_mode == "conda") {
-        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
-        binaryBuildParams += string(name: "binary_class", value: "conda")
-    }
     downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
     
     binary_build_job = downstreamJob.getNumber()

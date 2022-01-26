@@ -11,14 +11,7 @@ if ('conda_env' in params && params.conda_env != '') {
     conda_env = params.conda_env
 }
 echo "Running ut on ${conda_env}"
-
-conda_env_mode = "pypi"
-if ('conda_env_mode' in params && params.conda_env_mode != '') {
-    conda_env_mode = params.conda_env_mode
-}
-echo "Running test on ${conda_env_mode}"
-
-lpot_url="https://gitlab.devtools.intel.com/chuanqiw/auto-tuning.git"
+lpot_url="git@github.com:intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -238,7 +231,6 @@ def build_conda_env() {
                 echo "Create new conda env for UT..."
                 bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
                     --conda_env_name=${conda_env_name} \
-                    --conda_env_mode=${conda_env_mode} \
                     --python_version="${python_version}" \
                     --tensorflow_version="${tensorflow_version}" \
                     --pytorch_version="${pytorch_version}" \
@@ -287,7 +279,7 @@ node(node_label){
                 copyArtifacts(
                         projectName: 'lpot-release-wheel-build',
                         selector: specific("${binary_build_job}"),
-                        filter: 'neural_compressor*.whl, neural_compressor*.tar.gz, neural-compressor*.tar.bz2',
+                        filter: 'neural_compressor*.whl',
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
             }

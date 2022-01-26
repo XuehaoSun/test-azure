@@ -15,12 +15,6 @@ if ('sub_node_label' in params && params.sub_node_label != '') {
 }
 echo "Running on node ${sub_node_label}"
 
-conda_env_mode = "pypi"
-if ('conda_env_mode' in params && params.conda_env_mode != '') {
-    conda_env_mode = params.conda_env_mode
-}
-echo "Running test on ${conda_env_mode}"
-
 // test framework
 framework = "tensorflow"
 if ('framework' in params && params.framework != '') {
@@ -63,7 +57,7 @@ if ('mode' in params && params.mode != '') {
 mode_list = parseStrToList(mode)
 echo "Mode: ${mode}"
 
-lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -422,8 +416,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                 source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh \
                     --framework=${framework} \
                     --model=${model} \
-                    --conda_env_name=${conda_env_name} \
-                    --conda_env_mode=${conda_env_mode} 
+                    --conda_env_name=${conda_env_name}
                 set_environment
                 echo "=================================="
 
@@ -456,7 +449,6 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --batch_size=${batch_size} \
                     --multi_instance=${multi_instance} \
                     --conda_env_name=${conda_env_name} \
-                    --conda_env_mode=${conda_env_mode} \
                     --yaml=${yaml} \
                     --os=${os} \
                     --cpu=${cpu} \
@@ -774,7 +766,7 @@ node( sub_node_label ) {
                     copyArtifacts(
                             projectName: 'lpot-release-wheel-build',
                             selector: specific("${binary_build_job}"),
-                            filter: 'neural_compressor*.whl, neural_compressor*.tar.gz, neural-compressor*.tar.bz2',
+                            filter: 'neural_compressor*.whl',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
                 }
@@ -943,7 +935,6 @@ node( sub_node_label ) {
                             --algorithm=${algorithm} \
                             --sampling_size="${sampling_size}" \
                             --conda_env_name=${conda_env_name} \
-                            --conda_env_mode=${conda_env_mode} \
                             2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
                     """
                 }

@@ -3,6 +3,29 @@
 set -eo pipefail
 set -x
 
+PATTERN='[-a-zA-Z0-9_]*='
+if [ $# -lt 14 ] || [ $# -gt 15 ]; then
+    echo 'ERROR:'
+    echo "Expected 14 parameters got $#"
+    printf 'Please use following parameters:
+    --framework=<framework name>
+    --model=<model name>
+    --model_src_dir=<path to model tuning script>
+    --dataset_location=<path to dataset>
+    --input_model=<path to input model>
+    --precision=<kind of data precision>
+    --mode=<benchmark mode>
+    --batch_size=<batch_size for accuracy and throughput>
+    --conda_env_name=<conda environment name>
+    --yaml=<path to lpot yaml configuration>
+    --profiling=<profiling or not for oob models>
+    --cpu=<CPU name>
+    --os=<OS name>
+    --output_path=<path for output logs> [OPTIONAL]
+    '
+    exit 1
+fi
+
 output_path=${WORKSPACE}
 
 for i in "$@"
@@ -26,8 +49,6 @@ do
             batch_size=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
-        --conda_env_mode=*)
-            conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
         --yaml=*)
             yaml=`echo $i | sed "s/${PATTERN}//"`;;
         --profiling=*)
@@ -54,8 +75,7 @@ fi
 main() {
 
     # Import common functions
-    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
-        --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode}
+    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name}
 
     echo -e "\nSetting environment..."
     set_environment

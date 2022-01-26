@@ -157,7 +157,7 @@ node( sub_node_label ){
                 copyArtifacts(
                         projectName: 'lpot-release-wheel-build',
                         selector: specific("${binary_build_job}"),
-                        filter: 'neural_compressor*.whl, neural_compressor*.tar.gz, neural-compressor*.tar.bz2',
+                        filter: 'neural_compressor*.whl',
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
             }
