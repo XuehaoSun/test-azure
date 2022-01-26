@@ -78,6 +78,7 @@ if (params.run_coverage != null){
 echo "run_coverage = ${run_coverage}"
 
 torchvision_versions = [
+    "1.10.1": "0.11.2",
     "1.10.0": "0.11.0",
     "1.9.0": "0.10.0",
     "1.8.0": "0.9.0",

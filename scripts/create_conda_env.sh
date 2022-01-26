@@ -157,6 +157,8 @@ if [[ "${install_ipex}" == "true" ]]; then
             [[ -f ${ipex_whl} ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.9.0 -f https://software.intel.com/ipex-whl-stable";;
         1.10.0*)
             install_params="intel_extension_for_pytorch==1.10.0 -f https://software.intel.com/ipex-whl-stable";;
+        1.10.1*)
+            install_params="intel_extension_for_pytorch==1.10.100+cpu -f https://software.intel.com/ipex-whl-stable";;
     esac
     if [[ ! -z ${install_params} ]]; then
         pip install ${install_params}

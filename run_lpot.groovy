@@ -144,6 +144,7 @@ if ('inferencer_config' in params && params.inferencer_config != ''){
 echo "inferencer_config: ${inferencer_config}"
 
 torchvision_versions = [
+        "1.10.1": "0.11.2",
         "1.10.0": "0.11.0",
         "1.9.0": "0.10.0",
         "1.8.0": "0.9.0",
@@ -791,6 +792,7 @@ node( sub_node_label ) {
                 }
 
                 if ( MR_source_branch != '' ){
+                    
                     //PR test will cover different strategies, the other test mode will use the passed strategy
                     if (framework == "tensorflow"){
                         strategy = "basic"
@@ -822,7 +824,7 @@ node( sub_node_label ) {
                     }else if(framework == "pytorch") {
                         if (model == "resnet18") {
                             strategy = "bayesian"
-                        }
+                        } 
                         if (model_src_dir.contains("image_recognition/torchvision_models/quantization")) {
                             dataset_location = "/tf_dataset2/datasets/mini-imageraw"
                         }
