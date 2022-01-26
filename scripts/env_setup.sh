@@ -3,13 +3,14 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "3" ] ; then
+if [ $# != "4" ] ; then
     echo 'ERROR:'
-    echo "Expected 3 parameters got $#"
+    echo "Expected 4 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
     --conda_env_name=<conda environment name>
+    --conda_env_mode=<conda environment mode>
     '
     exit 1
 fi
@@ -23,6 +24,8 @@ do
             model=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_name=*)
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
+        --conda_env_mode=*)
+            conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -77,11 +80,18 @@ function set_PT_env {
 
     echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
+    [[ "${conda_env_mode}" == "conda" ]] && pip install opencv-python
 }
 
 function set_ONNXRT_env {
     export KMP_AFFINITY=granularity=fine,noduplicates,compact,1,0
     export OMP_NUM_THREADS=28
+    export PATH=${HOME}/miniconda3/bin/:$PATH
+    echo "Activating ${conda_env_name} env"
+    source activate ${conda_env_name}
+}
+
+function set_ENGINE_env {
     export PATH=${HOME}/miniconda3/bin/:$PATH
     echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
@@ -109,13 +119,20 @@ function set_environment {
             echo "Framework ${framework} not recognized."; exit 1;;
     esac
 
-    echo "Checking pip list..."
-    python -V
-    pip list
-    c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
-    if [ ${c_lpot} != 0 ]; then
-        pip uninstall neural-compressor -y
-        pip list
+    python -V   
+    if [ "${conda_env_mode}" == "conda" ];then
+        echo "Checking conda list..."
+        conda uninstall -y lpot || true
+        echo "after uninstalling INC"
+        conda list
+    else
+        echo "Checking pip list..."
+        c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
+        if [ ${c_lpot} != 0 ]; then
+            pip uninstall neural-compressor -y
+            echo "after uninstalling INC"
+            pip list
+        fi
     fi
 
     cd ${WORKSPACE}
@@ -123,12 +140,30 @@ function set_environment {
     n=0
     until [ "$n" -ge 5 ]
     do
-        pip install neural_compressor*.whl && break
+        if [ "${conda_env_mode}" == "conda" ];then
+            cd ${WORKSPACE}/lpot-models
+            lpot_bz2_path="$(find ${WORKSPACE} -name neural-compressor*.tar.* |tail -1)"
+            lpot_bz2_file="$(basename ${lpot_bz2_path})"
+            lpot_version="$(echo ${lpot_bz2_file} |sed 's/\.tar\..*//' |awk -F '-' '{print $3}')"
+            lpot_build="$(echo ${lpot_bz2_file} |sed 's/\.tar\..*//' |awk -F '-' '{print $4}')"
+            sed -i "s+LPOT_BZ2_FILE+${lpot_bz2_file}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
+            sed -i "s+LPOT_VERSION+${lpot_version}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
+            sed -i "s+LPOT_BUILD+${lpot_build}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
+            cp ${lpot_bz2_path} ${WORKSPACE}/lpot-validation/config/conda/noarch/
+            conda install lpot -c file:/${WORKSPACE}/lpot-validation/config/conda -c conda-forge -y && break
+        elif [ "${conda_env_mode}" == "source" ];then
+            cd ${WORKSPACE}/lpot-models
+            pip install -r requirements.txt
+            python setup.py clean || true
+            python setup.py install && break
+            cd -
+        else
+            pip install neural_compressor*.whl && break
+        fi
         n=$((n+1))
         sleep 5
     done
     echo "Checking lpot..."
-    pip list
-
+    [[ "${conda_env_mode}" == "conda" ]] && conda list || pip list
     export LOGLEVEL=DEBUG
 }

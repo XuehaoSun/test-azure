@@ -26,7 +26,7 @@ if ('requirement_list' in params && params.requirement_list != ''){
 }
 echo "requirement_list is ${requirement_list}"
 
-python_version="3.6"
+python_version="3.7"
 if ('python_version' in params && params.python_version != ''){
     python_version = params.python_version
 }

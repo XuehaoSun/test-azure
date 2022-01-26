@@ -12,7 +12,7 @@ if ('conda_env' in params && params.conda_env != '') {
 }
 echo "Running ut on ${conda_env}"
 
-lpot_url=""
+lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -194,7 +194,6 @@ def do_binary_build() {
             conda create python=${python_version} -y -n ${conda_env}
 
             source activate ${conda_env}
-
             # Upgrade pip
             pip install -U pip
             pip install cmake
@@ -203,7 +202,7 @@ def do_binary_build() {
 
             echo "Build Pypi binary..."
             cd lpot-models
-            
+            git submodule update --init --recursive
             python3 setup.py sdist bdist_wheel
             pip install auditwheel
             auditwheel repair dist/neural_compressor*.whl
@@ -235,7 +234,7 @@ node(node_label){
         }
         stage("binary build") {
             echo "+---------------- ${binary_class} build ----------------+"
-            retry(3){
+            retry(5){
                 do_binary_build()
             }
         }
