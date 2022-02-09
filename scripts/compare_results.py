@@ -52,7 +52,9 @@ def compare_result(result, reference):
     """Find reference data for benchmark results and get difference."""
     for benchmark in result.get("benchmarks", []):
         ref_benchmark = find_benchmark_result(
-            reference, benchmark.get("mode"), benchmark.get("precision")
+            result=reference,
+            mode=benchmark.get("mode"),
+            precision=benchmark.get("precision"),
         )
         if ref_benchmark and isinstance(ref_benchmark, dict):
             ref_value = ref_benchmark.get("value")
@@ -74,7 +76,11 @@ def get_diff(benchmark):
 def find_benchmark_result(result, mode, precision):
     """Find benchmark result for specified mode and precision."""
     for benchmark in result.get("benchmarks", []):
-        if benchmark.get("mode") == mode and benchmark.get("precision") == precision:
+        benchmark_modes = [benchmark.get("mode")]
+        if "performance" in benchmark_modes:
+            benchmark_modes.append("throughput")
+        benchmark_precision = benchmark.get("precision")
+        if mode in benchmark_modes and benchmark_precision == precision:
             return benchmark
     return None
 
@@ -84,7 +90,7 @@ def check_threshold(result, precision, mode):
     for benchmark in result.get("benchmarks", []):
         op = operator.gt
         modifier = 1  # Lower is better
-        if benchmark.get("mode") == "throughput":
+        if benchmark.get("mode") in ["throughput", "performance"]:
             modifier = -1  # Higher is better
             op = operator.lt
         if precision is not None and benchmark.get("precision") != precision:
