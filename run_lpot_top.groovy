@@ -1091,12 +1091,14 @@ def generateReport() {
         }else{
             refer_job_name = currentBuild.projectName
         }
-        copyArtifacts(
-                projectName: refer_job_name,
-                selector: specific("${refer_build}"),
-                filter: 'summary.log,tuning_info.log',
-                fingerprintArtifacts: true,
-                target: "reference")
+        catchError{
+            copyArtifacts(
+                    projectName: refer_job_name,
+                    selector: specific("${refer_build}"),
+                    filter: 'summary.log,tuning_info.log',
+                    fingerprintArtifacts: true,
+                    target: "reference")
+        }
     }
 
     dir(WORKSPACE) {
@@ -1501,17 +1503,31 @@ node( node_label ) {
             }
         }
 
-        stage("Generate report") {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        try {
+            stage("Generate report") {
                 generateReport()
             }
-        }
-
-        if (EXCEL_REPORT) {
-            stage("Generate excel report") {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    retry(3) {
-                        generateExcelReport()
+        } catch(error) {
+            if (PR_source_branch != '') {
+                recipient_list = ActualCommitAuthorEmail + ',' + TriggerAuthorEmail
+                if ('recipient_list' in params && params.recipient_list != '') {
+                    recipient_list = params.recipient_list + ',' + ActualCommitAuthorEmail + ',' + TriggerAuthorEmail
+                }
+            } else {
+                recipient_list = ''
+                if ('recipient_list' in params && params.recipient_list != '') {
+                    recipient_list = params.recipient_list
+                }
+            }
+            emailext attachLog: true, body: "Generate report failed (see ${env.BUILD_URL}): ${error}", subject: "${email_subject}", to: "${recipient_list}"
+            throw error
+        }finally {
+            if (EXCEL_REPORT) {
+                stage("Generate excel report") {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        retry(3) {
+                            generateExcelReport()
+                        }
                     }
                 }
             }
