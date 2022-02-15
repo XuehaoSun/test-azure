@@ -15,13 +15,17 @@ node(LABEL) {
     stage("Generate jira report") {
         withEnv([
             "AFFECTED_VERSION=${AFFECTED_VERSION}",
-            "PRIORITY=${PRIORITY}"
+            "PRIORITY=${PRIORITY}",
+            "CPU_NAME=${CPU_NAME}"
         ]) {
             sh '''#!/bin/bash
                 set -xe
 
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 conda_env_name="jira_status_check"
+                if [[ -n ${CPU_NAME} ]]; then
+                    conda_env_name="${conda_env_name}-${CPU_NAME}"
+                fi
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                     conda remove --name ${conda_env_name} --all -y
 

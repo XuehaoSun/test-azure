@@ -64,10 +64,15 @@ def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
-        rm -rf *
-        rm -rf .git
-        sudo rm -rf *
-        sudo rm -rf .git
+        if [[ "${CPU_NAME}" == "clx8280-07"* ]] || [[ "${CPU_NAME}" == "clx8260-"* ]]; then
+            rm -rf *
+            rm -rf .git
+        else
+            sudo rm -rf *
+            sudo rm -rf .git
+            rm -rf *
+            rm -rf .git
+        fi
         '''
     } catch(e) {
         echo "==============================================="
@@ -171,7 +176,7 @@ def run_pytest_with_coverage_count(repo_name){
         coverage_package='coverage_results_base'
         coverage_summary_log='coverage_summary_base.log'
     }
-    withEnv(["repo_name=${repo_name}","ut_log_name=${ut_log_name}", "coverage_package=${coverage_package}", "coverage_summary_log=${coverage_summary_log}"]){
+    withEnv(["repo_name=${repo_name}","ut_log_name=${ut_log_name}", "coverage_package=${coverage_package}", "coverage_summary_log=${coverage_summary_log}", "conda_env=${conda_env}"]){
         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env}
@@ -251,186 +256,193 @@ node(node_label){
         }
 
         stage('build env'){
-            retry(3){
-                sh(returnStatus: true, script: '''#!/bin/bash
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                       conda remove --name ${conda_env} --all -y  
-                    fi
-                    conda_dir=$(dirname $(dirname $(which conda)))
-                    if [ -d ${conda_dir}/envs/${conda_env} ]; then
-                        rm -rf ${conda_dir}/envs/${conda_env}
-                    fi
-                    conda create python=${python_version} -y -n ${conda_env}
-                    source activate ${conda_env}
-                ''')
+            if ("${CPU_NAME}" != ""){
+                conda_env="${conda_env}-${CPU_NAME}"
             }
-
-            retry(3) {
-                sh(returnStatus: true, script: '''#!/bin/bash
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    source activate ${conda_env}
-                    cd ${WORKSPACE}
-                    pip install neural_compressor*.whl 2>&1 | tee $WORKSPACE/binary_install.log
-                    echo "pip list after install neural_compressor..."
-                    pip list
-                ''')
-            }
-
-            if (unit_test_mode=='pytest'){
+            println("full conda_env_name = " + conda_env)
+            withEnv(["conda_env=${conda_env}"]) {
                 retry(3){
                     sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
+                        if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
+                           conda remove --name ${conda_env} --all -y  
+                        fi
+                        conda_dir=$(dirname $(dirname $(which conda)))
+                        if [ -d ${conda_dir}/envs/${conda_env} ]; then
+                            rm -rf ${conda_dir}/envs/${conda_env}
+                        fi
+                        conda create python=${python_version} -y -n ${conda_env}
                         source activate ${conda_env}
-                        
-                        if [ ${python_version} == '3.6' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp36-cp36m-manylinux2010_x86_64.whl
-                        elif [ ${python_version} == '3.7' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp37-cp37m-manylinux2010_x86_64.whl
-                        elif [ ${python_version} == '3.5' ]; then
-                            pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp35-cp35m-manylinux2010_x86_64.whl
-                        else
-                            echo "!!! TF 1.15UP2 do not support ${python_version}"
-                        fi
-                        
-                        cd ${WORKSPACE}/deep-engine/engine/test/pytest
-                        if [ -f "requirements.txt" ]; then
-                            pip install -r requirements.txt
-                            echo "pip list after install requirements.txt..."
-                            pip list
-                        else
-                            echo "Not found requirements.txt file."
-                        fi
                     ''')
+                }
+                retry(3) {
+                    sh(returnStatus: true, script: '''#!/bin/bash
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        source activate ${conda_env}
+                        cd ${WORKSPACE}
+                        pip install neural_compressor*.whl 2>&1 | tee $WORKSPACE/binary_install.log
+                        echo "pip list after install neural_compressor..."
+                        pip list
+                    ''')
+                }
+
+                if (unit_test_mode=='pytest'){
+                    retry(3){
+                        sh(returnStatus: true, script: '''#!/bin/bash
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            source activate ${conda_env}
+
+                            if [ ${python_version} == '3.6' ]; then
+                                pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp36-cp36m-manylinux2010_x86_64.whl
+                            elif [ ${python_version} == '3.7' ]; then
+                                pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp37-cp37m-manylinux2010_x86_64.whl
+                            elif [ ${python_version} == '3.5' ]; then
+                                pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up2-cp35-cp35m-manylinux2010_x86_64.whl
+                            else
+                                echo "!!! TF 1.15UP2 do not support ${python_version}"
+                            fi
+
+                            cd ${WORKSPACE}/deep-engine/engine/test/pytest
+                            if [ -f "requirements.txt" ]; then
+                                pip install -r requirements.txt
+                                echo "pip list after install requirements.txt..."
+                                pip list
+                            else
+                                echo "Not found requirements.txt file."
+                            fi
+                        ''')
+                    }
                 }
             }
         }
 
         stage('unit test'){
-            timeout(30){
-                if (unit_test_mode == 'gtest'){
-                    echo "+---------------- gtest ----------------+"
-                    ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    source activate ${conda_env}
-                    
-                    cd ${WORKSPACE}/deep-engine/engine/test/gtest
-                    mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
-                    
-                    find . -name "test*" > run.sh
-                    ut_log_name=$WORKSPACE/unit_test_gtest.log
-                    bash run.sh 2>&1 | tee ${ut_log_name}
-                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ];then
-                        exit 1
-                    fi
-                    ''')
-                    if (ut_status != 0) {
-                        currentBuild.result = 'FAILURE'
-                        error("gtest failed!")
-                    }
-                }
-
-                if (unit_test_mode == 'pytest'){
-                    if (run_coverage){
-                        echo "+---------------- pytest coverage ----------------+"
-                        run_pytest_with_coverage_count('deep-engine')
-
-                        echo "+---------------- pytest coverage status check ----------------+"
-                        // Get coverage summary
-                        sh '''#!/bin/bash
+            withEnv(["conda_env=${conda_env}"]) {
+                timeout(30){
+                    if (unit_test_mode == 'gtest'){
+                        echo "+---------------- gtest ----------------+"
+                        ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
-                        echo "Current conda ENV is ${conda_env}..."
-                        python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
-                            --cov-xml=${WORKSPACE}/coverage_results/coverage.xml \
-                            --summary-file=${WORKSPACE}/coverage_summary.log
-                        '''
-                            lines_coverage = Float.parseFloat(sh(
-                                    script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
-                                    returnStdout: true
-                            ).trim())
-                            println("Lines coverage: " + lines_coverage)
 
-                            branches_coverage = Float.parseFloat(sh(
-                                    script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
-                                    returnStdout: true
-                            ).trim())
-                            println("Branches coverage: " + branches_coverage)
-                        if (PR_source_branch == ''){
-                            echo "+---------------- nightly pytest coverage ----------------+"
-                            try {
-                            if (lines_coverage < lines_coverage_threshold) {
-                                println("Lines coverage below threshold!")
-                                error("Lines coverage below threshold!")
-                            }
-                            if (branches_coverage < branches_coverage_threshold) {
-                                println("Branches coverage below threshold!")
-                                error("Branches coverage below threshold!")
-                            }
-                            echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
-                            writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
-                            } catch (e) {
-                                echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
-                                writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
-                            }
-                        }else{
-                            echo "+---------------- PR pytest coverage basic ----------------+"
-                            sh '''#!/bin/bash
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
-                                source activate ${conda_env}
-    
-                                pip uninstall neural_compressor -y
-                                cd ${WORKSPACE}/deep-engine-base
-                                git submodule update --init --recursive
-                                python setup.py install
-                                pip list
-                            '''
+                        cd ${WORKSPACE}/deep-engine/engine/test/gtest
+                        mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
 
-                            run_pytest_with_coverage_count('deep-engine-base')
-                            lines_coverage_base = Float.parseFloat(sh(
-                                    script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
-                                    returnStdout: true
-                            ).trim())
-                            branches_coverage_base = Float.parseFloat(sh(
-                                    script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
-                                    returnStdout: true
-                            ).trim())
-                            try {
-                                if (lines_coverage < lines_coverage_base) {
-                                    error("Lines coverage decreased!")
-                                }
-
-                                if (branches_coverage < branches_coverage_base) {
-                                    error("Branches coverage decreased!")
-                                }
-
-                                echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
-                                writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
-                            } catch (e) {
-                                echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
-                                writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
-                            }
-                        }
-
-                    }else{
-                        echo "+---------------- pytest ----------------+"
-                        ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
-                            source activate ${conda_env}
-                            echo "Current conda ENV is ${conda_env}..."
-                            
-                            cd ${WORKSPACE}/deep-engine/engine/test/pytest
-                            echo "==================run pytest=================="
-                            find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
-                            ut_log_name=$WORKSPACE/unit_test_pytest.log
-                            bash run.sh 2>&1 | tee ${ut_log_name}
-                            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
-                                exit 1
-                            fi
+                        find . -name "test*" > run.sh
+                        ut_log_name=$WORKSPACE/unit_test_gtest.log
+                        bash run.sh 2>&1 | tee ${ut_log_name}
+                        if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ];then
+                            exit 1
+                        fi
                         ''')
                         if (ut_status != 0) {
                             currentBuild.result = 'FAILURE'
                             error("gtest failed!")
+                        }
+                    }
+
+                    if (unit_test_mode == 'pytest'){
+                        if (run_coverage){
+                            echo "+---------------- pytest coverage ----------------+"
+                            run_pytest_with_coverage_count('deep-engine')
+
+                            echo "+---------------- pytest coverage status check ----------------+"
+                            // Get coverage summary
+                            sh '''#!/bin/bash
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            source activate ${conda_env}
+                            echo "Current conda ENV is ${conda_env}..."
+                            python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
+                                --cov-xml=${WORKSPACE}/coverage_results/coverage.xml \
+                                --summary-file=${WORKSPACE}/coverage_summary.log
+                            '''
+                                lines_coverage = Float.parseFloat(sh(
+                                        script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
+                                        returnStdout: true
+                                ).trim())
+                                println("Lines coverage: " + lines_coverage)
+
+                                branches_coverage = Float.parseFloat(sh(
+                                        script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
+                                        returnStdout: true
+                                ).trim())
+                                println("Branches coverage: " + branches_coverage)
+                            if (PR_source_branch == ''){
+                                echo "+---------------- nightly pytest coverage ----------------+"
+                                try {
+                                if (lines_coverage < lines_coverage_threshold) {
+                                    println("Lines coverage below threshold!")
+                                    error("Lines coverage below threshold!")
+                                }
+                                if (branches_coverage < branches_coverage_threshold) {
+                                    println("Branches coverage below threshold!")
+                                    error("Branches coverage below threshold!")
+                                }
+                                echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
+                                writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
+                                } catch (e) {
+                                    echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
+                                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
+                                }
+                            }else{
+                                echo "+---------------- PR pytest coverage basic ----------------+"
+                                sh '''#!/bin/bash
+                                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                                    source activate ${conda_env}
+
+                                    pip uninstall neural_compressor -y
+                                    cd ${WORKSPACE}/deep-engine-base
+                                    git submodule update --init --recursive
+                                    python setup.py install
+                                    pip list
+                                '''
+
+                                run_pytest_with_coverage_count('deep-engine-base')
+                                lines_coverage_base = Float.parseFloat(sh(
+                                        script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
+                                        returnStdout: true
+                                ).trim())
+                                branches_coverage_base = Float.parseFloat(sh(
+                                        script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
+                                        returnStdout: true
+                                ).trim())
+                                try {
+                                    if (lines_coverage < lines_coverage_base) {
+                                        error("Lines coverage decreased!")
+                                    }
+
+                                    if (branches_coverage < branches_coverage_base) {
+                                        error("Branches coverage decreased!")
+                                    }
+
+                                    echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
+                                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
+                                } catch (e) {
+                                    echo "Writing FAILURE to file: ${WORKSPACE}/coverage_status.txt"
+                                    writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
+                                }
+                            }
+
+                        }else{
+                            echo "+---------------- pytest ----------------+"
+                            ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env}
+                                echo "Current conda ENV is ${conda_env}..."
+
+                                cd ${WORKSPACE}/deep-engine/engine/test/pytest
+                                echo "==================run pytest=================="
+                                find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
+                                ut_log_name=$WORKSPACE/unit_test_pytest.log
+                                bash run.sh 2>&1 | tee ${ut_log_name}
+                                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                                    exit 1
+                                fi
+                            ''')
+                            if (ut_status != 0) {
+                                currentBuild.result = 'FAILURE'
+                                error("gtest failed!")
+                            }
                         }
                     }
                 }

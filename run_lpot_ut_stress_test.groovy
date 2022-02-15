@@ -147,6 +147,8 @@ def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
+        rm -rf *
+        rm -rf .git
         sudo rm -rf *
         sudo rm -rf .git
         '''
@@ -190,6 +192,10 @@ def download() {
 }
 
 def build_conda_env() {
+    if ("${CPU_NAME}" != ""){
+        conda_env="${conda_env}-${CPU_NAME}"
+    }
+    println("full conda_env_name = " + conda_env)
     withEnv([
             "pytorch_version=${pytorch_version}",
             "torchvision_version=${torchvision_version}",
@@ -218,60 +224,62 @@ def build_conda_env() {
 }
 
 def binary_install() {
-    sh'''#!/bin/bash
-        export PATH=${HOME}/miniconda3/bin/:$PATH
-        source activate ${conda_env}
+    withEnv(["conda_env=${conda_env}"]) {
+        sh'''#!/bin/bash
+            export PATH=${HOME}/miniconda3/bin/:$PATH
+            source activate ${conda_env}
 
-        echo "Checking neural_compressor..."
-        python -V
-        pip list
-        c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
-        if [ ${c_lpot} != 0 ]; then
-            pip uninstall neural-compressor -y
+            echo "Checking neural_compressor..."
+            python -V
             pip list
-        fi
-                
-        echo "Install neural_compressor binary..."
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-            pip install neural_compressor*.whl && break
-            n=$((n+1))
-            sleep 5
-        done
-        
-        # re-install pycocotools resolve the issue with numpy
-        echo "re-install pycocotools resolve the issue with numpy..."
-        pip uninstall pycocotools -y
-        pip install --no-cache-dir pycocotools
+            c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
+            if [ ${c_lpot} != 0 ]; then
+                pip uninstall neural-compressor -y
+                pip list
+            fi
 
-        if [ ! -d ${WORKSPACE}/lpot-models ]; then
-            echo "\\"lpot-model\\" not found. Exiting..."
-            exit 1
-        fi
-
-        echo -e "\\nInstalling ut requirements..."
-        cd ${WORKSPACE}/lpot-models/test
-        if [ -f "requirements.txt" ]; then
-            sed -i '/^neural-compressor/d' requirements.txt
-            sed -i '/^intel-tensorflow/d' requirements.txt
-            sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-            sed -i '/^torch/d' requirements.txt
-            sed -i '/^mxnet-mkl/d' requirements.txt
-
+            echo "Install neural_compressor binary..."
             n=0
             until [ "$n" -ge 5 ]
             do
-                python -m pip install --no-cache-dir -r requirements.txt && pip install coverage && break
+                pip install neural_compressor*.whl && break
                 n=$((n+1))
                 sleep 5
             done
 
-            pip list
-        else
-            echo "Not found requirements.txt file."
-        fi
-    '''
+            # re-install pycocotools resolve the issue with numpy
+            echo "re-install pycocotools resolve the issue with numpy..."
+            pip uninstall pycocotools -y
+            pip install --no-cache-dir pycocotools
+
+            if [ ! -d ${WORKSPACE}/lpot-models ]; then
+                echo "\\"lpot-model\\" not found. Exiting..."
+                exit 1
+            fi
+
+            echo -e "\\nInstalling ut requirements..."
+            cd ${WORKSPACE}/lpot-models/test
+            if [ -f "requirements.txt" ]; then
+                sed -i '/^neural-compressor/d' requirements.txt
+                sed -i '/^intel-tensorflow/d' requirements.txt
+                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                sed -i '/^torch/d' requirements.txt
+                sed -i '/^mxnet-mkl/d' requirements.txt
+
+                n=0
+                until [ "$n" -ge 5 ]
+                do
+                    python -m pip install --no-cache-dir -r requirements.txt && pip install coverage && break
+                    n=$((n+1))
+                    sleep 5
+                done
+
+                pip list
+            else
+                echo "Not found requirements.txt file."
+            fi
+        '''
+    }
 }
 
 node(node_label){
@@ -316,6 +324,7 @@ node(node_label){
 
         stage('env_build') {
             build_conda_env()
+            println "now conda env is " + conda_env
             binary_install()
         }
 
@@ -329,7 +338,8 @@ node(node_label){
             }
             if (UT_STRESS_TEST){
                 println("UT_STRESS_TEST...")
-                withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}", "log_level=${log_level}"]){
+                println "when ut stress test, conda env is " + conda_env
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}", "log_level=${log_level}", "conda_env=${conda_env}"]){
                     sh'''#!/bin/bash
                     if [ "${log_level}" != "DEFAULT" ]; then
                       export LOGLEVEL=${log_level}
@@ -362,7 +372,7 @@ node(node_label){
 
             if (RUN_COVERAGE){
                 println("RUN_COVERAGE...")
-                withEnv(["run_ut_scripts=${run_ut_scripts}", "log_level=${log_level}"]){
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "log_level=${log_level}", "conda_env=${conda_env}"]){
                     sh'''#!/bin/bash
                         if [ "${log_level}" != "DEFAULT" ]; then
                             export LOGLEVEL=${log_level}

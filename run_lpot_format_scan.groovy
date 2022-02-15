@@ -36,6 +36,8 @@ def cleanup() {
         try {
         sh '''#!/bin/bash -x
             cd $WORKSPACE
+            rm -rf *
+            rm -rf .git
             sudo rm -rf *
             sudo rm -rf .git
             git config --global user.email "sys_lpot_val@intel.com"
@@ -84,12 +86,15 @@ def download() {
 
 def create_conda_env() {
     stage("Create conda env") {
-        withEnv(["python_version=${python_version}"]) {
+        withEnv(["python_version=${python_version}", "CPU_NAME=${CPU_NAME}"]) {
             retry(5) {
                 sh '''#!/bin/bash
                     set -xe
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     conda_env_name=lpot-format_scan-${python_version}
+                    if [[ -n ${CPU_NAME} ]]; then
+                        conda_env_name="${conda_env_name}-${CPU_NAME}"
+                    fi
                     if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                         echo "${conda_env_name} exist!"
                     else

@@ -32,7 +32,7 @@ done
 
 main() {
     export PATH=${HOME}/miniconda3/bin/:$PATH
-    source activate lpot-format_scan-${python_version}
+    source activate lpot-format_scan-${python_version}-${CPU_NAME}
     pip -V
     python -V
     pip install -U pip

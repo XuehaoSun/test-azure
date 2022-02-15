@@ -229,6 +229,7 @@ if ('dataset_prefix' in params && params.dataset_prefix != ''){
 }
 echo "dataset_prefix: ${dataset_prefix}"
 
+nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 upstreamBuild = ""
 upstreamJobName = ""
 upstreamUrl = ""
@@ -253,15 +254,24 @@ def cleanup() {
         sh '''#!/bin/bash 
         set -x
         cd $WORKSPACE
-        rm -rf *
-        rm -rf .git
-        sudo rm -rf *
-        sudo rm -rf .git
-        # set perf BKC
-        cat /sys/devices/system/cpu/intel_pstate/no_turbo
-        lscpu
-        sudo cpupower frequency-set -g performance
-        cat /proc/sys/kernel/numa_balancing
+        if [[ "${CPU_NAME}" == "clx8280-07"* ]] || [[ "${CPU_NAME}" == "clx8260"* ]]; then
+            rm -rf *
+            rm -rf .git
+            # set perf BKC
+            cat /sys/devices/system/cpu/intel_pstate/no_turbo
+            lscpu
+            cat /proc/sys/kernel/numa_balancing
+        else
+            rm -rf *
+            rm -rf .git
+            sudo rm -rf *
+            sudo rm -rf .git
+            # set perf BKC
+            cat /sys/devices/system/cpu/intel_pstate/no_turbo
+            lscpu
+            sudo cpupower frequency-set -g performance
+            cat /proc/sys/kernel/numa_balancing
+        fi
         '''
     } catch(e) {
         echo "==============================================="
@@ -487,19 +497,20 @@ def getReferenceData() {
                         fingerprintArtifacts: true,
                         target: "reference")
             }
+            withEnv(["conda_env_name=${conda_env_name}"]) {
+                sh"""#!/bin/bash
+                    set -x
+                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
+                        export PATH=${HOME}/anaconda3/bin/:$PATH
+                    fi
+                    source activate ${conda_env_name}
 
-            sh"""#!/bin/bash
-                set -x
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-                    export PATH=${HOME}/anaconda3/bin/:$PATH
-                fi
-                source activate ${conda_env_name}
-
-                python ${WORKSPACE}/lpot-validation/scripts/parse_summary.py \
-                    --summary-file=${WORKSPACE}/reference/summary.log \
-                    --output-name=${WORKSPACE}/reference_data.json
-                """
+                    python ${WORKSPACE}/lpot-validation/scripts/parse_summary.py \
+                        --summary-file=${WORKSPACE}/reference/summary.log \
+                        --output-name=${WORKSPACE}/reference_data.json
+                    """
+            }
         }
     }
 }
@@ -519,7 +530,7 @@ def findPerfDrops(result_json, os="", platform="", precision="", mode="") {
     if ("${mode}" != "") {
         cmd += " --mode=${mode}"
     }
-
+    
     def drops = sh(returnStdout: true, script: """#!/bin/bash
         set -x
         export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -527,9 +538,9 @@ def findPerfDrops(result_json, os="", platform="", precision="", mode="") {
             export PATH=${HOME}/anaconda3/bin/:$PATH
         fi
         source activate ${conda_env_name}
-
         ${cmd}
         """)
+
     println(drops)
     if (drops != "") {
         return drops.split(";")
@@ -557,7 +568,6 @@ def checkReferenceData() {
             while (rerun_num < MAX_RERUNS) {
                 rerun_num += 1
                 def rerun_path = "${WORKSPACE}/rerun_${mode}_${precision}_${rerun_num}"
-
                 runPerfTest(mode, precision, "${rerun_path}")
 
                 // Copy tuning log to rerun path
@@ -646,18 +656,18 @@ def collectLogs() {
         }
         required = required.substring(0, required.length() - 1) + "]"
         cmd += " --required=\"${required}\""
-
-        sh """#!/bin/bash
-            set -x
-            export PATH=${HOME}/miniconda3/bin/:$PATH
-            if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-                export PATH=${HOME}/anaconda3/bin/:$PATH
-            fi
-            source activate ${conda_env_name}
-            pip list
-            ${cmd}
-        """
-
+        withEnv(["conda_env_name=${conda_env_name}"]) {
+            sh """#!/bin/bash
+                set -x
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
+                    export PATH=${HOME}/anaconda3/bin/:$PATH
+                fi
+                source activate ${conda_env_name}
+                pip list
+                ${cmd}
+            """
+        }
         println("Logs collected.")
     }
 }
@@ -680,6 +690,10 @@ node( sub_node_label ) {
         if (cpu == '' && 'cpu' in params && params.cpu != ''){
             cpu=params.cpu
         }
+    }
+    if (cpu in nightly_cpu_list){
+        dataset_prefix="/home2/tensorflow-broad-product/oob"
+        echo "run tuning, dataset_prefix: ${dataset_prefix}"
     }
 
     getUpstreamInfo()
@@ -883,7 +897,10 @@ node( sub_node_label ) {
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
                 }
-
+                if ("${CPU_NAME}" != ""){
+                    conda_env_name="${conda_env_name}-${CPU_NAME}"
+                }
+                println("full conda_env_name = " + conda_env_name)
                 if (new_conda_env){
                     def tensorflow_version=''
                     def pytorch_version=''
@@ -910,6 +927,7 @@ node( sub_node_label ) {
 
             stage("Tuning") {
                 echo "Tuning timeout ${timeout}"
+                echo "CPU_NAME is ${CPU_NAME}"
                 if (framework=='pytorch' && (model_src_dir=~'oob_models').find()){
                     model_src_dir="${WORKSPACE}/lpot-validation/examples/${framework}/${model_src_dir}"
                 }else{
@@ -922,6 +940,7 @@ node( sub_node_label ) {
                         echo "-------w-------"
                         w
                         echo "-------w-------"
+                        echo "input path is ${dataset_prefix}${input_model}"
                         ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger.sh \
                             --framework=${framework} \
                             --model=${model} \

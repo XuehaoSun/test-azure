@@ -81,12 +81,16 @@ node(node_label){
 
     stage("build"){
         retry(5) {
-            sh'''#!/bin/bash
+            withEnv(["CPU_NAME=${CPU_NAME}"]){
+                sh'''#!/bin/bash
                 set -xe
 
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 # pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
                 conda_env_name=${framework}-${framework_version}-${python_version}
+                if [[ -n ${CPU_NAME} ]]; then
+                    conda_env_name="${conda_env_name}-${CPU_NAME}"
+                fi
                 conda config --add channels defaults
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                     if [ ${refresh_env} = true ]; then
@@ -129,7 +133,8 @@ node(node_label){
                 pip list
                 sleep 2
                 echo "------------------------------------------"
-            '''
+                '''
+            }
         }
     }
 

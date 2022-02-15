@@ -135,6 +135,7 @@ def cleanup() {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
         rm -rf *
+        rm -rf .git
         sudo rm -rf *
         sudo rm -rf .git
         '''
@@ -299,7 +300,6 @@ node(node_label){
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
                         # pip config set global.index-url https://pypi.douban.com/simple/
-                        
                         echo "Checking lpot..."
                         python -V
                         pip list
@@ -308,7 +308,6 @@ node(node_label){
                             pip uninstall neural-compressor -y
                             pip list
                         fi
-                                        
                         echo "Install neural_compressor binary..."
                         n=0
                         until [ "$n" -ge 5 ]
@@ -317,17 +316,14 @@ node(node_label){
                             n=$((n+1))
                             sleep 5
                         done
-                        
                         # re-install pycocotools resolve the issue with numpy
                         echo "re-install pycocotools resolve the issue with numpy..."
                         pip uninstall pycocotools -y
                         pip install --no-cache-dir pycocotools
-                        
                         if [ ! -d ${WORKSPACE}/lpot-models ]; then
                             echo "\\"lpot-model\\" not found. Exiting..."
                             exit 1
                         fi
-                        
                         echo -e "\\nInstalling ut requirements..."
                         cd ${WORKSPACE}/lpot-models/test
                         if [ -f "requirements.txt" ]; then
@@ -337,7 +333,6 @@ node(node_label){
                             sed -i '/^torch/d' requirements.txt
                             sed -i '/^mxnet-mkl/d' requirements.txt
                             sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
-
                             n=0
                             until [ "$n" -ge 5 ]
                             do
@@ -345,15 +340,12 @@ node(node_label){
                                 n=$((n+1))
                                 sleep 5
                             done
-
                             pip list
                         else
                             echo "Not found requirements.txt file."
                         fi
-
                         export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                         cat ${COVERAGE_RCFILE}
-
                         echo "Setting SigOpt strategy env variables"
                         export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                         export SIGOPT_PROJECT_ID="lpot"
@@ -365,7 +357,6 @@ node(node_label){
                             export TF_ENABLE_MKL_NATIVE_FORMAT=0
                             echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                         fi
-
                         lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                         find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                         ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
@@ -433,18 +424,15 @@ node(node_label){
                             sh '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH
                             source activate ${conda_env}
-
                             pip uninstall neural_compressor -y
                             cd ${WORKSPACE}/lpot-models-base
                             git submodule update --init --recursive
                             python setup.py install
                             pip list
-                            
                             # re-install pycocotools resolve the issue with numpy
                             echo "re-install pycocotools resolve the issue with numpy..."
                             pip uninstall pycocotools -y
                             pip install --no-cache-dir pycocotools
-
                             cd ${WORKSPACE}/lpot-models-base/test
                             if [ -f "requirements.txt" ]; then
                                 sed -i '/^neural-compressor/d' requirements.txt
@@ -453,7 +441,6 @@ node(node_label){
                                 sed -i '/^torch/d' requirements.txt
                                 sed -i '/^mxnet-mkl/d' requirements.txt
                                 sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
-
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
@@ -461,15 +448,12 @@ node(node_label){
                                 n=$((n+1))
                                 sleep 5
                                 done
-
                                 pip list
                             else
                                 echo "Not found requirements.txt file."
                             fi
-                        
                             export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                             cat ${COVERAGE_RCFILE}
-
                             echo "Setting SigOpt strategy env variables"
                             export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                             export SIGOPT_PROJECT_ID="lpot"
@@ -481,7 +465,6 @@ node(node_label){
                                 export TF_ENABLE_MKL_NATIVE_FORMAT=0
                                 echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                             fi
-
                             lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                             find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                             ut_log_name=${WORKSPACE}/unit_test_base.log
@@ -489,11 +472,9 @@ node(node_label){
                             bash run.sh 2>&1 | tee ${ut_log_name}
                             coverage report -m --rcfile=${COVERAGE_RCFILE}
                             coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml --rcfile=${COVERAGE_RCFILE}
-
                             python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
                                 --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
                                 --summary-file=${WORKSPACE}/coverage_summary_base.log
-
                             '''
                         }
                         lines_coverage_base = Float.parseFloat(sh(
@@ -531,7 +512,6 @@ node(node_label){
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH
                             source activate ${conda_env}
-                    
                             echo "Checking neural_compressor..."
                             python -V
                             pip list
@@ -540,7 +520,6 @@ node(node_label){
                                 pip uninstall neural-compressor -y
                                 pip list
                             fi
-                                    
                             echo "Install neural_compressor binary..."
                             n=0
                             until [ "$n" -ge 5 ]
@@ -549,16 +528,13 @@ node(node_label){
                                 n=$((n+1))
                                 sleep 5
                             done
-                            
                             echo "re-install pycocotools resolve the issue with numpy..."
                             pip uninstall pycocotools -y
                             pip install --no-cache-dir pycocotools
-                    
                             if [ ! -d ${WORKSPACE}/lpot-models ]; then
                                 echo "\\"lpot-model\\" not found. Exiting..."
                                 exit 1
                             fi
-                    
                             echo -e "\\nInstalling ut requirements..."
                             cd ${WORKSPACE}/lpot-models/test
                             if [ -f "requirements.txt" ]; then
@@ -568,7 +544,6 @@ node(node_label){
                                 sed -i '/^torch/d' requirements.txt
                                 sed -i '/^mxnet-mkl/d' requirements.txt
                                 sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
-        
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
@@ -576,12 +551,10 @@ node(node_label){
                                     n=$((n+1))
                                     sleep 5
                                 done
-        
                                 pip list
                             else
                                 echo "Not found requirements.txt file."
                             fi
-
                             echo "Setting SigOpt strategy env variables"
                             export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                             export SIGOPT_PROJECT_ID="lpot"
@@ -593,7 +566,6 @@ node(node_label){
                                 export TF_ENABLE_MKL_NATIVE_FORMAT=0
                                 echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                             fi
-                            
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                             ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
                             bash run.sh 2>&1 | tee ${ut_log_name}

@@ -42,10 +42,10 @@ done
 
 
 function main {
-    create_conda_env tensorflow ${tensorflow_version} ${python_version} "LPOT_TensorFlow-${tensorflow_version}_py${python_version}"
-    create_conda_env pytorch ${pytorch_version} ${python_version} "LPOT_PyTorch-${pytorch_version}_py${python_version}"
-    create_conda_env mxnet ${mxnet_version} ${python_version} "LPOT_MXNet-${mxnet_version}_py${python_version}"
-    create_conda_env onnx ${onnxruntime_version} ${python_version} "LPOT_ONNXRT-${onnxruntime_version}_py${python_version}"
+    create_conda_env tensorflow ${tensorflow_version} ${python_version} "LPOT_TensorFlow-${tensorflow_version}_py${python_version}-${CPU_NAME}"
+    create_conda_env pytorch ${pytorch_version} ${python_version} "LPOT_PyTorch-${pytorch_version}_py${python_version}-${CPU_NAME}"
+    create_conda_env mxnet ${mxnet_version} ${python_version} "LPOT_MXNet-${mxnet_version}_py${python_version}-${CPU_NAME}"
+    create_conda_env onnx ${onnxruntime_version} ${python_version} "LPOT_ONNXRT-${onnxruntime_version}_py${python_version}-${CPU_NAME}"
 }
 
 

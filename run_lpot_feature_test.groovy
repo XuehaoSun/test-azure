@@ -83,10 +83,10 @@ def cleanup() {
         dir(WORKSPACE) {
             deleteDir()
             sh '''#!/bin/bash -x
-                sudo rm -rf *
-                sudo rm -rf .git
                 rm -rf *
                 rm -rf .git
+                sudo rm -rf *
+                sudo rm -rf .git
             '''
         }
     } catch(e) {

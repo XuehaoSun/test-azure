@@ -32,6 +32,9 @@ do
     esac
 done
 
+# update conda env name
+
+
 # step 0: export conda
 if [[ ${model} = "dlrm"* ]] && [[ "${pytorch_version}" != "" ]]; then
     export PATH=${HOME}/anaconda3/bin/:$PATH
@@ -42,16 +45,18 @@ else
 fi
 
 function update_conda_env {
-
     if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
         conda remove --name ${conda_env_name} --all -y
     fi
-
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
         rm -rf ${conda_dir}/envs/${conda_env_name}
     fi
-
+    offending_pkg_dir=("libgcc-ng-9.3.0-h5101ec6_17" "libffi-3.3-he6710b0_2")
+    for pkg in ${offending_pkg_dir[@]}
+    do 
+        [[ -d ${conda_dir}/pkgs/${pkg} && $(ls ${conda_dir}/pkgs/${pkg} | wc -l) != 0 ]] && rm -fr ${conda_dir}/pkgs/${pkg}
+    done
     conda config --add channels defaults
     conda create python=${python_version} -y -n ${conda_env_name}
 
@@ -124,7 +129,7 @@ if [[ "${pytorch_version}" != "" ]]; then
     else
         pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
     fi
-    if [ ${model} == '3dunet' ]; then
+    if [[ ${model} == '3dunet' ]]; then
         # Install mlperf_loadgen
         pip install absl-py
         mlperf_loadgen_whl=/tf_dataset/pytorch/mlperf_3dunet/mlperf_loadgen-0.5a0-cp${python_version//./}-*.whl

@@ -55,7 +55,10 @@ def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
+        rm -rf *
+        rm -rf .git
         sudo rm -rf *
+        sudo rm -rf .git
         '''
     } catch(e) {
         echo "==============================================="
@@ -67,6 +70,7 @@ def cleanup() {
 }
 
 def conda_env_create() {
+    println("full conda_env_name = " + conda_env)
     withEnv(["python_version=${python_version}", "conda_env_name=${conda_env}"]){
         sh '''#!/bin/bash
         export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -93,6 +97,9 @@ node(node_label){
             }
         }
         stage('snyk scan') {
+            if ("${CPU_NAME}" != ""){
+                conda_env="${conda_env}-${CPU_NAME}"
+            }
             if (NPM != '') {
                 npm_list.each { npm_dep ->
                     echo "snyk scan on ${npm_dep} --->"

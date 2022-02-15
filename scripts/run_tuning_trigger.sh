@@ -312,7 +312,11 @@ main() {
 
     echo "run tuning env..."
     env
-    /usr/bin/time -v bash run_tuning.sh ${parameters}
+    if [[ "${CPU_NAME}" == "clx8280-07"* ]] || [[ "${CPU_NAME}" == "clx8260-"* ]]; then
+        bash -x run_tuning.sh ${parameters}
+    else
+        /usr/bin/time -v bash run_tuning.sh ${parameters}
+    fi
     endtime=`date +'%Y-%m-%d %H:%M:%S'`
     start_seconds=$(date --date="$starttime" +%s);
     end_seconds=$(date --date="$endtime" +%s);

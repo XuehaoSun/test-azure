@@ -477,6 +477,8 @@ def cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
+        rm -rf *
+        rm -rf .git
         sudo rm -rf *
         sudo rm -rf .git
         git config --global user.email "sys_lpot_val@intel.com"
@@ -1091,13 +1093,27 @@ def generateReport() {
         }else{
             refer_job_name = currentBuild.projectName
         }
-        catchError{
+        try{
             copyArtifacts(
-                    projectName: refer_job_name,
-                    selector: specific("${refer_build}"),
-                    filter: 'summary.log,tuning_info.log',
-                    fingerprintArtifacts: true,
-                    target: "reference")
+                projectName: refer_job_name,
+                selector: specific("${refer_build}"),
+                filter: 'summary.log,tuning_info.log',
+                fingerprintArtifacts: true,
+                target: "reference")
+        } catch(err) {
+            println("Copy reference artifact failed, try make up an empty one")
+            withEnv(["tuneLogLast=${tuneLogLast}", "summaryLogLast=${summaryLogLast}"]){
+            sh '''#!/bin/bash -x
+                if [[ ! -f ${tuneLogLast} ]]; then
+                    [[ ! -d ${WORKSPACE}/reference ]] && sudo mkdir ${WORKSPACE}/reference
+                    touch ${tuneLogLast}
+                fi
+                if [[ ! -f ${summaryLogLast} ]]; then
+                    [[ ! -d ${WORKSPACE}/reference ]] && sudo mkdir ${WORKSPACE}/reference
+                    touch ${summaryLogLast}
+                fi
+            '''
+            }
         }
     }
 
@@ -1503,35 +1519,26 @@ node( node_label ) {
             }
         }
 
-        try {
-            stage("Generate report") {
-                generateReport()
-            }
-        } catch(error) {
-            if (PR_source_branch != '') {
-                recipient_list = ActualCommitAuthorEmail + ',' + TriggerAuthorEmail
-                if ('recipient_list' in params && params.recipient_list != '') {
-                    recipient_list = params.recipient_list + ',' + ActualCommitAuthorEmail + ',' + TriggerAuthorEmail
+            try {
+                stage("Generate report") {
+                    generateReport()
                 }
-            } else {
-                recipient_list = ''
-                if ('recipient_list' in params && params.recipient_list != '') {
-                    recipient_list = params.recipient_list
-                }
-            }
-            emailext attachLog: true, body: "Generate report failed (see ${env.BUILD_URL}): ${error}", subject: "${email_subject}", to: "${recipient_list}"
-            throw error
-        }finally {
-            if (EXCEL_REPORT) {
-                stage("Generate excel report") {
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        retry(3) {
-                            generateExcelReport()
+            } catch(error) {
+                recipient_list = "suyue.chen@intel.com,wenxin.zhang@intel.com"
+                emailext attachLog: true, body: "Generate report failed (see ${env.BUILD_URL}): ${error}", subject: "${email_subject}", to: "${recipient_list}"
+                throw error
+            }finally {
+                if (EXCEL_REPORT) {
+                    stage("Generate excel report") {
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            retry(3) {
+                                generateExcelReport()
+                            }
                         }
                     }
                 }
             }
-        }
+        
 
         stage("Send report") {
             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {

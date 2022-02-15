@@ -99,6 +99,8 @@ def Cleanup() {
     try {
         sh '''#!/bin/bash -x
         cd $WORKSPACE
+        rm -rf *
+        rm -rf .git
         sudo rm -rf *
         sudo rm -rf .git
         git config --global user.email "sys_lpot_val@intel.com"

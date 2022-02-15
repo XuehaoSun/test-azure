@@ -11,6 +11,8 @@ def cleanup() {
         stage("Cleanup") {
             dir(WORKSPACE) {
                 sh """
+                    rm -rf *
+                    rm -rf .git
                     sudo rm -rf *
                     sudo rm -rf .git
                 """

@@ -104,24 +104,30 @@ node(node_label) {
         }
 
         stage('Upload binary'){
-            sh '''#!/bin/bash
-            set -xe
-            echo "Create conda env..."
-            export PATH=${HOME}/miniconda3/bin/:$PATH
-            if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                echo "${conda_env} exist!"
-            else
-                conda create python=3.6.9 -y -n ${conda_env}
-            fi
-            
-            source activate ${conda_env}
-            
-            # Upgrade pip
-            pip install -U pip
-            pip install twine
-            cp ${WORKSPACE}/lpot-validation/config/.pypirc $HOME
-            twine upload --repository testpypi dist/*
-            '''
+            if ("${CPU_NAME}" != ""){
+                conda_env="${conda_env}-${CPU_NAME}"
+            }
+            println("full conda_env_name = " + conda_env)
+            withEnv(["conda_env=${conda_env}"]) {
+                sh '''#!/bin/bash
+                set -xe
+                echo "Create conda env..."
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
+                    echo "${conda_env} exist!"
+                else
+                    conda create python=3.6.9 -y -n ${conda_env}
+                fi
+
+                source activate ${conda_env}
+
+                # Upgrade pip
+                pip install -U pip
+                pip install twine
+                cp ${WORKSPACE}/lpot-validation/config/.pypirc $HOME
+                twine upload --repository testpypi dist/*
+                '''
+            }
         }
 
     }catch(e){

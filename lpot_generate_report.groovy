@@ -27,11 +27,15 @@ node(NODE_NAME) {
     }
 
     stage("Generate excel report") {
-        sh '''#!/bin/bash
+        withEnv(["CPU_NAME=${CPU_NAME}"]){
+            sh '''#!/bin/bash
             set -xe
 
             export PATH=${HOME}/miniconda3/bin/:$PATH
             conda_env_name="report_generator"
+            if [[ -n ${CPU_NAME} ]]; then
+                conda_env_name="${conda_env_name}-${CPU_NAME}"
+            fi
             if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                 conda remove --name ${conda_env_name} --all -y
 
@@ -51,7 +55,8 @@ node(NODE_NAME) {
             python ./lpot-validation/scripts/report_generator/generate_excel_report.py \
                 --tuning-log=${WORKSPACE}/logs/tuning_info.log \
                 --summary-log=${WORKSPACE}/logs/summary.log
-        '''
+            '''
+        }
     }
 
     stage("Send report") {

@@ -122,6 +122,9 @@ node(node_label){
                         sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             
                         echo "=======cache clean======="
+                        if [[ -n ${CPU_NAME} ]]; then
+                            conda_env_name="${conda_env_name}-${CPU_NAME}"
+                        fi
                         bash ${WORKSPACE}/lpot-validation/OOB_benchmark/launch_benchmark.sh \
                             --model=${each_model} \
                             --input_model=${input_model} \

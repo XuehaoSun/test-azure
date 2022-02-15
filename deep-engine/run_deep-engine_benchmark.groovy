@@ -139,21 +139,23 @@ def build_env() {
                 target: "${WORKSPACE}")
     }
     timeout(10){
-        sh(returnStatus: true, script: '''#!/bin/bash
-            export PATH=${HOME}/miniconda3/bin/:$PATH
-            if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-               conda remove --name ${conda_env} --all -y  
-            fi
-            conda_dir=$(dirname $(dirname $(which conda)))
-            if [ -d ${conda_dir}/envs/${conda_env} ]; then
-                rm -rf ${conda_dir}/envs/${conda_env}
-            fi
-            conda create python=${python_version} -y -n ${conda_env}
-            source activate ${conda_env}
-            pip install ${WORKSPACE}/neural_compressor*.whl
-            echo "Print components list after install inc..."
-            pip list
-        ''')
+        withEnv(["conda_env=${conda_env}"]){
+            sh(returnStatus: true, script: '''#!/bin/bash
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
+                   conda remove --name ${conda_env} --all -y  
+                fi
+                conda_dir=$(dirname $(dirname $(which conda)))
+                if [ -d ${conda_dir}/envs/${conda_env} ]; then
+                    rm -rf ${conda_dir}/envs/${conda_env}
+                fi
+                conda create python=${python_version} -y -n ${conda_env}
+                source activate ${conda_env}
+                pip install ${WORKSPACE}/neural_compressor*.whl
+                echo "Print components list after install inc..."
+                pip list
+            ''')
+        }
     }
 }
 
@@ -167,6 +169,10 @@ node(node_label){
             download()
         }
         stage('Env setup'){
+            if ("${CPU_NAME}" != ""){
+                conda_env="${conda_env}-${CPU_NAME}"
+            }
+            println("full conda_env = " + conda_env)
             retry(3){
                 build_env()
             }
@@ -191,17 +197,19 @@ node(node_label){
                                 }
                             }
                             config = "${WORKSPACE}/deep-engine/${config}"
-                            timeout(120) {
-                                sh """#!/bin/bash -x
-                                echo "Running ----${each_model}, ${each_seq_len}, ${weight}, ${config}, ${ncores_per_instance},${bs},${each_precision} ---- Benchmark"
-                                
-                                echo "=======cache clean======="
-                                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-                                echo "========================="
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
-                                source activate ${conda_env}
-                                bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${each_model} ${each_seq_len} ${ncores_per_instance} ${bs} ${config} ${weight} ${each_precision}
-                                """
+                            withEnv(["conda_env=${conda_env}"]) {
+                                timeout(120) {
+                                    sh """#!/bin/bash -x
+                                    echo "Running ----${each_model}, ${each_seq_len}, ${weight}, ${config}, ${ncores_per_instance},${bs},${each_precision} ---- Benchmark"
+
+                                    echo "=======cache clean======="
+                                    sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+                                    echo "========================="
+                                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                                    source activate ${conda_env}
+                                    bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${each_model} ${each_seq_len} ${ncores_per_instance} ${bs} ${config} ${weight} ${each_precision}
+                                    """
+                                }
                             }
                         }
                     }

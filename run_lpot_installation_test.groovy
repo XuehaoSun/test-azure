@@ -61,6 +61,8 @@ def cleanup() {
         try {
             sh '''#!/bin/bash -x
             cd $WORKSPACE
+            rm -rf *
+            rm -rf .git
             sudo rm -rf *
             sudo rm -rf .git
             git config --global user.email "sys_lpot_val@intel.com"
@@ -116,11 +118,14 @@ node(node_label) {
                 dir("$WORKSPACE/LPOT") {
                     python_version_list.each { per_python_version ->
 
-                        withEnv(["python_version=${per_python_version}"]) {
+                        withEnv(["python_version=${per_python_version}", "CPU_NAME=${CPU_NAME}"]) {
                             sh '''#!/bin/bash
                             set -x
                             export PATH=${HOME}/miniconda3/bin/:$PATH
                             conda_env_name=lpot-install-${python_version}-test
+                            if [[ -n ${CPU_NAME} ]]; then
+                                conda_env_name="${conda_env_name}-${CPU_NAME}"
+                            fi
                             if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                                 conda remove --name ${conda_env_name} --all -y
                             fi
@@ -205,11 +210,14 @@ node(node_label) {
                 dir("$WORKSPACE") {
                     python_version_list.each { per_python_version ->
 
-                        withEnv(["python_version=${per_python_version}"]) {
+                        withEnv(["python_version=${per_python_version}", "CPU_NAME=${CPU_NAME}"]) {
                             sh '''#!/bin/bash
                             set -x
                             export PATH=${HOME}/miniconda3/bin/:$PATH
                             conda_env_name=lpot-install-${python_version}-test
+                            if [[ -n ${CPU_NAME} ]]; then
+                                conda_env_name="${conda_env_name}-${CPU_NAME}"
+                            fi
                             if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                                 conda remove --name ${conda_env_name} --all -y
                             fi
