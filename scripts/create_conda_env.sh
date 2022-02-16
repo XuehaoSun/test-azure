@@ -115,6 +115,8 @@ elif [[ "${tensorflow_version}" == '2.6.0' ]]; then
     pip install keras==2.6.0
 elif [[ "${tensorflow_version}" == '2.6.2' ]] || [[ "${tensorflow_version}" == '2.6.1' ]]; then
     pip install tensorflow==${tensorflow_version}
+elif [[ "${tensorflow_version}" == "spr-base" ]]; then
+    pip install ${WORKSPACE}/tensorflow*.whl
 elif [[ "${tensorflow_version}" != "" ]]; then
     pip install intel-tensorflow==${tensorflow_version}
 else

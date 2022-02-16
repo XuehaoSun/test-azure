@@ -87,6 +87,12 @@ if ('binary_build_job' in params && params.binary_build_job != ''){
 }
 echo "binary_build_job is ${binary_build_job}"
 
+tf_binary_build_job=""
+if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
+    tf_binary_build_job = params.tf_binary_build_job
+}
+echo "tf_binary_build_job is ${tf_binary_build_job}"
+
 test_mode="nightly"
 if ('test_mode' in params && params.test_mode != ''){
     test_mode = params.test_mode
@@ -789,6 +795,14 @@ node( sub_node_label ) {
                             projectName: 'lpot-release-wheel-build',
                             selector: specific("${binary_build_job}"),
                             filter: 'neural_compressor*.whl, neural_compressor*.tar.gz, neural-compressor*.tar.bz2',
+                            fingerprintArtifacts: true,
+                            target: "${WORKSPACE}")
+                }
+                if (framework_version == "spr-base"){
+                    copyArtifacts(
+                            projectName: 'TF-spr-base-wheel-build',
+                            selector: specific("${tf_binary_build_job}"),
+                            filter: 'tensorflow*.whl',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
                 }
