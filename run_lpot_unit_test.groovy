@@ -225,6 +225,7 @@ def build_conda_env() {
         "onnx_version=${onnx_version}",
         "onnxruntime_version=${onnxruntime_version}",
         "conda_env_name=${conda_env}",
+        "conda_env_mode=${conda_env_mode}",
         "python_version=${python_version}"]) {
         retry(5) {
             sh'''#!/bin/bash
