@@ -6,7 +6,7 @@ if ('node_label' in params && params.node_label != '') {
 }
 echo "Running on node ${node_label}"
 
-lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
+lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -196,7 +196,7 @@ node(node_label) {
                     copyArtifacts(
                             projectName: 'lpot-release-wheel-build',
                             selector: specific("${binary_build_job}"),
-                            filter: 'neural_compressor*.whl',
+                            filter: 'neural_compressor*.whl, neural_compressor*.tar.gz, neural-compressor*.tar.bz2',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
                 }

@@ -22,6 +22,12 @@ if ('test_title' in params && params.test_title != '') {
 }
 echo "Running named ${test_title}"
 
+conda_env_mode = "pypi"
+if ('conda_env_mode' in params && params.conda_env_mode != '') {
+    conda_env_mode = params.conda_env_mode
+}
+echo "Running test on ${conda_env_mode}"
+
 // setting node_label
 node_label = "clx8280"
 if ('node_label' in params && params.node_label != '') {
@@ -120,7 +126,7 @@ if ('onnxrt_models' in params && params.onnxrt_models != '') {
 }
 echo "onnxrt_models: ${onnxrt_models}"
 
-lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot"
+lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -359,6 +365,11 @@ if (params.RUN_PROFILING != null){
 echo "RUN_PROFILING = ${RUN_PROFILING}"
 
 binary_build_job = ""
+tf_binary_build_job = ""
+if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
+    tf_binary_build_job=params.tf_binary_build_job
+}
+echo "tf_binary_build_job: ${tf_binary_build_job}"
 
 val_branch="master"
 if ('val_branch' in params && params.val_branch != ''){
@@ -576,6 +587,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu
     ParamsPerJob += string(name: "strategy", value: "${strategy}")
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
+    ParamsPerJob += string(name: "tf_binary_build_job", value: "${tf_binary_build_job}")
     ParamsPerJob += string(name: "mode", value: "${pass_mode}")
     ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
     ParamsPerJob += booleanParam(name: "multi_instance", value: multi_instance)
@@ -590,6 +602,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu
     ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
     ParamsPerJob += booleanParam(name: "collect_tuned_model", value: collect_tuned_model)
     ParamsPerJob += string(name: "precision", value: "${precision}")
+    ParamsPerJob += string(name: "conda_env_mode", value: "${conda_env_mode}")
 
     return ParamsPerJob
 }
@@ -966,6 +979,8 @@ def UTBuildParams(tf_version, pt_version, run_coverage){
     ParamsPerJob += string(name: "onnxruntime_version", value: "${onnxruntime_version}")
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
     ParamsPerJob += booleanParam(name: "run_coverage", value: run_coverage)
+    ParamsPerJob += string(name: "conda_env_mode", value: "${conda_env_mode}")
+
     return ParamsPerJob
 }
 
@@ -1070,6 +1085,10 @@ def buildBinary(){
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "pypi_version", value: "${pypi_version}")
     ]
+    if(conda_env_mode == "conda") {
+        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
+        binaryBuildParams += string(name: "binary_class", value: "conda")
+    }
     downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
     
     binary_build_job = downstreamJob.getNumber()
@@ -1080,6 +1099,24 @@ def buildBinary(){
         failed_build_url = downstreamJob.absoluteUrl
         echo "failed_build_url: ${failed_build_url}"
         error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+    }
+
+    if (tensorflow_version == "spr-base" && tf_binary_build_job == ""){
+        List TFBinaryBuildParams = [
+                string(name: "python_version", value: "${python_version}"),
+                string(name: "val_branch", value: "${val_branch}"),
+        ]
+        downstreamJob = build job: "TF-spr-base-wheel-build", propagate: false, parameters: TFBinaryBuildParams
+
+        tf_binary_build_job = downstreamJob.getNumber()
+        echo "tf_binary_build_job: ${tf_binary_build_job}"
+        echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+            failed_build_url = downstreamJob.absoluteUrl
+            echo "failed_build_url: ${failed_build_url}"
+            error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        }
     }
 }
 
