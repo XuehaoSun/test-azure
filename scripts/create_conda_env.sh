@@ -44,6 +44,13 @@ else
     export PATH=${HOME}/miniconda3/bin/:$PATH
 fi
 
+# add channels
+conda_ver1=$(conda -V |awk -F '[. ]' '{print $2}')
+conda_ver2=$(conda -V |awk -F '[. ]' '{print $3}')
+if [ ${conda_ver1} -le 4 ] && [ ${conda_ver2} -lt 10 ];then
+    conda update conda -y
+fi
+
 function update_conda_env {
     if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
         conda remove --name ${conda_env_name} --all -y
@@ -213,6 +220,10 @@ wait
 
 echo "pip list all the components------------->"
 pip list
+sleep 2
+echo "------------------------------------------"
+echo "conda list all the components------------->"
+conda list
 sleep 2
 echo "------------------------------------------"
 

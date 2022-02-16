@@ -12,7 +12,7 @@ if ('conda_env' in params && params.conda_env != '') {
 }
 echo "Running ut on ${conda_env}"
 
-lpot_url=""
+lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
@@ -237,7 +237,7 @@ node(node_label){
         }
         stage("binary build") {
             echo "+---------------- ${binary_class} build ----------------+"
-            retry(3){
+            retry(5){
                 do_binary_build()
             }
         }
