@@ -56,6 +56,12 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
+new_tf_version=""
+if ('new_tf_version' in params && params.new_tf_version != ''){
+    new_tf_version = params.new_tf_version
+}
+echo "new_tf_version is ${new_tf_version}"
+
 def cleanup() {
 
     try {
@@ -131,6 +137,14 @@ def download() {
             cd ${WORKSPACE}/lpot-models
             git submodule update --init --recursive
             '''
+        }
+        if (new_tf_version != ""){
+            withEnv(["new_tf_version=${new_tf_version}"]) {
+                sh '''#!/bin/bash
+                sed -i "s/name: \\['2.1.0',/name: \\['2.1.0', '${new_tf_version}', /g" ${WORKSPACE}/lpot-models/neural_compressor/adaptor/tensorflow.yaml
+                cat  ${WORKSPACE}/lpot-models/neural_compressor/adaptor/tensorflow.yaml
+                '''
+            }
         }
     }
 }

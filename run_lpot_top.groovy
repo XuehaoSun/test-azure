@@ -1076,31 +1076,6 @@ def unitTestJobs() {
 
 def buildBinary(){
 
-    List binaryBuildParams = [
-            string(name: "python_version", value: "${python_version}"),
-            string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_commit}"),
-            string(name: "MR_source_branch", value: "${PR_source_branch}"),
-            string(name: "MR_target_branch", value: "${PR_target_branch}"),
-            string(name: "val_branch", value: "${val_branch}"),
-            string(name: "pypi_version", value: "${pypi_version}")
-    ]
-    if(conda_env_mode == "conda") {
-        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
-        binaryBuildParams += string(name: "binary_class", value: "conda")
-    }
-    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
-    
-    binary_build_job = downstreamJob.getNumber()
-    echo "binary_build_job: ${binary_build_job}"
-    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
-    if (downstreamJob.getResult() != "SUCCESS") {
-        currentBuild.result = "FAILURE"
-        failed_build_url = downstreamJob.absoluteUrl
-        echo "failed_build_url: ${failed_build_url}"
-        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
-    }
-
     if (tensorflow_version == "spr-base" && tf_binary_build_job == ""){
         List TFBinaryBuildParams = [
                 string(name: "python_version", value: "${python_version}"),
@@ -1117,6 +1092,46 @@ def buildBinary(){
             echo "failed_build_url: ${failed_build_url}"
             error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
         }
+    }
+
+    List binaryBuildParams = [
+            string(name: "python_version", value: "${python_version}"),
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_commit}"),
+            string(name: "MR_source_branch", value: "${PR_source_branch}"),
+            string(name: "MR_target_branch", value: "${PR_target_branch}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "pypi_version", value: "${pypi_version}")
+    ]
+    if(conda_env_mode == "conda") {
+        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
+        binaryBuildParams += string(name: "binary_class", value: "conda")
+    }
+
+    if(tensorflow_version == "spr-base"){
+        copyArtifacts(
+                projectName: 'TF-spr-base-wheel-build',
+                selector: specific("${tf_binary_build_job}"),
+                filter: 'tensorflow*.whl',
+                fingerprintArtifacts: true,
+                target: "${WORKSPACE}")
+        new_tf_version = sh(
+                script: 'echo $(ls tensorflow*.whl | cut -d \'-\' -f2)',
+                returnStdout: true
+        ).trim()
+        binaryBuildParams += string(name: "new_tf_version", value: "${new_tf_version}")
+    }
+
+    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
+    
+    binary_build_job = downstreamJob.getNumber()
+    echo "binary_build_job: ${binary_build_job}"
+    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+    if (downstreamJob.getResult() != "SUCCESS") {
+        currentBuild.result = "FAILURE"
+        failed_build_url = downstreamJob.absoluteUrl
+        echo "failed_build_url: ${failed_build_url}"
+        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
     }
 }
 
