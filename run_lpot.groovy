@@ -394,7 +394,6 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     }else{
         model_src_dir="${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}"
     }
-
     if (new_benchmark == true) {
         def cmd = "python ${WORKSPACE}/lpot-validation/scripts/run_new_benchmark_trigger.py \
                 --framework=${framework} \
@@ -950,6 +949,9 @@ node( sub_node_label ) {
             stage("Tuning") {
                 echo "Tuning timeout ${timeout}"
                 echo "CPU_NAME is ${CPU_NAME}"
+                if (cpu in nightly_cpu_list){
+                    cpu = cpu.split("-")[0]
+                }
                 if (framework=='pytorch' && (model_src_dir=~'oob_models').find()){
                     model_src_dir="${WORKSPACE}/lpot-validation/examples/${framework}/${model_src_dir}"
                 }else{

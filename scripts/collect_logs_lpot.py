@@ -24,6 +24,9 @@ print(args)
 
 os_name = str(platform.system()).lower()
 cpu_name = os.environ.get("CPU_NAME", "unknown").lower()
+nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
+if cpu_name in nightly_cpu_list:
+    cpu_name = cpu_name.split("-")[0]
 
 result = Result()
 result.framework = args.framework
