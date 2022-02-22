@@ -1109,17 +1109,7 @@ def buildBinary(){
     }
 
     if(tensorflow_version == "spr-base"){
-        copyArtifacts(
-                projectName: 'TF-spr-base-wheel-build',
-                selector: specific("${tf_binary_build_job}"),
-                filter: 'tensorflow*.whl',
-                fingerprintArtifacts: true,
-                target: "${WORKSPACE}")
-        new_tf_version = sh(
-                script: 'echo $(ls tensorflow*.whl | cut -d \'-\' -f2)',
-                returnStdout: true
-        ).trim()
-        binaryBuildParams += string(name: "new_tf_version", value: "${new_tf_version}")
+        binaryBuildParams += string(name: "tf_binary_build_job", value: "${tf_binary_build_job}")
     }
 
     downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
