@@ -63,7 +63,7 @@ main() {
 run_cpplint() {
     pip install cpplint
     log_path=${WORKSPACE}/engine_cpplint.log
-    cpplint --recursive --quiet --linelength=120 ./engine/ 2>&1| tee ${log_path}
+    cpplint --exclude=./engine/executor/include/kernels/xbyak --recursive --quiet --linelength=120 ./engine/ 2>&1| tee ${log_path}
     if [[ ! -f ${log_path} ]] || [[ $(grep -c "Total errors found:" ${log_path}) != 0 ]]; then
         exit 1
     fi
