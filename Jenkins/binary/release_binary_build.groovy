@@ -135,9 +135,6 @@ def do_binary_build() {
     python_list.each{ per_python ->
         println("python_version is  " + per_python)
         conda_env="python${per_python}"
-        if ("${CPU_NAME}" != ""){
-            conda_env="${conda_env}-${CPU_NAME}"
-        }
         println("full conda_env_name = " + conda_env)
         retry(3){
             withEnv(["pypi_version=${pypi_version}", "python_version=${per_python}", "conda_env=${conda_env}"]){
