@@ -241,6 +241,12 @@ if ('dataset_prefix' in params && params.dataset_prefix != ''){
 }
 echo "dataset_prefix: ${dataset_prefix}"
 
+log_level="DEBUG"
+if ('log_level' in params && params.log_level != ''){
+    log_level=params.log_level
+}
+echo "log_level: ${log_level}"
+
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 upstreamBuild = ""
 upstreamJobName = ""
@@ -438,7 +444,8 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --framework=${framework} \
                     --model=${model} \
                     --conda_env_name=${conda_env_name} \
-                    --conda_env_mode=${conda_env_mode} 
+                    --conda_env_mode=${conda_env_mode} \
+                    --log_level=${log_level}
                 set_environment
                 echo "=================================="
 
@@ -476,7 +483,8 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --os=${os} \
                     --cpu=${cpu} \
                     --profiling=${RUN_PROFILING} \
-                    --output_path=${output_path}
+                    --output_path=${output_path} \
+                    --log_level=${log_level}
                 """
         }
     }
@@ -979,6 +987,7 @@ node( sub_node_label ) {
                             --sampling_size="${sampling_size}" \
                             --conda_env_name=${conda_env_name} \
                             --conda_env_mode=${conda_env_mode} \
+                            --log_level=${log_level} \
                             2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
                     """
                 }

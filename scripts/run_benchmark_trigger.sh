@@ -40,6 +40,8 @@ do
             output_path=`echo $i | sed "s/${PATTERN}//"`;;
         --multi_instance=*)
             multi_instance=`echo $i | sed "s/${PATTERN}//"`;;
+        --log_level=*)
+            log_level=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -55,7 +57,7 @@ main() {
 
     # Import common functions
     source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
-        --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode}
+        --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level}
 
     echo -e "\nSetting environment..."
     set_environment

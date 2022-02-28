@@ -3,14 +3,15 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "4" ] ; then
+if [ $# != "5" ] ; then
     echo 'ERROR:'
-    echo "Expected 4 parameters got $#"
+    echo "Expected 5 parameters got $#"
     printf 'Please use following parameters:
     --framework=<framework name>
     --model=<model name>
     --conda_env_name=<conda environment name>
     --conda_env_mode=<conda environment mode>
+    --log_level=<INC LOGLEVEL>
     '
     exit 1
 fi
@@ -26,6 +27,8 @@ do
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_mode=*)
             conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
+        --log_level=*)
+            log_level=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -171,5 +174,8 @@ function set_environment {
     done
     echo "Checking lpot..."
     [[ "${conda_env_mode}" == "conda" ]] && conda list || pip list
-    export LOGLEVEL=DEBUG
+
+    if [[ "${log_level}" != "" ]] && [[ "${log_level}" != "default" ]]; then
+        export LOGLEVEL=${log_level}
+    fi
 }

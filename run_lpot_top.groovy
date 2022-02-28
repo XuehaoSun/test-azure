@@ -425,6 +425,11 @@ if (params.multi_instance != null){
 }
 echo "Multi instance: ${multi_instance}"
 
+log_level="DEBUG"
+if ('log_level' in params && params.log_level != ''){
+    log_level=params.log_level
+}
+echo "log_level: ${log_level}"
 
 def updateGithubCommitStatus(String state, String description) {
     try {
@@ -603,6 +608,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu
     ParamsPerJob += booleanParam(name: "collect_tuned_model", value: collect_tuned_model)
     ParamsPerJob += string(name: "precision", value: "${precision}")
     ParamsPerJob += string(name: "conda_env_mode", value: "${conda_env_mode}")
+    ParamsPerJob += string(name: "log_level", value: "${log_level}")
 
     return ParamsPerJob
 }

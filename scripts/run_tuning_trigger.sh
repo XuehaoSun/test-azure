@@ -2,26 +2,6 @@
 set -eox pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "13" ] ; then
-    echo 'ERROR:'
-    echo "Expected 13 parameters got $#"
-    printf 'Please use following parameters:
-    --framework=<framework name>
-    --model=<model name>
-    --model_src_dir=<path to model tuning script>
-    --dataset_location=<path to dataset>
-    --input_model=<path to input model>
-    --yaml=<path to lpot yaml configuration>
-    --strategy=<tuning strategy>
-    --strategy_token=<token for strategy>
-    --max_trials=<max tuning trials>
-    --algorithm=<algorithm for quantization>
-    --sampling_size=<sampling size for calibration>
-    --conda_env_name=<conda environment name>
-    --conda_env_mode=<conda pypi or source>
-    '
-    exit 1
-fi
 
 for i in "$@"
 do
@@ -52,6 +32,8 @@ do
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_mode=*)
             conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
+        --log_level=*)
+            log_level=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -61,7 +43,7 @@ done
 main() {
     # Import common functions
     source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
-         --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode}
+         --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level}
 
     echo -e "\nSetting environment..."
     set_environment
