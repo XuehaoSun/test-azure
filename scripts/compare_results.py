@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument(
         "--platform",
         type=str,
-        default=os.environ.get("CPU_NAME", "unknown"),
+        default=os.environ.get("CPU_NAME", "unknown").split("-")[0],
     )
     parser.add_argument("--threshold", type=float, default=0.05)
     parser.add_argument(

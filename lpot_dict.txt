@@ -234,6 +234,7 @@ CFLAGS
 ChamNet
 Chaumond
 checkbox
+checkboxes
 Cheng
 chmod
 Cho's
@@ -549,6 +550,7 @@ Erf
 Éric
 eriklindernoren
 Errno
+esri
 et
 eval
 evaluator
@@ -2036,5 +2038,5 @@ Zptls
 zrelro
 zrl
 zxvf
-esri
+networkbuilders
 MaskRCNN

@@ -214,7 +214,7 @@ def do_binary_build() {
                 CALL conda config --add channels esri
                 CALL conda install conda-build conda-verify -y
 
-                CALL conda build meta.yaml
+                CALL conda build meta.yaml --no-test
 
                 FOR /F %%i IN ('where conda') do SET CONDA_PATH="%%i"
                 FOR %%F in ("%CONDA_PATH:"=%") do SET CONDA_DIRNAME=%%~dpF
