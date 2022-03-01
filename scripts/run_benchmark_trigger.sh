@@ -216,7 +216,7 @@ function run_benchmark {
     ncores_per_instance=${ncores_per_socket}
     iters=100
 
-    single_instance=("3dunet" "centernet_hg104")
+    single_instance=("3dunet" "centernet_hg104" "GPT2")
     if [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
         multi_instance="false"
     fi
