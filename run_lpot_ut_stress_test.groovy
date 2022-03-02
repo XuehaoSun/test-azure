@@ -271,6 +271,7 @@ def binary_install() {
                 sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                 sed -i '/^torch/d' requirements.txt
                 sed -i '/^mxnet-mkl/d' requirements.txt
+                sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
 
                 n=0
                 until [ "$n" -ge 5 ]

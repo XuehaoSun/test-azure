@@ -60,7 +60,7 @@ main() {
         if [ -f "requirements.txt" ]; then
             sed -i '/neural-compressor/d' requirements.txt
             if [ "${framework}" == "onnxrt" ]; then
-              sed -i '/onnx/d;/onnxruntime/d' requirements.txt
+              sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
             fi
             if [ "${framework}" == "tensorflow" ]; then
               sed -i '/tensorflow==/d;/tensorflow$/d' requirements.txt

@@ -339,7 +339,7 @@ node(node_label){
                             sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                             sed -i '/^torch/d' requirements.txt
                             sed -i '/^mxnet-mkl/d' requirements.txt
-                            sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
+                            sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
                             n=0
                             until [ "$n" -ge 5 ]
                             do
@@ -447,7 +447,7 @@ node(node_label){
                                 sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                                 sed -i '/^torch/d' requirements.txt
                                 sed -i '/^mxnet-mkl/d' requirements.txt
-                                sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
+                                sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
@@ -550,7 +550,7 @@ node(node_label){
                                 sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
                                 sed -i '/^torch/d' requirements.txt
                                 sed -i '/^mxnet-mkl/d' requirements.txt
-                                sed -i '/^onnx/d;/onnxruntime/d' requirements.txt
+                                sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
