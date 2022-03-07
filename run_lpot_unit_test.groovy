@@ -364,6 +364,8 @@ node(node_label){
                             export TF_ENABLE_MKL_NATIVE_FORMAT=0
                             echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                         fi
+                        # mute engine log
+                        export GLOG_minloglevel=2
                         lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                         find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                         ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
@@ -472,6 +474,8 @@ node(node_label){
                                 export TF_ENABLE_MKL_NATIVE_FORMAT=0
                                 echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                             fi
+                            # mute engine log
+                            export GLOG_minloglevel=2
                             lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                             find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                             ut_log_name=${WORKSPACE}/unit_test_base.log
@@ -573,6 +577,8 @@ node(node_label){
                                 export TF_ENABLE_MKL_NATIVE_FORMAT=0
                                 echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                             fi
+                            # mute engine log
+                            export GLOG_minloglevel=2
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                             ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
                             bash run.sh 2>&1 | tee ${ut_log_name}
