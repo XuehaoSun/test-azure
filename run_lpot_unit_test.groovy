@@ -370,6 +370,9 @@ node(node_label){
                         find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                         ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
                         coverage erase
+                        echo "cat run.sh..."
+                        cat run.sh 
+                        echo "-------------"
                         bash run.sh 2>&1 | tee ${ut_log_name}
                         coverage report -m --rcfile=${COVERAGE_RCFILE}
                         coverage html -d ${WORKSPACE}/coverage_results/htmlcov --rcfile=${COVERAGE_RCFILE}
@@ -480,6 +483,9 @@ node(node_label){
                             find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                             ut_log_name=${WORKSPACE}/unit_test_base.log
                             coverage erase
+                            echo "cat run.sh..."
+                            cat run.sh 
+                            echo "-------------"
                             bash run.sh 2>&1 | tee ${ut_log_name}
                             coverage report -m --rcfile=${COVERAGE_RCFILE}
                             coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml --rcfile=${COVERAGE_RCFILE}
@@ -581,6 +587,9 @@ node(node_label){
                             export GLOG_minloglevel=2
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                             ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
+                            echo "cat run.sh..."
+                            cat run.sh 
+                            echo "-------------"
                             bash run.sh 2>&1 | tee ${ut_log_name}
                             if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                                 exit 1
