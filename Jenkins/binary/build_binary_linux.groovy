@@ -56,12 +56,6 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
-tf_binary_build_job=""
-if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
-    tf_binary_build_job = params.tf_binary_build_job
-}
-echo "tf_binary_build_job is ${tf_binary_build_job}"
-
 def cleanup() {
 
     try {
@@ -136,33 +130,6 @@ def download() {
             fi
             cd ${WORKSPACE}/lpot-models
             git submodule update --init --recursive
-            '''
-        }
-        if (tf_binary_build_job != ""){
-            copyArtifacts(
-                    projectName: 'TF-spr-base-wheel-build',
-                    selector: specific("${tf_binary_build_job}"),
-                    filter: 'tensorflow*.whl',
-                    fingerprintArtifacts: true,
-                    target: "${WORKSPACE}")
-
-            sh '''#!/bin/bash -x
-            export PATH=${HOME}/miniconda3/bin/:$PATH
-            if [ $(conda info -e | grep "tf-spr-base" | wc -l) != 0 ]; then
-                conda remove --name "tf-spr-base" --all -y
-            fi
-            conda_dir=$(dirname $(dirname $(which conda)))
-            if [ -d ${conda_dir}/envs/tf-spr-base ]; then
-                rm -rf ${conda_dir}/envs/tf-spr-base
-            fi
-            conda create python=${python_version} -y -n "tf-spr-base"
-            source activate tf-spr-base
-            
-            pip install ${WORKSPACE}/tensorflow*.whl
-            new_tf_version=$(python -c "import tensorflow as tf; print(tf.__version__)")
-
-            sed -i "s/name: \\['2.1.0',/name: \\['2.1.0', '${new_tf_version}', /g" ${WORKSPACE}/lpot-models/neural_compressor/adaptor/tensorflow.yaml
-            cat ${WORKSPACE}/lpot-models/neural_compressor/adaptor/tensorflow.yaml
             '''
         }
     }

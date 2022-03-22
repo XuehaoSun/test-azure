@@ -1114,10 +1114,6 @@ def buildBinary(){
         binaryBuildParams += string(name: "binary_class", value: "conda")
     }
 
-    if(tensorflow_version == "spr-base"){
-        binaryBuildParams += string(name: "tf_binary_build_job", value: "${tf_binary_build_job}")
-    }
-
     downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
     
     binary_build_job = downstreamJob.getNumber()
