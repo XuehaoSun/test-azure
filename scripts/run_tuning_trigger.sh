@@ -131,6 +131,7 @@ main() {
         gcc -v
         bash install.sh
     fi
+
     if [[ -f "prepare_loadgen.sh" ]]; then
         if [[ "${model}" == "rnnt_ipex" ]]; then
             bash prepare_env.sh

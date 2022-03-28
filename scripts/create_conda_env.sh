@@ -47,7 +47,7 @@ fi
 # add channels
 conda_ver1=$(conda -V |awk -F '[. ]' '{print $2}')
 conda_ver2=$(conda -V |awk -F '[. ]' '{print $3}')
-if [ ${conda_ver1} -le 4 ] && [ ${conda_ver2} -lt 10 ];then
+if [[ ${conda_ver1} -le 4 ]] && [[ ${conda_ver2} -lt 10 ]] && [[ ${model} != "dlrm"* ]]; then
     conda update conda -y
 fi
 
