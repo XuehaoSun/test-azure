@@ -278,7 +278,7 @@ main() {
         if [[ ${model} == "fcn" ]]; then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../annotations/instances_val2017.json"
         fi
-        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]];then
+        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
         fi
     fi
