@@ -612,7 +612,7 @@ node(node_label){
     } finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: '*.log, coverage_status.txt, **/coverage_results/**/*', excludes: null
+            archiveArtifacts artifacts: '*.log, coverage_status.txt, **/coverage_results/**/*, **/coverage_results_base/**/*', excludes: null
             fingerprint: true
         }
     }
