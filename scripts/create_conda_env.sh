@@ -77,6 +77,11 @@ function update_conda_env {
 echo -e "\nUpdate conda env... "
 update_conda_env
 
+#workaround for python3.10 collection interface problem
+if [ "${pytorch_version}" == "3.10" ]; then
+    pip install py4j>=0.10.9.5
+fi
+
 # Install TF
 if [ "${tensorflow_version}" == '1.15UP1' ]; then
     if [ ${python_version} == '3.6' ]; then
@@ -138,11 +143,17 @@ if [[ "${pytorch_version}" != "" ]]; then
     else
         pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
     fi
-    if [[ ${model} == '3dunet' ]]; then
+    if [[ ${model} == '3dunet' ]] && [[ ${python_version} != "3.10" ]]; then
         # Install mlperf_loadgen
         pip install absl-py
         mlperf_loadgen_whl=/tf_dataset/pytorch/mlperf_3dunet/mlperf_loadgen-0.5a0-cp${python_version//./}-*.whl
         pip install ${mlperf_loadgen_whl}
+    elif [[ ${model} == '3dunet' ]] && [[ ${python_version} == "3.10" ]]; then
+        git clone https://github.com/mlcommons/inference.git --recursive
+        cd inference/loadgen
+        pip install absl-py
+        python setup.py install
+        cd -
     fi
 else
     echo "Won't install PyTorch!"
@@ -173,6 +184,8 @@ if [[ "${install_ipex}" == "true" ]]; then
             install_params="intel_extension_for_pytorch==1.10.0 -f https://software.intel.com/ipex-whl-stable";;
         1.10.1*)
             install_params="intel_extension_for_pytorch==1.10.100+cpu -f https://software.intel.com/ipex-whl-stable";;
+        1.11.0*)
+            install_params="intel_extension_for_pytorch==1.11.0+cpu -f https://software.intel.com/ipex-whl-stable";;
     esac
     if [[ ! -z ${install_params} ]]; then
         pip install ${install_params}
