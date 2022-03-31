@@ -40,7 +40,7 @@
   "onnxrt": {
     "language_translation": {
       "bert": [
-        "bert_base_MRPC"
+        "bert_base_MRPC_static"
       ]
     }
   }
