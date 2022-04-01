@@ -197,16 +197,18 @@ function run_accuracy {
 
 function run_benchmark {
     # define a low iteration list to save time
-    # if latency ~ 500 ms , then set iter = 100. if latency ~ 1000 ms, then set iter = 80
-    latency_high_500=("arttrack-coco-multi" "arttrack-mpii-single" "east_resnet_v1_50" \
-    "DeepLab" "mask_rcnn_resnet50_atrous_coco" "bert_large_SQuAD" "gpt_WikiText" "albert_base_MRPC" "bart_WNLI" \
+    # if latency ~ 500 ms , then set iter = 100. if latency ~ 1000 ms, then set iter = 50
+    latency_high_500=("ssd_resnet50_v1_fpn_coco" \
+    "faster_rcnn_resnet101_ava_v2_1" "faster_rcnn_resnet101_coco" "SSD_ResNet50_V1_FPN_640x640_RetinaNet50" \
+    "faster_rcnn_resnet101_kitti" "arttrack-coco-multi" "arttrack-mpii-single" "east_resnet_v1_50" \
+    "mask_rcnn_resnet50_atrous_coco" "bert_large_SQuAD" "gpt_WikiText" "albert_base_MRPC" "bart_WNLI" \
     "longformer_MRPC" "ctrl_MRPC" "ssd_resnet34_fx")
 
-    latency_high_1000=("efficientnet-b7_auto_aug" "i3d-flow" "i3d-rgb" "VNet" "icnet-camvid-ava-0001" \
+    latency_high_1000=("cpm-person" "DeepLab" "efficientnet-b7_auto_aug" "i3d-flow" "i3d-rgb" "VNet" "icnet-camvid-ava-0001" \
     "icnet-camvid-ava-sparse-30-0001" "icnet-camvid-ava-sparse-60-0001" "dilation" \
     "faster_rcnn_inception_resnet_v2_atrous_coco" "faster_rcnn_nas_coco" "faster_rcnn_nas_lowproposals_coco" \
     "gmcnn-places2" "mask_rcnn_inception_resnet_v2_atrous_coco" "Transformer-LT" "mask_rcnn_resnet101_atrous_coco" \
-    "person-vehicle-bike-detection-crossroad-yolov3-1024" "unet-3d-isensee_2017" "unet-3d-origin" "3dunet" \
+    "person-vehicle-bike-detection-crossroad-yolov3-1024" "faster_rcnn_nas_coco_2018_01_28" "unet-3d-isensee_2017" "unet-3d-origin" "3dunet" \
     "t5_WMT_en_ro" "marianmt_WMT_en_ro" "pegasus_billsum" "dialogpt_wikitext" "transfo_xl_MRPC" "")
 
     # get cpu information for multi-instance
