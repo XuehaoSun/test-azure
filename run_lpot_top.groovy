@@ -167,7 +167,7 @@ if ('COUNT_CODE_LINES' in params && params.COUNT_CODE_LINES){
 echo "COUNT_CODE_LINES = ${COUNT_CODE_LINES}"
 
 // set ut extension test for tensorflow
-ut_extension_tensorflows='1.15.2,1.15UP2'
+ut_extension_tensorflows=''
 if (params.ut_extension_tensorflows != null) {
     ut_extension_tensorflows = params.ut_extension_tensorflows
 }
