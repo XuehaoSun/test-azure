@@ -271,14 +271,14 @@ main() {
             parameters="${parameters} --dataset_location=${dataset_location}"
         fi
 
-        onnxrt_ds_full_input_models=("googlenet-12" "squeezenet" "caffenet" "alexnet" "zfnet" "inception_v1")
+        onnxrt_ds_full_input_models=("googlenet-12" "squeezenet" "squeezenet_qdq" "caffenet" "alexnet" "zfnet" "inception_v1")
         if [[ " ${onnxrt_ds_full_input_models[@]} " =~ " ${model} " ]]; then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../val.txt"
         fi
         if [[ ${model} == "fcn" ]]; then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../annotations/instances_val2017.json"
         fi
-        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]];then
+        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "mask_rcnn_qdq" ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
         fi
     fi
@@ -390,7 +390,7 @@ function update_yaml_config {
                 sed -i "/\/path\/to\/calibration\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
                 sed -i "/\/path\/to\/evaluation\/label/s|image_list:.*|image_list: ${dataset_location}/../val.txt|g" ${yaml}
             fi
-            if [ "${model}" == "ssd-12" ]; then
+            if [[ "${model}" == "ssd-12" ]] || [[ "${model}" == "ssd-12_qdq" ]]; then
                 sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: ${WORKSPACE}/lpot-models/examples/tensorflow/object_detection/tensorflow_models/quantization/ptq/label_map.yaml |g" ${yaml}
             elif [ "${model}" == "ssd_mobilenet_v1-2" ]; then
                 echo "annotation path is ${model_src_dir}/label_map.yaml"

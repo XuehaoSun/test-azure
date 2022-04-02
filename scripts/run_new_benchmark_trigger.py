@@ -148,7 +148,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
             ]
 
     # Workaround for ONNXRT googlenet-12,squeezenet,caffenet,alexnet
-    if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "caffenet", "alexnet", "zfnet", "inception_v1"]:
+    if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "squeezenet_qdq", "caffenet", "alexnet", "zfnet", "inception_v1"]:
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
@@ -159,7 +159,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
         ])
-    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3"]:
+    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "mask_rcnn_qdq"]:
         parameters.extend([
             f"--data_path={args.dataset_location}"
         ])
@@ -264,7 +264,7 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
         ])
-    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3"]:
+    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "mask_rcnn_qdq"]:
         parameters.extend([
             f"--data_path={args.dataset_location}"
         ])
