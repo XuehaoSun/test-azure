@@ -14,7 +14,6 @@ from utils.utils import (
     execute_command,
     get_executable,
     get_number_of_sockets,
-    install_requirements,
 )
 
 parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -54,11 +53,6 @@ def main():
     """Execute main function."""
     if not os.path.isdir(args.model_src_dir):
         raise Exception(f"[ERROR] model_src_dir \"{args.model_src_dir}\" not exists.")
-
-    install_requirements(
-        requirements_file=os.path.join(args.model_src_dir, "requirements.txt"),
-        exclude=consts.EXCLUDED_REQUIREMENTS,
-    )
 
     yaml_path = os.path.join(args.model_src_dir, args.yaml)
     benchmark_yaml_path = os.path.join(args.model_src_dir, "benchmark.yaml")

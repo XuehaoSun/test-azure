@@ -326,7 +326,8 @@ def unitTestJobs(unit_test_mode) {
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "binary_build_job", value: "${binary_build_job}"),
             booleanParam(name: "run_coverage", value: RUN_COVERAGE),
-            string(name: "unit_test_mode", value: "${unit_test_mode}")
+            string(name: "unit_test_mode", value: "${unit_test_mode}"),
+            string(name: "python_version", value: "${python_version}")
     ]
     ut_jobs[unit_test_mode] = {
         downstreamJob = build job: "deep-engine-unit-test", propagate: false, parameters: UTBuildParams
