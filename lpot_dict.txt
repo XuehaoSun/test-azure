@@ -2051,3 +2051,7 @@ zrl
 zxvf
 CustomObj
 ModelSize
+QDQ
+QLinearOps
+qdq
+qdqops
