@@ -1556,7 +1556,7 @@ node( node_label ) {
 
                 if (collect_tuned_model){
                     sh (
-                            script: 'cp -r ./tensorflow/tuned_model /tmp/',
+                            script: 'cp -r ./*/tuned_model /tmp/',
                             returnStdout: true
                     ).trim()
                 }
