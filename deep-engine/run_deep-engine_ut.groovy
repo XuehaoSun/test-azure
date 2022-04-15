@@ -328,20 +328,23 @@ node(node_label){
                         cd ${WORKSPACE}/deep-engine/engine/test/gtest
                         mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
 
-                        find . -name "test*" > run.sh
+                        find . -maxdepth 1 -name "test*" > run.sh
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
                         bash run.sh 2>&1 | tee ${ut_log_name}
                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ];then
                             exit 1
                         fi
                         
+                        echo "SparseLib gtest build..." 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
                         if [ -d "SparseLib" ]; then 
                             cd SparseLib
-                            echo "SparseLib gtest build..." 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
                             mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
-                            find . -name "test*" > run.sh
+                            find . -maxdepth 1 -name "test*" > run.sh
                             echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
                             bash run.sh 2>&1 | tee -a ${ut_log_name}
+                        fi
+                        if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ];then
+                            exit 1
                         fi
                         ''')
                         if (ut_status != 0) {
