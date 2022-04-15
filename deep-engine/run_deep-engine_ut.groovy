@@ -334,6 +334,15 @@ node(node_label){
                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ];then
                             exit 1
                         fi
+                        
+                        if [ -d "SparseLib" ]; then 
+                            cd SparseLib
+                            echo "SparseLib gtest build..." 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
+                            mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
+                            find . -name "test*" > run.sh
+                            echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
+                            bash run.sh 2>&1 | tee -a ${ut_log_name}
+                        fi
                         ''')
                         if (ut_status != 0) {
                             currentBuild.result = 'FAILURE'
