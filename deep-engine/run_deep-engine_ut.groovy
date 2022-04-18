@@ -320,7 +320,7 @@ node(node_label){
             withEnv(["conda_env=${conda_env}"]) {
                 timeout(30){
                     if (unit_test_mode == 'gtest'){
-                        echo "+---------------- gtest ----------------+"
+                        echo "+---------------- gtest for engine ----------------+"
                         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
@@ -335,14 +335,25 @@ node(node_label){
                             exit 1
                         fi
                         
-                        echo "SparseLib gtest build..." 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
-                        if [ -d "SparseLib" ]; then 
-                            cd SparseLib
-                            mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
-                            find . -maxdepth 1 -name "test*" > run.sh
-                            echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
-                            bash run.sh 2>&1 | tee -a ${ut_log_name}
-                        fi
+                        ''')
+                        if (ut_status != 0) {
+                            currentBuild.result = 'FAILURE'
+                            error("gtest failed!")
+                        }
+
+                        echo "+---------------- gtest for sparseLib ----------------+"
+                        ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        source activate ${conda_env}
+                        cd ${WORKSPACE}/deep-engine/engine/test/gtest/SparseLib
+                        
+                        echo "SparseLib gtest build..." 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log 
+                        mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
+                        find . -maxdepth 1 -name "test*" > run.sh
+                        ut_log_name=$WORKSPACE/unit_test_gtest.log
+                        echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
+                        
+                        bash run.sh 2>&1 | tee -a ${ut_log_name}
                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ];then
                             exit 1
                         fi
@@ -351,6 +362,7 @@ node(node_label){
                             currentBuild.result = 'FAILURE'
                             error("gtest failed!")
                         }
+
                     }
 
                     if (unit_test_mode == 'pytest'){
