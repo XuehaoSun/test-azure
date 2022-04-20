@@ -324,6 +324,9 @@ main() {
     mkdir -p "${save_path}"
     echo "Copying \"${q_model}*\" to \"${save_path}\""
     cp -r "${q_model}"* "${save_path}"
+    if [ "${framework}" == "pytorch" ]; then
+        cp -r "${q_model}"* "${WORKSPACE}/${framework}-${model}-tune"
+    fi
 }
 
 function collect_pb_size {
