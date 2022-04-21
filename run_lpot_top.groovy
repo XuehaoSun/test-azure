@@ -232,6 +232,13 @@ if ('tensorflow_models_windows' in params && params.tensorflow_models_windows !=
 }
 echo "tensorflow_models_windows: ${tensorflow_models_windows}"
 
+// setting tensorflow_oob_models_windows
+tensorflow_oob_models_windows = ""
+if ('tensorflow_oob_models_windows' in params && params.tensorflow_oob_models_windows != '') {
+    tensorflow_oob_models_windows = params.tensorflow_oob_models_windows
+}
+echo "tensorflow_oob_models_windows: ${tensorflow_oob_models_windows}"
+
 // setting mxnet_models_windows
 mxnet_models_windows = ""
 if ('mxnet_models_windows' in params && params.mxnet_models_windows != '') {
@@ -680,7 +687,7 @@ def getPerfJobs() {
                                     selector: specific("${downstreamJob.getNumber()}"),
                                     filter: "*.log, tuning_config.yaml, ${job_framework}*.json",
                                     fingerprintArtifacts: true,
-                                    target: "${job_framework}/${job_model}",
+                                    target: "${system}/${job_framework}/${job_model}",
                                     optional: true)
                             if (collect_tuned_model){
                                 copyArtifacts(
@@ -693,7 +700,7 @@ def getPerfJobs() {
                             }
 
                             // Archive in Jenkins
-                            archiveArtifacts artifacts: "${job_framework}/${job_model}/**", allowEmptyArchive: true
+                            archiveArtifacts artifacts: "${system}/${job_framework}/${job_model}/**", allowEmptyArchive: true
                         }
 
                         downstreamJobStatus = downstreamJob.result
@@ -705,7 +712,7 @@ def getPerfJobs() {
                                 if (test_mode != 'nightly'){
                                     currentBuild.result = "FAILURE"
                                 }
-                                sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                                sh " tail -n 50 ${system}/${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                                 failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
                                 error("---- ${cpu}_${system}_${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                             }
@@ -886,8 +893,8 @@ def collectLog() {
                      // Generate tuning info log
 
                     sh """#!/bin/bash -x
-                        if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/tuning_info.log ]]; then
-                            cat ${WORKSPACE}/${job_framework}/${job_model}/tuning_info.log >> ${WORKSPACE}/tuning_info.log
+                        if [[ -f ${WORKSPACE}/${system}/${job_framework}/${job_model}/tuning_info.log ]]; then
+                            cat ${WORKSPACE}/${system}/${job_framework}/${job_model}/tuning_info.log >> ${WORKSPACE}/tuning_info.log
                         else
                             echo "${system};Unknown;${job_framework};N/A;${job_model};basic;;;${RUN_DISPLAY_URL};;;" >> ${WORKSPACE}/tuning_info.log
                         fi
@@ -900,8 +907,8 @@ def collectLog() {
 
                     echo "Getting results for ${job_framework} - ${job_model}"
                     sh """#!/bin/bash -x
-                        if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/summary.log ]]; then
-                            cat ${WORKSPACE}/${job_framework}/${job_model}/summary.log >> ${WORKSPACE}/summary.log
+                        if [[ -f ${WORKSPACE}/${system}/${job_framework}/${job_model}/summary.log ]]; then
+                            cat ${WORKSPACE}/${system}/${job_framework}/${job_model}/summary.log >> ${WORKSPACE}/summary.log
                         else
                             echo "${system};Unknown;${job_framework};N/A;INT8;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                             echo "${system};Unknown;${job_framework};N/A;FP32;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
@@ -1100,22 +1107,34 @@ def buildBinary(){
         }
     }
 
-    List binaryBuildParams = [
-            string(name: "python_version", value: "${python_version}"),
-            string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_commit}"),
-            string(name: "MR_source_branch", value: "${PR_source_branch}"),
-            string(name: "MR_target_branch", value: "${PR_target_branch}"),
-            string(name: "val_branch", value: "${val_branch}"),
-            string(name: "pypi_version", value: "${pypi_version}")
-    ]
-    if(conda_env_mode == "conda") {
-        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
-        binaryBuildParams += string(name: "binary_class", value: "conda")
+    def conda_build_env_name = "inc_binary_build"
+
+    def LINUX_BINARY_CLASSES = ""
+    def WINDOWS_BINARY_CLASSES = ""
+
+    PLATFORMS.split(";").each { systemConfig ->
+        def system = systemConfig.split(":")[0]
+        if (system == "linux") {
+            LINUX_BINARY_CLASSES = "wheel"
+        }
+        if (system == "windows") {
+            WINDOWS_BINARY_CLASSES = "wheel"
+        }
     }
 
-    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
-    
+    List binaryBuildParams = [
+            string(name: "inc_url", value: "${lpot_url}"),
+            string(name: "inc_branch", value: "${lpot_commit}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "conda_env", value: "${conda_build_env_name}"),
+            string(name: "pypi_version", value: "${pypi_version}"),
+            string(name: "LINUX_BINARY_CLASSES", value: "${LINUX_BINARY_CLASSES}"),
+            string(name: "LINUX_PYTHON_VERSIONS", value: "${python_version}"),
+            string(name: "WINDOWS_BINARY_CLASSES", value: "${WINDOWS_BINARY_CLASSES}"),
+            string(name: "WINDOWS_PYTHON_VERSIONS", value: "${python_version}"),
+    ]
+    downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildParams
+
     binary_build_job = downstreamJob.getNumber()
     echo "binary_build_job: ${binary_build_job}"
     echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"

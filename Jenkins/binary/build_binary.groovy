@@ -1,3 +1,10 @@
+binary_build_job = ""
+tf_binary_build_job = ""
+if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
+    tf_binary_build_job=params.tf_binary_build_job
+}
+echo "tf_binary_build_job: ${tf_binary_build_job}"
+
 def Exception(String step, def e) {
     def msg = "Job name: $JOB_NAME\nBuild ID:$BUILD_ID\nStep: $step\nException: $e"
     echo "$msg"
@@ -139,6 +146,7 @@ def getBuildParams(osName, binaryClass, pythonVersion) {
     jobParams += string(name: "binary_class", value: "${binaryClass}")
     jobParams += string(name: "val_branch", value: "${val_branch}")
     jobParams += string(name: "python_version", value: "${pythonVersion}")
+    jobParams += string(name: "tf_binary_build_job", value: "${tf_binary_build_job}")
 
     return jobParams
 }

@@ -18,6 +18,12 @@ if ('lpot_url' in params && params.lpot_url != ''){
 }
 echo "lpot_url is ${lpot_url}"
 
+tf_binary_build_job=""
+if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
+    tf_binary_build_job = params.tf_binary_build_job
+}
+echo "tf_binary_build_job is ${tf_binary_build_job}"
+
 lpot_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
