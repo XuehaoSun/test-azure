@@ -1002,7 +1002,7 @@ def unitTestJobs() {
             copyArtifacts(
                     projectName: "lpot-unit-test",
                     selector: specific("${downstreamJob.getNumber()}"),
-                    filter: '*.log, *.txt, **/coverage_results/**/*',
+                    filter: '*.log, *.txt, **/coverage_results/**/*, **/coverage_results_base/**/*',
                     fingerprintArtifacts: true,
                     target: "unittest")
 

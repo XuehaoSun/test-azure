@@ -224,7 +224,7 @@ def download() {
     }
 }
 
-def build_conda_env() {
+def build_conda_env(conda_env_name) {
     withEnv([
         "pytorch_version=${pytorch_version}",
         "torchvision_version=${torchvision_version}",
@@ -232,7 +232,7 @@ def build_conda_env() {
         "mxnet_version=${mxnet_version}",
         "onnx_version=${onnx_version}",
         "onnxruntime_version=${onnxruntime_version}",
-        "conda_env_name=${conda_env}",
+        "conda_env_name=${conda_env_name}",
         "python_version=${python_version}"]) {
         retry(5) {
             sh'''#!/bin/bash
@@ -250,6 +250,121 @@ def build_conda_env() {
             '''
         }
     }
+}
+
+def run_coverage_test(is_base=false, MR_branch=""){
+    withEnv(["MR_branch=${MR_branch}", "is_base=${is_base}"]){
+        timeout(80) {
+            withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+                echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
+                ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                export PATH=${HOME}/miniconda3/bin/:$PATH
+                if [[ ${is_base} == "true" ]];then
+                    source activate ${conda_env}_base
+                else
+                    source activate ${conda_env}
+                fi
+                # pip config set global.index-url https://pypi.douban.com/simple/
+                echo "Checking lpot..."
+                python -V
+                pip list
+                c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
+                if [ ${c_lpot} != 0 ]; then
+                    pip uninstall neural-compressor -y
+                    pip list
+                fi
+                echo "Install neural_compressor binary..."
+                n=0
+                until [ "$n" -ge 5 ]
+                do
+                    if [[ ${MR_branch} == "" ]] || [[ ${is_base} == "false" ]];then
+                        pip install neural_compressor*.whl && break
+                    else
+                        cd ${WORKSPACE}/lpot-models-base
+                        git submodule update --init --recursive
+                        pip install pandas==1.3.5
+                        pip install Cython<=0.29.28
+                        pip install ipython==7.32.0
+                        pip install threadpoolctl
+                        python setup.py install
+                    fi
+                    [[ $(pip list | grep -c 'neural-compressor') ]] && break
+                    n=$((n+1))
+                    sleep 5
+                done
+                # re-install pycocotools resolve the issue with numpy
+                echo "re-install pycocotools resolve the issue with numpy..."
+                pip uninstall pycocotools -y
+                pip install --no-cache-dir pycocotools
+                if [[ ${is_base} == "true" ]];then
+                    target_path=${WORKSPACE}/lpot-models-base
+                    export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc_base
+                    cp ${WORKSPACE}/lpot-validation/.coveragerc ${COVERAGE_RCFILE}
+                    ut_log_name=${WORKSPACE}/unit_test_base.log
+                    coverage_path="coverage_results_base"
+                    mkdir -p ${WORKSPACE}/${coverage_path}
+                else
+                    target_path=${WORKSPACE}/lpot-models
+                    export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
+                    ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
+                    coverage_path="coverage_results"
+                fi
+                if [ ! -d ${target_path} ]; then
+                    echo "\\"lpot-model\\" not found. Exiting..."
+                    exit 1
+                fi
+                echo -e "\\nInstalling ut requirements..."
+                cd ${target_path}/test
+                if [ -f "requirements.txt" ]; then
+                    sed -i '/^neural-compressor/d' requirements.txt
+                    sed -i '/^intel-tensorflow/d' requirements.txt
+                    sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
+                    sed -i '/^torch/d' requirements.txt
+                    sed -i '/^mxnet-mkl/d' requirements.txt
+                    sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
+                    n=0
+                    until [ "$n" -ge 5 ]
+                    do
+                        python -m pip install --no-cache-dir -r requirements.txt && pip install coverage && break
+                        n=$((n+1))
+                        sleep 5
+                    done
+                    pip list
+                else
+                    echo "Not found requirements.txt file."
+                fi
+                echo "Setting SigOpt strategy env variables"
+                export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
+                export SIGOPT_PROJECT_ID="lpot"
+                if [[ "${tensorflow_version}" = "2.6.0" ]]; then
+                    export TF_ENABLE_ONEDNN_OPTS=1
+                    echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+                elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
+                    # default use block format
+                    export TF_ENABLE_MKL_NATIVE_FORMAT=0
+                    echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
+                fi
+                # mute engine log
+                export GLOG_minloglevel=2
+                lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
+                find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
+                coverage erase
+                bash run.sh 2>&1 | tee ${ut_log_name}
+                coverage report -m --rcfile=${COVERAGE_RCFILE}
+                coverage html -d ${WORKSPACE}/${coverage_path}/htmlcov --rcfile=${COVERAGE_RCFILE}
+                coverage xml -o ${WORKSPACE}/${coverage_path}/coverage.xml --rcfile=${COVERAGE_RCFILE}
+                echo "cat xml file ${coverage_path}/coverage.xml"
+                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                    exit 1
+                fi
+                ''')
+                if (ut_status != 0) {
+                    currentBuild.result = 'FAILURE'
+                    error("Unit test failed!")
+                }
+            }
+        }  
+    }  
 }
 
 node(node_label){
@@ -293,100 +408,33 @@ node(node_label){
                         target: "${WORKSPACE}")
             }
         }
-        
+
         stage('env_build') {
-            build_conda_env()
+            if (MR_source_branch != "" && run_coverage) {
+                // Pre-CI
+                parallel(
+                    "PR-env": {build_conda_env(conda_env)},
+                    "base-env": {build_conda_env("${conda_env}_base")}
+                )
+            } else {
+                // nightly, weekly, extention, release
+                build_conda_env(conda_env)
+            }  
         }
 
         if (run_coverage){
             stage('unit test') {
                 // ut test
-                timeout(80) {
-                    withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
-                        echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
-                        ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
-                        source activate ${conda_env}
-                        # pip config set global.index-url https://pypi.douban.com/simple/
-                        echo "Checking lpot..."
-                        python -V
-                        pip list
-                        c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
-                        if [ ${c_lpot} != 0 ]; then
-                            pip uninstall neural-compressor -y
-                            pip list
-                        fi
-                        echo "Install neural_compressor binary..."
-                        n=0
-                        until [ "$n" -ge 5 ]
-                        do
-                            pip install neural_compressor*.whl && break
-                            n=$((n+1))
-                            sleep 5
-                        done
-                        # re-install pycocotools resolve the issue with numpy
-                        echo "re-install pycocotools resolve the issue with numpy..."
-                        pip uninstall pycocotools -y
-                        pip install --no-cache-dir pycocotools
-                        if [ ! -d ${WORKSPACE}/lpot-models ]; then
-                            echo "\\"lpot-model\\" not found. Exiting..."
-                            exit 1
-                        fi
-                        echo -e "\\nInstalling ut requirements..."
-                        cd ${WORKSPACE}/lpot-models/test
-                        if [ -f "requirements.txt" ]; then
-                            sed -i '/^neural-compressor/d' requirements.txt
-                            sed -i '/^intel-tensorflow/d' requirements.txt
-                            sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                            sed -i '/^torch/d' requirements.txt
-                            sed -i '/^mxnet-mkl/d' requirements.txt
-                            sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
-                            n=0
-                            until [ "$n" -ge 5 ]
-                            do
-                                python -m pip install --no-cache-dir -r requirements.txt && pip install coverage && break
-                                n=$((n+1))
-                                sleep 5
-                            done
-                            pip list
-                        else
-                            echo "Not found requirements.txt file."
-                        fi
-                        export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
-                        cat ${COVERAGE_RCFILE}
-                        echo "Setting SigOpt strategy env variables"
-                        export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
-                        export SIGOPT_PROJECT_ID="lpot"
-                        if [[ "${tensorflow_version}" = "2.6.0" ]]; then
-                            export TF_ENABLE_ONEDNN_OPTS=1
-                            echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
-                        elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
-                            # default use block format
-                            export TF_ENABLE_MKL_NATIVE_FORMAT=0
-                            echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
-                        fi
-                        # mute engine log
-                        export GLOG_minloglevel=2
-                        lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
-                        find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
-                        ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
-                        coverage erase
-                        echo "cat run.sh..."
-                        cat run.sh 
-                        echo "-------------"
-                        bash run.sh 2>&1 | tee ${ut_log_name}
-                        coverage report -m --rcfile=${COVERAGE_RCFILE}
-                        coverage html -d ${WORKSPACE}/coverage_results/htmlcov --rcfile=${COVERAGE_RCFILE}
-                        coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml --rcfile=${COVERAGE_RCFILE}
-                        if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
-                            exit 1
-                        fi
-                        ''')
-                        if (ut_status != 0) {
-                            currentBuild.result = 'FAILURE'
-                            error("Unit test failed!")
-                        }
-                    }
+                if (MR_source_branch == "") {
+                    ut_log_name="${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log"
+                    run_coverage_test(false, MR_target_branch)
+                } else {
+                    ut_log_name="${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log"
+                    ut_log_name_base="${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log"
+                    parallel(
+                        "PR-test": {run_coverage_test(false, MR_source_branch)},
+                        "base-test": {run_coverage_test(true, MR_source_branch)}
+                    )
                 }
                 // Coverage status check
                 timeout(80) {
@@ -408,13 +456,11 @@ node(node_label){
                             returnStdout: true
                     ).trim())
                     println("Lines coverage: " + lines_coverage)
-
                     branches_coverage = Float.parseFloat(sh(
                             script: "grep 'branches_coverage' ${WORKSPACE}/coverage_summary.log | cut -d ',' -f 4",
                             returnStdout: true
                     ).trim())
                     println("Branches coverage: " + branches_coverage)
-
                     if (MR_source_branch == "") {
                         try {
                             if (lines_coverage < lines_coverage_threshold) {
@@ -432,69 +478,15 @@ node(node_label){
                             writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,FAILURE"
                         }
                     } else {
-                        println("Getting base coverage on branch \"" + MR_target_branch + "\"")
-                        withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
-                            sh '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
-                            source activate ${conda_env}
-                            pip uninstall neural_compressor -y
-                            cd ${WORKSPACE}/lpot-models-base
-                            git submodule update --init --recursive
-                            python setup.py install
-                            pip list
-                            # re-install pycocotools resolve the issue with numpy
-                            echo "re-install pycocotools resolve the issue with numpy..."
-                            pip uninstall pycocotools -y
-                            pip install --no-cache-dir pycocotools
-                            cd ${WORKSPACE}/lpot-models-base/test
-                            if [ -f "requirements.txt" ]; then
-                                sed -i '/^neural-compressor/d' requirements.txt
-                                sed -i '/^intel-tensorflow/d' requirements.txt
-                                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                                sed -i '/^torch/d' requirements.txt
-                                sed -i '/^mxnet-mkl/d' requirements.txt
-                                sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
-                                n=0
-                                until [ "$n" -ge 5 ]
-                                do
-                                python -m pip install -r requirements.txt && break
-                                n=$((n+1))
-                                sleep 5
-                                done
-                                pip list
-                            else
-                                echo "Not found requirements.txt file."
-                            fi
-                            export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
-                            cat ${COVERAGE_RCFILE}
-                            echo "Setting SigOpt strategy env variables"
-                            export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
-                            export SIGOPT_PROJECT_ID="lpot"
-                            if [[ "${tensorflow_version}" = "2.6.0" ]]; then
-                                export TF_ENABLE_ONEDNN_OPTS=1
-                                echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
-                            elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
-                                # default use block format
-                                export TF_ENABLE_MKL_NATIVE_FORMAT=0
-                                echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
-                            fi
-                            # mute engine log
-                            export GLOG_minloglevel=2
-                            lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
-                            find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
-                            ut_log_name=${WORKSPACE}/unit_test_base.log
-                            coverage erase
-                            echo "cat run.sh..."
-                            cat run.sh 
-                            echo "-------------"
-                            bash run.sh 2>&1 | tee ${ut_log_name}
-                            coverage report -m --rcfile=${COVERAGE_RCFILE}
-                            coverage xml -o ${WORKSPACE}/coverage_results_base/coverage.xml --rcfile=${COVERAGE_RCFILE}
-                            python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
-                                --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
-                                --summary-file=${WORKSPACE}/coverage_summary_base.log
-                            '''
-                        }
+                        println("Getting coverage on branch \"" + branch + "\"")
+                        // Get coverage baselinesummary
+                        sh '''#!/bin/bash
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        source activate ${conda_env}
+                        python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
+                                    --cov-xml=${WORKSPACE}/coverage_results_base/coverage.xml \
+                                    --summary-file=${WORKSPACE}/coverage_summary_base.log
+                        '''
                         lines_coverage_base = Float.parseFloat(sh(
                                 script: "grep 'lines_coverage' ${WORKSPACE}/coverage_summary_base.log | cut -d ',' -f 4",
                                 returnStdout: true
@@ -507,11 +499,9 @@ node(node_label){
                             if (lines_coverage < lines_coverage_base) {
                                 error("Lines coverage decreased!")
                             }
-
                             if (branches_coverage < branches_coverage_base) {
                                 error("Branches coverage decreased!")
                             }
-
                             echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
                             writeFile file: "${WORKSPACE}/coverage_status.txt", text: "coverage_status,SUCCESS"
                         } catch (e) {
@@ -520,7 +510,7 @@ node(node_label){
                         }
                     }
                 }
-            }
+            }        
         }else {
             stage("unit test") {
                 echo "+---------------- unit test For TF ${tensorflow_version} PT ${pytorch_version} ----------------+"
@@ -605,7 +595,6 @@ node(node_label){
                 }
             }
         }
-
     } catch (e) {
         // If there was an exception thrown, the build failed
         currentBuild.result = "FAILURE"
