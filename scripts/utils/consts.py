@@ -11,8 +11,7 @@ SUPPORTED_MODES = [
 ]
 
 EXCLUDED_REQUIREMENTS = [
-    "neural-compressor",
-    "neural_compressor",
+    "lpot",
     "intel-tensorflow",
     "torch",
     "mxnet",

@@ -143,9 +143,6 @@ def execute_command(args: List[str],
 
     proc.wait()
 
-    if proc.returncode != 0:
-        raise Exception("Process failed!")
-
     return proc
 
 
@@ -186,77 +183,22 @@ def get_number_of_sockets():
     return 0
 
 
-def update_yaml(yaml, framework, topology, dataset_location = None, strategy = None, max_trials = None, strategy_token = None):
+def update_yaml(yaml, framework, dataset_location = None, strategy = None, max_trials = None, strategy_token = None):
     if not os.path.isfile(yaml):
         raise Exception(f"Not found yaml config at '{yaml}' location.")
 
-    print("Reading config")
-    with open(yaml, "r") as config:
-        lines = config.readlines()
-
     # Update dataset
     if framework != "pytorch":
-        val_txt_location = os.path.dirname(dataset_location) + f"\{os.path.sep}" + "val.txt"
-
-        patterns = {
-            "root_path": {
-                "pattern": r'root:.*/path/to/(calibration|evaluation)/dataset/?',
-                "replacement": f"root: {dataset_location}",
-            },
-            "data_path": {
-                "pattern": r'data_path:.*/path/to/(calibration|evaluation)/dataset/?',
-                "replacement": f"data_path: {dataset_location}",
-            },
-            "image_list": {
-                "pattern": r'image_list:.*/path/to/(calibration|evaluation)/label/?',
-                "replacement": f"image_list: {val_txt_location}",
-            },
-            "data_dir": {
-                "pattern": r'data_dir:.*/path/to/dataset/?',
-                "replacement": f"data_dir: {dataset_location}",
-            },
-        }
-        print("Saving config")
-        with open(yaml, "w") as config:
-            for line in lines:
-                for key, key_patterns in patterns.items():
-                    if re.search(key_patterns["pattern"], line):
-                        print(f"Replacing {key} key.")
-                        line = re.sub(key_patterns["pattern"], key_patterns["replacement"], line)
-                print(line)
-                config.write(line)
-
-    if framework == "pytorch":
-        val_dataset = dataset_location + f"\{os.path.sep}" + "val"
-        train_dataset = dataset_location + f"\{os.path.sep}" + "train"
-        patterns = {
-            "calibration_dataset": {
-                "pattern": r'root:.*/path/to/calibration/dataset/?',
-                "replacement": f"root: {train_dataset}",
-            },
-            "evaluation_dataset": {
-                "pattern": r'root:.*/path/to/evaluation/dataset/?',
-                "replacement": f"root: {val_dataset}",
-            },
-        }
-
-        if topology == "distilbert_base_MRPC":
-            patterns.update({
-                "bert_name": {
-                    "pattern": r'name:/s+bert',
-                    "replacement": "name: distilbert",
-                }
-        })
+        print("Reading config")
+        with open(yaml, "r") as config:
+            lines = config.readlines()
 
         print("Saving config")
         with open(yaml, "w") as config:
             for line in lines:
-                for key, key_patterns in patterns.items():
-                    if re.search(key_patterns["pattern"], line):
-                        print(f"Replacing {key} key.")
-                        line = re.sub(key_patterns["pattern"], key_patterns["replacement"], line)
-                print(line)
-                config.write(line)
+                config.write(re.sub(r'root:.*/path/to/(calibration|evaluation)/dataset/?', f"root: {dataset_location}", line))
+                config.write(re.sub(r'data_dir:.*/path/to/dataset/?', f"data_dir: {dataset_location}", line))
+
 
     update_yaml_config(
         yaml_file=yaml,

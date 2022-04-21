@@ -22,28 +22,28 @@ IF "%framework%" == "tensorflow" (
 )
 
 
-:install_inc
-echo "Installing Neural Compressor..."
+:install_lpot
+echo "Installing LPOT..."
 CALL python -V
 
-FOR /F %%i IN ('pip list ^| find /c "neural-compressor"') do SET c_inc=%%i
+FOR /F %%i IN ('pip list ^| find /c "lpot"') do SET c_lpot=%%i
 
-if %c_inc% NEQ 0 (
-    CALL pip uninstall neural-compressor -y --user
+if %c_lpot% NEQ 0 (
+    CALL pip uninstall lpot -y --user
     IF %ERRORLEVEL% NEQ 0 (
-        echo "Could not remove Neural Compressor package."
+        echo "Could not remove LPOT package."
         exit 1
     )
     CALL pip list
 )
 
 cd %WORKSPACE%
-FOR %%i in (neural_compressor*.whl) DO CALL pip install %%i
+FOR %%i in (lpot*.whl) DO CALL pip install %%i
 IF %ERRORLEVEL% NEQ 0 (
-    echo "Could not install inc package."
+    echo "Could not install lpot package."
     exit 1
 )
-echo "Checking Neural Compressor..."
+echo "Checking LPOT..."
 CALL pip list
 
 cd %WORKSPACE%\\lpot-models
@@ -65,7 +65,7 @@ SET KMP_BLOCKTIME=1
 SET KMP_AFFINITY=granularity=fine,verbose,compact,1,0
 SET TF_MKL_OPTIMIZE_PRIMITIVE_MEMUSE=false
 
-GOTO:install_inc
+GOTO:install_lpot
 
 
 :set_MXNet_env
@@ -74,17 +74,17 @@ SET KMP_BLOCKTIME=1
 SET KMP_AFFINITY=granularity=fine,verbose,compact,1,0
 SET OMP_NUM_THREADS=28
 
-GOTO:install_inc
+GOTO:install_lpot
 
 
 :set_PT_env
 echo "Setting env variables for PyTorch..."
 SET OMP_NUM_THREADS=28
 
-GOTO:install_inc
+GOTO:install_lpot
 
 
 :set_ONNXRT_env
 echo "Setting env variables for ONNX..."
 
-GOTO:install_inc
+GOTO:install_lpot
