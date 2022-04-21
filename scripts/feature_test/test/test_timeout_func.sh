@@ -31,7 +31,7 @@ function main {
 
   # 2. prepare
   cd ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq || return
-  input_model="/tf_dataset/sh_models/PB_dir/resnet50_v15/resnet50_v1.pb"
+  input_model="/tf_dataset/pre-trained-models/resnet50v1_5/fp32/resnet50_v1.pb"
   quantized_model="./models/quantized_resnet50_v1.pb"
   yaml="resnet50_v1_5.yaml"
   dataset="/tf_dataset/dataset/TF_Imagenet_Mini_val"
