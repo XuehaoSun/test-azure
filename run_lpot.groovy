@@ -1093,7 +1093,7 @@ node( sub_node_label ) {
             archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,inferencer_summary.log,summary.log,tuning_info.log,reference_data.json", excludes: null
             fingerprint: true
             if (collect_tuned_model){
-                archiveArtifacts artifacts: "${framework}-${model}-tune*", excludes: null
+                archiveArtifacts artifacts: "${framework}-${model}-tune*,${framework}-${model}-tune/**", excludes: null
                 fingerprint: true
             }
         }
