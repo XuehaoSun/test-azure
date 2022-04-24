@@ -2074,3 +2074,10 @@ GraphModules
 wsl
 descs
 gtest
+IOMP
+MALLOC
+PRETAINED
+SPR
+libjemalloc
+preload
+thp
