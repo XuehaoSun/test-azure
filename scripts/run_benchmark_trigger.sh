@@ -186,7 +186,7 @@ function run_accuracy {
 
     logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log
     echo "ACCURACY BENCHMARK RUNCMD: $run_cmd " >& ${logFile}
-    eval "${run_cmd}" >> ${logFile}
+    eval "${run_cmd}" 2>&1|tee -a ${logFile}
     status=$?
     echo "Benchmark process status: ${status}"
     if [ ${status} != 0 ]; then
