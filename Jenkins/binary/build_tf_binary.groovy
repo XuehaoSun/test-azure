@@ -122,6 +122,7 @@ def do_binary_build() {
                 # Upgrade pip
                 pip install -U pip numpy wheel
                 pip install cmake
+                pip install packaging
                 cmake_path=$(which cmake)
                 ln -s ${cmake_path} ${cmake_path}3 || true
     
