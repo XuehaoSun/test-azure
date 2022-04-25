@@ -401,6 +401,12 @@ if (params.upload_nightly_binary != null){
 }
 echo "upload_nightly_binary = ${upload_nightly_binary}"
 
+upstream_nightly_source=false
+if (params.upstream_nightly_source != null){
+    upstream_nightly_source=params.upstream_nightly_source
+}
+echo "upstream_nightly_source = ${upstream_nightly_source}"
+
 precision = 'int8,fp32'
 if ('precision' in params && params.precision != '') {
     precision = params.precision
@@ -701,10 +707,7 @@ def getPerfJobs() {
                         def failed_build_url = downstreamJob.absoluteUrl
 
                         if (failed_build_result != 'SUCCESS') {
-                            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-                                if (test_mode != 'nightly'){
-                                    currentBuild.result = "FAILURE"
-                                }
+                            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE'){
                                 sh " tail -n 50 ${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                                 failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
                                 error("---- ${cpu}_${system}_${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
@@ -1367,6 +1370,17 @@ def uploadNightlyBinary(){
     }
 }
 
+def upstreanNightlySource(){
+    sh"""#!/bin/bash
+        cd lpot-models
+        git branch
+        git remote -v
+        git remote add upstream https://github.com/intel/neural-compressor.git
+        git remote -v
+        git push upstream HEAD:master
+    """
+}
+
 node( node_label ) {
     
     if (ABORT_DUPLICATE_TEST && "${PR_source_branch}" != '') {
@@ -1540,6 +1554,18 @@ node( node_label ) {
                         uploadNightlyBinary()
                     }else{
                         println('Nightly build not succeed, will not push binary.')
+                    }
+                }
+            }
+        }
+
+        if (upstream_nightly_source){
+            stage("upstream nightly source"){
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    if (currentBuild.result != 'FAILURE' && currentBuild.result != 'ABORTED') {
+                        upstreanNightlySource()
+                    }else{
+                        println('Nightly build not succeed, will not upstream source code.')
                     }
                 }
             }
