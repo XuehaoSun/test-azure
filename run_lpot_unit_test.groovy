@@ -350,10 +350,9 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                 coverage erase
                 bash run.sh 2>&1 | tee ${ut_log_name}
-                coverage report -m --rcfile=${COVERAGE_RCFILE}
+                coverage report -m --rcfile=${COVERAGE_RCFILE} | tee -a ${ut_log_name}
                 coverage html -d ${WORKSPACE}/${coverage_path}/htmlcov --rcfile=${COVERAGE_RCFILE}
                 coverage xml -o ${WORKSPACE}/${coverage_path}/coverage.xml --rcfile=${COVERAGE_RCFILE}
-                echo "cat xml file ${coverage_path}/coverage.xml"
                 if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                     exit 1
                 fi

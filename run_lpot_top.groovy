@@ -260,7 +260,7 @@ lpot_commit = ''
 PR_source_branch = ''
 PR_target_branch = ''
 if ('lpot_branch' in params && params.lpot_branch != '') {
-    lpot_branch = params.lpot_branch
+   lpot_branch = params.lpot_branch
 }else{
     PR_source_branch = params.GITHUB_PR_SOURCE_BRANCH
     PR_target_branch = params.GITHUB_PR_TARGET_BRANCH
@@ -1029,7 +1029,18 @@ def unitTestJobs() {
 
             // Coverage decrease is not allowed in MRs
             if (lpot_branch == "" && coverage_status.split(",")[1] != "SUCCESS") {
-                currentBuild.result = "FAILURE"
+                currentBuild.result = "FAILURE"     
+            }
+            if (lpot_branch == "") {
+                // only for PR coverage test
+                sh '''
+                    cd ${WORKSPACE}/unittest
+                    ut_log_name="ut_tf_${tensorflow_version}_pt_${pytorch_version}.log"
+                    coverage_detail="${WORKSPACE}/coverage_detail.html"
+                    touch ${coverage_detail}
+                    bash -x ${WORKSPACE}/lpot-validation/scripts/compare_coverage.sh ${coverage_detail} ${ut_log_name} unit_test_base.log neural_compressor
+                    cat ${coverage_detail}
+                '''
             }
         }
     }

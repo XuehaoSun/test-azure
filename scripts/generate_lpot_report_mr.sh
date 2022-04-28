@@ -104,11 +104,15 @@ function createOverview {
         coverage=($(grep 'coverage_status' ${overview_log} |sed 's/,/ /g'))
         echo "Coverage: ${coverage}"
         if [[ "${coverage[1]}" == *"FAIL"* ]];then
-            coverage_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+            coverage_status="<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a>, "
+            coverage_status=${coverage_status}"<a href=\"${BUILD_URL}/artifact/unittest/coverage_results_base/htmlcov/index.html\">Coverage_base report</a></td>"
+            coverage_status=${coverage_status}"<td style=\"background-color:#FFD2D2\">Fail</td>"
         elif [[ "${coverage[1]}" == *"SUCC"* ]];then
-            coverage_status="<td style=\"background-color:#90EE90\">Pass</td>"
+            coverage_status="<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a></td>"
+            coverage_status=${coverage_status}"<td style=\"background-color:#90EE90\">Pass</td>"
         else
-            coverage_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+            coverage_status="<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a></td>"
+            coverage_status=${coverage_status}"<td style=\"background-color:#f2ea0a\">Verify</td>"
         fi
     fi
 
@@ -150,7 +154,6 @@ function createOverview {
 
              if [ ${#coverage[@]} -gt 0 ] && [ "${coverage[1]}" != "" ]; then
                 echo "<tr><td>Code Coverage Scan</td>"
-                echo "<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results/htmlcov/index.html\">Coverage report</a></td>"
                 echo "${coverage_status}</tr>"
             fi
 
@@ -170,7 +173,7 @@ function createCoverageOverview {
 
     lines_coverage_base=($(grep 'lines_coverage' ${coverage_summary_base} |sed 's/,/ /g'))
     branches_coverage_base=($(grep 'branches_coverage' ${coverage_summary_base} |sed 's/,/ /g'))
-
+    coverage_detail="${BUILD_URL}/artifact/coverage_detail.html"
     echo """
         <h2>Code Coverage</h2> 
         <table class=\"features-table\" style=\"width: 60%;margin: 0 auto 0 0;\">
@@ -186,13 +189,13 @@ function createCoverageOverview {
             <td>${lines_coverage[3]} %</td>
     """ >> ${WORKSPACE}/report.html
 
-    awk -v lines_coverage="${lines_coverage[3]}" -v lines_coverage_base="${lines_coverage_base[3]}" -F ';' '
+    awk -v lines_coverage="${lines_coverage[3]}" -v lines_coverage_base="${lines_coverage_base[3]}" -v coverage_detail="${coverage_detail}" -F ';' '
     BEGIN {
         lines_coverage_diff = lines_coverage - lines_coverage_base
         if(lines_coverage_diff < 0) {
-            printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", lines_coverage_diff);
+            printf("<td style=\"background-color:#FFD2D2\"><a href=%s>%.2f %</a></td>", coverage_detail, lines_coverage_diff);
         } else {
-            printf("<td style=\"background-color:#90EE90\">%.2f %</td>", lines_coverage_diff);
+            printf("<td style=\"background-color:#90EE90\"><a href=%s>%.2f %</a></td>", coverage_detail, lines_coverage_diff);
         }
     }' >> ${WORKSPACE}/report.html
     echo """
@@ -202,13 +205,13 @@ function createCoverageOverview {
             <td>${branches_coverage_base[3]} %</td>
             <td>${branches_coverage[3]} %</td>
     """ >> ${WORKSPACE}/report.html
-    awk -v branches_coverage="${branches_coverage[3]}" -v branches_coverage_base="${branches_coverage_base[3]}" -F ';' '
+    awk -v branches_coverage="${branches_coverage[3]}" -v branches_coverage_base="${branches_coverage_base[3]}" -v coverage_detail="${coverage_detail}" -F ';' '
     BEGIN {
         branches_coverage_diff = branches_coverage - branches_coverage_base
         if(branches_coverage_diff < 0) {
-            printf("<td style=\"background-color:#FFD2D2\">%.2f %</td>", branches_coverage_diff);
+            printf("<td style=\"background-color:#FFD2D2\"><a href=%s>%.2f %</a></td>", coverage_detail, branches_coverage_diff);
         } else {
-            printf("<td style=\"background-color:#90EE90\">%.2f %</td>", branches_coverage_diff);
+            printf("<td style=\"background-color:#90EE90\"><a href=%s>%.2f %</a></td>", coverage_detail, branches_coverage_diff);
         }
     }' >> ${WORKSPACE}/report.html
     echo """
