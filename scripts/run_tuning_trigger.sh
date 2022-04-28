@@ -34,6 +34,8 @@ do
             conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
         --log_level=*)
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
+        --dtype=*)
+            dtype=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -429,6 +431,10 @@ function update_yaml_config {
 
     if [ "${sampling_size}" != "" ]; then
         update_yaml_params="${update_yaml_params} --sampling_size=${sampling_size}"
+    fi
+
+    if [ "${dtype}" != "" ]; then
+        update_yaml_params="${update_yaml_params} --dtype=${dtype}"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then

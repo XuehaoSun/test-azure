@@ -191,6 +191,12 @@ if (params.ABORT_DUPLICATE_TEST != null){
 }
 echo "ABORT_DUPLICATE_TEST is ${ABORT_DUPLICATE_TEST}"
 
+dtype=""
+if ('dtype' in params && params.dtype != ''){
+    dtype=params.dtype
+}
+echo "dtype: ${dtype}"
+
 binary_build_job = ""
 
 def cleanup() {
@@ -393,6 +399,7 @@ def incParams(job_framework, job_model, python_version, strategy, cpu, os){
     ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
     ParamsPerJob += string(name: "precision", value: "${precision}")
     ParamsPerJob += string(name: "inferencer_config", value: "${inferencer_config}")
+    ParamsPerJob += string(name: "dtype", value: "${dtype}")
 
     return ParamsPerJob
 }
