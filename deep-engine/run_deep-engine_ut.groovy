@@ -324,6 +324,10 @@ node(node_label){
                         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
+                        
+                        pip install cmake
+                        cmake_path=$(which cmake)
+                        ln -s ${cmake_path} ${cmake_path}3 || true
 
                         cd ${WORKSPACE}/deep-engine/engine/test/gtest
                         mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
