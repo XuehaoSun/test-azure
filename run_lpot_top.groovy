@@ -1376,9 +1376,6 @@ def uploadNightlyBinary(){
     downstreamJob = build job: "lpot-nightly-binary-upload", propagate: false, parameters: binaryBuildParams
 
     echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
-    if (downstreamJob.getResult() != "SUCCESS") {
-        currentBuild.result = "FAILURE"
-    }
 }
 
 def upstreanNightlySource(){
