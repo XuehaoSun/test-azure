@@ -291,6 +291,7 @@ def run_coverage_test(is_base=false, MR_branch=""){
                         pip install cmake
                         cmake_path=$(which cmake)
                         ln -s ${cmake_path} ${cmake_path}3 || true
+                        pip install -r requirements.txt
                         python setup.py install
                     fi
                     [[ $(pip list | grep -c 'neural-compressor') ]] && break

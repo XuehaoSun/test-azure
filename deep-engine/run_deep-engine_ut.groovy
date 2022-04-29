@@ -427,6 +427,7 @@ node(node_label){
                                     pip uninstall neural_compressor -y
                                     cd ${WORKSPACE}/deep-engine-base
                                     git submodule update --init --recursive
+                                    pip install -r requirements.txt
                                     python setup.py install
                                     pip list
                                 '''
