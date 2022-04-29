@@ -297,6 +297,8 @@ def cleanup() {
             sudo cpupower frequency-set -g performance
             cat /proc/sys/kernel/numa_balancing
         fi
+        git config --global user.email "sys_lpot_val@intel.com"
+        git config --global user.name "sys-lpot-val"
         '''
     } catch(e) {
         echo "==============================================="

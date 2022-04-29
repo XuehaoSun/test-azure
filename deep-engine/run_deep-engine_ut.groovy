@@ -73,6 +73,8 @@ def cleanup() {
             rm -rf *
             rm -rf .git
         fi
+        git config --global user.email "sys_lpot_val@intel.com"
+        git config --global user.name "sys-lpot-val"
         '''
     } catch(e) {
         echo "==============================================="
