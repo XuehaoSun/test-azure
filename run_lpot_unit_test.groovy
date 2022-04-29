@@ -288,6 +288,9 @@ def run_coverage_test(is_base=false, MR_branch=""){
                         pip install Cython<=0.29.28
                         pip install ipython==7.32.0
                         pip install threadpoolctl
+                        pip install cmake
+                        cmake_path=$(which cmake)
+                        ln -s ${cmake_path} ${cmake_path}3 || true
                         python setup.py install
                     fi
                     [[ $(pip list | grep -c 'neural-compressor') ]] && break
