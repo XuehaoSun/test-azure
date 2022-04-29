@@ -127,22 +127,14 @@ function set_environment {
             echo "Framework ${framework} not recognized."; exit 1;;
     esac
 
-    python -V   
-    if [ "${conda_env_mode}" == "conda" ];then
-        echo "Checking conda list..."
-        conda uninstall -y neural-compressor || true
-        echo "after uninstalling INC"
-        conda list
-    else
-        echo "Checking pip list..."
-        c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
-        if [ ${c_lpot} != 0 ]; then
-            pip uninstall neural-compressor -y
-            echo "after uninstalling INC"
-            pip list
-        fi
+    if [[ $(pip list | grep 'neural-compressor')  ]]; then
+        echo "found nueral-compressor installed by pypi"
+        return 0
     fi
-
+    if [[ $(conda list | grep 'neural-compressor') ]]; then
+        echo "found nueral-compressor installed by conda"
+        return 0
+    fi
     cd ${WORKSPACE}
     echo "Install neural-compressor binary..."
     n=0
@@ -158,7 +150,8 @@ function set_environment {
             sed -i "s+LPOT_VERSION+${lpot_version}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
             sed -i "s+LPOT_BUILD+${lpot_build}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
             cp ${lpot_bz2_path} ${WORKSPACE}/lpot-validation/config/conda/noarch/
-            conda install lpot -c file:/${WORKSPACE}/lpot-validation/config/conda -c conda-forge -y && break
+            pip uninstall neural-compressor -y || true
+            conda install neural-compressor-conda -c file:/${WORKSPACE}/lpot-validation/config/conda -c conda-forge -c intel -y && break
         elif [ "${conda_env_mode}" == "source" ];then
             cd ${WORKSPACE}/lpot-models
             git submodule update --init --recursive
@@ -173,7 +166,19 @@ function set_environment {
         sleep 5
     done
     echo "Checking lpot..."
-    [[ "${conda_env_mode}" == "conda" ]] && conda list || pip list
+    if [[ "${conda_env_mode}" == "conda" ]]; then
+        #python_version=$(python --version | grep -Po [0-9]+.[0-9]+)
+        if [[ ! $(pip list | grep opencv-python) ]]; then
+            pip install opencv-python    
+        fi
+        if [[ ! $(conda list | grep ffmpeg) ]]; then
+            conda install ffmpeg -c conda-forge -y
+        fi
+        cp ${HOME}/miniconda3/envs/${conda_env_name}/lib/libopenh264.so.6 ${HOME}/miniconda3/envs/${conda_env_name}/lib/libopenh264.so.5
+        conda list --show-channel-urls
+    else
+        pip list
+    fi
 
     if [[ "${log_level}" != "" ]] && [[ "${log_level}" != "default" ]]; then
         export LOGLEVEL=${log_level}

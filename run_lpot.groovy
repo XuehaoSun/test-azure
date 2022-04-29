@@ -248,6 +248,12 @@ if ('log_level' in params && params.log_level != ''){
 }
 echo "log_level: ${log_level}"
 
+dtype=""
+if ('dtype' in params && params.dtype != ''){
+    dtype=params.dtype
+}
+echo "dtype: ${dtype}"
+
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 upstreamBuild = ""
 upstreamJobName = ""
@@ -291,6 +297,8 @@ def cleanup() {
             sudo cpupower frequency-set -g performance
             cat /proc/sys/kernel/numa_balancing
         fi
+        git config --global user.email "sys_lpot_val@intel.com"
+        git config --global user.name "sys-lpot-val"
         '''
     } catch(e) {
         echo "==============================================="
@@ -989,6 +997,7 @@ node( sub_node_label ) {
                             --conda_env_name=${conda_env_name} \
                             --conda_env_mode=${conda_env_mode} \
                             --log_level=${log_level} \
+                            --dtype=${dtype} \
                             2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
                     """
                 }

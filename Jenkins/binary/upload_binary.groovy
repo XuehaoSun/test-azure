@@ -70,25 +70,26 @@ node(node_label) {
 
         stage('Build binary') {
 
-            List binaryBuildParams = [
-                    string(name: "lpot_url", value: "${lpot_url}"),
-                    string(name: "lpot_branch", value: "${lpot_branch}"),
-                    string(name: "val_branch", value: "${val_branch}"),
-                    string(name: "pypi_version", value: "${pypi_version}")
-            ]
-            downstreamJob = build job: "lpot-nightly-release-wheel-build", propagate: false, parameters: binaryBuildParams
+            if (binary_build_job == ""){
+                List binaryBuildParams = [
+                        string(name: "lpot_url", value: "${lpot_url}"),
+                        string(name: "lpot_branch", value: "${lpot_branch}"),
+                        string(name: "val_branch", value: "${val_branch}"),
+                        string(name: "pypi_version", value: "${pypi_version}")
+                ]
+                downstreamJob = build job: "lpot-nightly-release-wheel-build", propagate: false, parameters: binaryBuildParams
 
-            binary_build_job = downstreamJob.getNumber()
-            echo "binary_build_job: ${binary_build_job}"
-            echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
-            if (downstreamJob.getResult() != "SUCCESS") {
-                currentBuild.result = "FAILURE"
-                failed_build_url = downstreamJob.absoluteUrl
-                echo "failed_build_url: ${failed_build_url}"
-                error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                binary_build_job = downstreamJob.getNumber()
+                echo "binary_build_job: ${binary_build_job}"
+                echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+                if (downstreamJob.getResult() != "SUCCESS") {
+                    currentBuild.result = "FAILURE"
+                    failed_build_url = downstreamJob.absoluteUrl
+                    echo "failed_build_url: ${failed_build_url}"
+                    error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                }
             }
         }
-
 
         stage('Copy binary') {
             catchError {

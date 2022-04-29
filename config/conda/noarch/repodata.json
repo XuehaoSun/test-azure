@@ -4,7 +4,7 @@
       "default_python_version":"3.7",
       "arch":null,
       "subdir":"noarch",
-      "default_numpy_version":"1.19"
+      "default_numpy_version":"1.20"
    },
    "packages":{
       "LPOT_BZ2_FILE":{
@@ -37,7 +37,7 @@
          "target-triplet":"None-any-None",
          "size":47537254,
          "build_number":0,
-         "name":"lpot",
+         "name":"neural-compressor-conda",
          "license":"Apache 2.0",
          "has_prefix":false,
          "license_family":"Apache",
