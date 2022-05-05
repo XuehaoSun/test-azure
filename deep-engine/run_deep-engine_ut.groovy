@@ -419,10 +419,15 @@ node(node_label){
                                 sh '''#!/bin/bash
                                     export PATH=${HOME}/miniconda3/bin/:$PATH
                                     source activate ${conda_env}
+                                    
+                                    pip install cmake
+                                    cmake_path=$(which cmake)
+                                    ln -s ${cmake_path} ${cmake_path}3 || true
 
                                     pip uninstall neural_compressor -y
                                     cd ${WORKSPACE}/deep-engine-base
                                     git submodule update --init --recursive
+                                    pip install -r requirements.txt
                                     python setup.py install
                                     pip list
                                 '''
