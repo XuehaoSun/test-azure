@@ -2088,3 +2088,6 @@ solutionslibrary
 geomean
 VNNI
 Preloading
+DUC
+duc
+leftImg
