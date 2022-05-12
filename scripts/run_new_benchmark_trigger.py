@@ -158,6 +158,12 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         parameters.extend([
             f"--data_path={args.dataset_location}"
         ])
+
+    if args.framework == "onnxrt" and args.model == "duc":
+        parameters.extend([
+            f"--data_path={args.dataset_location}",
+            f"--label_path=/tf_dataset2/datasets/gtFine/val"
+        ])
     # Workaround for engine
     if args.framework == "baremetal":
         tokenizer_dir=os.path.dirname(args.input_model)
@@ -262,6 +268,11 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
     if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4", "mask_rcnn_qdq"]:
         parameters.extend([
             f"--data_path={args.dataset_location}"
+        ])
+    if args.framework == "onnxrt" and args.model == "duc":
+        parameters.extend([
+            f"--data_path={args.dataset_location}",
+            f"--label_path=/tf_dataset2/datasets/gtFine/val"
         ])
     # Workaround for engine
     if args.framework == "baremetal":

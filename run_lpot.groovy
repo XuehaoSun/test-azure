@@ -208,7 +208,7 @@ echo "Multi instance: ${multi_instance}"
 
 // specify sub node label for pytorch models
 if(framework == 'pytorch') {
-    if (model == 'dlrm' || model == 'dlrm_fx') {
+    if (model == 'dlrm' || model == 'dlrm_fx' || model == 'dlrm_ipex') {
         sub_node_label = 'dlrm'
     }
 }

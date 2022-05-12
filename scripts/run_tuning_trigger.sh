@@ -284,6 +284,9 @@ main() {
         if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "mask_rcnn_qdq" ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
         fi
+        if [[ ${model} == "duc" ]];then
+            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=/tf_dataset2/datasets/gtFine/val"
+        fi
     fi
 
     if [ "${framework}" == "baremetal" ]; then
