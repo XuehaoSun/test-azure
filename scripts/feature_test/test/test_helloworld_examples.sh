@@ -102,7 +102,8 @@ function tf_example6 {
 
 function tf_example7 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example7 || return
-    python test.py
+    python test.py --tune
+    python test.py --benchmark
 }
 
 function create_conda_env {
