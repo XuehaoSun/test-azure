@@ -54,7 +54,7 @@ function set_TF_env {
         echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
     fi
     intel_tf=$(pip list | grep 'tensorflow' | grep -c 'intel')
-    if [[ "${tf_version}" = "2.6.1" ]] || [[ "${tf_version}" = "2.6.2" ]] || [[ "${intel_tf}" == "0" ]]; then
+    if [[ "${tf_version}" = "2.6.1" ]] || [[ "${tf_version}" = "2.6.2" ]] || [[ "${intel_tf}" = "0" ]]; then
         # default use block format
         export TF_ENABLE_ONEDNN_OPTS=1
         echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
