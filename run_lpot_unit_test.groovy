@@ -262,7 +262,8 @@ def build_conda_env(conda_env_name) {
         do
             filename=${local_file_list[i]}
             [[ ! -f ${local_path}/${filename} ]] && continue
-            cp -r ${local_path}/${filename} ${target_path[i]}${filename##*/}
+            [[ -d ${local_path}/${filename%/*} ]] && mkdir -p ${target_path[i]}${filename%/*}
+            cp -r ${local_path}/${filename} ${target_path[i]}${filename}
         done
     '''
 }
