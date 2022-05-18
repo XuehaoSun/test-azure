@@ -352,9 +352,12 @@ node(node_label){
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
                         cd ${WORKSPACE}/deep-engine/engine/test/gtest/SparseLib
+                        conda install -c conda-forge gxx gcc sysroot_linux-64 -y
                         
                         echo "SparseLib gtest build..." 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log 
-                        mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
+                        mkdir build && cd build 
+                        cmake .. -DSPARSE_LIB_USE_AMX=True
+                        make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
                         find . -maxdepth 1 -name "test*" > run.sh
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
                         echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
