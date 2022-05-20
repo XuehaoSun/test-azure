@@ -809,10 +809,14 @@ node( node_label ) {
             }
         }
 
-        stage("Generate report") {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        try {
+            stage("Generate report") {
                 generateReport()
             }
+        } catch(error) {
+            recipient_list = "suyue.chen@intel.com,wenxin.zhang@intel.com"
+            emailext attachLog: true, body: "Generate report failed (see ${env.BUILD_URL}): ${error}", subject: "${email_subject}", to: "${recipient_list}"
+            throw error
         }
 
         if (EXCEL_REPORT) {

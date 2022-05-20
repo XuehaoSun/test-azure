@@ -252,11 +252,25 @@ def build_conda_env(conda_env_name) {
             '''
         }
     }
+    // prepare env with local files to avoid network downloading problem
+    sh'''#!/bin/bash
+        set -xe
+        declare local_file_list=("mobilenet_v1_1.0_224.tgz" "slim/inception_v1_2016_08_28.tar.gz" "saved_model.tar.gz" "ssd_resnet50_v1.tgz" "cifar-10-batches-py.tar.gz")
+        local_path="/home/tensorflow/localfile"
+        declare target_path=("/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/home/tensorflow/.keras/datasets/")
+        for((i=0; i<${#local_file_list[@]}; i++))
+        do
+            filename=${local_file_list[i]}
+            [[ ! -f ${local_path}/${filename} ]] && continue
+            [[ -d ${local_path}/${filename%/*} ]] && mkdir -p ${target_path[i]}${filename%/*}
+            cp -r ${local_path}/${filename} ${target_path[i]}${filename}
+        done
+    '''
 }
 
 def run_coverage_test(is_base=false, MR_branch=""){
     withEnv(["MR_branch=${MR_branch}", "is_base=${is_base}"]){
-        timeout(80) {
+        timeout(90) {
             withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                 echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
                 ut_status = sh(returnStatus: true, script: '''#!/bin/bash
@@ -442,7 +456,7 @@ node(node_label){
                     )
                 }
                 // Coverage status check
-                timeout(80) {
+                timeout(90) {
                     branch = lpot_branch
                     if (MR_source_branch != "") {
                         branch = MR_source_branch
@@ -520,7 +534,7 @@ node(node_label){
             stage("unit test") {
                 echo "+---------------- unit test For TF ${tensorflow_version} PT ${pytorch_version} ----------------+"
                 withEnv(["ext_version=${tensorflow_version}_${pytorch_version}"]){
-                    timeout(80) {
+                    timeout(90) {
                         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH

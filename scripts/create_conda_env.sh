@@ -122,6 +122,8 @@ elif [[ "${tensorflow_version}" == '2.6.2' ]] || [[ "${tensorflow_version}" == '
     pip install tensorflow==${tensorflow_version}
 elif [[ "${tensorflow_version}" == "spr-base" ]]; then
     pip install ${WORKSPACE}/tensorflow*.whl
+elif [[ "${tensorflow_version}" == *"-official" ]]; then
+    pip install tensorflow==${tensorflow_version%-official}
 elif [[ "${tensorflow_version}" != "" ]]; then
     pip install intel-tensorflow==${tensorflow_version}
 else

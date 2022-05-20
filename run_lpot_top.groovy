@@ -692,7 +692,7 @@ def getPerfJobs() {
                                 copyArtifacts(
                                         projectName: sub_jenkins_job,
                                         selector: specific("${downstreamJob.getNumber()}"),
-                                        filter: "${job_framework}-${job_model}-tune*",
+                                        filter: "${job_framework}-${job_model}-tune*, ${job_framework}-${job_model}-tune/**",
                                         fingerprintArtifacts: true,
                                         target: "${job_framework}/tuned_model",
                                         optional: true)

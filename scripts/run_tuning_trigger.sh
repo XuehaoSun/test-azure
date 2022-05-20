@@ -213,9 +213,11 @@ main() {
 
     # Workaround for ONNX models from remote storage
     if [ "${framework}" == "onnxrt" ]; then
-        if [ "${model}" == "bert_squad_model_zoo" ] || [ "${model}" == "mobilebert_squad_mlperf" ]; then
+        if [[ "${model_src_dir}" == *"language_translation"* ]]; then
             bert_dirname=$(dirname ${input_model})
-            cp -r ${bert_dirname}/uncased_L-12_H-768_A-12 ${model_src_dir}/
+            if [[ -d "${bert_dirname}/uncased_L-12_H-768_A-12" ]]; then
+              cp -r ${bert_dirname}/uncased_L-12_H-768_A-12 ${model_src_dir}/
+            fi
         fi
         copy_model
     fi
@@ -262,9 +264,6 @@ main() {
 
     if [ "${framework}" == "onnxrt" ] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
         parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
-        if [[ "${model_src_dir}" == *"language_translation"* ]]; then
-            ln -s ${input_model} ${model_src_dir}/
-        fi
     fi
 
     if [ "${framework}" == "onnxrt" ]; then
@@ -283,6 +282,9 @@ main() {
 
         if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "mask_rcnn_qdq" ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
+        fi
+        if [[ ${model} == "duc" ]];then
+            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=/tf_dataset2/datasets/gtFine/val"
         fi
     fi
 
