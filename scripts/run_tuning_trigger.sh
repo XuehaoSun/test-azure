@@ -280,7 +280,7 @@ main() {
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../annotations/instances_val2017.json"
         fi
 
-        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "mask_rcnn_qdq" ]];then
+        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "tiny_yolov3" ]] || [[ ${model} == "mask_rcnn_qdq" ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
         fi
         if [[ ${model} == "duc" ]];then
