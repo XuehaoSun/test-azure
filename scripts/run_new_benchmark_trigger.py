@@ -138,23 +138,28 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
                 f"--config={yaml_path}",
                 f"--input_model={input_model}",
                 f"--mode={onnxrt_lt_mode}",
-                f"--dataset_location={args.dataset_location}"
+                f"--data_path={args.dataset_location}"
             ]
 
     # Workaround for ONNXRT googlenet-12,squeezenet,caffenet,alexnet
-    if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "squeezenet_qdq", "caffenet", "alexnet", "zfnet", "inception_v1"]:
+    if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "caffenet", "alexnet", "zfnet", "inception_v1", "alexnet_qdq", "caffenet_qdq", "googlenet-12_qdq", "zfnet_qdq", "inception_v1_qdq", "squeezenet_qdq"]:
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
         ])
         
-    if args.framework == "onnxrt" and args.model == "fcn":
+    if args.framework == "onnxrt" and args.model in [ "fcn_qdq", "fcn"]:
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
         ])
 
-    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4", "tiny_yolov3", "mask_rcnn_qdq"]:
+    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4"]:
+        parameters.extend([
+            f"--data_path={args.dataset_location}"
+        ])
+    qdq_model_list = ["bert_squad_model_zoo_qdq", "mobilebert_squad_mlperf_qdq", "mask_rcnn_qdq", "ssd_mobilenet_v1-2_qdq", "faster_rcnn_qdq"]
+    if args.framework == "onnxrt" and args.model in qdq_model_list:
         parameters.extend([
             f"--data_path={args.dataset_location}"
         ])
@@ -250,30 +255,39 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
             f"--config={yaml_path}",
             f"--input_model={input_model}",
             f"--mode={onnxrt_lt_mode}",
-            f"--dataset_location={args.dataset_location}"
+            f"--data_path={args.dataset_location}"
         ]
 
     # Workaround for ONNXRT googlenet-12,squeezenet,caffenet,alexnet
-    if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "squeezenet_qdq", "caffenet", "alexnet", "zfnet", "inception_v1"]:
+    if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "caffenet", "alexnet", "zfnet", "inception_v1", "alexnet_qdq", "caffenet_qdq", "googlenet-12_qdq", "zfnet_qdq", "inception_v1_qdq", "squeezenet_qdq"]:
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../val.txt"
         ])
 
-    if args.framework == "onnxrt" and args.model == "fcn":
+    if args.framework == "onnxrt" and args.model in [ "fcn_qdq", "fcn"]:
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
         ])
-    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4", "tiny_yolov3", "mask_rcnn_qdq"]:
+
+    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4"]:
         parameters.extend([
             f"--data_path={args.dataset_location}"
         ])
+        
+    qdq_model_list = ["bert_squad_model_zoo_qdq", "mobilebert_squad_mlperf_qdq", "mask_rcnn_qdq", "ssd_mobilenet_v1-2_qdq", "faster_rcnn_qdq"]
+    if args.framework == "onnxrt" and args.model in qdq_model_list:
+        parameters.extend([
+            f"--data_path={args.dataset_location}"
+        ])
+
     if args.framework == "onnxrt" and args.model == "duc":
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path=/tf_dataset2/datasets/gtFine/val"
         ])
+
     # Workaround for engine
     if args.framework == "baremetal":
         tokenizer_dir=os.path.dirname(args.input_model)

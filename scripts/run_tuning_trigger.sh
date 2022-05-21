@@ -269,20 +269,21 @@ main() {
     if [ "${framework}" == "onnxrt" ]; then
         onnxrt_ds_location_models=("bert_squad_model_zoo" "mobilebert_squad_mlperf" "gpt2_lm_head_wikitext_model_zoo")
         if [[ " ${onnxrt_ds_location_models[@]} " =~ " ${model} " ]]; then
-            parameters="${parameters} --dataset_location=${dataset_location}"
+            parameters="${parameters} --data_path=${dataset_location}"
         fi
 
-        onnxrt_ds_full_input_models=("googlenet-12" "squeezenet" "squeezenet_qdq" "caffenet" "alexnet" "zfnet" "inception_v1")
+        onnxrt_ds_full_input_models=("googlenet-12" "squeezenet" "squeezenet_qdq" "caffenet" "alexnet" "zfnet" "inception_v1" "googlenet-12_qdq" "caffenet_qdq" "alexnet_qdq" "zfnet_qdq" "inception_v1_qdq")
         if [[ " ${onnxrt_ds_full_input_models[@]} " =~ " ${model} " ]]; then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../val.txt"
         fi
-        if [[ ${model} == "fcn" ]]; then
+        if [[ ${model} == "fcn" ]] || [[ ${model} == "fcn_qdq" ]]; then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../annotations/instances_val2017.json"
         fi
 
-        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "tiny_yolov3" ]] || [[ ${model} == "mask_rcnn_qdq" ]];then
+        qdq_model_list=("bert_squad_model_zoo_qdq" "mobilebert_squad_mlperf_qdq" "mask_rcnn_qdq" "ssd_mobilenet_v1-2_qdq" "faster_rcnn_qdq")
+        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ " ${qdq_model_list[@]} " =~ " ${model} " ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
-        fi
+        fi       
         if [[ ${model} == "duc" ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=/tf_dataset2/datasets/gtFine/val"
         fi
