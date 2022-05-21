@@ -370,7 +370,8 @@ node(node_label){
                     fi
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
-                    if [[ "${tensorflow_version}" = "2.6.0" ]]; then
+                    intel_tf=$(pip list | grep 'tensorflow' | grep -c 'intel') || true
+                    if [[ "${tensorflow_version}" = "2.6.0" ]] || [[ "${intel_tf}" = "0" ]]; then
                         export TF_ENABLE_ONEDNN_OPTS=1
                         echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
                     elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
