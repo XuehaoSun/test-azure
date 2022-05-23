@@ -36,7 +36,7 @@ if ('framework_version' in params && params.framework_version != '') {
 echo "framework_version: ${framework_version}"
 
 // setting onnx_version
-onnx_version  = '1.7.0'
+onnx_version  = '1.9.0'
 if ('onnx_version' in params && params.onnx_version != '') {
     onnx_version = params.onnx_version
 }
