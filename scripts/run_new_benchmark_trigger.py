@@ -132,7 +132,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         ])
 
     # Workaround for ONNXRT LT models
-    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
+    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf", "gpt2_lm_head_wikitext_model_zoo"]:
             onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
             parameters = [
                 f"--config={yaml_path}",
@@ -154,7 +154,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
             f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
         ])
 
-    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4"]:
+    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4", "tiny_yolov3"]:
         parameters.extend([
             f"--data_path={args.dataset_location}"
         ])
@@ -249,7 +249,7 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         ])
 
     # Workaround for ONNXRT LT models
-    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
+    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf", "gpt2_lm_head_wikitext_model_zoo"]:
         onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
         parameters = [
             f"--config={yaml_path}",
@@ -271,7 +271,7 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
             f"--label_path={args.dataset_location}/../annotations/instances_val2017.json"
         ])
 
-    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4"]:
+    if args.framework == "onnxrt" and args.model in ["faster_rcnn", "mask_rcnn", "yolov3", "yolov4", "tiny_yolov3"]:
         parameters.extend([
             f"--data_path={args.dataset_location}"
         ])
