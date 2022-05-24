@@ -125,9 +125,6 @@ main() {
         fi
     fi
     
-    if [[ "${framework}" == "onnxrt" ]] && [[ "${model}" == "gpt2_lm_head_wikitext_model_zoo" ]]; then
-        topology="gpt2_lm_wikitext2"
-    fi
 
     if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "bert_base_MRPC_qat" ]]; then
         topology="bert-base-cased"
@@ -157,6 +154,11 @@ main() {
         sed -i '/python setup.py install/d' run_benchmark.sh
     fi
 
+    if [[ "${framework}" == "onnxrt" ]] && [[ "${model}" == "gpt2_lm_head_wikitext_model_zoo" ]]; then
+        topology="gpt2_lm_wikitext2"
+        parameters="--data_path=${dataset_location} --input_model=${input_model}"
+    fi
+    
     echo -e "\nStart run function..."
     case ${mode} in
         accuracy)
