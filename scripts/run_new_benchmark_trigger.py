@@ -132,7 +132,7 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         ])
 
     # Workaround for ONNXRT LT models
-    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf", "gpt2_lm_head_wikitext_model_zoo"]:
+    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
             onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
             parameters = [
                 f"--config={yaml_path}",
@@ -249,7 +249,7 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         ])
 
     # Workaround for ONNXRT LT models
-    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf", "gpt2_lm_head_wikitext_model_zoo"]:
+    if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf"]:
         onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
         parameters = [
             f"--config={yaml_path}",

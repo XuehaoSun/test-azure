@@ -156,9 +156,9 @@ main() {
 
     if [[ "${framework}" == "onnxrt" ]] && [[ "${model}" == "gpt2_lm_head_wikitext_model_zoo" ]]; then
         topology="gpt2_lm_wikitext2"
-        parameters="--data_path=${dataset_location} --input_model=${input_model}"
+        parameters="--topology=${topology} --data_path=${dataset_location} --input_model=${input_model}"
     fi
-    
+
     echo -e "\nStart run function..."
     case ${mode} in
         accuracy)
