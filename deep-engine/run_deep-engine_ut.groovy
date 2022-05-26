@@ -312,6 +312,8 @@ node(node_label){
                             else
                                 echo "Not found requirements.txt file."
                             fi
+                            # workaround frozen protobuf 
+                            pip install protobuf==3.20.1
                         ''')
                     }
                 }
