@@ -332,8 +332,12 @@ node(node_label){
                         ln -s ${cmake_path} ${cmake_path}3 || true
 
                         cd ${WORKSPACE}/deep-engine/engine/test/gtest
-                        mkdir build && cd build && cmake .. && make -j
+                        mkdir build && cd build && cmake .. && make -j  2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
 
+                        if [ $(find . -maxdepth 1 -name "test*" | wc -l) == 0 ]; then
+                            echo "--------build failure---------"
+                            exit 1
+                        fi
                         find . -maxdepth 1 -name "test*" > run.sh
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
                         bash run.sh 2>&1 | tee ${ut_log_name}
@@ -354,10 +358,15 @@ node(node_label){
                         cd ${WORKSPACE}/deep-engine/engine/test/gtest/SparseLib
                         conda install -c conda-forge gxx gcc sysroot_linux-64 -y
                         
-                        echo "SparseLib gtest build..."
+                        echo "SparseLib gtest build..."  2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log 
                         mkdir build && cd build 
                         cmake .. -DSPARSE_LIB_USE_AMX=True
                         make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
+                        
+                        if [ $(find . -maxdepth 1 -name "test*" | wc -l) == 0 ]; then
+                            echo "--------build failure---------"
+                            exit 1
+                        fi
                         find . -maxdepth 1 -name "test*" > run.sh
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
                         echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
