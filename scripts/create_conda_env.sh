@@ -126,6 +126,7 @@ elif [[ "${tensorflow_version}" == *"-official" ]]; then
     pip install tensorflow==${tensorflow_version%-official}
 elif [[ "${tensorflow_version}" != "" ]]; then
     pip install intel-tensorflow==${tensorflow_version}
+    pip install protobuf==3.20.1
 else
     echo "Won't install TensorFlow!"
 fi
