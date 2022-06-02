@@ -65,6 +65,13 @@ function create_conda_env {
         sleep 5
     done
     pip install intel-tensorflow==${tensorflow_version}
+
+    if [[ ! $(pip list | grep intel_tensorflow) ]]; then
+        py_version=$(echo ${python_version} | sed "s|\.||g")
+        install_file=$(ls /home/tensorflow/tf_dataset/tensorflow/ | grep "intel_tensorflow-${tensorflow_version}.*cp${py_version}.*.whl" | head -1)
+        [[ -f ${install_file} ]] && pip install ${install_file}
+    fi
+
     pip install protobuf==3.20.1
     pip list
 
