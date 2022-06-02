@@ -27,6 +27,7 @@ function main {
     echo "re-install pycocotools resolve the issue with numpy..."
     pip uninstall pycocotools -y
     pip install --no-cache-dir pycocotools
+    pip install protobuf==3.20.1
     pip list
     cp -r /tf_dataset2/models/tensorflow/resnet_v2/baseline_model .
     python main.py   2>&1 | tee ${WORKSPACE}/tensorflow_prune.log

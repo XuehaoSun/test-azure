@@ -61,6 +61,7 @@ function create_conda_env {
         echo "\"lpot-model\" not found. Exiting..."
         exit 1
     fi
+    pip install protobuf==3.20.1
     cd ${WORKSPACE}/lpot-models || return
 }
 

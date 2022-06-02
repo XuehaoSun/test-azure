@@ -65,6 +65,7 @@ function create_conda_env {
         sleep 5
     done
     pip install intel-tensorflow==${tensorflow_version}
+    pip install protobuf==3.20.1
     pip list
 
     lpot_install

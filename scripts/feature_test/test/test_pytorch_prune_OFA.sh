@@ -75,7 +75,7 @@ function create_conda_env {
         n=$((n+1))
         sleep 5
     done
-
+    pip install protobuf==3.20.1
     pip list
 
     if [ ! -d ${WORKSPACE}/lpot-models ]; then

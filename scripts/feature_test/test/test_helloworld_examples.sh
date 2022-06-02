@@ -134,6 +134,7 @@ function create_conda_env {
         python -m pip install -r requirements.txt
         pip list
     fi
+    pip install protobuf==3.20.1
 }
 
 function lpot_install {

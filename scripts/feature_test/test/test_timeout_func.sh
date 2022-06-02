@@ -66,6 +66,7 @@ function create_conda_env {
   conda info -e
   pip install intel-tensorflow==${tensorflow_version}
   pip install ruamel.yaml==0.17.4
+  pip install protobuf==3.20.1
   pip list
 
   if [ ! -d ${WORKSPACE}/lpot-models ]; then

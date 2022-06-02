@@ -25,6 +25,7 @@ function main {
       pip install --no-cache-dir -r requirements.txt
       echo "pip list after install requirements..."
     fi
+    pip install protobuf==3.20.1
     pip list
     python main.py /tf_dataset/pytorch/ImageNet/raw --topology resnet18 --prune --config conf.yaml --pretrained --output-model model_final.pth --batch-size 256 --keep-batch-size --lr 0.001 --iteration 30 --epochs 3 2>&1 | tee ${WORKSPACE}/pytorch_prune_resnet.log
 
