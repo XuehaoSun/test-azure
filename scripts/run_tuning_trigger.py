@@ -1,13 +1,9 @@
 import argparse
 import datetime
-import glob
 import os
 import platform
-import re
-import shutil
 import subprocess
 import sys
-from typing import List
 
 import psutil
 
@@ -33,6 +29,8 @@ args = parser.parse_args()
 
 print(args)
 
+dataset_location = os.path.normpath(args.dataset_location).replace("\\", "\\\\")
+
 
 def main():
 
@@ -44,9 +42,12 @@ def main():
 
     if not os.path.isdir(args.model_src_dir):
         raise Exception(f"[ERROR] model_src_dir \"{args.model_src_dir}\" not exists.")
-    
+
+    excluded_requirements = consts.EXCLUDED_REQUIREMENTS
+    if args.framework == "onnxrt":
+        excluded_requirements.remove("torch")
     install_requirements(requirements_file=os.path.join(args.model_src_dir, "requirements.txt"),
-                         exclude=consts.EXCLUDED_REQUIREMENTS)
+                         exclude=excluded_requirements)
 
     # Temporary change for helloworld_keras
     if args.model == "helloworld_keras":
@@ -63,27 +64,38 @@ def main():
         topology = "resnet50_v1"
 
     if args.model.endswith("_qat"):
-        topology = f"{args.model}_qat"
+        topology = args.model[:-4]
 
     if args.model.endswith("_gpu"):
-        topology = f"{args.model}_gpu"
+        topology = args.model[:-4]
+
+    if args.model.endswith("_fx"):
+        topology = args.model[:-3]
 
     q_model=os.path.join(os.environ["WORKSPACE"], f"{args.framework}-{args.model}-tune")
     if args.framework == "tensorflow":
         q_model = f"{q_model}.pb"
     if args.framework == "mxnet":
         os.makedirs(q_model)
-        q_model = os.path.join(q_model, topology)
+        q_model = os.path.join(q_model, args.model)
     if args.framework == "onnxrt":
         q_model = f"{q_model}.onnx"
-
-    parameters = get_tuning_parameters(args.framework, topology, q_model, operating_system)
+    if args.framework == "tensorflow" and "oob_models" in args.model_src_dir:
+        parameters = get_oob_models_parameters(topology, args.input_model, q_model, args.yaml)
+    else:
+        parameters = get_tuning_parameters(args.framework, args.model, topology, q_model, operating_system)
 
     yaml_full_path = os.path.join(args.model_src_dir, args.yaml)
+
+    print("\nPrint original yaml... ")
+    with open(yaml_full_path, 'r') as yaml_file:
+        print(yaml_file.read())
+
     update_yaml(
         yaml=yaml_full_path,
         framework=args.framework,
-        dataset_location=args.dataset_location,
+        topology=topology,
+        dataset_location=dataset_location,
         strategy=args.strategy,
         max_trials=args.max_trials)
 
@@ -96,8 +108,12 @@ def main():
     total_memory = psutil.virtual_memory().total
 
     cmd = get_executable("tuning")
+    if args.framework == "pytorch" and args.model == "distilbert_base_MRPC":
+        cmd = ["python", "-u", "run_glue_tune.py"]
     if args.framework == "onnxrt" and args.model == "bert_base_MRPC":
         cmd = ["python", "bert_base.py"]
+    if args.framework == "tensorflow" and "oob_models" in args.model_src_dir:
+        cmd = ["python", "tf_benchmark.py"]
     cmd.extend(parameters)
     print("Executing command: '" + " ".join(cmd) + "' in '" + args.model_src_dir + "' directory.")
 
@@ -178,7 +194,7 @@ def collect_model_size(fp32_model: str, int8_model: str):
     return fp32_model_size, int8_model_size
 
 
-def get_tuning_parameters(framework: str, topology: str, q_model :str, os: str):
+def get_tuning_parameters(framework: str, model:str, topology: str, q_model: str, os: str):
     os_map = {
         "Windows": get_windows_parameters,
         "Linux": get_linux_parameters,
@@ -187,10 +203,10 @@ def get_tuning_parameters(framework: str, topology: str, q_model :str, os: str):
     if parameter_parser is None:
         raise Exception(f"Could not found parameter parser for {os} OS.")
 
-    return parameter_parser(framework, topology, q_model)
+    return parameter_parser(framework, model, topology, q_model)
 
 
-def get_windows_parameters(framework: str, topology: str, q_model: str):
+def get_windows_parameters(framework: str, model: str, topology: str, q_model: str):
     parameters_map = {
         "tensorflow": {
             "resnet50v1.0": [
@@ -207,7 +223,7 @@ def get_windows_parameters(framework: str, topology: str, q_model: str):
                 "--tune"
             ],
             "mobilenetv1": [
-                 "--input-graph", f"{args.input_model}",
+                "--input-graph", f"{args.input_model}",
                 "--output-graph", f"{q_model}",
                 "--config", f"{args.yaml}",
                 "--tune"
@@ -226,21 +242,48 @@ def get_windows_parameters(framework: str, topology: str, q_model: str):
                 "--output_model", f"{q_model}",
                 "--tune"
             ],
-            "bert_base_MRPC": [
+            "bert_base_MRPC_static": [
                 "--model_path", f"{args.input_model}",
                 "--config", f"{args.yaml}",
                 "--output_model", f"{q_model}",
                 "--tune"
             ]
+        },
+        "pytorch": {
+            "resnet18_fx": [
+                "--pretrained",
+                "--arch", f"{topology}",
+                "--batch-size", "30",
+                "--tune",
+                f"{dataset_location}",
+            ],
+            "resnet50": [
+                "--pretrained",
+                "--arch", f"{topology}",
+                "--batch-size", "30",
+                "--tune",
+                f"{dataset_location}",
+            ],
+            "distilbert_base_MRPC": [
+                "--model_name_or_path", f"{args.input_model}",
+                "--task_name", "MRPC",
+                "--do_eval",
+                "--do_train",
+                "--max_seq_length", "128",
+                "--per_gpu_eval_batch_size", "16",
+                "--no_cuda",
+                "--output_dir", "saved_results",
+                "--tune"
+            ]
         }
     }
-    parameters = parameters_map.get(framework, {}).get(topology, None)
+    parameters = parameters_map.get(framework, {}).get(model, None)
     if parameters is None:
         raise NotImplementedError
     return parameters
 
 
-def get_linux_parameters(framework: str, topology: str, q_model: str):
+def get_linux_parameters(framework: str, model: str, topology: str, q_model: str):
     if framework == "onnxrt":
         return [
             f"--config={args.yaml}",
@@ -250,7 +293,7 @@ def get_linux_parameters(framework: str, topology: str, q_model: str):
 
     parameters = [
         f"--topology={topology}",
-        f"--dataset_location={args.dataset_location}",
+        f"--dataset_location={dataset_location}",
         f"--input_model={args.input_model}"
     ]
 
@@ -268,6 +311,120 @@ def get_linux_parameters(framework: str, topology: str, q_model: str):
     
     return parameters
 
+def get_oob_models_parameters(topology, input_model, output_model, yaml_path):
+    """Get tuning parameters for TF OOB models."""
+    models_need_name = [
+        "CRNN",
+        "CapsuleNet",
+        "CenterNet",
+        "CharCNN",
+        "Hierarchical_LSTM",
+        "MANN",
+        "MiniGo",
+        "TextCNN",
+        "TextRNN",
+        "aipg-vdcnn",
+        "arttrack-coco-multi",
+        "arttrack-mpii-single",
+        "context_rcnn_resnet101_snapshot_serenget",
+        "deepspeech",
+        "deepvariant_wgs",
+        "dense_vnet_abdominal_ct",
+        "east_resnet_v1_50",
+        "efficientnet-b0",
+        "efficientnet-b0_auto_aug",
+        "efficientnet-b5",
+        "efficientnet-b7_auto_aug",
+        "facenet-20180408-102900",
+        "handwritten-score-recognition-0003",
+        "license-plate-recognition-barrier-0007",
+        "optical_character_recognition-text_recognition-tf",
+        "pose-ae-multiperson",
+        "pose-ae-refinement",
+        "resnet_v2_200",
+        "show_and_tell",
+        "text-recognition-0012",
+        "vggvox",
+        "wide_deep",
+        "yolo-v3-tiny",
+        "NeuMF",
+        "PRNet",
+        "DIEN_Deep-Interest-Evolution-Network",
+    ]
+
+    models_need_disable_optimize = [
+        "CRNN",
+        "efficientnet-b0",
+        "efficientnet-b0_auto_aug",
+        "efficientnet-b5",
+        "efficientnet-b7_auto_aug",
+        "vggvox",
+    ]
+
+    models_need_bs16 = [
+        "icnet-camvid-ava-0001",
+        "icnet-camvid-ava-sparse-30-0001",
+        "icnet-camvid-ava-sparse-60-0001",
+    ]
+    models_need_bs32 = [
+        "adv_inception_v3",
+        "ens3_adv_inception_v3",
+    ]
+
+
+    models_need_nc_graphdef = [
+        "pose-ae-multiperson",
+        "pose-ae-refinement",
+        "centernet_hg104",
+        "DETR",
+        "Elmo",
+        "Time_series_LSTM",
+        "Unet",
+        "WD",
+        "ResNest101",
+        "ResNest50",
+        "ResNest50-3D",
+        "adversarial_text",
+        "Attention_OCR",
+        "AttRec",
+        "GPT2",
+        "Parallel_WaveNet",
+        "PNASNet-5",
+        "VAE-CF",
+        "DLRM",
+        "Deep_Speech_2",
+    ]
+
+    parameters = [
+        "--model_path", f"{input_model}",
+        "--output_path", f"{output_model}",
+        "--yaml", f"{yaml_path}",
+        "--tune",
+        "--num_warmup", "10",
+        "-n", "500",
+    ]
+
+    if topology in models_need_name:
+        print(f"{topology} need model name!")
+        parameters.extend(["--model_name", f"{topology}"])
+
+    if topology in models_need_disable_optimize:
+        print(f"{topology} need to disable optimize_for_inference!")
+        parameters.append("--disable_optimize")
+
+    if topology in models_need_bs16:
+        print(f"{topology} need to set bs = 16!")
+        parameters.extend(["-b", "16"])
+
+    if topology in models_need_bs32:
+        print(f"{topology} need to set bs = 32!")
+        parameters.extend(["-b", "32"])
+
+    if topology in models_need_nc_graphdef:
+        print(f"{topology} need neural_compressor graph_def!")
+        parameters.append("--use_nc")
+
+    return parameters
 
 if __name__ == "__main__":
     main()

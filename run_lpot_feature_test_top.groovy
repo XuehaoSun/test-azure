@@ -167,12 +167,15 @@ def parallel_jobs() {
 
 def buildBinary(){
     List binaryBuildParams = [
-            string(name: "python_version", value: "${python_version}"),
-            string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}"),
-            string(name: "val_branch", value: "${val_branch}")
+            string(name: "inc_url", value: "${lpot_url}"),
+            string(name: "inc_branch", value: "${lpot_branch}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "LINUX_BINARY_CLASSES", value: "wheel"),
+            string(name: "LINUX_PYTHON_VERSIONS", value: "${python_version}"),
+            string(name: "WINDOWS_BINARY_CLASSES", value: ""),
+            string(name: "WINDOWS_PYTHON_VERSIONS", value: ""),
     ]
-    def downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
+    def downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildParams
 
     binary_build_job = downstreamJob.getNumber()
     if (downstreamJob.getResult() != "SUCCESS") {

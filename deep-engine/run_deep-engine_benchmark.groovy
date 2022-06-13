@@ -132,10 +132,11 @@ def download() {
 def build_env() {
     catchError {
         copyArtifacts(
-                projectName: 'lpot-release-wheel-build',
+                projectName: 'lpot-release-build',
                 selector: specific("${binary_build_job}"),
-                filter: 'neural_compressor*.whl',
+                filter: "linux_binaries/wheel/${python_version}/neural_compressor*.whl, linux_binaries/wheel/${python_version}/neural_compressor*.tar.gz, linux_binaries/wheel/${python_version}/neural-compressor*.tar.bz2",,
                 fingerprintArtifacts: true,
+                flatten: true,
                 target: "${WORKSPACE}")
     }
     timeout(10){

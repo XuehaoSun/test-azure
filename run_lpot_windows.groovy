@@ -40,14 +40,14 @@ precision  = 'int8,fp32'
 if ('precision' in params && params.precision != '') {
     precision = params.precision
 }
-def precision_list = parseStrToList(precision)
+precision_list = parseStrToList(precision)
 echo "Running ${precision}"
 
 mode = 'latency'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
-def mode_list = parseStrToList(mode)
+mode_list = parseStrToList(mode)
 echo "Running ${mode}"
 
 lpot_url="https://gitlab.devtools.intel.com/intelai/LowPrecisionInferenceTool"
@@ -149,6 +149,43 @@ if ('onnx_version' in params && params.onnx_version != '') {
 }
 println("onnx_version: " + onnx_version)
 
+torchvision_versions = [
+        "1.10.0": "0.11.0",
+        "1.9.0": "0.10.0",
+        "1.8.0": "0.9.0",
+        "1.7.0": "0.8.0",
+        "1.6.0": "0.7.0",
+        "1.5.1": "0.6.1",
+        "1.5.0": "0.6.0",
+        "1.4.0": "0.5.0",
+        "1.3.1": "0.4.2",
+        "1.3.0": "0.4.1",
+        "1.2.0": "0.4.0",
+        "1.1.0": "0.3.0",
+]
+
+torchvision_version = ""
+if (framework == "pytorch") {
+
+    pytorch_version_base = framework_version.split('\\+')[0]
+    try {
+        pytorch_version_postfix = framework_version.split('\\+')[1]
+    } catch(e) {
+        pytorch_version_postfix = ""
+    }
+
+    torchvision_version = torchvision_versions[pytorch_version_base]
+
+    if (!torchvision_version) {
+        error("Could not found torchvision for pytorch " + pytorch_version_base)
+    }
+
+    if (pytorch_version_postfix != "") {
+        torchvision_version = torchvision_version + "+" + pytorch_version_postfix
+    }
+}
+println("torchvision_version: " + torchvision_version)
+
 
 cpu="unknown"
 if ('cpu' in params && params.cpu != ''){
@@ -175,12 +212,28 @@ if (params.multi_instance != null){
 }
 echo "Multi instance: ${multi_instance}"
 
+upstreamBuild = ""
+upstreamJobName = ""
+upstreamUrl = ""
+
+@NonCPS
+def getUpstreamInfo() {
+    def upstream_job = currentBuild.rawBuild.getCause(hudson.model.Cause$UpstreamCause)
+    if (!upstream_job) {
+        return
+    }
+    println("Found upstream job. Updating info...")
+    upstreamJobName = upstream_job.upstreamProject
+    upstreamBuild = upstream_job.upstreamBuild
+    upstreamUrl = upstream_job.upstreamUrl
+}
+
 
 def cleanup() {
 
     try {
         bat '''
-            RMDIR /s /q C:/Jenkins/workspace/.lpot
+            RMDIR /s /q C:\\Jenkins\\workspace\\.lpot
             ( dir /b /a "." | findstr . ) > nul && (
                 FORFILES /P "." /M * /C "cmd /c if @isdir==FALSE (del @file) else (rmdir /s /q @path)"
             )
@@ -208,10 +261,6 @@ def create_virtual_env() {
     withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
         retry(5) {
             bat '''
-
-                # CALL pip config set global.index-url http://pypi.douban.com/simple/
-                # CALL pip config set global.trusted-host "pypi.douban.com test.pypi.org pypi.org pypi.python.org"
-
                 SET env_name=%framework%-%framework_version%-%python_version%
 
                 FOR /F %%i IN ('dir "."  ^| find /c "%env_name%"') do SET VENV_COUNT=%%i
@@ -253,10 +302,7 @@ def create_virtual_env() {
                         CALL pip install intel-%framework:"=%==%framework_version:"=%
                     )
                 ) ELSE IF "%framework%" == "pytorch" (
-                        IF "%model%" == "resnest50" (
-                            SET framework_version="1.6.0+cpu"
-                        )
-                        CALL pip install torch==%framework_version% -f https://download.pytorch.org/whl/torch_stable.html
+                        CALL pip install torch==%framework_version% torchvision==%torchvision_version% -f https://download.pytorch.org/whl/torch_stable.html
                 ) ELSE IF "%framework%" == "mxnet" (
                     IF "%framework_version%" == "1.6.0" (
                         CALL pip install %framework:"=%-mkl==%framework_version%
@@ -291,19 +337,20 @@ def create_virtual_env() {
 }
 
 def create_conda_env() {
-    withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
+    withEnv([
+        "framework=${framework}",
+        "framework_version=${framework_version}",
+        "python_version=${python_version}",
+        "torchvision_version=${torchvision_version}"]) {
         retry(5){
 
             bat '''
-                # CALL pip config set global.index-url http://pypi.douban.com/simple/
-                # CALL pip config set global.trusted-host "pypi.douban.com test.pypi.org pypi.org pypi.python.org"
-
                 SET conda_env_name=%framework%-%framework_version%-%python_version%
 
                 FOR /F %%i IN ('conda info -e ^| find /c "%conda_env_name%"') do SET CONDA_COUNT=%%i
 
                 if %CONDA_COUNT% NEQ 0 (
-                    CALL conda remove --name "%conda_env_name:"=%" --all -y
+                    CALL conda env remove --name "%conda_env_name:"=%"
                     IF %ERRORLEVEL% NEQ 0 (
                         echo "Could not remove conda environment."
                         exit 1
@@ -355,10 +402,7 @@ def create_conda_env() {
                         CALL pip install intel-%framework:"=%==%framework_version:"=%
                     )
                 ) ELSE IF "%framework%" == "pytorch" (
-                        IF "%model%" == "resnest50" (
-                            SET framework_version="1.6.0+cpu"
-                        )
-                        CALL pip install torch==%framework_version% -f https://download.pytorch.org/whl/torch_stable.html
+                        CALL pip install torch==%framework_version% torchvision==%torchvision_version% -f https://download.pytorch.org/whl/torch_stable.html
                 ) ELSE IF "%framework%" == "mxnet" (
                     IF "%framework_version%" == "1.6.0" (
                         CALL pip install %framework:"=%-mkl==%framework_version%
@@ -372,6 +416,7 @@ def create_conda_env() {
                         CALL pip install -i https://test.pypi.org/simple ort-nightly
                     ) ELSE (
                         CALL pip install onnxruntime==%framework_version%
+                        CALL pip install onnxruntime-extensions
                     )
                     IF "%model%" == "bert_base_MRPC" (
                         CALL pip install torch
@@ -380,7 +425,8 @@ def create_conda_env() {
                 )
 
                 CALL pip install opencv-python
-
+                CALL pip install protobuf==3.20.1
+                
                 IF %ERRORLEVEL% NEQ 0 (
                     echo "Could not install requirements."
                     exit 1
@@ -398,12 +444,86 @@ def normalizePath(path) {
     return path.replaceAll("\\\\", "/")
 }
 
+def syncConfigFile(){
+    bat """
+        SET inc_config_path=${WORKSPACE}\\lpot-models\\examples\\.config
+        IF exist %inc_config_path%\\ (
+            copy /y %inc_config_path%\\* ${WORKSPACE}\\lpot-validation\\config
+        )
+    """
+}
+
+def collectLogs() {
+    stage("Collect logs") {
+        println("Updating logs prefix..")
+        logs_prefix_url = ""
+        if (upstreamUrl != "") {
+            logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/${framework}/${model}/"
+        }
+
+        println("Collecting logs...")
+
+        cmd = "python ${WORKSPACE}/lpot-validation/scripts/collect_logs_lpot.py \
+        --framework=\"${framework}\" \
+        --python_version=\"${python_version}\" \
+        --model=\"${model}\" \
+        --logs_dir=\"${WORKSPACE}\" \
+        --output_dir=\"${WORKSPACE}\" \
+        --logs_prefix_url=\"${logs_prefix_url}\" \
+        --job_url=\"${BUILD_URL}/consoleText\""
+
+        println("--------mode--------->" + mode)
+        if (MR_source_branch != "" || mode == "throughput") {
+            cmd += " --tune_acc"
+        }
+
+        required = "["
+        precision_list.each { precision ->
+            mode_list.each { mode ->
+                required += "{\'precision\': \'${precision}\', \'mode\': \'${mode}\'},"
+                }
+        }
+        required = required.substring(0, required.length() - 1) + "]"
+        cmd += " --required=\"${required}\""
+        withEnv([
+            "framework=${framework}",
+            "framework_version=${framework_version}",
+            "python_version=${python_version}",
+        ]) {
+            bat """
+                SET env_name=%framework%-%framework_version%-%python_version%
+
+                IF "${env_type}" == "conda" (
+                    CALL conda activate %env_name%
+                ) else (
+                    CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
+                )
+                IF %ERRORLEVEL% NEQ 0 (
+                    echo "Could not activate environment."
+                    exit 1
+                )
+
+                CALL pip list
+                CALL ${cmd}
+            """
+        }
+
+        println("Logs collected.")
+    }
+}
+
+
 node( sub_node_label ) {
     // Get CPU name from env variable if not defined
     if (['unknown','any', '*'].contains(cpu)) {
         cpu = env.CPU_NAME
         echo "Detected cpu: ${cpu}"
     }
+
+    getUpstreamInfo()
+    println("upstreamBuild = ${upstreamBuild}")
+    println("upstreamJobName = ${upstreamJobName}")
+    println("upstreamUrl = ${upstreamUrl}")
 
     stage("Cleanup") {
         cleanup()
@@ -418,303 +538,296 @@ node( sub_node_label ) {
     }
 
     try {
-
-        stage("Prepare environment"){
-            if (new_env){
-                if (env_type == "conda") {
-                    create_conda_env()
-                } else {
-                    create_virtual_env()
+        try {
+            stage("Prepare environment"){
+                if (new_env){
+                    if (env_type == "conda") {
+                        create_conda_env()
+                    } else {
+                        create_virtual_env()
+                    }
+                }else{
+                    println("Test need a special local conda env, DO NOT create again!!!")
                 }
-            }else{
-                println("Test need a special local conda env, DO NOT create again!!!")
+
             }
 
-        }
-
-        stage("Clone INC repository") {
-            retry(5) {
-                if(MR_source_branch != ''){
-                    checkout changelog: true, poll: true, scm: [
-                            $class                           : 'GitSCM',
-                            branches                         : [[name: "${MR_source_branch}"]],
-                            browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                            doGenerateSubmoduleConfigurations: false,
-                            extensions                       : [
-                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                                    [$class: 'CloneOption', timeout: 5],
-                                    [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
-                            ],
-                            submoduleCfg                     : [],
-                            userRemoteConfigs                : [
-                                    [credentialsId: "${credential}",
-                                    url          : "${lpot_url}"]
-                            ]
-                    ]
-                }
-                else {
-                    checkout changelog: true, poll: true, scm: [
-                            $class                           : 'GitSCM',
-                            branches                         : [[name: "${lpot_branch}"]],
-                            browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                            doGenerateSubmoduleConfigurations: false,
-                            extensions                       : [
-                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                                    [$class: 'CloneOption', timeout: 5]
-                            ],
-                            submoduleCfg                     : [],
-                            userRemoteConfigs                : [
-                                    [credentialsId: "${credential}",
-                                    url          : "${lpot_url}"]
-                            ]
-                    ]
-                }
-            }
-        }
-
-        if ("${binary_build_job}" == "") {
-            stage('Build wheel') {
-                withEnv([
-                    "framework=${framework}",
-                    "framework_version=${framework_version}",
-                    "python_version=${python_version}"]) {
-                    retry(5) {
-                        bat """
-                            SET env_name=%framework%-%framework_version%-%python_version%
-
-                            IF "${env_type}" == "conda" (
-                                CALL conda activate %env_name%
-                            ) else (
-                                CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
-                            )
-                            IF %ERRORLEVEL% NEQ 0 (
-                                echo "Could not activate environment."
-                                exit 1
-                            )
-                            
-
-                            echo "Build wheel..."
-                            cd lpot-models
-                            python setup.py sdist bdist_wheel
-                            copy dist\\neural_compressor*.whl ${WORKSPACE}\\
-                        """
+            stage("Clone INC repository") {
+                retry(5) {
+                    if(MR_source_branch != ''){
+                        checkout changelog: true, poll: true, scm: [
+                                $class                           : 'GitSCM',
+                                branches                         : [[name: "${MR_source_branch}"]],
+                                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                                doGenerateSubmoduleConfigurations: false,
+                                extensions                       : [
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                        [$class: 'CloneOption', timeout: 5],
+                                        [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
+                                ],
+                                submoduleCfg                     : [],
+                                userRemoteConfigs                : [
+                                        [credentialsId: "${credential}",
+                                        url          : "${lpot_url}"]
+                                ]
+                        ]
+                    }
+                    else {
+                        checkout changelog: true, poll: true, scm: [
+                                $class                           : 'GitSCM',
+                                branches                         : [[name: "${lpot_branch}"]],
+                                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
+                                doGenerateSubmoduleConfigurations: false,
+                                extensions                       : [
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                        [$class: 'CloneOption', timeout: 5]
+                                ],
+                                submoduleCfg                     : [],
+                                userRemoteConfigs                : [
+                                        [credentialsId: "${credential}",
+                                        url          : "${lpot_url}"]
+                                ]
+                        ]
                     }
                 }
             }
-        } else {
-            stage("Copy wheel")
-            copyArtifacts(
-                projectName: 'lpot-release-wheel-build',
-                selector: specific("${binary_build_job}"),
-                filter: 'neural_compressor*.whl',
-                fingerprintArtifacts: true,
-                target: "${WORKSPACE}")
-        }
 
-        stage("Read model config") {
-            // get params FOR tuning and benchmark
-            def configPath = "$WORKSPACE/lpot-validation/config/model_params_${framework}_win.json"
-            println("Reading config from " + configPath)
-            def modelConf =  jsonParse(readFile(configPath))
-            println(modelConf."${framework}"."${model}")
-            
-            model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
-            println("model_src_dir = " + model_src_dir)
-            
-            dataset_location = modelConf."${framework}"."${model}"."dataset_location"
-            println("dataset_location = " + dataset_location)
+            if ("${binary_build_job}" == "") {
+                stage('Build binary') {
+                    List binaryBuildParams = [
+                        string(name: "inc_url", value: "${lpot_url}"),
+                        string(name: "inc_branch", value: "${lpot_branch}"),
+                        string(name: "val_branch", value: "${val_branch}"),
+                        string(name: "LINUX_BINARY_CLASSES", value: ""),
+                        string(name: "LINUX_PYTHON_VERSIONS", value: ""),
+                        string(name: "WINDOWS_BINARY_CLASSES", value: "wheel"),
+                        string(name: "WINDOWS_PYTHON_VERSIONS", value: "${python_version}"),
+                    ]
+                    downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildParams
 
-            input_model = modelConf."${framework}"."${model}"."input_model"
-            println("input_model = " + input_model)
-
-            yaml = modelConf."${framework}"."${model}"."yaml"
-            println("yaml = " + yaml)
-
-            //mr test will cover different strategies, the other test mode will use the passed strategy
-            if ( MR_source_branch != '' ){
-                if (framework == "tensorflow"){
-                    strategy = "basic"
-                    if (model_src_dir == "image_recognition"){
-                        dataset_location = "C:/Users/Public/Downloads/dataset/TF_mini_imagenet"
-                        println("MR test tensorflow model_src_dir is image_recognition.")
-                        println("So set dataset_location to C:/Users/Public/Downloads/dataset/TF_mini_imagenet")
+                    binary_build_job = downstreamJob.getNumber()
+                    echo "binary_build_job: ${binary_build_job}"
+                    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+                    if (downstreamJob.getResult() != "SUCCESS") {
+                        currentBuild.result = "FAILURE"
+                        failed_build_url = downstreamJob.absoluteUrl
+                        echo "failed_build_url: ${failed_build_url}"
+                        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
                     }
-                    if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
-                        // Set mini-coco FOR obj mr test, set absolute baseline replace relative one to reach the acc goal
-                        dataset_location = " C:/Users/Public/Downloads/dataset/tensorflow/mini-coco-500.record"
-                        withEnv(["model_src_dir=${model_src_dir}"]) {
-                            bat (
-                                    script:"""
-                                        SET yaml_config="%WORKSPACE:"=%\\lpot-models\\examples\\%framework:"=%\\%model_src_dir:"=%\\ssd_resnet50_v1.yaml"
-                                        powershell -command "Get-content %yaml_config% | Foreach-Object {\$_ -replace 'relative:\\s*.*\$', 'absolute: 0.01'} | Set-Content %yaml_config%
-                                    """,
-                                    returnStdout: true
-                            ).trim()
+                }
+            }
+
+            stage('Copy binary') {
+                catchError {
+                    copyArtifacts(
+                        projectName: 'lpot-release-build',
+                        selector: specific("${binary_build_job}"),
+                        filter: "windows_binaries/wheel/${python_version}/neural_compressor*.whl",
+                        fingerprintArtifacts: true,
+                        flatten: true,
+                        target: "${WORKSPACE}")
+                }
+            }
+
+            syncConfigFile()
+
+            stage("Read model config") {
+                // get params FOR tuning and benchmark
+                def configPath = "$WORKSPACE/lpot-validation/config/model_params_${framework}_win.json"
+                println("Reading config from " + configPath)
+                def modelConf =  jsonParse(readFile(configPath))
+                println(modelConf."${framework}"."${model}")
+                
+                model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
+                println("model_src_dir = " + model_src_dir)
+                
+                dataset_location = modelConf."${framework}"."${model}"."dataset_location"
+                println("dataset_location = " + dataset_location)
+
+                input_model = modelConf."${framework}"."${model}"."input_model"
+                println("input_model = " + input_model)
+
+                yaml = modelConf."${framework}"."${model}"."yaml"
+                println("yaml = " + yaml)
+
+                //mr test will cover different strategies, the other test mode will use the passed strategy
+                if ( MR_source_branch != '' ){
+                    if (framework == "tensorflow"){
+                        strategy = "basic"
+                        if (model_src_dir == "image_recognition"){
+                            dataset_location = "C:/Users/Public/Downloads/dataset/TF_mini_imagenet"
+                            println("MR test tensorflow model_src_dir is image_recognition.")
+                            println("So set dataset_location to C:/Users/Public/Downloads/dataset/TF_mini_imagenet")
+                        }
+                        if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
+                            // Set mini-coco FOR obj mr test, set absolute baseline replace relative one to reach the acc goal
+                            dataset_location = " C:/Users/Public/Downloads/dataset/tensorflow/mini-coco-500.record"
+                            withEnv(["model_src_dir=${model_src_dir}"]) {
+                                bat (
+                                        script:"""
+                                            SET yaml_config="%WORKSPACE:"=%\\lpot-models\\examples\\%framework:"=%\\%model_src_dir:"=%\\ssd_resnet50_v1.yaml"
+                                            powershell -command "Get-content %yaml_config% | Foreach-Object {\$_ -replace 'relative:\\s*.*\$', 'absolute: 0.01'} | Set-Content %yaml_config%
+                                        """,
+                                        returnStdout: true
+                                ).trim()
+                            }
+                        }
+                    }else if(framework == "pytorch" && model == "resnet18"){
+                        strategy = "bayesian"
+                    }else if(framework == "mxnet" && model == "resnet50v1"){
+                        strategy = "mse"
+                    }
+                }
+            }
+
+            stage("Tuning") {
+                if ( MR_source_branch != '' ){
+                    tuninig_timeout="5400"
+                }
+                timeout(time: tuning_timeout, unit: "SECONDS") {
+                    model_src_dir = normalizePath("${WORKSPACE}\\lpot-models\\examples\\${framework}\\${model_src_dir}")
+                    dataset_location = normalizePath("${DATASET_DIR}\\${dataset_location}")
+                    input_model = normalizePath("${DATASET_DIR}\\${input_model}")
+                    withCredentials([string(credentialsId: 'sigopt_api_token_suyue', variable: 'SIGOPT_TOKEN')]) {
+                        withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
+                            bat """
+                                echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
+                                CALL quser
+                                echo "-------quser-------"
+                                
+                                SET env_name=%framework%-%framework_version%-%python_version%
+
+                                IF "${env_type}" == "conda" (
+                                    CALL conda activate %env_name%
+                                ) else (
+                                    CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
+                                )
+                                IF %ERRORLEVEL% NEQ 0 (
+                                    echo "Could not activate environment."
+                                    exit 1
+                                )
+
+                                CALL ${WORKSPACE}%\\lpot-validation\\scripts\\env_setup.bat ${framework} ${model}
+
+                                CALL python ${WORKSPACE}%\\lpot-validation\\scripts\\run_tuning_trigger.py ^
+                                --framework=${framework} ^
+                                --model=${model} ^
+                                --model_src_dir=${model_src_dir} ^
+                                --dataset_location=${dataset_location} ^
+                                --input_model=${input_model} ^
+                                --yaml=${yaml} ^
+                                --strategy=${strategy} ^
+                                --strategy_token=${SIGOPT_TOKEN} ^
+                                --max_trials=${max_trials} ^
+                                --cpu=${cpu}
+                            """
                         }
                     }
-                }else if(framework == "pytorch" && model == "resnet18"){
-                    strategy = "bayesian"
-                }else if(framework == "mxnet" && model == "resnet50v1"){
-                    strategy = "mse"
                 }
             }
-        }
 
-        stage("Tuning") {
-            if ( MR_source_branch != '' ){
-                tuninig_timeout="5400"
+            stage("Check tuning status"){
+                dir("${WORKSPACE}"){
+
+                    bat """
+                        SET control_phrase="Found a quantized model which meet accuracy goal."
+                        IF %model% == "helloworld_keras" (
+                            SET control_phrase="Inference is done."
+                        )
+
+                        FOR /F %%i IN ('type "${framework}-${model}-${os}-${cpu}-tune.log" ^| find /c %control_phrase%') do SET status_count=%%i 
+                        if %status_count% EQU 0 (
+                            exit 1
+                        )
+
+                    """
+                }
             }
-            timeout(time: tuning_timeout, unit: "SECONDS") {
-                model_src_dir = normalizePath("${WORKSPACE}\\lpot-models\\examples\\${framework}\\${model_src_dir}")
-                dataset_location = normalizePath("${DATASET_DIR}\\${dataset_location}")
-                input_model = normalizePath("${DATASET_DIR}\\${input_model}")
-                withCredentials([string(credentialsId: 'sigopt_api_token_suyue', variable: 'SIGOPT_TOKEN')]) {
-                    withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
-                        bat """
-                            echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
-                            CALL quser
-                            echo "-------quser-------"
-                            
-                            SET env_name=%framework%-%framework_version%-%python_version%
-                            IF "%framework%" == "pytorch" (
-                                IF NOT %model:bert=% == %model% (
-                                    SET env_name=pytorch-bert-1.6
-                                )
-                            )
 
-                            IF "${env_type}" == "conda" (
-                                CALL conda activate %env_name%
-                            ) else (
-                                CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
-                            )
-                            IF %ERRORLEVEL% NEQ 0 (
-                                echo "Could not activate environment."
-                                exit 1
-                            )
+            stage("Performance") {
+                // Set Latency mode for MR tests
+                if ((lpot_branch == ''&& MR_source_branch != '') || model_src_dir == 'oob_models' || model == 'style_transfer') {
+                    mode_list = ["latency"]
+                    echo "Mode list: ${mode_list}"
+                }
 
-                            CALL ${WORKSPACE}%\\lpot-validation\\scripts\\env_setup.bat ${framework} ${model}
+                def configPath = "$WORKSPACE/lpot-validation/config/model_params_${framework}_win.json"
+                println("Reading config from " + configPath)
+                def modelConf =  jsonParse(readFile(configPath))
+                println(modelConf."${framework}"."${model}")
 
-                            CALL python ${WORKSPACE}%\\lpot-validation\\scripts\\run_tuning_trigger.py ^
-                            --framework=${framework} ^
-                            --model=${model} ^
-                            --model_src_dir=${model_src_dir} ^
-                            --dataset_location=${dataset_location} ^
-                            --input_model=${input_model} ^
-                            --yaml=${yaml} ^
-                            --strategy=${strategy} ^
-                            --strategy_token=${SIGOPT_TOKEN} ^
-                            --max_trials=${max_trials} ^
-                            --cpu=${cpu}
-                        """
+                if (!tune_only && model != "helloworld_keras") {
+                    println("========== Benchmark ========")
+                    if (perf_bs == "default") {
+                        perf_bs = modelConf."${framework}"."${model}"."batch_size"
                     }
-                }
-            }
-        }
+                    timeout(360) {
+                        withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
+                            precision_list.each { precision ->
+                            echo "Precision: ${precision}"
+                                mode_list.each { mode ->
+                                    echo "Mode: ${mode}"
+                                    bat """
+                                        echo "Running ---- ${framework}, ${model}, ${precision}, ${mode} ---- Benchmarking"
+                                        
+                                        echo "-------quser-------"
+                                        CALL quser
+                                        echo "-------quser-------"
+                                        
+                                        SET env_name=%framework%-%framework_version%-%python_version%
 
-        stage("Check tuning status"){
-            dir("${WORKSPACE}"){
-
-                bat """
-                    SET control_phrase="Found a quantized model which meet accuracy goal."
-                    IF %model% == "helloworld_keras" (
-                        SET control_phrase="Inference is done."
-                    )
-
-                    FOR /F %%i IN ('type "${framework}-${model}-${os}-${cpu}-tune.log" ^| find /c %control_phrase%') do SET status_count=%%i 
-                    if %status_count% EQU 0 (
-                        exit 1
-                    )
-
-                """
-            }
-        }
-
-        stage("Performance") {
-            // Set Latency mode for MR tests
-            if ((lpot_branch == ''&& MR_source_branch != '') || model_src_dir == 'oob_models' || model == 'style_transfer') {
-                mode_list = ["latency"]
-                echo "Mode list: ${mode_list}"
-            }
-
-            def configPath = "$WORKSPACE/lpot-validation/config/model_params_${framework}_win.json"
-            println("Reading config from " + configPath)
-            def modelConf =  jsonParse(readFile(configPath))
-            println(modelConf."${framework}"."${model}")
-
-            if (!tune_only && model != "helloworld_keras") {
-                println("========== Benchmark ========")
-                if (perf_bs == "default") {
-                    perf_bs = modelConf."${framework}"."${model}"."batch_size"
-                }
-                timeout(360) {
-                    withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
-                        precision_list.each { precision ->
-                        echo "Precision: ${precision}"
-                            mode_list.each { mode ->
-                                echo "Mode: ${mode}"
-                                bat """
-                                    echo "Running ---- ${framework}, ${model}, ${precision}, ${mode} ---- Benchmarking"
-                                    
-                                    echo "-------quser-------"
-                                    CALL quser
-                                    echo "-------quser-------"
-                                    
-                                    SET env_name=%framework%-%framework_version%-%python_version%
-                                    IF "%framework%" == "pytorch" (
-                                        IF NOT %model:bert=% == %model% (
-                                            SET env_name=pytorch-bert-1.6
+                                        IF "${env_type}" == "conda" (
+                                            CALL conda activate %env_name%
+                                        ) else (
+                                            CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
                                         )
-                                    )
+                                        IF %ERRORLEVEL% NEQ 0 (
+                                            echo "Could not activate environment."
+                                            exit 1
+                                        )
 
-                                    IF "${env_type}" == "conda" (
-                                        CALL conda activate %env_name%
-                                    ) else (
-                                        CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
-                                    )
-                                    IF %ERRORLEVEL% NEQ 0 (
-                                        echo "Could not activate environment."
-                                        exit 1
-                                    )
+                                        SET cmd=python ${WORKSPACE}%\\lpot-validation\\scripts\\run_benchmark_trigger.py ^
+                                            --framework=${framework} ^
+                                            --model=${model} ^
+                                            --model_src_dir=${model_src_dir} ^
+                                            --dataset_location=${dataset_location} ^
+                                            --input_model=${input_model} ^
+                                            --precision=${precision} ^
+                                            --mode=${mode} ^
+                                            --batch_size=${perf_bs} ^
+                                            --yaml=${yaml} ^
+                                            --cpu=${cpu} ^
+                                        
+                                        IF "${multi_instance}" == "true" (
+                                            SET cmd=%cmd% --multi_instance
+                                        )
 
-                                    SET cmd=python ${WORKSPACE}%\\lpot-validation\\scripts\\run_benchmark_trigger.py ^
-                                        --framework=${framework} ^
-                                        --model=${model} ^
-                                        --model_src_dir=${model_src_dir} ^
-                                        --dataset_location=${dataset_location} ^
-                                        --input_model=${input_model} ^
-                                        --precision=${precision} ^
-                                        --mode=${mode} ^
-                                        --batch_size=${perf_bs} ^
-                                        --yaml=${yaml} ^
-                                        --cpu=${cpu} ^
-                                    
-                                    IF "${multi_instance}" == "true" (
-                                        SET cmd=%cmd% --multi_instance=${multi_instance}
-                                    )
+                                        CALL %cmd%
 
-                                    CALL %cmd%
-
-                                    IF %ERRORLEVEL% NEQ 0 (
-                                        echo "Error while executing benchmark."
-                                        exit 1
-                                    )
-                                """
+                                        IF %ERRORLEVEL% NEQ 0 (
+                                            echo "Error while executing benchmark."
+                                            exit 1
+                                        )
+                                    """
+                                }
                             }
                         }
                     }
                 }
             }
+        } catch(e) {
+            currentBuild.result = "FAILURE"
+            throw e
+        } finally {
+            collectLogs()
         }
-
-
     } catch(e) {
         currentBuild.result = "FAILURE"
         throw e
     } finally {
-
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "${framework}*.log, tuning_config.yaml", excludes: null
+            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,tuning_config.yaml,summary.log,tuning_info.log", excludes: null
             fingerprint: true
         }
     }

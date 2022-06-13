@@ -226,13 +226,16 @@ node(node_label){
         if ("${binary_build_job}" == "") {
             stage('Build binary') {
                 List binaryBuildParams = [
-                        string(name: "lpot_url", value: "${deepengine_url}"),
-                        string(name: "lpot_branch", value: "${deepengine_branch}"),
-                        string(name: "MR_source_branch", value: "${PR_source_branch}"),
-                        string(name: "MR_target_branch", value: "${PR_target_branch}"),
-                        string(name: "val_branch", value: "${val_branch}")
+
+                    string(name: "inc_url", value: "${deepengine_url}"),
+                    string(name: "inc_branch", value: "${deepengine_branch}"),
+                    string(name: "val_branch", value: "${val_branch}"),
+                    string(name: "LINUX_BINARY_CLASSES", value: "wheel"),
+                    string(name: "LINUX_PYTHON_VERSIONS", value: "${python_version}"),
+                    string(name: "WINDOWS_BINARY_CLASSES", value: ""),
+                    string(name: "WINDOWS_PYTHON_VERSIONS", value: ""),
                 ]
-                downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
+                downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildParams
 
                 binary_build_job = downstreamJob.getNumber()
                 echo "binary_build_job: ${binary_build_job}"
@@ -249,10 +252,11 @@ node(node_label){
         stage('Copy binary') {
             catchError {
                 copyArtifacts(
-                        projectName: 'lpot-release-wheel-build',
+                        projectName: 'lpot-release-build',
                         selector: specific("${binary_build_job}"),
-                        filter: 'neural_compressor*.whl',
+                        filter: "linux_binaries/wheel/${python_version}/neural_compressor*.whl, linux_binaries/wheel/${python_version}/neural_compressor*.tar.gz, linux_binaries/wheel/${python_version}/neural-compressor*.tar.bz2",
                         fingerprintArtifacts: true,
+                        flatten: true,
                         target: "${WORKSPACE}")
             }
         }
