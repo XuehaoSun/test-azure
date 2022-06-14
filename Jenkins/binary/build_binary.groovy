@@ -134,6 +134,8 @@ def getBuildParams(osName, binaryClass, pythonVersion) {
 
     jobParams += string(name: "node_label", value: "${subnode_label}")
     jobParams += string(name: "lpot_url", value: "${inc_url}")
+    jobParams += string(name: "MR_source_branch", value: "${PR_source_branch}")
+    jobParams += string(name: "MR_target_branch", value: "${PR_target_branch}")
     jobParams += string(name: "lpot_branch", value: "${inc_branch}")
     jobParams += string(name: "conda_env", value: "${conda_env}")
     jobParams += string(name: "binary_class", value: "${binaryClass}")

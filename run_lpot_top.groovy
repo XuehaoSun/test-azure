@@ -1148,6 +1148,8 @@ def buildBinary(){
     List binaryBuildParams = [
             string(name: "inc_url", value: "${lpot_url}"),
             string(name: "inc_branch", value: "${lpot_commit}"),
+            string(name: "PR_source_branch", value: "${PR_source_branch}"),
+            string(name: "PR_target_branch", value: "${PR_target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "conda_env", value: "${conda_build_env_name}"),
             string(name: "pypi_version", value: "${pypi_version}"),

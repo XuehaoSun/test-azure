@@ -399,6 +399,8 @@ node(node_label){
                 List binaryBuildParams = [
                     string(name: "inc_url", value: "${lpot_url}"),
                     string(name: "inc_branch", value: "${lpot_branch}"),
+                    string(name: "PR_source_branch", value: "${MR_source_branch}"),
+                    string(name: "PR_target_branch", value: "${MR_target_branch}"),
                     string(name: "val_branch", value: "${val_branch}"),
                     string(name: "LINUX_BINARY_CLASSES", value: "wheel"),
                     string(name: "LINUX_PYTHON_VERSIONS", value: "${python_version}"),
