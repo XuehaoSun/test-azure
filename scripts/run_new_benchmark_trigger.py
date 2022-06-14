@@ -47,7 +47,7 @@ excluded_requirements = [
 ]
 
 operating_system = platform.system()
-
+yaml_record_file = os.path.join(args.output_path, "yaml_record.log")
 
 def main():
     """Execute main function."""
@@ -58,6 +58,13 @@ def main():
     benchmark_yaml_path = os.path.join(args.model_src_dir, "benchmark.yaml")
     shutil.copyfile(yaml_path, benchmark_yaml_path)
     yaml_path = benchmark_yaml_path
+
+    with open(yaml_path, "r") as yaml_file:
+        yaml_context = yaml_file.read()
+
+    with open(yaml_record_file, 'a') as f:
+        f.write("Origin yaml... \n")
+        f.write(yaml_context)
 
     input_model = get_model_name(
         framework=args.framework,
@@ -117,8 +124,12 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
     lpot_config.dump(yaml_path)
     print("\nPrint updated yaml... ")
     with open(yaml_path, "r") as yaml_file:
-        print(yaml_file.read())
-    ###
+        yaml_context = yaml_file.read()
+        print(yaml_context)
+    with open(yaml_record_file, 'a') as f:
+        f.write("\n\nAccuracy yaml... \n")
+        f.write(yaml_context)
+
 
     # Set execution command
     parameters.append("--mode=accuracy")
@@ -234,8 +245,11 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
     lpot_config.dump(yaml_path)
     print("\nPrint updated yaml... ")
     with open(yaml_path, "r") as yaml_file:
-        print(yaml_file.read())
-    ###
+        yaml_context = yaml_file.read()
+        print(yaml_context)
+    with open(yaml_record_file, 'a') as f:
+        f.write("\n\nPerformance yaml... \n")
+        f.write(yaml_context)
 
     # Set execution command
     parameters.append("--mode=performance")

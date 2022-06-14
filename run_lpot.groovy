@@ -934,7 +934,7 @@ node( sub_node_label ) {
                 }
                 if (framework == "tensorflow") {
                     label=model.split('_')
-                    if((label[0] == 'bert' || label[-1] == 'slim') && (!(framework_version=~'1.15').find())){
+                    if((model == 'bert_base_mrpc' || label[-1] == 'slim') && (!(framework_version=~'1.15').find())){
                         framework_version = '1.15UP3'
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
@@ -1107,7 +1107,7 @@ node( sub_node_label ) {
     } finally {
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,inferencer_summary.log,summary.log,tuning_info.log,reference_data.json", excludes: null
+            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,inferencer_summary.log,summary.log,tuning_info.log,reference_data.json,yaml_record.log", excludes: null
             fingerprint: true
             if (collect_tuned_model){
                 archiveArtifacts artifacts: "${framework}-${model}-tune*,${framework}-${model}-tune/**", excludes: null
