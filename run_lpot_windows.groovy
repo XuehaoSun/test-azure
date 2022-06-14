@@ -150,6 +150,7 @@ if ('onnx_version' in params && params.onnx_version != '') {
 println("onnx_version: " + onnx_version)
 
 torchvision_versions = [
+        "1.11.0": "0.12.0",
         "1.10.0": "0.11.0",
         "1.9.0": "0.10.0",
         "1.8.0": "0.9.0",
