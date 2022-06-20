@@ -38,8 +38,8 @@ done
 # step 0: export conda
 if [[ ${model} = "dlrm"* ]] && [[ "${pytorch_version}" != "" ]]; then
     export PATH=${HOME}/anaconda3/bin/:$PATH
-    export https_proxy=http://child-prc.intel.com:913
-    export http_proxy=http://child-prc.intel.com:913
+    export https_proxy=http://proxy-prc.intel.com:913
+    export http_proxy=http://proxy-prc.intel.com:913
 else
     export PATH=${HOME}/miniconda3/bin/:$PATH
 fi

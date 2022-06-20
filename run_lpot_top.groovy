@@ -461,7 +461,7 @@ def updateGithubCommitStatus(String state, String description) {
                     -X POST \
                     -H \"Accept: application/vnd.github.v3+json\" \
                     -H \"Authorization: Bearer $LPOT_VAL_GH_TOKEN\" \
-                    --proxy child-prc.intel.com:913 \
+                    --proxy proxy-prc.intel.com:913 \
                     https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/statuses/${commit_sha} \
                     -d '{\"state\": \"${state}\", \"context\": \"Jenkins CI\", \"target_url\": \"${RUN_DISPLAY_URL}\", \"description\": \"${description}\"}'
                 """
@@ -486,7 +486,7 @@ def createGithubIssueComment(String comment) {
                     -X POST \
                     -H \"Accept: application/vnd.github.v3+json\" \
                     -H \"Authorization: Bearer $LPOT_VAL_GH_TOKEN\" \
-                    --proxy child-prc.intel.com:913 \
+                    --proxy proxy-prc.intel.com:913 \
                     https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/issues/${issueNumber}/comments \
                     -d '{\"body\": \"${comment}\"}'
                 """
