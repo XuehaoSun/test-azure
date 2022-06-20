@@ -25,6 +25,7 @@ def parse_args():
     parser.add_argument("--sampling_size", type=str, required=False, help="Sampling size for calibration.")
     parser.add_argument("--timeout", type=int, required=False, help="Tuning timeout.")
     parser.add_argument("--dtype", type=str, required=False, help="Quantize model precision type.")
+    parser.add_argument("--tf_new_api", type=str, required=False, help="Set framework for tensorflow models.")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -41,4 +42,5 @@ if __name__ == "__main__":
         strategy_token=args.strategy_token,
         sampling_size=args.sampling_size,
         dtype=args.dtype,
+        tf_new_api=args.tf_new_api
     )

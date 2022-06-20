@@ -1176,7 +1176,7 @@ def generateReport() {
         def refer_job_name
         if(test_mode == "extension") {
             refer_job_name = "intel-lpot-validation-top-weekly"
-        }else if(test_mode == "mr"){
+        }else if(test_mode == "mr" && tensorflow_version != "spr-base"){
             refer_job_name = "intel-lpot-validation-top-PR"
         }else{
             refer_job_name = currentBuild.projectName

@@ -258,7 +258,8 @@ nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", 
 upstreamBuild = ""
 upstreamJobName = ""
 upstreamUrl = ""
-algorithm=''
+algorithm=""
+tf_new_api=""
 
 MAX_RERUNS = 3
 
@@ -511,7 +512,7 @@ def getReferenceData() {
                 }else{
                     refer_job_name="intel-lpot-validation-top-weekly"
                 }
-            }else if(test_mode == "mr" && framework != "baremetal"){
+            }else if(test_mode == "mr" && framework != "baremetal" && tf_new_api != "true"){
                 refer_job_name = "intel-lpot-validation-top-PR"
             } else {
                 if (upstreamJobName) {
@@ -824,6 +825,7 @@ node( sub_node_label ) {
                             target: "${WORKSPACE}")
                 }
                 if (framework_version == "spr-base"){
+                    tf_new_api="true"
                     copyArtifacts(
                             projectName: 'TF-spr-base-wheel-build',
                             selector: specific("${tf_binary_build_job}"),
@@ -1008,6 +1010,7 @@ node( sub_node_label ) {
                             --conda_env_mode=${conda_env_mode} \
                             --log_level=${log_level} \
                             --dtype=${dtype} \
+                            --tf_new_api=${tf_new_api} \
                             2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
                     """
                 }
