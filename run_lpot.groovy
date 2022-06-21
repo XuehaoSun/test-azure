@@ -660,7 +660,7 @@ def collectLogs() {
         println("Updating logs prefix..")
         logs_prefix_url = ""
         if (upstreamUrl != "") {
-            logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/${framework}/${model}/"
+            logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/${os}/${framework}/${model}/"
         }
 
         println("Collecting logs...")
