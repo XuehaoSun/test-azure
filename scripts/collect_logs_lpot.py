@@ -39,7 +39,8 @@ result.platform = cpu_name
 def main():
     result.version = get_framework_version(result.framework)
     tuning_log = os.path.join(args.logs_dir, f"{args.framework}-{args.model}-{os_name}-{cpu_name}-tune.log")
-    read_tuning_log(tuning_log)
+    if os.path.exists(tuning_log):
+        read_tuning_log(tuning_log)
 
     logs_pattern = os.path.join(args.logs_dir, f"{args.framework}-{args.model}-*.log")
     log_files = glob.glob(logs_pattern)
@@ -170,8 +171,10 @@ def read_perf_logs(precision, mode):
     if mode == "latency" and "latency" in partials[0].keys():
         latency = [item.get("latency") for item in partials]
         measurement.value = round(sum(latency)/len(latency), 4)
-    if mode == "throughput" and "throughput" in partials[0].keys():
-        measurement.value = round(sum([item.get("throughput") for item in partials]), 4)
+    if mode == "throughput":
+        throughput = [item.get("throughput") for item in partials if "throughput" in item]
+        if len(throughput) == len(partials):
+            measurement.value = round(sum(throughput), 4)
     if mode == "accuracy" and "accuracy" in partials[0].keys():
         measurement.value = partials[0].get("accuracy")
     
