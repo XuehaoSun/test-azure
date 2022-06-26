@@ -2146,3 +2146,6 @@ bidaf
 FERPlus
 ferplus
 MixedPrecision
+DUnetCNN
+calibrationset
+ndhwc
