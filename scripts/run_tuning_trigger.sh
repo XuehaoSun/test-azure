@@ -377,7 +377,7 @@ function update_yaml_config {
             if [ "${model}"  == "ssd_resnet34" ]; then
                 sed -i "/\/path\/to\/annotation/s|anno_path:.*|anno_path: ${model_src_dir}/label_map.yaml |g" ${yaml}
             fi
-            if [ "${model}" == "bert_large_squad" ]; then
+            if [[ "${model}" == "bert_large_squad"* ]]; then
                 sed -i "/\/path\/to\/eval.tf_record/s|root:.*|root: $dataset_location/eval.tf_record|g" ${yaml}
                 sed -i "/\/path\/to\/dev-v1.1.json/s|label_file:.*|label_file: $dataset_location/dev-v1.1.json|g" ${yaml}
                 sed -i "/\/path\/to\/vocab.txt/s|vocab_file:.*|vocab_file: $dataset_location/vocab.txt|g" ${yaml}
