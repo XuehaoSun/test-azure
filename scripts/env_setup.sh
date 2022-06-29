@@ -142,6 +142,7 @@ function set_environment {
     until [ "$n" -ge 5 ]
     do
         if [ "${conda_env_mode}" == "conda" ];then
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/miniconda3/bin/
             cd ${WORKSPACE}/lpot-models
             lpot_bz2_path="$(find ${WORKSPACE} -name neural-compressor*.tar.* |tail -1)"
             lpot_bz2_file="$(basename ${lpot_bz2_path})"
