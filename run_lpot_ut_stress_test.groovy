@@ -149,6 +149,22 @@ if (params.UT_STRESS_TEST != null){
 }
 echo "UT_STRESS_TEST = ${UT_STRESS_TEST}"
 
+tf_binary_build_job=""
+if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
+    tf_binary_build_job = params.tf_binary_build_job
+}
+if (python_version == "3.7"){
+    tf_binary_build_job = 100
+}else if (python_version == "3.8"){
+    tf_binary_build_job = 99
+}else if (python_version == "3.9"){
+    tf_binary_build_job = 101
+}else if (python_version == "3.10"){
+    tf_binary_build_job = 102
+}
+
+echo "tf_binary_build_job is ${tf_binary_build_job}"
+
 def cleanup() {
 
     try {
@@ -335,6 +351,24 @@ node(node_label){
                     echo "failed_build_url: ${failed_build_url}"
                     error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
                 }
+
+                if (tf_binary_build_job == ""){
+                    List TFBinaryBuildParams = [
+                            string(name: "python_version", value: "${python_version}"),
+                            string(name: "val_branch", value: "${val_branch}"),
+                    ]
+                    downstreamJob = build job: "TF-spr-base-wheel-build", propagate: false, parameters: TFBinaryBuildParams
+
+                    tf_binary_build_job = downstreamJob.getNumber()
+                    echo "tf_binary_build_job: ${tf_binary_build_job}"
+                    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+                    if (downstreamJob.getResult() != "SUCCESS") {
+                        currentBuild.result = "FAILURE"
+                        failed_build_url = downstreamJob.absoluteUrl
+                        echo "failed_build_url: ${failed_build_url}"
+                        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                    }
+                }
             }
         }
 
@@ -344,6 +378,13 @@ node(node_label){
                         projectName: 'lpot-release-build',
                         selector: specific("${binary_build_job}"),
                         filter: "linux_binaries/wheel/${python_version}/neural_compressor*.whl, linux_binaries/wheel/${python_version}/neural_compressor*.tar.gz, linux_binaries/wheel/${python_version}/neural-compressor*.tar.bz2",
+                        fingerprintArtifacts: true,
+                        flatten: true,
+                        target: "${WORKSPACE}")
+                copyArtifacts(
+                        projectName: 'TF-spr-base-wheel-build',
+                        selector: specific("${tf_binary_build_job}"),
+                        filter: 'tensorflow*.whl',
                         fingerprintArtifacts: true,
                         flatten: true,
                         target: "${WORKSPACE}")
@@ -359,15 +400,22 @@ node(node_label){
         stage("ut stress test") {
             ut_cases = test_case_list.split(',')
             run_ut_scripts = "${WORKSPACE}/lpot-models/test/run.sh"
+            run_tfnewapi_scripts = "${WORKSPACE}/lpot-models/test/run_tfnewapi.sh"
             writeFile file: run_ut_scripts, text: ""
+            writeFile file: run_tfnewapi_scripts, text: ""
             ut_cases.each{ ut_case ->
-                run_ut_context = readFile file: run_ut_scripts
-                writeFile file: run_ut_scripts, text: run_ut_context + "python " + ut_case + "\n"
+                if (ut_case=~"tfnewapi"){
+                    run_ut_context = readFile file: run_tfnewapi_scripts
+                    writeFile file: run_tfnewapi_scripts, text: run_ut_context + "python " + ut_case + "\n"
+                }else{
+                    run_ut_context = readFile file: run_ut_scripts
+                    writeFile file: run_ut_scripts, text: run_ut_context + "python " + ut_case + "\n"
+                }
             }
             if (UT_STRESS_TEST){
                 println("UT_STRESS_TEST...")
                 println "when ut stress test, conda env is " + conda_env
-                withEnv(["run_ut_scripts=${run_ut_scripts}", "test_trials=${test_trials}", "log_level=${log_level}", "conda_env=${conda_env}"]){
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "run_tfnewapi_scripts=${run_tfnewapi_scripts}", "test_trials=${test_trials}", "log_level=${log_level}", "conda_env=${conda_env}"]){
                     sh'''#!/bin/bash
                     if [ "${log_level}" != "DEFAULT" ]; then
                       export LOGLEVEL=${log_level}
@@ -384,24 +432,40 @@ node(node_label){
                         echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                     fi
                     cd ${WORKSPACE}/lpot-models/test
-                    cat ${run_ut_scripts}
+                    
                     ut_log_name=${WORKSPACE}/unit_test_${test_trials}.log
-                    for((j=0;$j<${test_trials};j=$(($j + 1))));
-                    do
-                      echo "------ Start of test around ${j} -------" >> ${ut_log_name}
-                      bash ${run_ut_scripts} 2>&1 | tee -a ${ut_log_name}
-                      echo "\n" >> ${ut_log_name}
-                      if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
-                        exit 1
-                      fi
-                    done
+                    if [ -f "${run_ut_scripts}" ]; then
+                        cat ${run_ut_scripts}
+                        for((j=0;$j<${test_trials};j=$(($j + 1))));
+                        do
+                          echo "------ Start of test around ${j} -------" >> ${ut_log_name}
+                          bash ${run_ut_scripts} 2>&1 | tee -a ${ut_log_name}
+                          echo "\n" >> ${ut_log_name}
+                          if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                            exit 1
+                          fi
+                        done
+                    fi
+                    if [ -f "${run_tfnewapi_scripts}" ]; then
+                        cat ${run_tfnewapi_scripts}
+                        pip install ${WORKSPACE}/tensorflow*.whl
+                        for((j=0;$j<${test_trials};j=$(($j + 1))));
+                        do
+                          echo "------ Start of test around ${j} -------" >> ${ut_log_name}
+                          bash ${run_tfnewapi_scripts} 2>&1 | tee -a ${ut_log_name}
+                          echo "\n" >> ${ut_log_name}
+                          if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                            exit 1
+                          fi
+                        done
+                    fi
                 '''
                 }
             }
 
             if (RUN_COVERAGE){
                 println("RUN_COVERAGE...")
-                withEnv(["run_ut_scripts=${run_ut_scripts}", "log_level=${log_level}", "conda_env=${conda_env}"]){
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "run_tfnewapi_scripts=${run_tfnewapi_scripts}", "log_level=${log_level}", "conda_env=${conda_env}"]){
                     sh'''#!/bin/bash
                         if [ "${log_level}" != "DEFAULT" ]; then
                             export LOGLEVEL=${log_level}
@@ -421,13 +485,23 @@ node(node_label){
                         # mute engine log
                         export GLOG_minloglevel=2
                         lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
-                        sed -i 's,python ,coverage run --source='"${lpot_path}"' --append ,g' ${run_ut_scripts}
-                        cat ${run_ut_scripts}
+                        
                         coverage erase
-                        bash ${run_ut_scripts}
+                        if [ -f "${run_ut_scripts}" ]; then 
+                            sed -i 's,python ,coverage run --source='"${lpot_path}"' --append ,g' ${run_ut_scripts}
+                            cat ${run_ut_scripts}
+                            bash ${run_ut_scripts} 
+                        fi
+                        if [ -f "${run_tfnewapi_scripts}" ]; then
+                            sed -i 's,python ,coverage run --source='"${lpot_path}"' --append ,g' ${run_tfnewapi_scripts}
+                            cat ${run_tfnewapi_scripts}
+                            pip install ${WORKSPACE}/tensorflow*.whl
+                            bash ${run_tfnewapi_scripts}
+                        fi
                         coverage report -m
                         coverage html -d ${WORKSPACE}/coverage_results/htmlcov
                         coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml
+                        
                     '''
                 }
             }
