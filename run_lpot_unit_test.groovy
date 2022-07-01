@@ -397,6 +397,7 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 bash run.sh 2>&1 | tee ${ut_log_name}
                 if [ -d "tfnewapi" ]; then 
                     echo "Run special UT with TFnewAPI..."
+                    pip uninstall intel-tensorflow
                     pip install ${WORKSPACE}/tensorflow*.whl
                     echo "-------------"
                     bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
@@ -670,6 +671,7 @@ node(node_label){
                 
                             if [ -d "tfnewapi" ]; then
                                 echo "Run special UT with TFnewAPI..."
+                                pip uninstall intel-tensorflow
                                 pip install ${WORKSPACE}/tensorflow*.whl
                                 echo "-------------"
                                 bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
