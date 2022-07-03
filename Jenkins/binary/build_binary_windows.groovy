@@ -128,17 +128,6 @@ def cloneINCRepository() {
                         ]
                     }
                 }
-
-                retry(3){
-                    bat """
-                        if not exist %WORKSPACE%\\lpot-models (
-                            echo "lpot-models not found. Exiting..."
-                            exit 1
-                        )
-                        cd %WORKSPACE%\\lpot-models
-                        git submodule update --init --recursive
-                    """
-                }
             }
         }
     } catch(e) {

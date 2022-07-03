@@ -155,7 +155,6 @@ function set_environment {
             conda install neural-compressor-conda -c file:/${WORKSPACE}/lpot-validation/config/conda -c conda-forge -c intel -y && break
         elif [ "${conda_env_mode}" == "source" ];then
             cd ${WORKSPACE}/lpot-models
-            git submodule update --init --recursive
             pip install -r requirements.txt
             python setup.py clean || true
             python setup.py install && break
