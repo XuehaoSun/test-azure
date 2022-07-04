@@ -1,5 +1,5 @@
-try{ echo "AFFECTED_VERSION=${AFFECTED_VERSION}"; } catch (Exception e) { AFFECTED_VERSION="ALL" ; echo "AFFECTED_VERSION=${AFFECTED_VERSION}" }
-try{ echo "PRIORITY=${PRIORITY}"; } catch (Exception e) { PRIORITY="P1" ; echo "PRIORITY=${PRIORITY}" }
+try{ echo "PROJECT=${PROJECT}"; } catch (Exception e) { PROJECT="P1" ; echo "PROJECT=${PROJECT}" }
+try{ echo "VERSION=${VERSION}"; } catch (Exception e) { VERSION="ALL" ; echo "VERSION=${VERSION}" }
 
 
 node(LABEL) {
@@ -14,8 +14,8 @@ node(LABEL) {
 
     stage("Generate jira report") {
         withEnv([
-            "AFFECTED_VERSION=${AFFECTED_VERSION}",
-            "PRIORITY=${PRIORITY}",
+            "VERSION=${VERSION}",
+            "PROJECT=${PROJECT}",
             "CPU_NAME=${CPU_NAME}"
         ]) {
             sh '''#!/bin/bash
@@ -43,9 +43,9 @@ node(LABEL) {
 
                 pushd ./lpot-validation/scripts/jira_status_check
                 pip install -r requirements.txt
-                python collect_issues_data.py --priority=${PRIORITY} --affected_version=${AFFECTED_VERSION}
+                python collect_issues_data.py --project=${PROJECT} --version=${VERSION}
                 csv_report=$(ls -t LPOT_jira_status_of_*.csv | head -n 1)
-                python generate_report.py --csv=${csv_report} --affected_version=${AFFECTED_VERSION}
+                python generate_report.py --csv=${csv_report} --version=${VERSION} --project=${PROJECT}
                 popd
                 cp ./lpot-validation/scripts/jira_status_check/jira_status_report.html .
             '''
@@ -56,7 +56,7 @@ node(LABEL) {
             if (REPORT_RECIPIENTS.size() <= 0) {
                 print("Report recipients not specified.")
             } else {
-                emailext subject: "INC JIRA status report",
+                emailext subject: "${PROJECT} BUGs status report",
                 to: "${REPORT_RECIPIENTS}",
                 body: '''${FILE,path="jira_status_report.html"}''',
                 mimeType: 'text/html'

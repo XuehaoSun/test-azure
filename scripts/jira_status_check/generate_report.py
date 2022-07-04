@@ -30,10 +30,6 @@ class JiraIssue:
         self.eta = data.get("eta")
         self.left_days = data.get("left days")
         self.affected_version = data.get("affected version")
-        self.pr = data.get("pr")
-        self.pr_link = data.get("pr link")
-        self.pre_ci = data.get("pre-ci")
-        self.pending_days = data.get("pending days")
 
     def __getitem__(self,key):
         return getattr(self, key)
@@ -130,7 +126,8 @@ class Issues:
 def parse_arguments() -> Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", type=str, required=True, help="Path to csv with issues summary.")
-    parser.add_argument("--affected_version", type=str, default="ALL")
+    parser.add_argument("--project", type=str, default="INC")
+    parser.add_argument("--version", type=str, default="ALL")
     return parser.parse_args()
 
 def main(args: Namespace) -> None:
@@ -144,83 +141,100 @@ def main(args: Namespace) -> None:
 
     jira_issues.sort_issues(["owner", "priority"])
 
-    customer_issues = jira_issues.get_issue_by_labels({"include": ["customer"]})
-    customer_issues_unresolved = Issues(customer_issues).get_issue_by_status(UNRESOLVED_STATUSES)
-    customer_issues_resolved = Issues(customer_issues).get_issue_by_status(RESOLVED_STATUSES)
-    customer_issues_table = create_table(customer_issues_unresolved)
+    #customer_issues = jira_issues.get_issue_by_labels({"include": ["customer"]})
+    #customer_issues_unresolved = Issues(customer_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    #customer_issues_resolved = Issues(customer_issues).get_issue_by_status(RESOLVED_STATUSES)
+    #customer_issues_table = create_table(customer_issues_unresolved)
 
     non_customer_issues = jira_issues.get_issue_by_labels({"exclude": ["customer"]})
 
-    feature_issues = Issues(non_customer_issues).get_issue_by_type(["Feature", "Sub-Feature"])
+    #feature_issues = Issues(non_customer_issues).get_issue_by_type(["Feature", "Sub-Feature"])
 
-    p1_feature_issues = Issues(feature_issues).get_issue_by_priority(["P1"])
-    p1_feature_issues_unresolved = Issues(p1_feature_issues).get_issue_by_status(UNRESOLVED_STATUSES)
-    p1_feature_issues_resolved = Issues(p1_feature_issues).get_issue_by_status(RESOLVED_STATUSES)
-    p1_feature_issues_table = create_table(p1_feature_issues_unresolved)
+    #p1_feature_issues = Issues(feature_issues).get_issue_by_priority(["P1"])
+    #p1_feature_issues_unresolved = Issues(p1_feature_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    #p1_feature_issues_resolved = Issues(p1_feature_issues).get_issue_by_status(RESOLVED_STATUSES)
+    #p1_feature_issues_table = create_table(p1_feature_issues_unresolved)
 
-    other_feature_issues = Issues(feature_issues).get_issue_by_priority(["P2", "P3", "P4"])
-    other_feature_issues_unresolved = Issues(other_feature_issues).get_issue_by_status(UNRESOLVED_STATUSES)
-    other_feature_issues_resolved = Issues(other_feature_issues).get_issue_by_status(RESOLVED_STATUSES)
-    other_feature_issues_table = create_table(other_feature_issues_unresolved)
-
+    #other_feature_issues = Issues(feature_issues).get_issue_by_priority(["P2", "P3", "P4"])
+    #other_feature_issues_unresolved = Issues(other_feature_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    #other_feature_issues_resolved = Issues(other_feature_issues).get_issue_by_status(RESOLVED_STATUSES)
+    #other_feature_issues_table = create_table(other_feature_issues_unresolved)
+    import pdb
     bugs_issues = Issues(non_customer_issues).get_issue_by_type(["Bug"])
-    bugs_issues_unresolved = Issues(bugs_issues).get_issue_by_status(UNRESOLVED_STATUSES)
-    bugs_issues_resolved = Issues(bugs_issues).get_issue_by_status(RESOLVED_STATUSES)
-    bugs_table = create_table(bugs_issues_unresolved)
+    p1_bugs_issues = Issues(bugs_issues).get_issue_by_priority(["P1"])
+    p1_bugs_issues_unresolved = Issues(p1_bugs_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    p1_bugs_issues_resolved = Issues(p1_bugs_issues).get_issue_by_status(RESOLVED_STATUSES)
+    p1_bugs_table = create_table(p1_bugs_issues_unresolved)
 
-    html_title = "INC JIRA status summary"
-    if args.affected_version != "" and args.affected_version != "ALL":
-        html_title = f"INC v{args.affected_version} JIRA status summary"
+    other_bugs_issues = Issues(bugs_issues).get_issue_by_priority(["P2", "P3", "P4"])
+    other_bugs_issues_unresolved = Issues(other_bugs_issues).get_issue_by_status(UNRESOLVED_STATUSES)
+    other_bugs_issues_resolved = Issues(other_bugs_issues).get_issue_by_status(RESOLVED_STATUSES)
+    other_bugs_table = create_table(other_bugs_issues_unresolved)
+
+    html_title = f"{args.project} BUG status summary"
+    if args.version != "" and args.version != "ALL":
+        html_title = f"{args.project} v{args.version} BUG status summary"
 
 
     # Initialize sections
-    p1_features_section = (
-        h3("Features P1:"),
+    #p1_features_section = (
+    #    h3("Features P1:"),
+    #    h5("None")
+    #)
+    #other_features_section = (
+    #    h3("Other features:"),
+    #    h5("None")
+    #)
+    p1_bugs_section = (
+        h3("Bugs P1:"),
         h5("None")
     )
-    other_features_section = (
-        h3("Other features:"),
+    other_bugs_section = (
+        h3("Bugs P2,P3,P4:"),
         h5("None")
     )
-    bugs_section = (
-        h3("Bugs:"),
-        h5("None")
-    )
-    customer_section = (
-        h3("Customer:"),
-        h5("None")
-    )
+    #customer_section = (
+    #    h3("Customer:"),
+    #    h5("None")
+    #)
 
-    if len(p1_feature_issues) > 0:
-        p1_features_section = (
-            h3("Features P1:"),
-            h5(f"Progress: {round(100*len(p1_feature_issues_resolved)/len(p1_feature_issues))}% [ Done tasks {len(p1_feature_issues_resolved)}/{len(p1_feature_issues)} ]"),
-            p1_feature_issues_table,
-            br()
-        )
-
-    if len(other_feature_issues) > 0:
-        other_features_section = (
-            h3("Other features:"),
-            h5(f"Progress: {round(100*len(other_feature_issues_resolved)/len(other_feature_issues))}% [ Done tasks {len(other_feature_issues_resolved)}/{len(other_feature_issues)} ]"),
-            other_feature_issues_table,
-            br()
-        )
+    #if len(p1_feature_issues) > 0:
+    #    p1_features_section = (
+    #        h3("Features P1:"),
+    #        h5(f"Progress: {round(100*len(p1_feature_issues_resolved)/len(p1_feature_issues))}% [ Done tasks {len(p1_feature_issues_resolved)}/{len(p1_feature_issues)} ]"),
+    #        p1_feature_issues_table,
+    #        br()
+    #    )
+#
+    #if len(other_feature_issues) > 0:
+    #    other_features_section = (
+    #        h3("Other features:"),
+    #        h5(f"Progress: {round(100*len(other_feature_issues_resolved)/len(other_feature_issues))}% [ Done tasks {len(other_feature_issues_resolved)}/{len(other_feature_issues)} ]"),
+    #        other_feature_issues_table,
+    #        br()
+    #    )
 
     
-    if len(bugs_issues) > 0:
-        bugs_section = (
-            h3("Bugs:"),
-            h5(f"Progress: {round(100*len(bugs_issues_resolved)/len(bugs_issues))}% [ Done tasks {len(bugs_issues_resolved)}/{len(bugs_issues)} ]"),
-            bugs_table,
+    if len(p1_bugs_issues) > 0:
+        p1_bugs_section = (
+            h3("Bugs P1:"),
+            h5(f"Progress: {round(100*len(p1_bugs_issues_resolved)/len(bugs_issues))}% [ Done tasks {len(p1_bugs_issues_resolved)}/{len(bugs_issues)} ]"),
+            p1_bugs_table,
             br(),
         )
-    if len(customer_issues) > 0:
-        customer_section = (
-            h3("Customer:"),
-            h5(f"Progress: {round(100*len(customer_issues_resolved)/len(customer_issues))}% [ Done tasks {len(customer_issues_resolved)}/{len(customer_issues)} ]"),
-            customer_issues_table,
+    if len(other_bugs_issues) > 0:
+        other_bugs_section = (
+            h3("Bugs P2,P3,P4:"),
+            h5(f"Progress: {round(100*len(other_bugs_issues_resolved)/len(bugs_issues))}% [ Done tasks {len(other_bugs_issues_resolved)}/{len(bugs_issues)} ]"),
+            other_bugs_table,
+            br(),
         )
+    #if len(customer_issues) > 0:
+    #    customer_section = (
+    #        h3("Customer:"),
+    #        h5(f"Progress: {round(100*len(customer_issues_resolved)/len(customer_issues))}% [ Done tasks {len(customer_issues_resolved)}/{len(customer_issues)} ]"),
+    #        customer_issues_table,
+    #    )
 
     
     report = html(
@@ -252,10 +266,8 @@ def main(args: Namespace) -> None:
             h1(align="center")(html_title),
             h2(align="center")(datetime.datetime.now().strftime('%Y-%m-%d')),
             br(),
-            p1_features_section,
-            other_features_section,
-            bugs_section,
-            customer_section,
+            p1_bugs_section,
+            other_bugs_section,
         )
     )
 
@@ -263,7 +275,7 @@ def main(args: Namespace) -> None:
         f.write(report.render())
 
 def create_table(issues: Dict[str, JiraIssue]):
-    table_header = ["Jira ID", "Task", "Owner", "Priority ", "ETA", "Jira status", "PR", "Pending Days"]
+    table_header = ["Jira ID", "Task", "Owner", "Priority ", "ETA", "Jira status"]
     table_header_row = [th(item) for item in table_header]
     issue_entries = [issue_to_table_row(issue) for issue in issues]
     return table(
@@ -280,19 +292,13 @@ def create_table(issues: Dict[str, JiraIssue]):
 def issue_to_table_row(issue: JiraIssue):
     """Create pyhtml entry for issue."""
     eta_style = get_eta_style(issue)
-    pending_days_style = get_pending_days_style(issue)
-    pr_cell = issue.pr_link
-    if issue.pr_link not in ["", "N/A"]:
-        pr_cell = a(href=issue.pr_link, style="color: inherit;background-color: inherit;")(issue.pr)
     return tr(
         td(a(href=issue.jira_link, style="color: inherit;background-color: inherit;")(issue.jira_id)),
         td(a(href=issue.jira_link, style="color: inherit;background-color: inherit;")(issue.task)),
         td(issue.owner),
         td(issue.priority),
         td(style=eta_style)(issue.eta),
-        td(issue.jira_status),
-        td(pr_cell),
-        td(style=pending_days_style)(issue.pending_days)
+        td(issue.jira_status)
     )
 
 def get_eta_style(issue: JiraIssue) -> str:
@@ -301,7 +307,7 @@ def get_eta_style(issue: JiraIssue) -> str:
         return ""
     if 0 < issue.remaining_time <= 3:
         return "background-color: #fff2d0; font-weight: bold"
-    if issue.remaining_time < 0:
+    if issue.remaining_time <= 0:
         return "color: #931c1a; background-color: #ffe1dd; font-weight: bold"
     return ""
 
