@@ -302,7 +302,7 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 pip list
                 c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
                 if [ ${c_lpot} != 0 ]; then
-                    pip uninstall neural-compressor -y
+                    pip uninstall neural-compressor-full -y
                     pip list
                 fi
                 echo "Install neural_compressor binary..."
@@ -600,7 +600,7 @@ node(node_label){
                             pip list
                             c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'neural_compressor' not found
                             if [ ${c_lpot} != 0 ]; then
-                                pip uninstall neural-compressor -y
+                                pip uninstall neural-compressor-full -y
                                 pip list
                             fi
                             echo "Install neural_compressor binary..."

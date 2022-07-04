@@ -44,6 +44,12 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
+build_mode="basic,full"
+if ('build_mode' in params && params.build_mode != ''){
+    build_mode = params.build_mode
+}
+echo "build_mode is ${build_mode}"
+
 lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
@@ -120,87 +126,77 @@ def download() {
 }
 
 def do_binary_build() {
-    python_list = python_version.split(',')
-    python_version = "3.9"
+    def build_mode_list = build_mode.split(',')
     conda_env="python${python_version}"
-    retry(3){
-        withEnv(["pypi_version=${pypi_version}", "python_version=${python_version}", "conda_env=${conda_env}"]){
-            if (binary_class == 'wheel') {
-                sh '''#!/bin/bash
-                set -xe
-                echo "Create conda env..."
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                    conda remove --name ${conda_env} --all -y
-                fi
-                
-                conda_dir=$(dirname $(dirname $(which conda)))
-                if [ -d ${conda_dir}/envs/${conda_env} ]; then
-                    rm -rf ${conda_dir}/envs/${conda_env}
-                fi
-                
-                conda create python=${python_version} -y -n ${conda_env}
-    
-                source activate ${conda_env}
-    
-                # Upgrade pip
-                pip install -U pip
-    
-                echo "Build Pypi binary..."
-                cd lpot-models
-                if [ "${pypi_version}" != "default" ]; then
-                    cd neural_compressor
-                    sed -i '/__version__ =/d' version.py
-                    sed -i '$a\\__version__ = \\"'$pypi_version'\\"' version.py
-                    cat version.py
-                    cd -
-                fi
-                
-                python3 setup.py sdist bdist_wheel
-                cp dist/neural_compressor* ${WORKSPACE}/
-            '''
-            }
-            else if (binary_class == 'conda') {
-                sh '''#!/bin/bash
-                set -xe
-                echo "Create conda env..."
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                    conda remove --name ${conda_env} --all -y
-                fi
-                
-                conda_dir=$(dirname $(dirname $(which conda)))
-                if [ -d ${conda_dir}/envs/${conda_env} ]; then
-                  rm -rf ${conda_dir}/envs/${conda_env}
-                fi
-                
-                conda create python=${python_version} -y -n ${conda_env}
-                source activate ${conda_env}
-    
-                # Upgrade pip
-                pip install -U pip
-    
-                echo "Build Pypi binary..."
-                cd lpot-models
-                python3 setup.py sdist bdist_wheel
-                cp dist/neural_compressor* ${WORKSPACE}/
-                
-                echo "Build Conda binary..."
-                conda clean -i
-                nc_whl_path=${WORKSPACE}/lpot-models/dist/neural_compressor*.whl
-                export NC_WHL=${nc_whl_path}
-                conda install patchelf conda-build conda-verify -y
-                conda config --add channels conda-forge
-                conda config --add channels fastai
-                conda build meta.yaml
-                cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/linux-64/neural-compressor-*.tar.bz2 ${WORKSPACE}/
-            '''
+    build_mode_list.each{ each_build_mode ->
+        retry(3){
+            withEnv(["pypi_version=${pypi_version}", "python_version=${python_version}", "conda_env=${conda_env}", "build_mode=${each_build_mode}"]){
 
-            } else {
-                echo "DO NOT support ${binary_class} build!!!"
+                sh '''#!/bin/bash
+                        set -xe
+                        echo "Create conda env..."
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
+                            conda remove --name ${conda_env} --all -y
+                        fi
+                        
+                        conda_dir=$(dirname $(dirname $(which conda)))
+                        if [ -d ${conda_dir}/envs/${conda_env} ]; then
+                            rm -rf ${conda_dir}/envs/${conda_env}
+                        fi
+                        
+                        conda create python=${python_version} -y -n ${conda_env}
+            
+                        source activate ${conda_env}
+            
+                        # Upgrade pip
+                        pip install -U pip
+            
+                        echo "Build Pypi binary..."
+                        cd lpot-models
+                        git clean -df
+                        if [ "${pypi_version}" != "default" ]; then
+                            cd neural_compressor
+                            sed -i '/__version__ =/d' version.py
+                            sed -i '$a\\__version__ = \\"'$pypi_version'\\"' version.py
+                            cat version.py
+                            cd -
+                        fi
+                        
+                        if [ "$build_mode" == "full" ]; then
+                            python3 setup.py --full sdist bdist_wheel
+                        else
+                            python3 setup.py sdist bdist_wheel
+                        fi
+                        
+                        cp dist/neural_compressor* ${WORKSPACE}/
+                    '''
+                if (binary_class == 'conda') {
+                    sh '''#!/bin/bash
+                        source activate ${conda_env}
+            
+                        echo "Build Conda binary..."
+                        conda clean -i
+                        cd lpot-models
+                        nc_whl_path=${WORKSPACE}/lpot-models/dist/neural_compressor*.whl
+                        export NC_WHL=${nc_whl_path}
+                        conda install patchelf conda-build conda-verify -y
+                        conda config --add channels conda-forge
+                        conda config --add channels fastai
+                        if [ "$build_mode" == "full" ]; then
+                            conda build conda_meta/full/meta.yaml
+                        else
+                            conda build conda_meta/basic/meta.yaml
+                        fi
+                        
+                        cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/noarch/neural-compressor*.tar.bz2 ${WORKSPACE}/
+                    '''
+                }
             }
         }
     }
+
+
 }
 
 node(node_label){
@@ -219,7 +215,7 @@ node(node_label){
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'neural_compressor*.whl, neural-compressor-*.tar.bz2, neural_compressor-*.tar.gz', excludes: null
+            archiveArtifacts artifacts: 'neural_compressor*.whl, neural-compressor*.tar.bz2, neural_compressor*.tar.gz', excludes: null
             fingerprint: true
         }
     }

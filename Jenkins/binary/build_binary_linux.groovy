@@ -156,7 +156,7 @@ def do_binary_build() {
                     cat version.py
                     cd -
                 fi
-                python3 setup.py sdist bdist_wheel
+                python3 setup.py --full sdist bdist_wheel
                 cp dist/neural_compressor* ${WORKSPACE}/
             '''
         }
@@ -184,7 +184,7 @@ def do_binary_build() {
 
                 echo "Build Pypi binary..."
                 cd lpot-models
-                python3 setup.py sdist bdist_wheel
+                python3 setup.py --full sdist bdist_wheel
                 cp dist/neural_compressor* ${WORKSPACE}/
 
                 echo "Build Conda binary..."
@@ -194,8 +194,8 @@ def do_binary_build() {
                 conda install patchelf conda-build conda-verify -y
                 conda config --add channels conda-forge
                 conda config --add channels fastai
-                conda build meta.yaml
-                cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/linux-64/neural-compressor-*.tar.bz2 ${WORKSPACE}/
+                conda build conda_meta/full/meta.yaml
+                cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/noarch/neural-compressor-*.tar.bz2 ${WORKSPACE}/
             '''
         }
     } else {
@@ -221,7 +221,7 @@ node(node_label){
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'neural_compressor*.whl, neural-compressor-*.tar.bz2, neural_compressor-*.tar.gz', excludes: null
+            archiveArtifacts artifacts: 'neural_compressor*.whl, neural-compressor*.tar.bz2, neural_compressor*.tar.gz', excludes: null
             fingerprint: true
         }
     }

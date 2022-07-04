@@ -273,7 +273,7 @@ def binary_install() {
             pip list
             c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
             if [ ${c_lpot} != 0 ]; then
-                pip uninstall neural-compressor -y
+                pip uninstall neural-compressor-full -y
                 pip list
             fi
 

@@ -29,7 +29,7 @@ CALL python -V
 FOR /F %%i IN ('pip list ^| find /c "neural-compressor"') do SET c_inc=%%i
 
 if %c_inc% NEQ 0 (
-    CALL pip uninstall neural-compressor -y --user
+    CALL pip uninstall neural-compressor-full -y --user
     IF %ERRORLEVEL% NEQ 0 (
         echo "Could not remove Neural Compressor package."
         exit 1
