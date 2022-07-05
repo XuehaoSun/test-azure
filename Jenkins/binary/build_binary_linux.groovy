@@ -121,17 +121,6 @@ def download() {
                 ]
             }
         }
-
-        retry(3){
-            sh '''#!/bin/bash
-            if [ ! -d ${WORKSPACE}/lpot-models ]; then
-                echo "\\"lpot-models\\" not found. Exiting..."
-                exit 1
-            fi
-            cd ${WORKSPACE}/lpot-models
-            git submodule update --init --recursive
-            '''
-        }
     }
 }
 
@@ -153,14 +142,10 @@ def do_binary_build() {
                 fi
                 
                 conda create python=${python_version} -y -n ${conda_env}
-    
                 source activate ${conda_env}
     
                 # Upgrade pip
                 pip install -U pip
-                pip install cmake
-                cmake_path=$(which cmake)
-                ln -s ${cmake_path} ${cmake_path}3 || true
     
                 echo "Build Pypi binary..."
                 cd lpot-models
@@ -171,11 +156,8 @@ def do_binary_build() {
                     cat version.py
                     cd -
                 fi
-                python3 setup.py sdist bdist_wheel
-                pip install auditwheel
-                auditwheel repair dist/neural_compressor*.whl
-                cp wheelhouse/neural_compressor*.whl ${WORKSPACE}/
-                cp dist/neural_compressor*.tar.gz ${WORKSPACE}/
+                python3 setup.py --full sdist bdist_wheel
+                cp dist/neural_compressor* ${WORKSPACE}/
             '''
         }
     } else if (binary_class == 'conda') {
@@ -199,29 +181,21 @@ def do_binary_build() {
 
                 # Upgrade pip
                 pip install -U pip
-                pip install cmake
-                cmake_path=$(which cmake)
-                ln -s ${cmake_path} ${cmake_path}3 || true
 
                 echo "Build Pypi binary..."
                 cd lpot-models
-
-                python3 setup.py sdist bdist_wheel
-                pip install auditwheel
-                auditwheel repair dist/neural_compressor*.whl
-                cp wheelhouse/neural_compressor*.whl ${WORKSPACE}/
-                cp dist/neural_compressor*.tar.gz ${WORKSPACE}/
+                python3 setup.py --full sdist bdist_wheel
+                cp dist/neural_compressor* ${WORKSPACE}/
 
                 echo "Build Conda binary..."
                 conda clean -i
-                conda_py=$(echo ${python_version} | tr -d '.')
-                nc_whl_path=${WORKSPACE}/lpot-models/wheelhouse/neural_compressor*.whl
+                nc_whl_path=${WORKSPACE}/lpot-models/dist/neural_compressor*.whl
                 export NC_WHL=${nc_whl_path}
                 conda install patchelf conda-build conda-verify -y
                 conda config --add channels conda-forge
                 conda config --add channels fastai
-                conda build meta.yaml --python=${conda_py}
-                cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/linux-64/neural-compressor-*.tar.bz2 ${WORKSPACE}/
+                conda build conda_meta/full/meta.yaml
+                cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/noarch/neural-compressor-*.tar.bz2 ${WORKSPACE}/
             '''
         }
     } else {
@@ -247,7 +221,7 @@ node(node_label){
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'neural_compressor*.whl, neural-compressor-*.tar.bz2, neural_compressor-*.tar.gz', excludes: null
+            archiveArtifacts artifacts: 'neural_compressor*.whl, neural-compressor*.tar.bz2, neural_compressor*.tar.gz', excludes: null
             fingerprint: true
         }
     }

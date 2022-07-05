@@ -128,17 +128,6 @@ def cloneINCRepository() {
                         ]
                     }
                 }
-
-                retry(3){
-                    bat """
-                        if not exist %WORKSPACE%\\lpot-models (
-                            echo "lpot-models not found. Exiting..."
-                            exit 1
-                        )
-                        cd %WORKSPACE%\\lpot-models
-                        git submodule update --init --recursive
-                    """
-                }
             }
         }
     } catch(e) {
@@ -179,7 +168,7 @@ def do_binary_build() {
 
                     echo "Build wheel..."
                     cd lpot-models
-                    python setup.py sdist bdist_wheel
+                    python setup.py --full sdist bdist_wheel
                     copy dist\\neural_compressor*.whl %WORKSPACE%\\
                     copy dist\\neural_compressor*.tar.gz %WORKSPACE%\\
                 """
@@ -198,7 +187,7 @@ def do_binary_build() {
 
                 echo "Build wheel..."
                 cd lpot-models
-                python setup.py sdist bdist_wheel
+                python setup.py --full sdist bdist_wheel
                 copy dist\\neural_compressor*.whl %WORKSPACE%\\
                 
                 echo "Build Conda binary..."
@@ -214,7 +203,7 @@ def do_binary_build() {
                 CALL conda config --add channels esri
                 CALL conda install conda-build conda-verify -y
 
-                CALL conda build meta.yaml --no-test
+                CALL conda build conda_meta/full/meta.yaml --no-test
 
                 FOR /F %%i IN ('where conda') do SET CONDA_PATH="%%i"
                 FOR %%F in ("%CONDA_PATH:"=%") do SET CONDA_DIRNAME=%%~dpF
@@ -226,9 +215,9 @@ def do_binary_build() {
                 echo "Conda dir: %CONDA_DIRNAME%"
 
                 dir %CONDA_DIRNAME%\\envs\\%conda_env%\\conda-bld\\
-                dir %CONDA_DIRNAME%\\envs\\%conda_env%\\conda-bld\\win-64
-                for /F %%i IN ('dir /b %CONDA_DIRNAME%\\envs\\%conda_env%\\conda-bld\\win-64\\neural*.tar.bz2') DO SET "NC_PACKAGE_FILENAME=%%i"
-                copy %CONDA_DIRNAME%\\envs\\%conda_env%\\conda-bld\\win-64\\%NC_PACKAGE_FILENAME% %WORKSPACE%\\
+                dir %CONDA_DIRNAME%\\envs\\%conda_env%\\conda-bld\\noarch
+                for /F %%i IN ('dir /b %CONDA_DIRNAME%\\envs\\%conda_env%\\conda-bld\\noarch\\neural*.tar.bz2') DO SET "NC_PACKAGE_FILENAME=%%i"
+                copy %CONDA_DIRNAME%\\envs\\%conda_env%\\conda-bld\\noarch\\%NC_PACKAGE_FILENAME% %WORKSPACE%\\
             """
         }
     } else {

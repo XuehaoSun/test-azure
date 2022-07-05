@@ -152,11 +152,10 @@ function set_environment {
             sed -i "s+LPOT_VERSION+${lpot_version}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
             sed -i "s+LPOT_BUILD+${lpot_build}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
             cp ${lpot_bz2_path} ${WORKSPACE}/lpot-validation/config/conda/noarch/
-            pip uninstall neural-compressor -y || true
+            pip uninstall neural-compressor-full -y || true
             conda install neural-compressor-conda -c file:/${WORKSPACE}/lpot-validation/config/conda -c conda-forge -c intel -y && break
         elif [ "${conda_env_mode}" == "source" ];then
             cd ${WORKSPACE}/lpot-models
-            git submodule update --init --recursive
             pip install -r requirements.txt
             python setup.py clean || true
             python setup.py install && break

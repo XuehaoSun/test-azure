@@ -133,6 +133,22 @@ if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
 }
 println("onnxruntime_version: " + onnxruntime_version)
 
+tf_binary_build_job=""
+if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
+    tf_binary_build_job = params.tf_binary_build_job
+}
+if (python_version == "3.7"){
+    tf_binary_build_job = 100
+}else if (python_version == "3.8"){
+    tf_binary_build_job = 99
+}else if (python_version == "3.9"){
+    tf_binary_build_job = 101
+}else if (python_version == "3.10"){
+    tf_binary_build_job = 102
+}
+
+echo "tf_binary_build_job is ${tf_binary_build_job}"
+
 lines_coverage_threshold = 80
 branches_coverage_threshold = 75
 
@@ -286,7 +302,7 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 pip list
                 c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'lpot' not found
                 if [ ${c_lpot} != 0 ]; then
-                    pip uninstall neural-compressor -y
+                    pip uninstall neural-compressor-full -y
                     pip list
                 fi
                 echo "Install neural_compressor binary..."
@@ -297,14 +313,10 @@ def run_coverage_test(is_base=false, MR_branch=""){
                         pip install neural_compressor*.whl && break
                     else
                         cd ${WORKSPACE}/lpot-models-base
-                        git submodule update --init --recursive
                         pip install pandas==1.3.5
                         pip install Cython<=0.29.28
                         pip install ipython==7.32.0
                         pip install threadpoolctl
-                        pip install cmake
-                        cmake_path=$(which cmake)
-                        ln -s ${cmake_path} ${cmake_path}3 || true
                         pip install -r requirements.txt
                         python setup.py install
                     fi
@@ -369,8 +381,23 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 export GLOG_minloglevel=2
                 lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                 find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
+                if [ -d "tfnewapi" ]; then 
+                    grep "tfnewapi/" run.sh > run_tfnewapi.sh
+                    sed -i '/tfnewapi/d' run.sh
+                    echo "cat run_tfnewapi.sh..."
+                    cat run_tfnewapi.sh 
+                fi
+                echo "cat run.sh..."
+                cat run.sh 
                 coverage erase
                 bash run.sh 2>&1 | tee ${ut_log_name}
+                if [ -d "tfnewapi" ]; then 
+                    echo "Run special UT with TFnewAPI..."
+                    pip uninstall intel-tensorflow -y
+                    pip install ${WORKSPACE}/tensorflow*.whl
+                    echo "-------------"
+                    bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
+                fi
                 coverage report -m --rcfile=${COVERAGE_RCFILE} | tee -a ${ut_log_name}
                 coverage html -d ${WORKSPACE}/${coverage_path}/htmlcov --rcfile=${COVERAGE_RCFILE}
                 coverage xml -o ${WORKSPACE}/${coverage_path}/coverage.xml --rcfile=${COVERAGE_RCFILE}
@@ -418,6 +445,23 @@ node(node_label){
                     echo "failed_build_url: ${failed_build_url}"
                     error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
                 }
+                if (tf_binary_build_job == ""){
+                    List TFBinaryBuildParams = [
+                            string(name: "python_version", value: "${python_version}"),
+                            string(name: "val_branch", value: "${val_branch}"),
+                    ]
+                    downstreamJob = build job: "TF-spr-base-wheel-build", propagate: false, parameters: TFBinaryBuildParams
+
+                    tf_binary_build_job = downstreamJob.getNumber()
+                    echo "tf_binary_build_job: ${tf_binary_build_job}"
+                    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+                    if (downstreamJob.getResult() != "SUCCESS") {
+                        currentBuild.result = "FAILURE"
+                        failed_build_url = downstreamJob.absoluteUrl
+                        echo "failed_build_url: ${failed_build_url}"
+                        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+                    }
+                }
             }
         }
 
@@ -427,6 +471,13 @@ node(node_label){
                         projectName: 'lpot-release-build',
                         selector: specific("${binary_build_job}"),
                         filter: "linux_binaries/wheel/${python_version}/neural_compressor*.whl, linux_binaries/wheel/${python_version}/neural_compressor*.tar.gz, linux_binaries/wheel/${python_version}/neural-compressor*.tar.bz2",
+                        fingerprintArtifacts: true,
+                        flatten: true,
+                        target: "${WORKSPACE}")
+                copyArtifacts(
+                        projectName: 'TF-spr-base-wheel-build',
+                        selector: specific("${tf_binary_build_job}"),
+                        filter: 'tensorflow*.whl',
                         fingerprintArtifacts: true,
                         flatten: true,
                         target: "${WORKSPACE}")
@@ -549,7 +600,7 @@ node(node_label){
                             pip list
                             c_lpot=$(pip list | grep -c 'neural-compressor') || true  # Prevent from exiting when 'neural_compressor' not found
                             if [ ${c_lpot} != 0 ]; then
-                                pip uninstall neural-compressor -y
+                                pip uninstall neural-compressor-full -y
                                 pip list
                             fi
                             echo "Install neural_compressor binary..."
@@ -602,10 +653,26 @@ node(node_label){
                             export GLOG_minloglevel=2
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                             ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
+                            
+                            if [ -d "tfnewapi" ]; then
+                                grep "tfnewapi/" run.sh > run_tfnewapi.sh
+                                sed -i '/tfnewapi/d' run.sh
+                                echo "cat run_tfnewapi.sh..."
+                                cat run_tfnewapi.sh 
+                            fi
                             echo "cat run.sh..."
                             cat run.sh 
                             echo "-------------"
                             bash run.sh 2>&1 | tee ${ut_log_name}
+                
+                            if [ -d "tfnewapi" ]; then
+                                echo "Run special UT with TFnewAPI..."
+                                pip uninstall intel-tensorflow -y
+                                pip install ${WORKSPACE}/tensorflow*.whl
+                                echo "-------------"
+                                bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
+                            fi
+
                             if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                                 exit 1
                             fi

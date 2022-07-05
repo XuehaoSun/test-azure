@@ -1,45 +1,26 @@
+from codecs import utf_16_be_decode
 import re
+import os
 import datetime
 import json
 import requests
 import sys
 import argparse
-from utils import parse_priorities_string
 
 
-def main(version: str, priority: str):
+def main(project: str, version: str):
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
+    project = "INC" if not project else project
+    version = "1.12.1" if not version else version
     filename = "log"
     issue_list = []
     issue_dict = {}
-
     jira_api_url = "https://jira.devtools.intel.com/rest/api/2/search"
-    jql = f"project = ILITV AND issuetype in (Feature, Bug, Sub-Feature) AND priority in ({parse_priorities_string(priority)})"
-    if version != "ALL":
-        jql += f" AND affectedVersion = {version}"
-    jira_request_data = {
-        "jql": jql,
-        "maxResults": 500,
-        "fields": [
-            "summary",
-            "status",
-            "assignee",
-            "priority",
-            "labels",
-            "duedate",
-            "versions",
-            "issuetype"
-        ]
-    }
-    jira_request_headers = {
-        "Authorization": "Basic c3V5dWVjaGU6QG5seHgxODgxOA==",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    req = requests.post(url=jira_api_url, json=jira_request_data, headers=jira_request_headers, verify=False)
-    jira_data = req.json()
-
+    jql="project%20%3D%20ILITV%20AND%20issuetype%20%3DBug%20AND%20Sprint%20%3D%20%27{0}%20v{1}%27".format(project, version)
+    cmd = "curl -o out.json -k -vv -H \"Authorization: Bearer NDYwOTMxMzA3Nzk2OoFBUadiAkGCyKaiq3QBVq28F+Iw\" -H \"content-type: application/json\" -X GET {0}?jql={1}".format(jira_api_url, jql)
+    os.system(cmd)
+    with open("./out.json", "r") as f:
+        jira_data = json.loads(f.read())
     for issue in jira_data["issues"]:
         issue_dict = {}
         issue_dict['Jira ID'] = issue['key']
@@ -53,41 +34,16 @@ def main(version: str, priority: str):
         issue_dict['Left Days'] = "{:.2f}".format(hourstimediff("{} 0:0:0".format(issue_dict['ETA']), now)) if issue_dict['ETA'] != "N/A" else "N/A"
         issue_dict['Jira Status'] = issue['fields']['status']['name']
         issue_dict['Affected Version'] = issue['fields']['versions'][0]['name'] if issue['fields']['versions'] else "N/A"
-        match = 0
-        for label in issue['fields']['labels']:
-            if "PR-" in label:
-                match = 1
-                issue_dict['PR'] = label
-                issue_dict['PR Link'] = label.replace("PR-", "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot/pull/")
-                # begin to get github pr info
-                url = label.replace("PR-", 'https://api.github.com/repos/intel-innersource/frameworks.ai.lpot.intel-lpot/pulls/')
-                headers = {'Authorization': 'token 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',
-                        'Accept': 'application/vnd.github.v3+json'}
-                r = requests.get(url, headers=headers)
-                pr = r.json()
-                if pr["state"] == "open":
-                    issue_dict['Pending Days'] = "{:.2f}".format(
-                        hourstimediff(now, pr["created_at"].replace("T", " ").replace("Z", "")))
-                    issue_dict['Pre-ci'] = "N/A"
-                else:
-                    issue_dict['Pending Days'] = "N/A"
-                    issue_dict['Pre-ci'] = "N/A"
-                break
-        if match == 0:
-            issue_dict['PR'] = "N/A"
-            issue_dict['PR Link'] = "N/A"
-            issue_dict['Pending Days'] = "N/A"
-            issue_dict['Pre-ci'] = "N/A"
         issue_list.append(issue_dict)
 
     # coding=UTF-8
     today = datetime.datetime.now().strftime('%Y-%m-%d')
     filename = f"LPOT_jira_status_of_{today}.csv"
-    header = ["Jira ID", "Jira Link", "Issue Type", "Task", "Owner", "Priority", "Labels", "ETA", "Left Days", "Jira Status", "Affected Version", "PR", "PR Link", "Pending Days", "Pre-ci"]
+    header = ["Jira ID", "Jira Link", "Issue Type", "Task", "Owner", "Priority", "Labels", "ETA", "Left Days", "Jira Status", "Affected Version"]
     header_line = ",".join(header)
     csv_content = [header_line]
     for item in issue_list:
-        line = ",".join([item['Jira ID'], item['Jira Link'], item['Issue Type'], item['Task'], item['Owner'], item['Priority'], item['Labels'], item['ETA'], item['Left Days'], item['Jira Status'], item['Affected Version'], item['PR'], item['PR Link'], item['Pending Days'], item['Pre-ci']])
+        line = ",".join([item['Jira ID'], item['Jira Link'], item['Issue Type'], item['Task'], item['Owner'], item['Priority'], item['Labels'], item['ETA'], item['Left Days'], item['Jira Status'], item['Affected Version']])
         csv_content.append(line)
 
     with open(filename, 'w') as file:
@@ -107,14 +63,14 @@ def hourstimediff(new, old):
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--priority", type=str, default="P1")
-    parser.add_argument("--affected_version", type=str, default="ALL")
+    parser.add_argument("--project", type=str, default="INC")
+    parser.add_argument("--version", type=str, default="ALL")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
     main(
-        version=args.affected_version,
-        priority=args.priority,
+        project=args.project,
+        version=args.version,
     )
