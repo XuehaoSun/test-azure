@@ -2149,3 +2149,7 @@ MixedPrecision
 DUnetCNN
 calibrationset
 ndhwc
+ArcFace
+arcface
+arcfaceresnet
+nfolds
