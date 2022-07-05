@@ -56,6 +56,12 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
+build_mode="full"
+if ('build_mode' in params && params.build_mode != ''){
+    build_mode = params.build_mode
+}
+echo "build_mode is ${build_mode}"
+
 def cleanup() {
 
     try {
@@ -127,7 +133,7 @@ def download() {
 def do_binary_build() {
     println("full conda_env_name = " + conda_env)
     if (binary_class == 'wheel') {
-        withEnv(["pypi_version=${pypi_version}", "conda_env=${conda_env}"]) {
+        withEnv(["pypi_version=${pypi_version}", "conda_env=${conda_env}", "build_mode=${build_mode}"]) {
             sh '''#!/bin/bash
                 set -xe
                 echo "Create conda env..."
@@ -156,12 +162,16 @@ def do_binary_build() {
                     cat version.py
                     cd -
                 fi
-                python3 setup.py --full sdist bdist_wheel
+                if [ "$build_mode" == "full" ]; then
+                    python3 setup.py --full sdist bdist_wheel
+                else
+                    python3 setup.py sdist bdist_wheel
+                fi
                 cp dist/neural_compressor* ${WORKSPACE}/
             '''
         }
     } else if (binary_class == 'conda') {
-        withEnv(["conda_env=${conda_env}"]) {
+        withEnv(["conda_env=${conda_env}", "build_mode=${build_mode}"]) {
             sh '''#!/bin/bash
                 set -xe
                 echo "Create conda env..."
@@ -194,7 +204,11 @@ def do_binary_build() {
                 conda install patchelf conda-build conda-verify -y
                 conda config --add channels conda-forge
                 conda config --add channels fastai
-                conda build conda_meta/full/meta.yaml
+                if [ "$build_mode" == "full" ]; then
+                    conda build conda_meta/full/meta.yaml
+                else
+                    conda build conda_meta/basic/meta.yaml
+                fi
                 cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/noarch/neural-compressor-*.tar.bz2 ${WORKSPACE}/
             '''
         }
