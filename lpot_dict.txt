@@ -2153,3 +2153,7 @@ ArcFace
 arcface
 arcfaceresnet
 nfolds
+RFB
+WIDERFACE
+shuoyang
+ultraface
