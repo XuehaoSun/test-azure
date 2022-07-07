@@ -92,7 +92,6 @@ def main():
             yaml_path=yaml_path,
             log_file=log_file,
             input_model=input_model,
-
         )
     else:
         run_benchmark(
@@ -106,22 +105,31 @@ def main():
 
 def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_model: str):
     """Run accuracy benchmark."""
-    # Update yaml config
-    lpot_config = Config()
-    lpot_config.load(yaml_path)
+    ### update config with pyyaml
+    import yaml
 
-    try:
-        if lpot_config.evaluation.accuracy.dataloader:
-            lpot_config.evaluation.accuracy.dataloader.batch_size = args.batch_size
-        lpot_config.evaluation.accuracy.configs = None
-        # walk around for anno_path yaml format issue.
-        if ( lpot_config.evaluation.accuracy.metric.name == 'COCOmAP' ):
-            if (lpot_config.evaluation.accuracy.metric.param == {}):
-                lpot_config.evaluation.accuracy.metric = {'COCOmAP': {}}
-    except AttributeError:
-        print("[ WARNING ] Could not update accuracy config.")
+    # load and update config
+    with open(yaml_path, 'r') as f:
+        content = f.read()
+        lpot_config = yaml.safe_load(content)
+        try:
+            if lpot_config['evaluation']['accuracy'].get('dataloader', None):
+                lpot_config['evaluation']['accuracy']['dataloader']['batch_size'] = args.batch_size
+            if lpot_config['evaluation']['accuracy'].get('configs', None):
+                lpot_config['evaluation']['accuracy'].pop('configs')
+        except AttributeError:
+            print("[ WARNING ] Could not update accuracy config.")
 
-    lpot_config.dump(yaml_path)
+    # dump config
+    updated_yaml = yaml.dump(
+        data=lpot_config,
+        indent=4,
+        default_style=None,
+        sort_keys=False
+    )
+    with open(yaml_path, "w") as yaml_config:
+        yaml_config.write(updated_yaml)
+
     print("\nPrint updated yaml... ")
     with open(yaml_path, "r") as yaml_file:
         yaml_context = yaml_file.read()
@@ -129,7 +137,6 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
     with open(yaml_record_file, 'a') as f:
         f.write("\n\nAccuracy yaml... \n")
         f.write(yaml_context)
-
 
     # Set execution command
     parameters.append("--mode=accuracy")
@@ -191,7 +198,6 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
 
     cmd = get_executable("benchmark")
     cmd.extend(parameters)
-    ###
 
     execute_command(args=cmd, cwd=args.model_src_dir, shell=True, file=log_file)
 
@@ -218,31 +224,41 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         "LOGLEVEL": "DEBUG",
     }
 
-    # Update yaml config
-    lpot_config = Config()
-    lpot_config.load(yaml_path)
+    ### update config with pyyaml
+    import yaml
+    
+    # load and update config
+    with open(yaml_path, 'r') as f:
+        content = f.read()
+        lpot_config = yaml.safe_load(content)
+        try:
+            if lpot_config['evaluation']['performance'].get('dataloader', None):
+                lpot_config['evaluation']['performance']['dataloader']['batch_size'] = batch_size
+            lpot_config['evaluation']['performance']['iteration'] = iters
 
-    try:
-        if lpot_config.evaluation.performance.dataloader:
-            lpot_config.evaluation.performance.dataloader.batch_size = batch_size
-        lpot_config.evaluation.performance.iteration = iters
+            lpot_config['evaluation']['performance']['configs']['cores_per_instance'] = int(ncores_per_instance)
+            lpot_config['evaluation']['performance']['configs']['num_of_instance'] = int(num_benchmark_cores // ncores_per_instance)
+            if lpot_config['evaluation']['performance']['configs'].get('intra_num_of_threads', None):
+                lpot_config['evaluation']['performance']['configs'].pop('intra_num_of_threads')
+            if lpot_config['evaluation']['performance']['configs'].get('inter_num_of_threads', None):
+                lpot_config['evaluation']['performance']['configs'].pop('inter_num_of_threads')
+            if lpot_config['evaluation']['performance']['configs'].get('kmp_blocktime', None):
+                lpot_config['evaluation']['performance']['configs'].pop('kmp_blocktime')
 
-        lpot_config.evaluation.performance.configs.cores_per_instance = int(ncores_per_instance)
-        lpot_config.evaluation.performance.configs.num_of_instance = int(num_benchmark_cores // ncores_per_instance)
-        lpot_config.evaluation.performance.configs.intra_num_of_threads = None
-        lpot_config.evaluation.performance.configs.inter_num_of_threads = None
-        lpot_config.evaluation.performance.configs.kmp_blocktime = None
-        
-        print(lpot_config.evaluation.performance.configs.serialize())
+            print(str(lpot_config['evaluation']['performance']['configs']))
 
-        # walk around for anno_path yaml format issue.
-        if ( lpot_config.evaluation.accuracy.metric.name == 'COCOmAP' ):
-            if (lpot_config.evaluation.accuracy.metric.param == {}):
-                lpot_config.evaluation.accuracy.metric = {'COCOmAP': {}}
-    except:
-        print("[ WARNING ] Could not update performance config.")
+        except:
+            print("[ WARNING ] Could not update performance config.")
+    # dump config
+    updated_yaml = yaml.dump(
+        data=lpot_config,
+        indent=4,
+        default_style=None,
+        sort_keys=False
+    )
+    with open(yaml_path, "w") as yaml_config:
+        yaml_config.write(updated_yaml)
 
-    lpot_config.dump(yaml_path)
     print("\nPrint updated yaml... ")
     with open(yaml_path, "r") as yaml_file:
         yaml_context = yaml_file.read()
