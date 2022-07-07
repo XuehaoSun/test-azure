@@ -57,6 +57,7 @@ class Result(JsonSerializer):
         super().__init__()
         self.platform = None
         self.os = None
+        self.workflow = None
         self.python = None
         self.framework = None
         self.version = None
@@ -100,6 +101,43 @@ class Result(JsonSerializer):
                 data.append(line)
             return data
 
+    def to_new_format(self, mode) -> str:
+        if mode == "tuning":
+            return ";".join([xstr(item) for item in [
+                self.os,
+                self.platform,
+                self.workflow,
+                self.framework,
+                self.version,
+                self.model,
+                self.tuning.time,
+                self.tuning.trials,
+                self.tuning.log,
+                self.tuning.fp32_model_size,
+                self.tuning.int8_model_size,
+                self.tuning.mem_percentage
+            ]])
+        if mode == "performance":
+            data = []
+            for benchmark in self.benchmarks:
+                line = ";".join([xstr(item) for item in [
+                    self.os,
+                    self.platform,
+                    self.workflow,
+                    self.framework,
+                    self.version,
+                    benchmark.precision.upper(),
+                    self.model,
+                    "Inference",
+                    benchmark.simple_mode,
+                    benchmark.batch_size,
+                    benchmark.value,
+                    benchmark.log
+                ]])
+                data.append(line)
+            return data
+
+
     def save_summary(self, output_dir):
         os.makedirs(output_dir, exist_ok=True)
         
@@ -108,13 +146,19 @@ class Result(JsonSerializer):
             json.dump(self.serialize(), f, indent=4)
 
         summary_file = os.path.join(output_dir, "summary.log")
-        summary_data = self.to_old_format("performance")
+        if not self.workflow:
+            summary_data = self.to_old_format("performance")
+        else:
+            summary_data = self.to_new_format("performance")
         with open(summary_file, "w") as f:
             f.writelines([line + '\n' for line in summary_data])
 
         tuning_info_file = os.path.join(output_dir, "tuning_info.log")
         with open(tuning_info_file, "w") as f:
-            f.write(self.to_old_format("tuning") + "\n")
+            if not self.workflow:
+                f.write(self.to_old_format("tuning") + "\n")
+            else:
+                f.write(self.to_new_format("tuning") + "\n")     
 
 def xstr(s):
     if s is None:

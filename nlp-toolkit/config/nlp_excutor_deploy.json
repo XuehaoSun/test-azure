@@ -1,0 +1,420 @@
+{
+  "bert_mini_mrpc": {
+    "working_dir": "deployment/neural_engine/mrpc/bert_mini",
+    "data_dir": "/tf_dataset2/datasets/mrpc_data",
+    "hf_model_name": "M-FAC/bert-mini-finetuned-mrpc",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_base_mrpc",
+         "task_name": "mrpc",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/bert_mini_mrpc",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"       
+      }
+    }
+  },
+  "bert_mini_sst2": {
+    "working_dir": "deployment/neural_engine/sst2/bert_mini",
+    "data_dir": "/tf_dataset2/datasets/sst2_data",
+    "hf_model_name": "moshew/bert-mini-sst2-distilled",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_mini_sst2",
+         "task_name": "sst2",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/bert_mini_sst2",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "bert_base_mrpc": {
+    "working_dir": "deployment/neural_engine/mrpc/bert_base",
+    "data_dir": "/tf_dataset2/datasets/mrpc_data",
+    "hf_model_name": "textattack/bert-base-uncased-MRPC",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_base_mrpc",
+         "task_name": "sst2",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/bert_base_mrpc",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 1,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"           
+      }
+    }
+  },
+  "distilbert_base_uncased_emotion": {
+    "working_dir": "deployment/neural_engine/emotion/distilbert_base_uncased",
+    "tokenizer_dir": "/tf_dataset2/models/deep-engine/bert_mini_sst2/test_tokenizer",
+    "data_dir": "/tf_dataset2/datasets/emotion_data",
+    "hf_model_name": "bhadresh-savani/distilbert-base-uncased-emotion",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/distilbert_base_uncased_emotion",
+         "task_name": "emotion",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/distilbert_base_uncased_emotion",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 6,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"           
+      }
+    }
+  },
+  "bert_large_squad": {
+    "working_dir": "deployment/neural_engine/squad/bert_large",
+    "data_dir": "/tf_dataset2/models/deep-engine/bert_large",
+    "hf_model_name": "bhadresh-savani/distilbert-base-uncased-emotion",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_large_squad",
+         "task_name": "squad",
+         "dataset_name": "squad",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/bert_large_squad",
+         "precision": "int8/fp32",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 1,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "distilbert_base_uncased_sst2": {
+    "working_dir": "deployment/neural_engine/sst2/distilbert_base_uncased",
+    "data_dir": "/tf_dataset2/datasets/sst2_data",
+    "hf_model_name": "distilbert-base-uncased-finetuned-sst-2-english",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/distilbert_base_uncased_sst2",
+         "task_name": "sst2",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/distilbert_base_uncased_sst2",
+         "precision": "int8/fp32",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "distilbert_base_uncased_mrpc": {
+    "working_dir": "deployment/neural_engine/mrpc/distilbert_base_uncased",
+    "data_dir": "/tf_dataset2/datasets/mrpc_data",
+    "hf_model_name": "textattack/distilbert-base-uncased-MRPC",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/distilbert_base_uncased_mrpc",
+         "task_name": "mrpc",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/distilbert_base_uncased_mrpc",
+         "precision": "int8/fp32",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "bert_base_sparse_mrpc": {
+    "working_dir": "deployment/neural_engine/mrpc/bert_base_sparse",
+    "data_dir": "/tf_dataset2/datasets/mrpc_data",
+    "hf_model_name": "textattack/bert-base-uncased-MRPC",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_base_sparse_mrpc",
+         "task_name": "mrpc",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/bert_base_sparse_mrpc",
+         "precision": "int8/fp32",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "roberta_large_cola": {
+    "working_dir": "deployment/neural_engine/cola/roberta_large",
+    "data_dir": "/tf_dataset2/datasets/cola_data",
+    "hf_model_name": "cointegrated/roberta-large-cola-krishna2020",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/roberta_large_cola",
+         "task_name": "cola",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/roberta_large_cola",
+         "precision": "int8/fp32",
+         "output_dir": "model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 7,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "minilm_l6_h384_uncased_sst2": {
+    "working_dir": "deployment/neural_engine/sst2/minilm_l6_h384_uncased",
+    "data_dir": "/tf_dataset2/datasets/sst2_data",
+    "hf_model_name": "philschmid/MiniLM-L6-H384-uncased-sst2",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/minilm_l6_h384_uncased_sst2",
+         "task_name": "sst2",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/minilm_l6_h384_uncased_sst2",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "distilroberta_base_wnli": {
+    "working_dir": "deployment/neural_engine/wnli/distilroberta_base",
+    "data_dir": "/tf_dataset2/datasets/wnli_data",
+    "hf_model_name": "roberta-base",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/distilroberta_base_wnli",
+         "task_name": "wnli",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/distilroberta_base_wnli",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 71,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "paraphrase_xlm_r_multilingual_v1_stsb": {
+    "working_dir": "deployment/neural_engine/stsb/paraphrase_xlm_r_multilingual_v1",
+    "data_dir": "/tf_dataset2/datasets/stsb_data",
+    "hf_model_name": "sentence-transformers/paraphrase-xlm-r-multilingual-v1",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/paraphrase_xlm_r_multilingual_v1_stsb",
+         "task_name": "stsb",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/paraphrase_xlm_r_multilingual_v1_stsb",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 4,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "bert_base_nli_mean_tokens_stsb": {
+    "working_dir": "deployment/neural_engine/stsb/bert_base_nli_mean_tokens",
+    "data_dir": "/tf_dataset2/datasets/stsb_data",
+    "hf_model_name": "sentence-transformers/bert-base-nli-mean-tokens",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_base_nli_mean_tokens_stsb",
+         "task_name": "stsb",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/bert_base_nli_mean_tokens_stsb",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 4,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "bert_base_cased_mrpc": {
+    "working_dir": "deployment/neural_engine/mrpc/bert_base_cased",
+    "data_dir": "/tf_dataset2/models/deep-engine/bert_base_cased_mrpc/mrpc_data",
+    "hf_model_name": "bert-base-cased-finetuned-mrpc",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_base_cased_mrpc",
+         "task_name": "mrpc",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/bert_base_cased_mrpc",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 1,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "roberta_base_mrpc": {
+    "working_dir": "deployment/neural_engine/mrpc/roberta_base",
+    "data_dir": "/tf_dataset2/models/deep-engine/roberta_base_mrpc/data",
+    "hf_model_name": "textattack/roberta-base-MRPC",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/roberta_base_mrpc",
+         "task_name": "mrpc",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/roberta_base_mrpc",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  },
+  "finbert_financial_phrasebank": {
+    "working_dir": "deployment/neural_engine/financial_phrasebank/finbert",
+    "data_dir": "/tf_dataset2/datasets/financial_phrasebank_data",
+    "hf_model_name": "ProsusAI/finbert",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/finbert_financial_phrasebank",
+         "task_name": "sentences_50agree",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/finbert_financial_phrasebank",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    }
+  }
+}

@@ -10,6 +10,7 @@ import json
 
 parser = argparse.ArgumentParser(allow_abbrev = False)
 parser.add_argument("--framework", type=str, required=True)
+parser.add_argument("--workflow", type=str, default="")
 parser.add_argument("--python_version", type=str, default="")
 parser.add_argument("--model", type=str, required=True)
 parser.add_argument("--tune_acc", action="store_true")
@@ -30,6 +31,7 @@ if cpu_name in nightly_cpu_list:
 
 result = Result()
 result.framework = args.framework
+result.workflow = args.workflow
 result.version = "N/A"
 result.python = args.python_version
 result.model = args.model
@@ -172,7 +174,7 @@ def read_perf_logs(precision, mode):
         latency = [item.get("latency") for item in partials]
         measurement.value = round(sum(latency)/len(latency), 4)
     if mode == "throughput":
-        throughput = [item.get("throughput") for item in partials if "throughput" in item]
+        throughput = [item.get("throughput", 0) for item in partials if "throughput" in item]
         if len(throughput) == len(partials):
             measurement.value = round(sum(throughput), 4)
     if mode == "accuracy" and "accuracy" in partials[0].keys():

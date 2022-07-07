@@ -3,18 +3,6 @@
 set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
-if [ $# != "5" ] ; then
-    echo 'ERROR:'
-    echo "Expected 5 parameters got $#"
-    printf 'Please use following parameters:
-    --framework=<framework name>
-    --model=<model name>
-    --conda_env_name=<conda environment name>
-    --conda_env_mode=<conda environment mode>
-    --log_level=<INC LOGLEVEL>
-    '
-    exit 1
-fi
 
 for i in "$@"
 do
@@ -29,11 +17,12 @@ do
             conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
         --log_level=*)
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
+        --install_nlp_toolkit=*)
+            install_nlp_toolkit=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
 done
-
 
 # ------------------------------------- Environment -------------------------------------
 
@@ -73,7 +62,6 @@ function set_MXNet_env {
 
 function set_PT_env {
     export OMP_NUM_THREADS=28
-
     if [[ "${model}" = "dlrm"* ]]; then
       export PATH=${HOME}/anaconda3/bin/:$PATH
       export https_proxy=http://proxy-prc.intel.com:913
@@ -106,12 +94,6 @@ function set_ENGINE_env {
     source activate ${conda_env_name}
 }
 
-function set_ENGINE_env {
-    export PATH=${HOME}/miniconda3/bin/:$PATH
-    echo "Activating ${conda_env_name} env"
-    source activate ${conda_env_name}
-}
-
 function set_environment {
     case "${framework}" in
         tensorflow)
@@ -124,19 +106,27 @@ function set_environment {
             set_ONNXRT_env;;
         baremetal)
             set_ENGINE_env;;
+        nlp_excutor)
+            set_ENGINE_env;;
         *)
             echo "Framework ${framework} not recognized."; exit 1;;
     esac
 
-    if [[ $(pip list | grep 'neural-compressor')  ]]; then
-        echo "found nueral-compressor installed by pypi"
-        return 0
-    fi
-    if [[ $(conda list | grep 'neural-compressor') ]]; then
-        echo "found nueral-compressor installed by conda"
-        return 0
-    fi
     cd ${WORKSPACE}
+
+    if [[ "$install_nlp_toolkit" == "true" ]]; then
+        echo "Install nlp-toolkit binary..."
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+            [[ $(echo ${WORKSPACE} | grep "304") ]] && [[ -d "/home/linuxbrew/.linuxbrew/bin" ]] && export PATH="/home/linuxbrew/.linuxbrew/bin:"$PATH
+            pip install nlpaug
+            pip install nlp_toolkit*.whl && break
+
+            n=$((n+1))
+            sleep 5
+        done
+    fi
     echo "Install neural-compressor binary..."
     n=0
     until [ "$n" -ge 5 ]
@@ -170,7 +160,7 @@ function set_environment {
     if [[ "${conda_env_mode}" == "conda" ]]; then
         #python_version=$(python --version | grep -Po [0-9]+.[0-9]+)
         if [[ ! $(pip list | grep opencv-python) ]]; then
-            pip install opencv-python    
+            pip install opencv-python
         fi
         if [[ ! $(conda list | grep ffmpeg) ]]; then
             conda install ffmpeg -c conda-forge -y
