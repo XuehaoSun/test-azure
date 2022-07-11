@@ -286,7 +286,7 @@ def build_conda_env(conda_env_name) {
 
 def run_coverage_test(is_base=false, MR_branch=""){
     withEnv(["MR_branch=${MR_branch}", "is_base=${is_base}"]){
-        timeout(100) {
+        timeout(110) {
             withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                 echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
                 ut_status = sh(returnStatus: true, script: '''#!/bin/bash
@@ -512,7 +512,7 @@ node(node_label){
                     )
                 }
                 // Coverage status check
-                timeout(100) {
+                timeout(110) {
                     branch = lpot_branch
                     if (MR_source_branch != "") {
                         branch = MR_source_branch
@@ -590,7 +590,7 @@ node(node_label){
             stage("unit test") {
                 echo "+---------------- unit test For TF ${tensorflow_version} PT ${pytorch_version} ----------------+"
                 withEnv(["ext_version=${tensorflow_version}_${pytorch_version}"]){
-                    timeout(100) {
+                    timeout(110) {
                         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH
