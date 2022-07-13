@@ -139,7 +139,7 @@ def do_binary_build() {
                 echo "Create conda env..."
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                    conda remove --name ${conda_env} --all -y
+                    (conda remove --name ${conda_env} --all -y) || true
                 fi
                 
                 conda_dir=$(dirname $(dirname $(which conda)))
@@ -177,7 +177,7 @@ def do_binary_build() {
                 echo "Create conda env..."
                 export PATH=${HOME}/miniconda3/bin/:$PATH
                 if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                    conda remove --name ${conda_env} --all -y
+                    (conda remove --name ${conda_env} --all -y) || true
                 fi
 
                 conda_dir=$(dirname $(dirname $(which conda)))

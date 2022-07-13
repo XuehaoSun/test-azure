@@ -94,7 +94,7 @@ node(node_label){
                 conda config --add channels defaults
                 if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
                     if [ ${refresh_env} = true ]; then
-                        conda remove --name ${conda_env_name} --all -y
+                        (conda remove --name ${conda_env_name} --all -y) || true
 
                         conda_dir=$(dirname $(dirname $(which conda)))
                         if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
