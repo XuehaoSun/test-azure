@@ -286,7 +286,7 @@ main() {
         fi
 
         qdq_model_list=("bert_squad_model_zoo_qdq" "mobilebert_squad_mlperf_qdq" "mask_rcnn_qdq" "ssd_mobilenet_v1-2_qdq" "faster_rcnn_qdq")
-        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "tiny_yolov3" ]] || [[ " ${qdq_model_list[@]} " =~ " ${model} " ]];then
+        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "tiny_yolov3" ]] || [[ ${model} == "ultraface" ]] || [[ ${model} == "emotion_ferplus" ]] || [[ ${model} == "arcface" ]] || [[ ${model} == "BiDAF" ]] || [[ " ${qdq_model_list[@]} " =~ " ${model} " ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
         fi       
         if [[ ${model} == "duc" ]];then

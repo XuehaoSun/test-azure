@@ -33,6 +33,12 @@ if ('supported_extensions' in params && params.supported_extensions != '') {
 }
 echo "supported_extensions: ${supported_extensions}"
 
+target_path = "neural_compressor"
+if ('target_path' in params && params.target_path != '') {
+    target_path = params.target_path
+}
+echo "target_path: ${target_path}"
+
 def cleanup() {
     stage("Cleanup") {
         try {
@@ -96,12 +102,12 @@ node(node_label) {
             def extensions = supported_extensions.join(" ")
 
             dir("$WORKSPACE/LPOT") {
-                withEnv(["MR_target_branch=${MR_target_branch}", "extensions=${supported_extensions}"]) {
+                withEnv(["MR_target_branch=${MR_target_branch}", "extensions=${supported_extensions}", "target_path=${target_path}"]) {
                     sh '''#!/bin/bash
                     set -xe
                     supported_extensions=($(echo "${extensions}" | tr "," " "))
 
-                    git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) ./neural_compressor > ${WORKSPACE}/diff.log
+                    git --no-pager diff --name-only $(git show-ref -s remotes/origin/${MR_target_branch}) ./${target_path} > ${WORKSPACE}/diff.log
                     files=$(cat $WORKSPACE/diff.log | awk '!a[$0]++')
                     for file in ${files}
                     do

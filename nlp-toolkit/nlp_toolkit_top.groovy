@@ -340,7 +340,9 @@ install_nlp_toolkit="true"
 target_path="./nlp_toolkit"
 lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 lpot_branch="master"
-
+if ('lpot_branch' in params && params.lpot_branch) {
+    lpot_branch=params.lpot_branch
+}
 
 def parseStrToList(srtingElements, delimiter=',') {
     if (srtingElements == '') {
