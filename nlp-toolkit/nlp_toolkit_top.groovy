@@ -617,6 +617,7 @@ def unitTestBackend() {
             string(name: "PR_target_branch", value: "${target_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
+            string(name: "binary_build_job", value: "${binary_build_job}"),
             booleanParam(name: "run_coverage", value: RUN_COVERAGE),
             string(name: "unit_test_mode", value: "${unit_test_mode}")
         ]
@@ -721,6 +722,7 @@ def unitTestJobsOptimize() {
 def UTBuildParams(tf_version, pt_version, run_coverage) {
     List ParamsPerJob = []
     ParamsPerJob += string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}")
+    ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
     ParamsPerJob += string(name: "nlp_url", value: "${nlp_url}")
     ParamsPerJob += string(name: "nlp_branch", value: "${nlp_commit}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${source_branch}")
