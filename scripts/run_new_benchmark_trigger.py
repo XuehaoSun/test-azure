@@ -113,6 +113,8 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         content = f.read()
         lpot_config = yaml.safe_load(content)
         try:
+            if not lpot_config.get('evaluation') or not lpot_config['evaluation'].get('accuracy'):
+                raise AttributeError
             if lpot_config['evaluation']['accuracy'].get('dataloader', None):
                 lpot_config['evaluation']['accuracy']['dataloader']['batch_size'] = args.batch_size
             if lpot_config['evaluation']['accuracy'].get('configs', None):
@@ -232,6 +234,8 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
         content = f.read()
         lpot_config = yaml.safe_load(content)
         try:
+            if not lpot_config.get('evaluation') or not lpot_config['evaluation'].get('performance'):
+                raise AttributeError
             if lpot_config['evaluation']['performance'].get('dataloader', None):
                 lpot_config['evaluation']['performance']['dataloader']['batch_size'] = batch_size
             lpot_config['evaluation']['performance']['iteration'] = iters
@@ -247,7 +251,7 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
 
             print(str(lpot_config['evaluation']['performance']['configs']))
 
-        except:
+        except AttributeError:
             print("[ WARNING ] Could not update performance config.")
     # dump config
     updated_yaml = yaml.dump(
