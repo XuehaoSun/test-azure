@@ -216,8 +216,12 @@ if ('install_nlp_toolkit' in params && params.install_nlp_toolkit != ''){
 }
 echo "install_nlp_toolkit: ${install_nlp_toolkit}"
 
-lpot_url = "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 lpot_branch = "master"
+if ('lpot_branch' in params && params.lpot_branch) {
+    lpot_branch=params.lpot_branch
+}
+
+lpot_url = "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 
 workflow = "optimize"

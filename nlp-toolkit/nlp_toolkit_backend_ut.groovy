@@ -14,6 +14,9 @@ if ('nlp_url' in params && params.nlp_url != ''){
 echo "nlp_url is ${nlp_url}"
 
 lpot_branch = 'master'
+if ('lpot_branch' in params && params.lpot_branch) {
+    lpot_branch=params.lpot_branch
+}
 nlp_branch = ''
 PR_source_branch = ''
 PR_target_branch = ''
