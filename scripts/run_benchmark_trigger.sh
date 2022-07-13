@@ -211,7 +211,7 @@ function run_benchmark {
     "faster_rcnn_inception_resnet_v2_atrous_coco" "faster_rcnn_nas_coco" "faster_rcnn_nas_lowproposals_coco" \
     "gmcnn-places2" "mask_rcnn_inception_resnet_v2_atrous_coco" "Transformer-LT" "mask_rcnn_resnet101_atrous_coco" \
     "person-vehicle-bike-detection-crossroad-yolov3-1024" "faster_rcnn_nas_coco_2018_01_28" "unet-3d-isensee_2017" "unet-3d-origin" "3dunet" \
-    "t5_WMT_en_ro" "marianmt_WMT_en_ro" "pegasus_billsum" "dialogpt_wikitext" "transfo_xl_MRPC" "")
+    "t5_WMT_en_ro" "marianmt_WMT_en_ro" "pegasus_billsum" "dialogpt_wikitext" "transfo_xl_MRPC" "dlrm_fx")
 
     # get cpu information for multi-instance
     lscpu
