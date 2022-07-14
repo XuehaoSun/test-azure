@@ -323,7 +323,7 @@ node(node_label){
                     sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
-                           conda remove --name ${conda_env} --all -y  
+                           (conda remove --name ${conda_env} --all -y) || true
                         fi
                         conda_dir=$(dirname $(dirname $(which conda)))
                         if [ -d ${conda_dir}/envs/${conda_env} ]; then

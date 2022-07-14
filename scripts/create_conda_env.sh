@@ -53,7 +53,7 @@ fi
 
 function update_conda_env {
     if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
-        conda remove --name ${conda_env_name} --all -y
+        (conda remove --name ${conda_env_name} --all -y) || true
     fi
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
