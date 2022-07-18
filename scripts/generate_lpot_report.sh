@@ -642,7 +642,6 @@ eof
 createOverview
 createCoverageOverview
 createCodeLinesOverview ${nc_code_lines_summary} "Neural Compressor"
-createCodeLinesOverview ${engine_code_lines_summary} "Deep Engine"
 createFeatureTestsOverview
 
 echo "Generating benchmarks table"
