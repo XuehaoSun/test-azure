@@ -483,8 +483,6 @@ node(node_label){
                         fi
                         export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                         cd ${WORKSPACE}/lpot-models/test
-                        # mute engine log
-                        export GLOG_minloglevel=2
                         lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                         
                         coverage erase

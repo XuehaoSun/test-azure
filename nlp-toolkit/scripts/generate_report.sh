@@ -82,7 +82,7 @@ function createOverview {
         pytest_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    cpplint_scan=($(grep 'nlp-format-scan,cpplint' ${overviewLog} |sed 's/,/ /g'))
+    cpplint_scan=($(grep 'nlp-format-scan-localtest,cpplint' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${cpplint_scan[2]}" == *"FAIL"* ]];then
         cpplint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${cpplint_scan[2]}" == *"SUCC"* ]];then
@@ -91,7 +91,7 @@ function createOverview {
         cpplint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    pylint_scan=($(grep 'nlp-format-scan,pylint' ${overviewLog} |sed 's/,/ /g'))
+    pylint_scan=($(grep 'nlp-format-scan-localtest,pylint' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
         pylint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${pylint_scan[2]}" == *"SUCC"* ]];then
@@ -100,7 +100,7 @@ function createOverview {
         pylint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    bandit_scan=($(grep 'nlp-format-scan,bandit' ${overviewLog} |sed 's/,/ /g'))
+    bandit_scan=($(grep 'nlp-format-scan-localtest,bandit' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${bandit_scan[2]}" == *"FAIL"* ]];then
         bandit_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${bandit_scan[2]}" == *"SUCC"* ]];then
@@ -109,7 +109,7 @@ function createOverview {
         bandit_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    spellcheck_scan=($(grep 'nlp-format-scan,pyspelling' ${overviewLog} |sed 's/,/ /g'))
+    spellcheck_scan=($(grep 'nlp-format-scan-localtest,pyspelling' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${spellcheck_scan[2]}" == *"FAIL"* ]];then
         spellcheck_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${spellcheck_scan[2]}" == *"SUCC"* ]];then

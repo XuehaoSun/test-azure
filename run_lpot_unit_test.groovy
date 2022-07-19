@@ -287,7 +287,7 @@ def build_conda_env(conda_env_name) {
 
 def run_coverage_test(is_base=false, MR_branch=""){
     withEnv(["MR_branch=${MR_branch}", "is_base=${is_base}"]){
-        timeout(110) {
+        timeout(120) {
             withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                 echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
                 ut_status = sh(returnStatus: true, script: '''#!/bin/bash
@@ -378,8 +378,6 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     export TF_ENABLE_MKL_NATIVE_FORMAT=0
                     echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                 fi
-                # mute engine log
-                export GLOG_minloglevel=2
                 lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                 find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                 if [ -d "tfnewapi" ]; then 
@@ -513,7 +511,7 @@ node(node_label){
                     )
                 }
                 // Coverage status check
-                timeout(110) {
+                timeout(120) {
                     branch = lpot_branch
                     if (MR_source_branch != "") {
                         branch = MR_source_branch
@@ -591,7 +589,7 @@ node(node_label){
             stage("unit test") {
                 echo "+---------------- unit test For TF ${tensorflow_version} PT ${pytorch_version} ----------------+"
                 withEnv(["ext_version=${tensorflow_version}_${pytorch_version}"]){
-                    timeout(110) {
+                    timeout(120) {
                         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -650,8 +648,6 @@ node(node_label){
                                 export TF_ENABLE_MKL_NATIVE_FORMAT=0
                                 echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                             fi
-                            # mute engine log
-                            export GLOG_minloglevel=2
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                             ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
                             

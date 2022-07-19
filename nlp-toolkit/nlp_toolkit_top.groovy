@@ -572,7 +572,7 @@ def codeScan(tool) {
         optional: true)
     if (tool != "cloc") {
         text_comment = readFile file: "${overviewLog}"
-        writeFile file: "${overviewLog}", text: text_comment + "nlp-format-scan," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
+        writeFile file: "${overviewLog}", text: text_comment + "nlp-format-scan-localtest," + tool + "," + downstreamJob.result + "," + downstreamJob.number + "\n"
     }
     // Archive in Jenkins
     archiveArtifacts artifacts: "format_scan/**", allowEmptyArchive: true

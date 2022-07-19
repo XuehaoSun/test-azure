@@ -75,7 +75,7 @@ def conda_env_create() {
         sh '''#!/bin/bash
         export PATH=${HOME}/miniconda3/bin/:$PATH
         if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
-        conda remove --name ${conda_env_name} --all -y
+        (conda remove --name ${conda_env_name} --all -y) || true
         fi
     
         conda_dir=$(dirname $(dirname $(which conda)))

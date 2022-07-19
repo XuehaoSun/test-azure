@@ -239,7 +239,8 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
             if lpot_config['evaluation']['performance'].get('dataloader', None):
                 lpot_config['evaluation']['performance']['dataloader']['batch_size'] = batch_size
             lpot_config['evaluation']['performance']['iteration'] = iters
-
+            if not lpot_config['evaluation']['performance'].get('configs'):
+                raise AttributeError
             lpot_config['evaluation']['performance']['configs']['cores_per_instance'] = int(ncores_per_instance)
             lpot_config['evaluation']['performance']['configs']['num_of_instance'] = int(num_benchmark_cores // ncores_per_instance)
             if lpot_config['evaluation']['performance']['configs'].get('intra_num_of_threads', None):
