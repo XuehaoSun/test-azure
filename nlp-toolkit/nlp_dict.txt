@@ -2094,3 +2094,10 @@ compressions
 aclweb
 PrunerConfig
 HW
+Lecun
+NLPToolkit
+Yan
+exdb
+lecun
+publis
+yann
