@@ -182,13 +182,6 @@ if ('install_nlp_toolkit' in params && params.install_nlp_toolkit != '') {
     install_nlp_toolkit=params.install_nlp_toolkit
 }
 echo "install_nlp_toolkit: ${install_nlp_toolkit}"
-
-launcher_mode = ""
-if ('launcher_mode' in params && params.launcher_mode != '') {
-    launcher_mode=params.launcher_mode
-}
-echo "launcher_mode: ${launcher_mode}"
-
 lpot_url = "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 lpot_branch = "master"
 if ('lpot_branch' in params && params.lpot_branch) {
@@ -356,41 +349,6 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
     }
 }
 
-def runLauncherTest(mode, precision, launcher_cmd) {
-    def local_launcher_cmd = launcher_cmd
-    launcher_cmd_params.each{ k, v -> 
-        if (k == "mode") {
-            v = mode
-        }
-       local_launcher_cmd += " --${k}=${v}" 
-    }
-    def local_benchmark_cmd = "${working_dir}/run_executor.py"
-    benchmark_cmd_params.each{ k, v -> 
-        if (k == "mode") {
-            v = "performance"
-        }
-        if (k == "input_model") {
-            v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
-        }
-       local_benchmark_cmd += " --${k}=${v}" 
-    }
-    echo "launcher cmd is ${local_launcher_cmd} ${local_benchmark_cmd}"
-    withEnv(["framework=${framework}","model=${model}","precision=${precision}","os=${os}","cpu=${cpu}","working_dir=${working_dir_fullpath}","data_path=${data_dir}","benchmark_cmd=${local_benchmark_cmd}", "conda_env_name=${conda_env_name}", "output_path=${output_path}", "launcher_cmd=${local_launcher_cmd}","mode=${mode}"]) {
-        sh '''#!/bin/bash -x
-            echo "Running ---- ${framework}, ${model},${precision} ---- Benchmarking"
-            echo "=======cache clean======="
-            sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-            echo "=======launcher benchmark======="
-            source activate ${conda_env_name}
-            cp -r ${data_path} ${WORKSPACE}/data
-            echo "final benchmark cmd of precision ${precision} is ${benchmark_cmd}"
-            cd ${WORKSPACE}/lpot-models/examples/
-            echo "working in ${WORKSPACE}/lpot-models/examples"
-            #logFile="${output_path}/${framework}-${model}-${precision}-throughput-${os}-${cpu}"
-            python ${launcher_cmd} ${benchmark_cmd}
-        '''
-    }
-}
 def prepare_models(local_precision, prepare_cmd) {
     def local_prepare_cmd = prepare_cmd
     prepare_cmd_params.each{ k, v -> 
@@ -676,31 +634,6 @@ def collectLogs() {
     }
 }
 
-def collectLauncherLogs() {
-    logs_prefix_url = ""
-    if (upstreamUrl != "") {
-        logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/deploy/${framework}/${model}/"
-    }
-    withEnv(["conda_env_name=${conda_env_name}", "logs_prefix_url=${logs_prefix_url}"]) {
-        sh '''#!/bin/bash
-            set -x
-            export PATH=${HOME}/miniconda3/bin/:$PATH
-            source activate ${conda_env_name}
-            if [[ ! -f "out.csv" ]]; then
-                echo "batch,instance,cores per instance,Troughput,Average Latency,P50 Latency,P90 Latency,P99 Latency,cmd" >> ${WORKSPACE}/inferencer_summary.log
-            else
-                grep -A 2 "best," out.csv | tail -1 >> ${WORKSPACE}/launcher_summary.log
-                log_file=$(grep -A 2 "best," out.csv | tail -1 | awk -F "=" '{print $NF}' | sed 's|\"||g')
-                logfile=${log_file##*/}
-                logfile=${logs_prefix_url}${logfile}
-                [[ -d ${WORKSPACE}/launcher ]] && rm -fr ${WORKSPACE}/launcher
-                mkdir -p ${WORKSPACE}/launcher
-                mv ${WORKSPACE}/lpot-models/examples/*.log ${WORKSPACE}/launcher/
-                mv ${WORKSPACE}/lpot-models/examples/*.csv ${WORKSPACE}/
-            fi
-        '''
-    }
-}
 def syncConfigFile(){
     sh '''#!/bin/bash
         set -x
@@ -880,10 +813,9 @@ node( sub_node_label ) {
                     data_dir = "${dataset_prefix}/${data_dir_local}"
                     prepare_cmd = modelConf."prepare"."cmd"
                     prepare_cmd_params = modelConf."prepare"."params"
+                    
                     benchmark_cmd = modelConf."benchmark"."cmd"
                     benchmark_cmd_params = modelConf."benchmark"."params"
-                    launcher_cmd = modelConf."launcher"."cmd"
-                    launcher_cmd_params = modelConf."launcher"."params"
                 } catch(e) {
                     error("Could not genereate cmd for ${framework} ${model}")
                 }
@@ -895,20 +827,8 @@ node( sub_node_label ) {
                 prepare_models("fp32", prepare_cmd)
                 echo "--------START BENCHMARK----------"
                 if (!tune_only) {
-                    if ("accuracy" in mode) {
-                        runPerfTest("accuracy", "fp32", benchmark_cmd)
-                    }
-                    if ("throughput" in mode) {
-                        if (launcher_mode == "") {
-                            runPerfTest("throughput", "fp32", benchmark_cmd)
-                        } else {
-                            stage("Launcher Benchmark"){
-                                println("==========run launcher benchmark========")
-                                launcher_mode_list.each { mode ->
-                                    runLauncherTest(mode, "fp32", launcher_cmd)
-                                }
-                            }
-                        }
+                    mode_list.each { mode ->
+                        runPerfTest(mode, "fp32", benchmark_cmd)
                     }
                     stage("Inferencer Benchmark"){
                         println("==========run inferencer benchmark========")
@@ -927,20 +847,8 @@ node( sub_node_label ) {
                 prepare_models("int8", prepare_cmd)
                 echo "--------START BENCHMARK----------"
                 if (!tune_only) {
-                    if ("accuracy" in mode) {
-                        runPerfTest("accuracy", "int8", benchmark_cmd)
-                    }
-                    if ("throughput" in mode) {
-                        if (launcher_mode == "") {
-                            runPerfTest("throughput", "int8", benchmark_cmd)
-                        } else {
-                            stage("Launcher Benchmark"){
-                                println("==========run launcher benchmark========")
-                                launcher_mode_list.each { mode ->
-                                    runLauncherTest(mode, "int8", launcher_cmd)
-                                }
-                            }
-                        }
+                    mode_list.each { mode ->
+                        runPerfTest(mode, "int8", benchmark_cmd)
                     }
                     stage("Inferencer Benchmark"){
                         println("==========run inferencer benchmark========")
@@ -958,7 +866,6 @@ node( sub_node_label ) {
             throw e
         } finally {
             collectLogs()
-            collectLauncherLogs()
             //checkReferenceData()
         }
     } catch(e) {
@@ -967,7 +874,7 @@ node( sub_node_label ) {
     } finally {
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,engine-${model}/**,launcher/**,*.csv,launcher_summary.log,inferencer_summary.log,summary.log,tuning_info.log,reference_data.json", excludes: null
+            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,engine-${model}/**,inferencer_summary.log,summary.log,tuning_info.log,reference_data.json", excludes: null
             fingerprint: true
             if (collect_tuned_model){
                 archiveArtifacts artifacts: "${framework}-${model}-tune*", excludes: null
