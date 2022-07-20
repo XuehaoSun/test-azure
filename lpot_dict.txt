@@ -2186,5 +2186,12 @@ kai
 mailto
 superbench
 yao
+Lecun
+NLPToolkit
+Yan
+exdb
+lecun
+publis
+yann
 abcadf
 bcb
