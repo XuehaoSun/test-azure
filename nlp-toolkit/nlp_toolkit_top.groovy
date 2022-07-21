@@ -606,52 +606,50 @@ def copyrightCheck() {
     }
 }
 
-def unitTestBackend() {
-    def unit_test_mode_list = ["pytest", "gtest"]
+def unitTestBackend(unit_test_mode) {
     def ut_jobs = [:]
-    for (def unit_test_mode : unit_test_mode_list) {
-        List UTBuildParams = [
-            string(name: "nlp_url", value: "${nlp_url}"),
-            string(name: "nlp_branch", value: "${nlp_commit}"),
-            string(name: "PR_source_branch", value: "${source_branch}"),
-            string(name: "PR_target_branch", value: "${target_branch}"),
-            string(name: "val_branch", value: "${val_branch}"),
-            string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
-            string(name: "binary_build_job", value: "${binary_build_job}"),
-            booleanParam(name: "run_coverage", value: RUN_COVERAGE),
-            string(name: "unit_test_mode", value: "${unit_test_mode}")
-        ]
-        ut_jobs[unit_test_mode] = {
-            downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
-            catchError {
-                copyArtifacts(
-                        projectName: "nlp-toolkit-backend-ut",
-                        selector: specific("${downstreamJob.getNumber()}"),
-                        filter: '*.log, *.txt, **/coverage_results_backend/**/*',
-                        fingerprintArtifacts: true,
-                        target: "unittest")
-
-                archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+    List UTBuildParams = [
+        string(name: "nlp_url", value: "${nlp_url}"),
+        string(name: "nlp_branch", value: "${nlp_commit}"),
+        string(name: "PR_source_branch", value: "${source_branch}"),
+        string(name: "PR_target_branch", value: "${target_branch}"),
+        string(name: "val_branch", value: "${val_branch}"),
+        string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
+        string(name: "binary_build_job", value: "${binary_build_job}"),
+        booleanParam(name: "run_coverage", value: RUN_COVERAGE),
+        string(name: "unit_test_mode", value: "${unit_test_mode}")
+    ]
+    ut_jobs[unit_test_mode] = {
+        downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
+        catchError {
+            copyArtifacts(
+                    projectName: "nlp-toolkit-backend-ut",
+                    selector: specific("${downstreamJob.getNumber()}"),
+                    filter: '*.log, *.txt, **/coverage_results_backend/**/*, **/coverage_results_base_backend/**/*',
+                    fingerprintArtifacts: true,
+                    target: "unittest")
+            archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+        }
+        if (downstreamJob.result != 'SUCCESS') {
+            def sub_job_url = downstreamJob.absoluteUrl
+            withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
+                sh '''#!/bin/bash
+                overviewLog="${WORKSPACE}/summary_overview.log"
+                echo "deep-engine_ut_${ut_mode},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
+                '''
             }
-            if (downstreamJob.result != 'SUCCESS') {
-                def sub_job_url = downstreamJob.absoluteUrl
-                withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
-                    sh '''#!/bin/bash
-                    overviewLog="${WORKSPACE}/summary_overview.log"
-                    echo "deep-engine_ut_${ut_mode},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
-                    '''
-                }
+            currentBuild.result = "FAILURE"
+            error("---${unit_test_mode} test failed---")
+        }
+        println(RUN_COVERAGE)
+        println(unit_test_mode)
+        if (RUN_COVERAGE && unit_test_mode == "pytest"){
+            overview = readFile file: "${overviewLog}"
+            coverage_status_engine = readFile file: "unittest/coverage_status_engine.txt"
+            writeFile file: "${overviewLog}", text: overview + coverage_status_engine + "\n"
+            // Coverage decrease is not allowed in MRs
+            if (test_mode == "pre-CI" && coverage_status_engine.split(",")[1] != "SUCCESS") {
                 currentBuild.result = "FAILURE"
-                error("---${unit_test_mode} test failed---")
-            } 
-            if (RUN_COVERAGE && unit_test_mode == "pytest") {
-                overview = readFile file: "${overviewLog}"
-                coverage_status = readFile file: "unittest/coverage_status_engine.txt"
-                writeFile file: "${overviewLog}", text: overview + coverage_status + "\n"
-                // Coverage decrease is not allowed in MRs
-                if (test_mode == "pre-CI" && coverage_status.split(",")[1] != "SUCCESS") {
-                    currentBuild.result = "FAILURE"
-                }
             }
         }
     }
@@ -666,7 +664,7 @@ def unitTestJobsOptimize() {
             copyArtifacts(
                     projectName: "nlp-toolkit-optimize-ut",
                     selector: specific("${downstreamJob.getNumber()}"),
-                    filter: '*.log, *.txt, **/coverage_results/**/*',
+                    filter: '*.log, *.txt, **/coverage_results/**/*, **/coverage_results_base/**/*',
                     fingerprintArtifacts: true,
                     target: "unittest")
 
@@ -1348,9 +1346,10 @@ node( node_label ) {
             def ut_jobs = unitTestJobsOptimize()
             job_list = job_list + ut_jobs
         }
-        if (RUN_UT_OPT) {
-            def ut_jobs = unitTestBackend()
-            job_list = job_list + ut_jobs
+        if (RUN_UT_BAK) {
+            def ut_jobs_pytest = unitTestBackend("pytest")
+            def ut_jobs_gtest = unitTestBackend("gtest")
+            job_list = job_list + ut_jobs_pytest + ut_jobs_gtest
         }
         if (RUN_PYLINT) {
             job_list["Pylint Scan"] = {
