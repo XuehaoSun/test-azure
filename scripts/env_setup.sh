@@ -132,7 +132,7 @@ function set_environment {
     until [ "$n" -ge 5 ]
     do
         if [ "${conda_env_mode}" == "conda" ];then
-            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/miniconda3/bin/
+            export PATH=$PATH:/usr/lib64/openmpi/bin
             cd ${WORKSPACE}/lpot-models
             lpot_bz2_path="$(find ${WORKSPACE} -name neural-compressor*.tar.* |tail -1)"
             lpot_bz2_file="$(basename ${lpot_bz2_path})"
@@ -159,12 +159,18 @@ function set_environment {
     echo "Checking lpot..."
     if [[ "${conda_env_mode}" == "conda" ]]; then
         #python_version=$(python --version | grep -Po [0-9]+.[0-9]+)
+        if [[ $(pip list | grep scipy) ]]; then
+            pip uninstall scipy -y
+            pip install --no-cache scipy    
+        fi
+        
         if [[ ! $(pip list | grep opencv-python) ]]; then
             pip install opencv-python
         fi
         if [[ ! $(conda list | grep ffmpeg) ]]; then
             conda install ffmpeg -c conda-forge -y
         fi
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/miniconda3/bin/
         cp ${HOME}/miniconda3/envs/${conda_env_name}/lib/libopenh264.so.6 ${HOME}/miniconda3/envs/${conda_env_name}/lib/libopenh264.so.5
         conda list --show-channel-urls
     else
