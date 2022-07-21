@@ -191,6 +191,14 @@ if [[ "${install_ipex}" == "true" ]]; then
             install_params="intel_extension_for_pytorch==1.11.0+cpu -f https://software.intel.com/ipex-whl-stable";;
         1.12.0*)
             install_params="intel_extension_for_pytorch==1.12.0+cpu -f https://software.intel.com/ipex-whl-stable";;
+            #pip install cmake
+            #cmake_path=`which cmake`
+            #ln -s $cmake_path ${cmake_path}3
+            #git clone https://github.com/intel-innersource/frameworks.ai.pytorch.ipex-cpu.git
+            #cd frameworks.ai.pytorch.ipex-cpu
+            #git submodule sync && git submodule update --init --recursive
+            #python setup.py install
+            #cd -
     esac
     if [[ ! -z ${install_params} ]]; then
         pip install ${install_params}
