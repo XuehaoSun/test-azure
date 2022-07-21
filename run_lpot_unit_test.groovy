@@ -276,6 +276,7 @@ def build_conda_env(conda_env_name) {
         local_path="/home/tensorflow/localfile"
         declare target_path=("/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/home/tensorflow/.keras/datasets/")  
         mkdir -p /tmp/.neural_compressor/
+        mkdir -p /home/tensorflow/.keras/datasets
         for((i=0; i<${#local_file_list[@]}; i++))
         do
             filename=${local_file_list[i]}
