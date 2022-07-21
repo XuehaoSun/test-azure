@@ -389,7 +389,7 @@ def prepare_models(local_precision, prepare_cmd) {
         '''
     }
     // Check tuning status
-    if (local_precision == "int8") {
+    if (local_precision == "int8" || local_precision == "bf16") {
         dir("${WORKSPACE}"){
             withEnv([
                     "framework=${framework}",
@@ -422,6 +422,8 @@ def run_inferencer(ncores_per_instance, bs, precision) {
         cd ${working_dir_fullpath}
         if [[ "${precision}" == "fp32" ]]; then
             python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/fp32-model.onnx"); graph.save("./ir")'
+        elif [[ "${precision}" == "bf16" ]]; then
+            python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/bf16-model.onnx"); graph.save("./ir")'
         else
             python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/int8-model.onnx"); graph.save("./ir")'
         fi
@@ -859,6 +861,27 @@ node( sub_node_label ) {
                         }
                     }  
                 }      
+            }
+            if ("bf16" in precision_list) {
+                stage("BF16 workflow") {
+                echo "--------START TUNING----------"
+                echo "Tuning timeout ${timeout}"
+                prepare_models("bf16", prepare_cmd)
+                echo "--------START BENCHMARK----------"
+                if (!tune_only) {
+                    mode_list.each { mode ->
+                        runPerfTest(mode, "bf16", benchmark_cmd)
+                    }
+                    stage("Inferencer Benchmark"){
+                        println("==========run inferencer benchmark========")
+                        inferencer_config.split(',').each { each_ben_conf ->
+                            def ncores_per_instance = each_ben_conf.split(':')[0]
+                            def bs = each_ben_conf.split(':')[1]
+                            run_inferencer(ncores_per_instance, bs, "bf16")
+                        }
+                    }  
+                }      
+            }
             }
 
         } catch(e) {

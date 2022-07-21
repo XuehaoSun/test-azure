@@ -328,9 +328,11 @@ cat >> ${WORKSPACE}/report.html << eof
           <th rowspan="2">BS</th>
           <th>INT8</th>
           <th>FP32</th>
+          <th>BF16</th>
           <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
         </tr>
         <tr>
+          <th>throughput</th>
           <th>throughput</th>
           <th>throughput</th>
           <th colspan="2" class="col-cell col-cell1"><font size="2px">FP32/INT8</font></th>
@@ -358,16 +360,22 @@ eof
                         benchmark_int8_url=$(cat ${inferencerSummaryLog} |grep "${benchmark_pattern}," | tail -1 | cut -d',' -f10)
                         benchmark_fp32=$(cat ${inferencerSummaryLog} |grep "${benchmark_pattern},fp32" |cut -d',' -f9)
                         benchmark_fp32_url=$(cat ${inferencerSummaryLog} |grep "${benchmark_pattern},fp32" |cut -d',' -f10)
+                        benchmark_bf16=$(cat ${inferencerSummaryLog} |grep "${benchmark_pattern},bf16" |cut -d',' -f9)
+                        benchmark_bf16_url=$(cat ${inferencerSummaryLog} |grep "${benchmark_pattern},bf16" |cut -d',' -f10)
                         if [ $(cat ${inferencerSummaryLogLast} |grep -c "${benchmark_pattern},int8") == 0 ]; then
                             benchmark_int8_last=nan
                             benchmark_int8_url_last=nan
                             benchmark_fp32_last=nan
                             benchmark_fp32_url_last=nan
+                            benchmark_bf16_last=nan
+                            benchmark_bf16_url_last=nan
                         else
                             benchmark_int8_last=$(cat ${inferencerSummaryLogLast} |grep "${benchmark_pattern},int8" |cut -d',' -f9)
                             benchmark_int8_url_last=$(cat ${inferencerSummaryLogLast} |grep "${benchmark_pattern},int8" |cut -d',' -f10)
                             benchmark_fp32_last=$(cat ${inferencerSummaryLogLast} |grep "${benchmark_pattern},fp32" |cut -d',' -f9)
                             benchmark_fp32_url_last=$(cat ${inferencerSummaryLogLast} |grep "${benchmark_pattern},fp32" |cut -d',' -f10)
+                            benchmark_bf16_last=$(cat ${inferencerSummaryLogLast} |grep "${benchmark_pattern},bf16" |cut -d',' -f9)
+                            benchmark_bf16_url_last=$(cat ${inferencerSummaryLogLast} |grep "${benchmark_pattern},bf16" |cut -d',' -f10)
                         fi
                         generate_perf_core
                     done
@@ -387,7 +395,7 @@ eof
 function generate_perf_core {
     echo "<tr><td rowspan=3>${model}</td><td rowspan=3>${seq_len}</td><td>New</td><td rowspan=2>${full_core}</td><td rowspan=2>${core_per_ins}</td><td rowspan=2>${bs}</td>" >> ${WORKSPACE}/report.html
 
-    echo | awk -v b_int8=${benchmark_int8} -v b_int8_url=${benchmark_int8_url} -v b_fp32=${benchmark_fp32} -v b_fp32_url=${benchmark_fp32_url} -v b_int8_l=${benchmark_int8_last} -v b_int8_url_l=${benchmark_int8_url_last} -v b_fp32_l=${benchmark_fp32_last} -v b_fp32_url_l=${benchmark_fp32_url_last} '
+    echo | awk -v b_int8=${benchmark_int8} -v b_int8_url=${benchmark_int8_url} -v b_fp32=${benchmark_fp32} -v b_fp32_url=${benchmark_fp32_url} -v b_bf16=${benchmark_bf16} -v b_bf16_url=${benchmark_bf16_url} -v b_int8_l=${benchmark_int8_last} -v b_int8_url_l=${benchmark_int8_url_last} -v b_fp32_l=${benchmark_fp32_last} -v b_fp32_url_l=${benchmark_fp32_url_last} -v b_bf16_l=${benchmark_bf16_last} -v b_bf16_url_l=${benchmark_bf16_url_last} '
         function show_benchmark(a,b) {
             if(a ~/[1-9]/) {
                     printf("<td><a href=%s>%.2f</a></td>\n",b,a);
@@ -445,6 +453,7 @@ function generate_perf_core {
             // current
             show_benchmark(b_int8,b_int8_url)
             show_benchmark(b_fp32,b_fp32_url)
+            show_benchmark(b_bf16,b_bf16_url)
 
             // current comparison
             compare_current(b_int8,b_fp32)
@@ -453,6 +462,7 @@ function generate_perf_core {
             printf("</tr>\n<tr><td>Last</td>")
             show_benchmark(b_int8_l,b_int8_url_l)
             show_benchmark(b_fp32_l,b_fp32_url_l)
+            show_benchmark(b_bf16_l,b_bf16_url_l)
 
             // current vs last
             printf("</tr>\n<tr><td>New/Last</td><td colspan=3 class=\"col-cell3\"></td>");
@@ -552,11 +562,17 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">VS</th>
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
-                <th colspan="4">INT8/BF16</th>
+                <th colspan="4">INT8</th>
                 <th colspan="4">FP32</th>
+                <th colspan="4">BF16</th>
                 <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
           </tr>
           <tr>
+                <th>bs</th>
+                <th>imgs/s</th>
+                <th>bs</th>
+                <th>top1</th>
+
                 <th>bs</th>
                 <th>imgs/s</th>
                 <th>bs</th>
@@ -624,6 +640,13 @@ function generate_inference {
             int8_acc_bs = "nan";
             int8_acc_value = "nan";
             int8_acc_url = "nan";
+
+            bf16_perf_bs = "nan";
+            bf16_perf_value = "nan";
+            bf16_perf_url = "nan";
+            bf16_acc_bs = "nan";
+            bf16_acc_value = "nan";
+            bf16_acc_url = "nan";
         }{
             if($1 == os && $2 == platform && $3 == workflow && $4 == framework && $5 == fw_version && $7 == model) {
                 // FP32
@@ -657,11 +680,26 @@ function generate_inference {
                         int8_acc_url = $12;
                     }
                 }
+                if($6 == "BF16") {
+                    // Performance
+                    if($9 == "Performance") {
+                        bf16_perf_bs = $10;
+                        bf16_perf_value = $11;
+                        bf16_perf_url = $12;
+                    }
+                    // Accuracy
+                    if($9 == "Accuracy") {
+                        bf16_acc_bs = $10;
+                        bf16_acc_value = $11;
+                        bf16_acc_url = $12;
+                    }
+                }
             }
         }END {
             printf("%s;%s;%s;%s;", int8_perf_bs,int8_perf_value,int8_acc_bs,int8_acc_value);
             printf("%s;%s;%s;%s;", fp32_perf_bs,fp32_perf_value,fp32_acc_bs,fp32_acc_value);
             printf("%s;%s;%s;%s;", int8_perf_url,int8_acc_url,fp32_perf_url,fp32_acc_url);
+            printf("%s;%s;%s;%s;%s;%s;", bf16_perf_bs,bf16_perf_value,bf16_perf_url,bf16_acc_bs,bf16_acc_value,bf16_acc_url);
         }
     ' $1
 }
@@ -807,6 +845,18 @@ function generate_tuning_core {
             fp32_acc_url=current_value[12]
             show_new_last(fp32_acc_batch, fp32_acc_url, fp32_acc_value, "acc");
 
+            // BF16 Performance results
+            bf16_perf_batch=current_value[13]
+            bf16_perf_value=current_value[14]
+            bf16_perf_url=current_value[15]
+            show_new_last(bf16_perf_batch, bf16_perf_url, bf16_perf_value, "perf");
+
+            // BF16 Accuracy results
+            bf16_acc_batch=current_value[16]
+            bf16_acc_value=current_value[17]
+            bf16_acc_url=current_value[18]
+            show_new_last(bf16_acc_batch, bf16_acc_url, bf16_acc_value, "acc");
+
             // Compare Current
             compare_current(int8_perf_value, fp32_perf_value, "perf");
             compare_current(int8_acc_value, fp32_acc_value, "acc");
@@ -840,6 +890,18 @@ function generate_tuning_core {
             last_fp32_acc_value=last_value[8]
             last_fp32_acc_url=last_value[12]
             show_new_last(last_fp32_acc_batch, last_fp32_acc_url, last_fp32_acc_value, "acc");
+
+            // Show last BF16 Performance results
+            last_bf16_perf_batch=last_value[13]
+            last_bf16_perf_value=last_value[14]
+            last_bf16_perf_url=last_value[15]
+            show_new_last(last_bf16_perf_batch, last_bf16_perf_url, last_bf16_perf_value, "perf");
+
+            // Show last BF16 Accuracy results
+            last_bf16_acc_batch=last_value[16]
+            last_bf16_acc_value=last_value[17]
+            last_bf16_acc_url=last_value[18]
+            show_new_last(last_bf16_acc_batch, last_bf16_acc_url, last_bf16_acc_value, "acc");
             printf("</tr>")
 
             // current vs last
