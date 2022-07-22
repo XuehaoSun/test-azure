@@ -941,10 +941,12 @@ node( sub_node_label ) {
                     label=model.split('_')
                     if((model == 'bert_base_mrpc' || label[-1] == 'slim') && (!(framework_version=~'1.15').find())){
                         framework_version = '1.15UP3'
+                        python_version=3.7
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
                     if(model == 'yolo_v3'){
                         framework_version = '1.15UP3'
+                        python_version=3.7
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
                 }
