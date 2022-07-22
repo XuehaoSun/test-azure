@@ -124,7 +124,7 @@ if ('tensorflow_models' in params && params.tensorflow_models != '') {
 }
 echo "tensorflow_models: ${tensorflow_models}"
 // ncores_per_instance:bs for nlp_excutor inference
-inferencer_config = "4:64,4:128,24:1"
+inferencer_config = "4:64,4:128,28:1"
 if ('inferencer_config' in params && params.inferencer_config != '') {
     inferencer_config=params.inferencer_config
 }
