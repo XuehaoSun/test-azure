@@ -401,7 +401,7 @@ function generate_perf_core {
                     printf("<td><a href=%s>%.2f</a></td>\n",b,a);
             }else {
                 if(a == "") {
-                    printf("<td><a href=%s>Failure</a></td>\n",b,a);
+                    printf("<td><a href=%s>%s</a></td>\n",b,a);
                 }else{
                     printf("<td></td>\n");
                 }
@@ -718,7 +718,7 @@ function generate_tuning_core {
 
     echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
               -v tuning_time="${tuning_time}" \
-              -v tuning_count="${tuning_count}" -v tuning_log="${tuning_log}" '
+              -v tuning_count="${tuning_count}" -v tuning_log="${tuning_log}" -v workflow="${workflow}"  '
 
         function abs(x) { return x < 0 ? -x : x }
 
@@ -846,16 +846,19 @@ function generate_tuning_core {
             show_new_last(fp32_acc_batch, fp32_acc_url, fp32_acc_value, "acc");
 
             // BF16 Performance results
-            bf16_perf_batch=current_value[13]
-            bf16_perf_value=current_value[14]
-            bf16_perf_url=current_value[15]
-            show_new_last(bf16_perf_batch, bf16_perf_url, bf16_perf_value, "perf");
-
-            // BF16 Accuracy results
-            bf16_acc_batch=current_value[16]
-            bf16_acc_value=current_value[17]
-            bf16_acc_url=current_value[18]
-            show_new_last(bf16_acc_batch, bf16_acc_url, bf16_acc_value, "acc");
+            if (workflow == "deploy") {
+                bf16_perf_batch=current_value[13]
+                bf16_perf_value=current_value[14]
+                bf16_perf_url=current_value[15]
+                show_new_last(bf16_perf_batch, bf16_perf_url, bf16_perf_value, "perf");
+    
+                // BF16 Accuracy results
+                bf16_acc_batch=current_value[16]
+                bf16_acc_value=current_value[17]
+                bf16_acc_url=current_value[18]
+                show_new_last(bf16_acc_batch, bf16_acc_url, bf16_acc_value, "acc");
+            }
+            
 
             // Compare Current
             compare_current(int8_perf_value, fp32_perf_value, "perf");
@@ -891,18 +894,20 @@ function generate_tuning_core {
             last_fp32_acc_url=last_value[12]
             show_new_last(last_fp32_acc_batch, last_fp32_acc_url, last_fp32_acc_value, "acc");
 
-            // Show last BF16 Performance results
-            last_bf16_perf_batch=last_value[13]
-            last_bf16_perf_value=last_value[14]
-            last_bf16_perf_url=last_value[15]
-            show_new_last(last_bf16_perf_batch, last_bf16_perf_url, last_bf16_perf_value, "perf");
+            if (workflow == "deploy") {
+                // Show last BF16 Performance results
+                last_bf16_perf_batch=last_value[13]
+                last_bf16_perf_value=last_value[14]
+                last_bf16_perf_url=last_value[15]
+                show_new_last(last_bf16_perf_batch, last_bf16_perf_url, last_bf16_perf_value, "perf");
 
-            // Show last BF16 Accuracy results
-            last_bf16_acc_batch=last_value[16]
-            last_bf16_acc_value=last_value[17]
-            last_bf16_acc_url=last_value[18]
-            show_new_last(last_bf16_acc_batch, last_bf16_acc_url, last_bf16_acc_value, "acc");
-            printf("</tr>")
+                // Show last BF16 Accuracy results
+                last_bf16_acc_batch=last_value[16]
+                last_bf16_acc_value=last_value[17]
+                last_bf16_acc_url=last_value[18]
+                show_new_last(last_bf16_acc_batch, last_bf16_acc_url, last_bf16_acc_value, "acc");
+                printf("</tr>")
+            }
 
             // current vs last
             printf("</tr>\n<tr><td>New/Last</td><td colspan=2 class=\"col-cell3\"></td>");
