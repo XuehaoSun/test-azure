@@ -1372,7 +1372,7 @@ node( node_label ) {
                 codeScan("pyspelling")
             }
         }
-        if (CHECK_COPYRIGHT && test_mode == "pre-CI") {
+        if (CHECK_COPYRIGHT) {
             job_list["Copyright Check"] = {
                 copyrightCheck()
             }
