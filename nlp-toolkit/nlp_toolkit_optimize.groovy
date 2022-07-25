@@ -132,6 +132,7 @@ if (params.collect_tuned_model != null) {
 echo "collect_tuned_model = ${collect_tuned_model}"
 
 torchvision_versions = [
+        "1.12.0": "0.13.0",
         "1.11.0": "0.12.0",
         "1.10.1": "0.11.2",
         "1.10.0": "0.11.0",
