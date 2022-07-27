@@ -385,6 +385,7 @@ def runPerfTest(mode, precision) {
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             
             echo "=======run benchmark======="
+            export PATH=${HOME}/miniconda3/bin/:$PATH
             source activate ${conda_env_name}
             cd ${working_dir}
             echo "working in ${working_dir}"
