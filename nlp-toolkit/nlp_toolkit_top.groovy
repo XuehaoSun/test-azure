@@ -613,6 +613,7 @@ def unitTestBackend(unit_test_mode) {
         string(name: "nlp_branch", value: "${nlp_commit}"),
         string(name: "PR_source_branch", value: "${source_branch}"),
         string(name: "PR_target_branch", value: "${target_branch}"),
+        string(name: "python_version", value: "${python_version}"),
         string(name: "val_branch", value: "${val_branch}"),
         string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
         string(name: "binary_build_job", value: "${binary_build_job}"),
