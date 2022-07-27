@@ -288,6 +288,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             echo "=======run benchmark======="
             export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
+            export PATH=${HOME}/miniconda3/bin/:$PATH
             source activate ${conda_env_name}
             cp -r ${data_path} ${WORKSPACE}/data
             echo "final benchmark cmd of precision ${precision} is ${benchmark_cmd}"
