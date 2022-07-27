@@ -177,7 +177,6 @@ function run_accuracy {
 
     # general yaml for new config format
     iters=-1
-    config_new_yaml
 
     if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
@@ -251,9 +250,6 @@ function run_benchmark {
             sed -i "/models_need_disable_optimize/a ${topology}" ${model_src_dir}/run_benchmark.sh
         fi
     fi
-
-    # general yaml for new config format
-    config_new_yaml
 
     if [ -f "run_benchmark.sh" ]; then
         run_cmd="bash run_benchmark.sh ${parameters}"
@@ -335,20 +331,6 @@ function update_yaml_config {
     if [ "${update_yaml_params}" != "" ]; then
         python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
     fi
-}
-
-# general yaml for new config format
-function config_new_yaml {
-
-    if [ "${framework}" == "tensorflow" ]; then
-        if [[ "${model_src_dir}" == *"image_recognition"* ]] || [[ "${model_src_dir}" == *"object_detection"* ]] || [[ "${model_src_dir}" == *"nlp/bert"* ]]; then
-            update_yaml_config
-            echo -e "\nPrint_updated_yaml... "
-            cat ${yaml}
-            parameters="--config=${yaml} --input_model=${input_model}"
-        fi
-    fi
-
 }
 
 main
