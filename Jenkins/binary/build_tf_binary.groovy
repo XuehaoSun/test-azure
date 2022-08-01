@@ -122,7 +122,9 @@ def do_binary_build() {
                 # Upgrade pip
                 pip install -U pip numpy wheel
                 pip install cmake
-                pip install packaging
+                # walkaround for deps issue
+                pip install tensorflow packaging
+                pip uninstall -y tensorflow
                 cmake_path=$(which cmake)
                 ln -s ${cmake_path} ${cmake_path}3 || true
     
