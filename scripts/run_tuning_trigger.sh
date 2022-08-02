@@ -272,7 +272,7 @@ main() {
     fi
 
     if [ "${framework}" == "onnxrt" ]; then
-        onnxrt_ds_location_models=("bert_squad_model_zoo" "mobilebert_squad_mlperf" "gpt2_lm_head_wikitext_model_zoo")
+        onnxrt_ds_location_models=("bert_squad_model_zoo" "mobilebert_squad_mlperf" "gpt2_lm_head_wikitext_model_zoo" "densenet" "ssd-12" "ssd-12_qdq")
         if [[ " ${onnxrt_ds_location_models[@]} " =~ " ${model} " ]]; then
             parameters="${parameters} --data_path=${dataset_location}"
         fi
