@@ -271,7 +271,8 @@ function run_benchmark {
     export OMP_NUM_THREADS=${ncores_per_instance}
     if [ "${multi_instance}" == "false" ]; then
         echo "Executing single instance benchmark"
-        ${run_cmd} 2>&1|tee ${logFile}.log &
+        end_core_num=$((ncores_per_instance-1))
+        numactl -m 0 -C "0-${end_core_num}" ${run_cmd} 2>&1|tee ${logFile}.log &
         benchmark_pids+=($!)
     else
         echo "Executing multi instance benchmark"
