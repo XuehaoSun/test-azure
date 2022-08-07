@@ -1134,11 +1134,11 @@ def generateReport() {
             sh '''#!/bin/bash -x
                 if [[ ! -f ${tuneLogLast} ]]; then
                     [[ ! -d ${WORKSPACE}/reference ]] && sudo mkdir ${WORKSPACE}/reference
-                    touch ${tuneLogLast}
+                    sudo touch ${tuneLogLast} || touch ${tuneLogLast}
                 fi
                 if [[ ! -f ${summaryLogLast} ]]; then
                     [[ ! -d ${WORKSPACE}/reference ]] && sudo mkdir ${WORKSPACE}/reference
-                    touch ${summaryLogLast}
+                    sudo touch ${summaryLogLast} || touch ${summaryLogLast}
                 fi
             '''
             }
