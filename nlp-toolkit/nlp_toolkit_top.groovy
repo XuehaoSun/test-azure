@@ -338,6 +338,12 @@ if ('lpot_branch' in params && params.lpot_branch) {
     lpot_branch=params.lpot_branch
 }
 
+launcher_mode = ""
+if ('launcher_mode' in params && params.launcher_mode != '') {
+    launcher_mode=params.launcher_mode
+}
+echo "launcher_mode: ${launcher_mode}"
+
 def parseStrToList(srtingElements, delimiter=',') {
     if (srtingElements == '') {
         return []
@@ -860,6 +866,7 @@ def BuildParams(job_framework, model, cpu, os){
     ParamsPerJob += string(name: "log_level", value: "${log_level}")
     ParamsPerJob += string(name: "install_nlp_toolkit", value: "${install_nlp_toolkit}")
     ParamsPerJob += string(name: "inferencer_config", value: "${inferencer_config}")
+    ParamsPerJob += string(name: "launcher_mode", value: "${launcher_mode}")
 
     return ParamsPerJob
 }
@@ -965,7 +972,7 @@ def model_test_deploy() {
                             copyArtifacts(
                                     projectName: sub_jenkins_job,
                                     selector: specific("${downstreamJob.getNumber()}"),
-                                    filter: "*.log, ${job_framework}*.json, engine-${job_model}/**",
+                                    filter: "*.log, *.csv, ${job_framework}*.json, engine-${job_model}/**, launcher*/**",
                                     fingerprintArtifacts: true,
                                     target: "${workflow}/${job_framework}/${job_model}",
                                     optional: true)
@@ -1092,6 +1099,7 @@ def collect_deploy_Log() {
                         else
                             echo "${system};Unknown;${workflow};${job_framework};N/A;INT8;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                             echo "${system};Unknown;${workflow};${job_framework};N/A;FP32;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                            echo "${system};Unknown;${workflow};${job_framework};N/A;BF16;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                         fi
                     """
                     echo "Getting benchmark results for ${job_framework} - ${job_model}"
@@ -1101,6 +1109,17 @@ def collect_deploy_Log() {
                         else
                             echo "${job_framework},throughput,${job_model},,,,,INT8," >> ${WORKSPACE}/inferencer_summary.log
                             echo "${job_framework},throughput,${job_model},,,,,FP32," >> ${WORKSPACE}/inferencer_summary.log
+                            echo "${job_framework},throughput,${job_model},,,,,BF16," >> ${WORKSPACE}/inferencer_summary.log
+                        fi
+                    """
+                    echo "Getting launcher results for ${job_framework} - ${job_model}"
+                    sh """#!/bin/bash -x
+                        if [[ -f ${WORKSPACE}/${workflow}/${job_framework}/${job_model}/launcher_summary.log ]]; then
+                            cat ${WORKSPACE}/${workflow}/${job_framework}/${job_model}/launcher_summary.log >> ${WORKSPACE}/launcher_summary.log
+                        else
+                            echo "${job_framework},none,${job_model},,,,INT8," >> ${WORKSPACE}/launcher_summary.log
+                            echo "${job_framework},none,${job_model},,,,FP32," >> ${WORKSPACE}/launcher_summary.log
+                            echo "${job_framework},none,${job_model},,,,BF16," >> ${WORKSPACE}/launcher_summary.log
                         fi
                     """
                 }
@@ -1125,7 +1144,7 @@ def generateReport() {
             copyArtifacts(
                 projectName: refer_job_name,
                 selector: specific("${refer_build}"),
-                filter: 'summary.log,tuning_info.log,inferencer_summary.log',
+                filter: 'summary.log,tuning_info.log,inferencer_summary.log,launcher_summary.log',
                 fingerprintArtifacts: true,
                 target: "reference")
         } catch(err) {
@@ -1157,6 +1176,8 @@ def generateReport() {
             "summaryLogLast=${summaryLogLast}",
             "inferencerSummaryLog=${inferencerSummaryLog}",
             "inferencerSummaryLogLast=${inferencerSummaryLogLast}",
+            "launcherSummaryLog=${launcherSummaryLog}",
+            "launcherSummaryLogLast=${launcherSummaryLogLast}",
             "tuneLog=${tuneLog}",
             "tuneLogLast=${tuneLogLast}",
             "overviewLog=${overviewLog}",
@@ -1288,6 +1309,9 @@ node( node_label ) {
 
         inferencerSummaryLog = "${WORKSPACE}/inferencer_summary.log"
         inferencerSummaryLogLast = "${WORKSPACE}/reference/inferencer_summary.log"
+
+        launcherSummaryLog = "${WORKSPACE}/launcher_summary.log"
+        launcherSummaryLogLast = "${WORKSPACE}/reference/launcher_summary.log"
 
         // over view log
         overviewLog = "${WORKSPACE}/summary_overview.log"
@@ -1427,25 +1451,25 @@ node( node_label ) {
                 }
             }
         }
-            try {
-                stage("Generate report") {
-                    generateReport()
-                }
-            } catch(error) {
-                recipient_list = "suyue.chen@intel.com,wenxin.zhang@intel.com"
-                emailext attachLog: true, body: "Generate report failed (see ${env.BUILD_URL}): ${error}", subject: "${email_subject}", to: "${recipient_list}"
-                throw error
-            } finally {
-                if (EXCEL_REPORT) {
-                    stage("Generate excel report") {
-                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                            retry(3) {
-                                generateExcelReport()
-                            }
+        try {
+            stage("Generate report") {
+                generateReport()
+            }
+        } catch(error) {
+            recipient_list = "suyue.chen@intel.com,wenxin.zhang@intel.com"
+            emailext attachLog: true, body: "Generate report failed (see ${env.BUILD_URL}): ${error}", subject: "${email_subject}", to: "${recipient_list}"
+            throw error
+        } finally {
+            if (EXCEL_REPORT) {
+                stage("Generate excel report") {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        retry(3) {
+                            generateExcelReport()
                         }
                     }
                 }
             }
+        }
         
         stage("Send report") {
             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
