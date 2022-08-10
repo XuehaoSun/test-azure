@@ -11,12 +11,13 @@ import argparse
 def main(project: str, version: str):
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     project = "INC" if not project else project
+    jira_project = "ILITV" if project == "INC" else "NLPTOOLKIU"
     version = "1.12.1" if not version else version
     filename = "log"
     issue_list = []
     issue_dict = {}
     jira_api_url = "https://jira.devtools.intel.com/rest/api/2/search"
-    jql="project%20%3D%20ILITV%20AND%20issuetype%20%3DBug%20AND%20Sprint%20%3D%20%27{0}%20v{1}%27".format(project, version)
+    jql="project%20%3D%20{2}%20AND%20issuetype%20%3DBug%20AND%20Sprint%20%3D%22{0}%20v{1}%22".format(project, version, jira_project)
     cmd = "curl -o out.json -k -vv -H \"Authorization: Bearer NDYwOTMxMzA3Nzk2OoFBUadiAkGCyKaiq3QBVq28F+Iw\" -H \"content-type: application/json\" -X GET {0}?jql={1}".format(jira_api_url, jql)
     os.system(cmd)
     with open("./out.json", "r") as f:
