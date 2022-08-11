@@ -210,6 +210,12 @@ if (params.multi_instance != null) {
 }
 echo "Multi instance: ${multi_instance}"
 
+perf_bs = "1"
+if ('perf_bs' in params && params.perf_bs != '') {
+    perf_bs = params.perf_bs
+}
+echo "Performance batch size: ${perf_bs}"
+
 log_level = "DEBUG"
 if ('log_level' in params && params.log_level != '') {
     log_level=params.log_level
@@ -867,6 +873,7 @@ def BuildParams(job_framework, model, cpu, os){
     ParamsPerJob += string(name: "install_nlp_toolkit", value: "${install_nlp_toolkit}")
     ParamsPerJob += string(name: "inferencer_config", value: "${inferencer_config}")
     ParamsPerJob += string(name: "launcher_mode", value: "${launcher_mode}")
+    ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
 
     return ParamsPerJob
 }

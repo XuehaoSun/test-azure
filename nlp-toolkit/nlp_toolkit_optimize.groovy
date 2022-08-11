@@ -125,6 +125,12 @@ if ('val_branch' in params && params.val_branch != '') {
 }
 echo "val_branch: ${val_branch}"
 
+perf_bs = "1"
+if ('perf_bs' in params && params.perf_bs != '') {
+    perf_bs = params.perf_bs
+}
+echo "Performance batch size: ${perf_bs}"
+
 collect_tuned_model = false
 if (params.collect_tuned_model != null) {
     collect_tuned_model=params.collect_tuned_model
@@ -346,13 +352,15 @@ def create_conda_env(tensorflow_version, pytorch_version, onnxruntime_version, i
 
 def runPerfTest(mode, precision) {
     def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/${framework}_optimize.json"))."${model}"
-
     def benchmark_cmd = modelConf."benchmark"."cmd"
     def benchmark_params = modelConf."benchmark"."params"
-
+    def batch_size = 0
+    if (perf_bs != "default" && mode != "accuracy") {
+        batch_size = perf_bs
+    }
     benchmark_params.each{ k, v ->
-        if (multi_instance && k == "batch_size"){
-            v=1
+        if (k == "batch_size" && batch_size != 0){
+            v = batch_size
         }
         if (k == "int8"){
             v = (precision == k)
