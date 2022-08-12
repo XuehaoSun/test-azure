@@ -2200,3 +2200,5 @@ WARMUPS
 ende
 intra
 inteltensorflow
+AutoINC
+autoinc
