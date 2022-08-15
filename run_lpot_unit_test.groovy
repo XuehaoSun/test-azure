@@ -332,6 +332,9 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 echo "re-install pycocotools resolve the issue with numpy..."
                 pip uninstall pycocotools -y
                 pip install --no-cache-dir pycocotools
+                echo "re-install horovod resolve the issue with fwk..."
+                pip uninstall horovod -y
+                pip install --no-cache-dir horovod
                 if [[ ${is_base} == "true" ]];then
                     target_path=${WORKSPACE}/lpot-models-base
                     export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc_base
@@ -616,6 +619,9 @@ node(node_label){
                             echo "re-install pycocotools resolve the issue with numpy..."
                             pip uninstall pycocotools -y
                             pip install --no-cache-dir pycocotools
+                            echo "re-install horovod resolve the issue with fwk..."
+                            pip uninstall horovod -y
+                            pip install --no-cache-dir horovod
                             if [ ! -d ${WORKSPACE}/lpot-models ]; then
                                 echo "\\"lpot-model\\" not found. Exiting..."
                                 exit 1

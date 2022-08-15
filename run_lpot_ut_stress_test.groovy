@@ -294,6 +294,9 @@ def binary_install() {
             echo "re-install pycocotools resolve the issue with numpy..."
             pip uninstall pycocotools -y
             pip install --no-cache-dir pycocotools
+            echo "re-install horovod resolve the issue with fwk..."
+            pip uninstall horovod -y
+            pip install --no-cache-dir horovod
 
             if [ ! -d ${WORKSPACE}/lpot-models ]; then
                 echo "\\"lpot-model\\" not found. Exiting..."
