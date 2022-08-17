@@ -620,7 +620,7 @@
         },
         "min_latency": {
           "mode": "min_latency",
-         "instance_num": "1"
+          "instance_num": "1"
         }
       }
     }

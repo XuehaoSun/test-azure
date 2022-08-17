@@ -391,12 +391,21 @@ def runLauncherTest(mode, precision, launcher_cmd, launcher_cmd_params) {
        local_launcher_cmd += " --${k}=${v}" 
     }
     def local_benchmark_cmd = "${working_dir}/run_executor.py"
+    def batch_size = 0
+    if (perf_bs != "default" && mode != "accuracy") {
+        batch_size = perf_bs
+    }
     benchmark_cmd_params.each{ k, v -> 
         if (k == "mode") {
             v = "performance"
         }
         if (k == "input_model") {
-            v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
+            if (! v.find("/tf_dataset")) {
+                v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
+            }
+        }
+        if (k == "batch_size" && batch_size != 0){
+            v = batch_size
         }
        local_benchmark_cmd += " --${k}=${v}" 
     }
@@ -507,7 +516,6 @@ def run_inferencer(ncores_per_instance, bs, precision) {
         else
             python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/int8-model.onnx"); graph.save("./ir")'
         fi
-        ir_path=${working_dir_fullpath}/ir
         echo "ir_path for model ${model} is ${ir_path}"
         cd -
         echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
