@@ -244,6 +244,7 @@ def build_conda_env() {
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
                     --onnxruntime_version="${onnxruntime_version}" \
+                    --install_ipex=true
             '''
         }
     }
@@ -309,7 +310,7 @@ def binary_install() {
                 sed -i '/^neural-compressor/d' requirements.txt
                 sed -i '/^intel-tensorflow/d' requirements.txt
                 sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                sed -i '/^torch/d' requirements.txt
+                sed -i '/^torch/d;/^intel-extension-for-pytorch/d' requirements.txt
                 sed -i '/^mxnet-mkl/d' requirements.txt
                 sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
 

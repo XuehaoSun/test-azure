@@ -184,13 +184,42 @@ if [[ "${install_ipex}" == "true" ]]; then
             esac
             [[ -f ${ipex_whl} ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.9.0 -f https://software.intel.com/ipex-whl-stable";;
         1.10.0*)
-            install_params="intel_extension_for_pytorch==1.10.0 -f https://software.intel.com/ipex-whl-stable";;
+            case "${python_version}" in
+                3.7)
+                    ipex_whl="https://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.10/intel_extension_for_pytorch-1.10.0%2Bcpu-cp37-cp37m-linux_x86_64.whl";;
+                3.8)
+                    ipex_whl="https://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.10/intel_extension_for_pytorch-1.10.0%2Bcpu-cp38-cp38-linux_x86_64.whl";;
+                3.9)
+                    ipex_whl="https://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.10/intel_extension_for_pytorch-1.10.0%2Bcpu-cp39-cp39-linux_x86_64.whl";;
+            esac
+            [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.10.0 -f https://software.intel.com/ipex-whl-stable";;
         1.10.1*)
             install_params="intel_extension_for_pytorch==1.10.100+cpu -f https://software.intel.com/ipex-whl-stable";;
         1.11.0*)
-            install_params="intel_extension_for_pytorch==1.11.0+cpu -f https://software.intel.com/ipex-whl-stable";;
+            case "${python_version}" in
+                3.7)
+                    ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.11.0/intel_extension_for_pytorch-1.11.0%2Bcpu-cp37-cp37m-linux_x86_64.whl";;
+                3.8)
+                    ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.11.0/intel_extension_for_pytorch-1.11.0%2Bcpu-cp38-cp38-linux_x86_64.whl";;
+                3.9)
+                    ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.11.0/intel_extension_for_pytorch-1.11.0%2Bcpu-cp39-cp39-linux_x86_64.whl";;
+                3.10)
+                    ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.11.0/intel_extension_for_pytorch-1.11.0%2Bcpu-cp310-cp310-linux_x86_64.whl";;
+            esac
+            [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.11.0 -f https://software.intel.com/ipex-whl-stable";;
         1.12.0*)
-            install_params="intel_extension_for_pytorch==1.12.0+cpu -f https://software.intel.com/ipex-whl-stable";;
+            case "${python_version}" in
+                3.7)
+                    ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.12.0/intel_extension_for_pytorch-1.12.0%2Bcpu-cp37-cp37m-linux_x86_64.whl";;
+                3.8)
+                    ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.12.0/intel_extension_for_pytorch-1.12.0%2Bcpu-cp38-cp38-linux_x86_64.whl";;
+                3.9)
+                    ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.12.0/intel_extension_for_pytorch-1.12.0%2Bcpu-cp39-cp39-linux_x86_64.whl";;
+                3.10)
+                    ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.12.0/intel_extension_for_pytorch-1.12.0%2Bcpu-cp310-cp310-linux_x86_64.whl";;
+            esac
+            [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.12.0 -f https://software.intel.com/ipex-whl-stable";;
+
             #pip install cmake
             #cmake_path=`which cmake`
             #ln -s $cmake_path ${cmake_path}3
