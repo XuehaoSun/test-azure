@@ -738,7 +738,7 @@ def collectLauncherLogs(launchermode, precision) {
             echo "working in"
             pwd
             if [[ ! -f ${output_file} ]]; then
-                echo "${framework},${mode},${model},batch,cores per instance,Troughput,${precision}," >> ${WORKSPACE}/inferencer_summary.log
+                echo "${framework},${mode},${model},batch,cores per instance,Troughput,${precision}," >> ${WORKSPACE}/launcher_summary.log
             else
                 throughput=$(grep -A 2 "best," ${output_file} | tail -1 | awk -F "," '{print $1","$3","$4}')
                 log_file=$(grep -A 2 "best," ${output_file} | tail -1 | awk -F "=" '{print $NF}' | awk '{print $1}' | sed 's|\"||g')
