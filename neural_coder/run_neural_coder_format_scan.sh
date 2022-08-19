@@ -74,6 +74,7 @@ main() {
 run_pylint() {
     pip install pylint==2.12.1
     python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ./neural_coder > ${WORKSPACE}/lpot-pylint.json
+    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ./neural_compressor/ux >> ${WORKSPACE}/lpot-pylint.json
     # tf_utils.util will import some deps installed by tensorflow
     pip install intel-tensorflow
     exit_code=$?
