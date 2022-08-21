@@ -394,12 +394,16 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
             print(f"Changed dtype from {prev_dtype} to {dtype}")
         except Exception as e:
             print(f"[ WARNING ] {e}")
-    if tf_new_api == "true":
+    if tf_new_api:
+        if tf_new_api == "true":
+            framework_name = "inteltensorflow"
+        else:
+            framework_name = "tensorflow"
         try:
             model = yaml_config.get("model", {})
             prev_framework = model.get("framework", None)
-            model.update({"framework": "inteltensorflow"})
-            print(f"Changed framework from {prev_framework} to inteltensorflow")
+            model.update({"framework": framework_name})
+            print(f"Changed framework from {prev_framework} to {framework_name}")
         except Exception as e:
             print(f"[ WARNING ] {e}")
 

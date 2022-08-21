@@ -445,7 +445,7 @@ function update_yaml_config {
         update_yaml_params="${update_yaml_params} --dtype=${dtype}"
     fi
 
-    if [ "${tf_new_api}" != "" ]; then
+    if [ "${tf_new_api}" != "" ] && [ "${framework}" == "tensorflow" ]; then
         update_yaml_params="${update_yaml_params} --tf_new_api=${tf_new_api}"
     fi
 
