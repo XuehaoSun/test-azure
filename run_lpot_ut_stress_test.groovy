@@ -154,14 +154,17 @@ tf_binary_build_job=""
 if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
     tf_binary_build_job = params.tf_binary_build_job
 }
-if (python_version == "3.7"){
-    tf_binary_build_job = 100
-}else if (python_version == "3.8"){
-    tf_binary_build_job = 'lastSuccessfulBuild'
-}else if (python_version == "3.9"){
-    tf_binary_build_job = 101
-}else if (python_version == "3.10"){
-    tf_binary_build_job = 102
+
+if (tf_binary_build_job == ""){
+    if (python_version == "3.7"){
+        tf_binary_build_job = 100
+    }else if (python_version == "3.8"){
+        tf_binary_build_job = 'lastSuccessfulBuild'
+    }else if (python_version == "3.9"){
+        tf_binary_build_job = 101
+    }else if (python_version == "3.10"){
+        tf_binary_build_job = 102
+    }
 }
 
 echo "tf_binary_build_job is ${tf_binary_build_job}"

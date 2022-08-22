@@ -74,10 +74,12 @@ main() {
 run_pylint() {
     pip install pylint==2.12.1
     python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ./neural_coder > ${WORKSPACE}/lpot-pylint.json
+    exit_code1=$?
     python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ./neural_compressor/ux >> ${WORKSPACE}/lpot-pylint.json
+    exit_code2=$?
     # tf_utils.util will import some deps installed by tensorflow
     pip install intel-tensorflow
-    exit_code=$?
+    exit_code=$((${exit_code1} + ${exit_code2}))
     if [ ${exit_code} -ne 0 ] ; then
         echo "PyLint exited with non-zero exit code."; exit 1
     fi

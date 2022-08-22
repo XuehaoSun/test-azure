@@ -834,6 +834,10 @@ node( sub_node_label ) {
                             fingerprintArtifacts: true,
                             flatten: true,
                             target: "${WORKSPACE}")
+                }else{
+                    if (framework == "tensorflow"){
+                        tf_new_api="false"
+                    }
                 }
             }
 

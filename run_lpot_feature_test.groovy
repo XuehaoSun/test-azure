@@ -75,7 +75,7 @@ if ('os' in params && params.os != ''){
 echo "os: ${os}"
 
 if (feature_name == 'graph_optimization'){
-    sub_node_label='cpx'
+    sub_node_label='spr-acc'
 }
 
 def cleanup() {
