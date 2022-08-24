@@ -265,6 +265,9 @@ main() {
         if [ "${model}" == "bert_base_mrpc" ]; then
             parameters="${parameters} --dataset_location=${dataset_location}"
         fi
+        if [ "${model}" == "yolo_v3" ]; then
+            parameters="${parameters} --config=${yaml}"
+        fi
     fi
 
     if [ "${framework}" == "onnxrt" ] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
