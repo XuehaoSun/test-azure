@@ -134,7 +134,7 @@ function create_conda_env {
     else
       python_version="${origin_python_version}"
     fi
-    conda_env_name=lpot-py${python_version}-helloworld_${example_name}
+    conda_env_name=lpot-py${python_version}-helloworld
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
         rm -rf ${conda_dir}/envs/${conda_env_name}

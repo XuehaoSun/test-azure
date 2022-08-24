@@ -75,7 +75,7 @@ main() {
 run_cpplint() {
     pip install cpplint
     log_path=${WORKSPACE}/engine_cpplint.log
-    cpplint --exclude=${REPO_DIR}/nlp_toolkit/backends/neural_engine/executor/include/kernels/xbyak --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/ 2>&1| tee ${log_path}
+    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/ 2>&1| tee ${log_path}
     if [[ ! -f ${log_path} ]] || [[ $(grep -c "Total errors found:" ${log_path}) != 0 ]]; then
         exit 1
     fi
