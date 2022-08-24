@@ -262,7 +262,7 @@ if (params.RUN_UT_BAK != null) {
 }
 echo "RUN UT BACKEND = ${RUN_UT_BAK}"
 
-RUN_COVERAGE = true
+RUN_COVERAGE = false
 if (params.RUN_COVERAGE != null) {
     RUN_COVERAGE=params.RUN_COVERAGE
 }
