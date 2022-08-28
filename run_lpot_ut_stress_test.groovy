@@ -415,7 +415,7 @@ node(node_label){
             writeFile file: run_ut_scripts, text: ""
             writeFile file: run_tfnewapi_scripts, text: ""
             ut_cases.each{ ut_case ->
-                if (ut_case=~"tfnewapi"){
+                if ((ut_case=~"tfnewapi").find()){
                     run_ut_context = readFile file: run_tfnewapi_scripts
                     writeFile file: run_tfnewapi_scripts, text: run_ut_context + "python " + ut_case + "\n"
                 }else{
@@ -437,8 +437,7 @@ node(node_label){
                     if [[ "${tensorflow_version}" = "2.6.0" ]] || [[ "${intel_tf}" = "0" ]]; then
                         export TF_ENABLE_ONEDNN_OPTS=1
                         echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
-                    elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
-                        # default use block format
+                    elif [[ "${tensorflow_version}" = "2.5.0" ]]; then # default use block format
                         export TF_ENABLE_MKL_NATIVE_FORMAT=0
                         echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                     fi
@@ -446,18 +445,20 @@ node(node_label){
                     
                     ut_log_name=${WORKSPACE}/unit_test_${test_trials}.log
                     if [ -f "${run_ut_scripts}" ]; then
+                        echo "---------- Run basic test -----------------"
                         cat ${run_ut_scripts}
                         for((j=0;$j<${test_trials};j=$(($j + 1))));
                         do
                           echo "------ Start of test around ${j} -------" >> ${ut_log_name}
                           bash ${run_ut_scripts} 2>&1 | tee -a ${ut_log_name}
                           echo "\n" >> ${ut_log_name}
-                          if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                          if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ];then
                             exit 1
                           fi
                         done
                     fi
                     if [ -f "${run_tfnewapi_scripts}" ]; then
+                        echo "---------- Run TF newAPI -----------------"
                         cat ${run_tfnewapi_scripts}
                         pip install ${WORKSPACE}/tensorflow*.whl
                         for((j=0;$j<${test_trials};j=$(($j + 1))));
