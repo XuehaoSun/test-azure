@@ -267,7 +267,8 @@ def build_conda_env(conda_env_name) {
                     --torchvision_version="${torchvision_version}" \
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
-                    --onnxruntime_version="${onnxruntime_version}" 
+                    --onnxruntime_version="${onnxruntime_version}" \
+                    --install_ipex=true
             '''
         }
     }
