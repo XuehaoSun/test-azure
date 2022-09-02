@@ -1193,11 +1193,11 @@ def generateReport() {
             withEnv(["tuneLogLast=${tuneLogLast}", "summaryLogLast=${summaryLogLast}"]){
             sh '''#!/bin/bash -x
                 if [[ ! -f ${tuneLogLast} ]]; then
-                    [[ ! -d ${WORKSPACE}/reference ]] && sudo mkdir ${WORKSPACE}/reference
+                    [[ ! -d ${WORKSPACE}/reference ]] && mkdir ${WORKSPACE}/reference
                     touch ${tuneLogLast}
                 fi
                 if [[ ! -f ${summaryLogLast} ]]; then
-                    [[ ! -d ${WORKSPACE}/reference ]] && sudo mkdir ${WORKSPACE}/reference
+                    [[ ! -d ${WORKSPACE}/reference ]] && mkdir ${WORKSPACE}/reference
                     touch ${summaryLogLast}
                 fi
             '''
