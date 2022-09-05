@@ -278,6 +278,7 @@ def build_conda_env(conda_env_name) {
         local_path="/home/tensorflow/localfile"
         declare target_path=("/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/home/tensorflow/.keras/datasets/" "/tmp/.neural_compressor/inc_ut/")  
         mkdir -p /tmp/.neural_compressor/
+        rm -rf /home/tensorflow/.keras/datasets
         mkdir -p /home/tensorflow/.keras/datasets
         rm -rf /tmp/.neural_compressor/inc_ut/resnet_v2
         for((i=0; i<${#local_file_list[@]}; i++))
