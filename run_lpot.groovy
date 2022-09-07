@@ -156,6 +156,7 @@ if ('inferencer_config' in params && params.inferencer_config != ''){
 echo "inferencer_config: ${inferencer_config}"
 
 torchvision_versions = [
+        "1.12.1": "0.13.1",
         "1.12.0": "0.13.0",
         "1.11.0": "0.12.0",
         "1.10.1": "0.11.2",
