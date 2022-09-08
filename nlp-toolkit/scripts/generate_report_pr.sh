@@ -492,6 +492,9 @@ function generate_perf_core {
     ' >> ${WORKSPACE}/report.html
     job_state=$(tail -1 ${WORKSPACE}/report.html)
     sed -i '$s/.*//' ${WORKSPACE}/report.html
+    if [ ${job_state} == 'fail' ]; then
+      echo "performance regression" >> ${WORKSPACE}/perf_regression.log
+    fi
 }
 
 function generate_optimize_results {

@@ -25,8 +25,6 @@ do
             SCAN_TOOL=`echo $i | sed "s/${PATTERN}//"`;;
         --python_version=*)
             python_version=`echo $i | sed "s/${PATTERN}//"`;; 
-         --engine_only=*)
-            engine_only=`echo $i | sed "s/${PATTERN}//"`;; 
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -34,11 +32,11 @@ done
 
 main() {
     export PATH=${HOME}/miniconda3/bin/:$PATH
-    source activate nlp-toolkit-format_scan-${python_version}-${CPU_NAME} 
+    source activate sparse-lib-format_scan-${python_version}-${CPU_NAME} 
     pip -V
     python -V
     pip install -U pip
-
+    
     cd ${REPO_DIR}
     echo "Executing code scan on branch: $(git name-rev --name-only HEAD)."
     if [ -f "requirements.txt" ]; then
@@ -56,7 +54,7 @@ main() {
     else
         echo "Not found requirements.txt file."
     fi
-
+    
     echo "Executing code scan on branch: $(git name-rev --name-only HEAD)."
     cd ${REPO_DIR}
     echo "Code scan working path ${REPO_DIR} ..."
@@ -75,8 +73,7 @@ main() {
 run_cpplint() {
     pip install cpplint
     log_path=${WORKSPACE}/engine_cpplint.log
-    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/compile 2>&1| tee ${log_path}
-    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/executor 2>&1| tee -a ${log_path}
+    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/SparseLib 2>&1| tee ${log_path}
     cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/test 2>&1| tee -a ${log_path}
     if [[ ! -f ${log_path} ]] || [[ $(grep -c "Total errors found:" ${log_path}) != 0 ]]; then
         exit 1
@@ -111,11 +108,11 @@ run_pyspelling() {
     # Update paths to validation and lpot repositories
     VAL_REPO=${WORKSPACE}
 
-    sed -i "s|\${VAL_REPO}|$VAL_REPO|g" ${VAL_REPO}/nlp-toolkit/scripts/pyspelling_conf.yaml
-    sed -i "s|\${SCAN_REPO}|$REPO_DIR|g" ${VAL_REPO}/nlp-toolkit/scripts/pyspelling_conf.yaml
+    sed -i "s|\${VAL_REPO}|$VAL_REPO|g" ${VAL_REPO}/sparse_lib/pyspelling_conf.yaml
+    sed -i "s|\${SCAN_REPO}|$REPO_DIR|g" ${VAL_REPO}/sparse_lib/pyspelling_conf.yaml
     echo "Modified config:"
-    cat ${VAL_REPO}/nlp-toolkit/scripts/pyspelling_conf.yaml
-    pyspelling -c ${VAL_REPO}/nlp-toolkit/scripts/pyspelling_conf.yaml > ${WORKSPACE}/pyspelling_output.log
+    cat ${VAL_REPO}/sparse_lib/pyspelling_conf.yaml
+    pyspelling -c ${VAL_REPO}/sparse_lib/pyspelling_conf.yaml > ${WORKSPACE}/pyspelling_output.log
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "Pyspelling exited with non-zero exit code."; exit 1
