@@ -946,6 +946,22 @@ node( sub_node_label ) {
                         torchvision_version='0.9.0+cpu'
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
+                    if(model == "bert_large_ipex"){
+                        framework_version_base = framework_version.split('\\.')[1]
+                        if(framework_version_base.toInteger() < 12){
+                            framework_version = '1.12.1+cpu'
+                            torchvision_version='0.13.1+cpu'
+                            conda_env_name="${framework}-${framework_version}-${python_version}"
+                        }
+                    }
+                    if(model == "bert_large_1_10_ipex"){
+                        framework_version_base = framework_version.split('\\.')[1]
+                        if(framework_version_base.toInteger() > 11){
+                            framework_version = '1.11.0+cpu'
+                            torchvision_version='0.12.0+cpu'
+                            conda_env_name="${framework}-${framework_version}-${python_version}"
+                        }
+                    }
                 }
                 if (framework == "tensorflow") {
                     label=model.split('_')
