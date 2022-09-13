@@ -171,6 +171,9 @@ def do_binary_build() {
                     cat version.py
                     cd -
                 fi
+                if [[ -f requirements.txt ]]; then
+                    pip install -r requirements.txt
+                fi
                 python3 setup.py sdist bdist_wheel
                 pip install auditwheel
                 auditwheel repair dist/nlp_toolkit*.whl
