@@ -9,7 +9,7 @@ do
         --dataset_location=*)
             dataset_location=`echo $i | sed "s/${PATTERN}//"`;;
         --python_version=*)
-            python_version=`echo $i | sed "s/${PATTERN}//"`;;
+            origin_python_version=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -19,7 +19,7 @@ function main {
     export PATH=${HOME}/miniconda3/bin/:$PATH
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
 
-    for i in `seq 7`
+    for i in `seq 8`
     do
         create_conda_env "tf_example${i}"
         lpot_install
@@ -106,9 +106,35 @@ function tf_example7 {
     python test.py --benchmark
 }
 
+function tf_example8 {
+    cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example8 || return
+    if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
+        cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
+    else
+        cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
+    fi
+    python test.py
+}
+
+function tf_example9 {
+    export FORCE_BF16=1
+    cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example9 || return
+    if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
+        cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
+    else
+        cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
+    fi
+    python test.py
+}
+
 function create_conda_env {
     example_name=$1
-    conda_env_name=lpot-py${python_version}-helloworld_${example_name}
+    if [[ "${example_name}" == "tf_example3" ]]; then
+      python_version="3.7"
+    else
+      python_version="${origin_python_version}"
+    fi
+    conda_env_name=lpot-py${python_version}-helloworld
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
         rm -rf ${conda_dir}/envs/${conda_env_name}

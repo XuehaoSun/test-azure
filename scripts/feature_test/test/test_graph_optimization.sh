@@ -64,7 +64,14 @@ function create_conda_env {
         n=$((n+1))
         sleep 5
     done
-    pip install intel-tensorflow==${tensorflow_version}
+
+    intel_tensorflow_path=/home/tensorflow
+    intel_tf_whl=${intel_tensorflow_path}/intel_tensorflow-${tensorflow_version}-*.whl
+    if [ -f ${intel_tf_whl} ]; then
+        pip install ${intel_tf_whl}
+    else
+        pip install intel-tensorflow==${tensorflow_version}
+    fi
 
     if [[ ! $(pip list | grep intel_tensorflow) ]]; then
         py_version=$(echo ${python_version} | sed "s|\.||g")

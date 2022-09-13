@@ -23,6 +23,19 @@
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"       
       }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
     }
   },
   "bert_mini_sst2": {
@@ -48,6 +61,19 @@
         "iteration": 100,
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+         "max_throughput": {
+          "mode": "max_throughput",
+           "instance_num": "1,2,4,8"
+         },
+         "min_latency": {
+          "mode": "min_latency",
+          "instance_num": "1"
+         }
       }
     }
   },
@@ -75,6 +101,19 @@
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"           
       }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
     }
   },
   "distilbert_base_uncased_emotion": {
@@ -97,10 +136,23 @@
       "params": {
         "batch_size": 6,
         "seq_len": 128,
-        "warm_up": 8,
-        "iteration": 100,
+        "warm_up": 100,
+        "iteration": 1000,
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"           
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
       }
     }
   },
@@ -129,6 +181,19 @@
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
       }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
     }
   },
   "distilbert_base_uncased_sst2": {
@@ -154,6 +219,19 @@
         "iteration": 100,
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
       }
     }
   },
@@ -181,6 +259,19 @@
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
       }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
     }
   },
   "bert_base_sparse_mrpc": {
@@ -206,6 +297,19 @@
         "iteration": 100,
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
       }
     }
   },
@@ -233,6 +337,19 @@
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
       }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
     }
   },
   "minilm_l6_h384_uncased_sst2": {
@@ -258,6 +375,19 @@
         "iteration": 100,
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
       }
     }
   },
@@ -285,6 +415,19 @@
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
       }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
     }
   },
   "paraphrase_xlm_r_multilingual_v1_stsb": {
@@ -310,6 +453,19 @@
         "iteration": 100,
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
       }
     }
   },
@@ -337,6 +493,19 @@
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
       }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
     }
   },
   "bert_base_cased_mrpc": {
@@ -362,6 +531,19 @@
         "iteration": 100,
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
       }
     }
   },
@@ -389,6 +571,19 @@
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
       }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+          "instance_num": "1"
+        }
+      }
     }
   },
   "finbert_financial_phrasebank": {
@@ -414,6 +609,58 @@
         "iteration": 100,
         "input_model": "model_and_tokenizer",
         "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+          "instance_num": "1"
+        }
+      }
+    }
+  },
+  "bert_mini_sparse": {
+    "working_dir": "deployment/neural_engine/sparse/bert_mini",
+    "data_dir": "/tf_dataset2/datasets/sst2_data",
+    "hf_model_name": "prajjwal1/bert-mini",
+    "prepare": {
+      "cmd": "prepare_model.sh",
+      "params": {
+         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_mini_sst2_sparse",
+         "task_name": "sst2",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/bert_mini_sparse",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "/tf_dataset2/models/nlp_toolkit/bert_mini_sst2_sparse",
+        "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+          "instance_num": "1"
+        }
       }
     }
   }

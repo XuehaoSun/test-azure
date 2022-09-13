@@ -1,7 +1,7 @@
 {
    "info":{
       "platform":null,
-      "default_python_version":"3.7",
+      "default_python_version":"3.8",
       "arch":null,
       "subdir":"noarch",
       "default_numpy_version":"1.20"

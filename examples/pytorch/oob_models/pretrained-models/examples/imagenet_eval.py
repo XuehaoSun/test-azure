@@ -198,8 +198,9 @@ def main():
         model = model.to(memory_format=torch.channels_last)
 
     if args.evaluate:
+        model.eval()
         if args.jit:
-            scripted_model = torch.jit.script(model.eval())
+            scripted_model = torch.jit.script(model)
             validate(val_loader, scripted_model, criterion, args)
         else:
             model.eval()

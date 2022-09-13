@@ -1,3 +1,9 @@
+top_node_label = "master"
+if ('top_node_label' in params && params.top_node_label != '') {
+    top_node_label = params.top_node_label
+}
+echo "Running on node ${top_node_label}"
+
 def Exception(String step, def e) {
     def msg = "Job name: $JOB_NAME\nBuild ID:$BUILD_ID\nStep: $step\nException: $e"
     echo "$msg"
@@ -186,6 +192,6 @@ def main() {
 }
 
 
-node("master") {
+node(top_node_label) {
     main()
 }

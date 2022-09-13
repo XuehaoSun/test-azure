@@ -139,44 +139,60 @@ function main {
     cat $file_name | while read line
     do
         echo "read line: $line"
-        if [[ $(echo $line | grep "[0-9]a[0-9]") ]] && [[ $(cat $file_name | grep -A 1 "$line" | grep ">") ]]; then
-            file=$(cat $file_name | grep -A 1 "$line" | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $1}')
-            miss=$(cat $file_name | grep -A 1 "$line" | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $3}')
-            cover=$(cat $file_name | grep -A 1 "$line" | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $6}')
-            branch=$(cat $file_name | grep -A 1 "$line" | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $4}')
-            echo """
-            <tr><td>PR/BASE</td><td style=\"text-align:left\">${file}</td>
-                <td style=\"text-align:left\">NA/${miss}</td>
-                <td style=\"text-align:left\">NA/${branch}</td>
-                <td style=\"text-align:left\">NA/${cover}</td>
-            </tr>""" >> ${output_file}
-        elif [[ $(echo $line | grep "[0-9]c[0-9]") ]] && [[ $(cat $file_name | grep -A 1 "$line" | grep "<") ]] && [[ $(cat $file_name | grep -A 2 "$line" | grep ">") ]]; then
-            file1=$(cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $1}')
-            miss1=$(cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $3}')
-            cover1=$(cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $6}')
-            branch1=$(cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $4}')
-            file2=$(cat $file_name | grep -A 2 "$line" | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $1}')
-            miss2=$(cat $file_name | grep -A 2 "$line" | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $3}')
-            cover2=$(cat $file_name | grep -A 2 "$line" | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $6}')
-            branch2=$(cat $file_name | grep -A 2 "$line" | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $4}')
-            echo """
-            <tr><td>PR/BASE</td><td style=\"text-align:left\">${file1}</td>
-                <td style=\"text-align:left\">${miss1}/${miss2}</td>
-                <td style=\"text-align:left\">${branch1}/${branch2}</td>
-                <td style=\"text-align:left\">${cover1}/${cover2}</td>
-            </tr>""" >> ${output_file}
+        if [[ $(echo $line | grep "[0-9]a[0-9]") ]] && [[ $(grep -A 1 "$line" $file_name | grep ">") ]]; then
+            diff_lines=$(sed -n "/${line}/,/^[0-9]/p" ${file_name} | grep ">")
+            diff_file_name=$(echo ${diff_lines} | grep -Po "[a-z,A-Z].*?.py")
+            for diff_file in ${diff_file_name}
+            do          
+              file=$(grep "${diff_file}" $file_name | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $1}')
+              miss=$(grep "${diff_file}" $file_name | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $3}')
+              cover=$(grep "${diff_file}" $file_name | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $6}')
+              branch=$(grep "${diff_file}" $file_name | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $4}')
+              echo """
+              <tr><td>PR | BASE</td><td style=\"text-align:left\">${file}</td>
+                  <td style=\"text-align:left\">NA | ${miss}</td>
+                  <td style=\"text-align:left\">NA | ${branch}</td>
+                  <td style=\"text-align:left\">NA | ${cover}</td>
+              </tr>""" >> ${output_file}
+            done
+        elif [[ $(echo $line | grep "[0-9]c[0-9]") ]] && [[ $(cat $file_name | grep -A 1 "$line" | grep "<") ]]; then
+            diff_lines=$(sed -n "/${line}/,/^[0-9]/p" ${file_name} | grep "<")
+            diff_file_name=$(echo ${diff_lines} | grep -Po "[a-z,A-Z].*?.py")
+            for diff_file in ${diff_file_name}
+            do          
+              file1=$(grep "${diff_file}" $file_name | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $1}')
+              miss1=$(grep "${diff_file}" $file_name | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $3}')
+              cover1=$(grep "${diff_file}" $file_name | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $6}')
+              branch1=$(grep "${diff_file}" $file_name | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $4}')
+              file2=$(grep "${diff_file}" $file_name | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $1}')
+              miss2=$(grep "${diff_file}" $file_name | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $3}')
+              cover2=$(grep "${diff_file}" $file_name | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $6}')
+              branch2=$(grep "${diff_file}" $file_name | grep -Po ">.*" | sed 's/>[ \t]*//g' | awk '{print $4}')
+              [[ "${cover1}" == "${cover2}" ]] && continue
+              echo """
+              <tr><td>PR | BASE</td><td style=\"text-align:left\">${file1}</td>
+                  <td style=\"text-align:left\">${miss1} | ${miss2}</td>
+                  <td style=\"text-align:left\">${branch1} | ${branch2}</td>
+                  <td style=\"text-align:left\">${cover1} | ${cover2}</td>
+              </tr>""" >> ${output_file}
+            done
         elif [[ $(echo $line | grep "[0-9]d[0-9]") ]] && [[ $(cat $file_name | grep -A 1 "$line" | grep "<") ]]; then
-            cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/<[ \t]*//g' >> $output_file
-            file=$(cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/>[ \t]*//g' | awk '{print $1}')
-            miss=$(cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/>[ \t]*//g' | awk '{print $3}')
-            cover=$(cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/>[ \t]*//g' | awk '{print $6}')
-            branch=$(cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/>[ \t]*//g' | awk '{print $4}')
-            echo """
-            <tr><td>PR/BASE</td><td style=\"text-align:left\">${file}/NA</td>
-                <td style=\"text-align:left\">${miss}/NA</td>
-                <td style=\"text-align:left\">${branch}/NA</td>
-                <td style=\"text-align:left\">${cover}/NA</td>
-            </tr>""" >> ${output_file}
+            diff_lines=$(sed -n "/${line}/,/^[0-9]/p" ${file_name} | grep "<")
+            diff_file_name=$(echo ${diff_lines} | grep -Po "[a-z,A-Z].*?.py")
+            for diff_file in ${diff_file_name}
+            do    
+              #cat $file_name | grep -A 1 "$line" | grep -Po "<.*" | sed 's/<[ \t]*//g' >> $output_file
+              file=$(grep "${diff_file}" $file_name | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $1}')
+              miss=$(grep "${diff_file}" $file_name | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $3}')
+              cover=$(grep "${diff_file}" $file_name | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $6}')
+              branch=$(grep "${diff_file}" $file_name | grep -Po "<.*" | sed 's/<[ \t]*//g' | awk '{print $4}')
+              echo """
+              <tr><td>PR | BASE</td><td style=\"text-align:left\">${file} | NA</td>
+                  <td style=\"text-align:left\">${miss} | NA</td>
+                  <td style=\"text-align:left\">${branch} | NA</td>
+                  <td style=\"text-align:left\">${cover} | NA</td>
+              </tr>""" >> ${output_file}
+            done
         fi
     done
     # generage table end

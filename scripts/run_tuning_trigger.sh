@@ -255,7 +255,7 @@ main() {
     fi
 
     if [ "${framework}" == "tensorflow" ]; then
-        new_config_dirs=("image_recognition" "object_detection" "nlp/bert" "semantic_image_segmentation" "keras" "SavedModel")
+        new_config_dirs=("image_recognition" "object_detection/tensorflow_models" "nlp/bert" "semantic_image_segmentation" "keras" "SavedModel")
         for model_dir in ${new_config_dirs[*]}; do
             if [[ "${model_src_dir}" == *"${model_dir}"* ]]; then
                 parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
@@ -265,6 +265,9 @@ main() {
         if [ "${model}" == "bert_base_mrpc" ]; then
             parameters="${parameters} --dataset_location=${dataset_location}"
         fi
+        if [ "${model}" == "yolo_v3" ]; then
+            parameters="${parameters} --config=${yaml}"
+        fi
     fi
 
     if [ "${framework}" == "onnxrt" ] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
@@ -272,7 +275,7 @@ main() {
     fi
 
     if [ "${framework}" == "onnxrt" ]; then
-        onnxrt_ds_location_models=("bert_squad_model_zoo" "mobilebert_squad_mlperf" "gpt2_lm_head_wikitext_model_zoo")
+        onnxrt_ds_location_models=("bert_squad_model_zoo" "mobilebert_squad_mlperf" "gpt2_lm_head_wikitext_model_zoo" "densenet" "ssd-12" "ssd-12_qdq")
         if [[ " ${onnxrt_ds_location_models[@]} " =~ " ${model} " ]]; then
             parameters="${parameters} --data_path=${dataset_location}"
         fi
@@ -445,7 +448,7 @@ function update_yaml_config {
         update_yaml_params="${update_yaml_params} --dtype=${dtype}"
     fi
 
-    if [ "${tf_new_api}" != "" ]; then
+    if [ "${tf_new_api}" != "" ] && [ "${framework}" == "tensorflow" ]; then
         update_yaml_params="${update_yaml_params} --tf_new_api=${tf_new_api}"
     fi
 

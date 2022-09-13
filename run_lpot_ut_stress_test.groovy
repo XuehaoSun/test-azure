@@ -154,14 +154,17 @@ tf_binary_build_job=""
 if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
     tf_binary_build_job = params.tf_binary_build_job
 }
-if (python_version == "3.7"){
-    tf_binary_build_job = 100
-}else if (python_version == "3.8"){
-    tf_binary_build_job = 99
-}else if (python_version == "3.9"){
-    tf_binary_build_job = 101
-}else if (python_version == "3.10"){
-    tf_binary_build_job = 102
+
+if (tf_binary_build_job == ""){
+    if (python_version == "3.7"){
+        tf_binary_build_job = 100
+    }else if (python_version == "3.8"){
+        tf_binary_build_job = 'lastSuccessfulBuild'
+    }else if (python_version == "3.9"){
+        tf_binary_build_job = 101
+    }else if (python_version == "3.10"){
+        tf_binary_build_job = 102
+    }
 }
 
 echo "tf_binary_build_job is ${tf_binary_build_job}"
@@ -244,20 +247,24 @@ def build_conda_env() {
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
                     --onnxruntime_version="${onnxruntime_version}" \
+                    --install_ipex=true
             '''
         }
     }
     // prepare env with local files to avoid network downloading problem
     sh'''#!/bin/bash
         set -xe
-        declare local_file_list=("mobilenet_v1_1.0_224.tgz" "slim/inception_v1_2016_08_28.tar.gz" "saved_model.tar.gz" "ssd_resnet50_v1.tgz" "cifar-10-batches-py.tar.gz")
+        declare local_file_list=("mobilenet_v1_1.0_224.tgz" "slim/inception_v1_2016_08_28.tar.gz" "saved_model.tar.gz" "ssd_resnet50_v1.tgz" "cifar-10-batches-py.tar.gz" "resnet_v2")
         local_path="/home/tensorflow/localfile"
-        declare target_path=("/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/home/tensorflow/.keras/datasets/")
+        declare target_path=("/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/home/tensorflow/.keras/datasets/" "/tmp/.neural_compressor/inc_ut/")
+        mkdir -p /tmp/.neural_compressor/
+        mkdir -p /home/tensorflow/.keras/datasets
+        rm -rf /tmp/.neural_compressor/inc_ut/resnet_v2
         for((i=0; i<${#local_file_list[@]}; i++))
         do
             filename=${local_file_list[i]}
-            [[ ! -f ${local_path}/${filename} ]] && continue
-            [[ -d ${local_path}/${filename%/*} ]] && mkdir -p ${target_path[i]}${filename%/*}
+            [[ ! -f ${local_path}/${filename} && ! -d ${local_path}/${filename} ]] && continue
+            [[ -d ${local_path}/${filename%/*} ]] && mkdir -p ${target_path[i]}${filename%/*} && cp -r ${local_path}/${filename} ${target_path[i]} && continue
             cp -r ${local_path}/${filename} ${target_path[i]}${filename}
         done
     '''
@@ -291,6 +298,9 @@ def binary_install() {
             echo "re-install pycocotools resolve the issue with numpy..."
             pip uninstall pycocotools -y
             pip install --no-cache-dir pycocotools
+            echo "re-install horovod resolve the issue with fwk..."
+            pip uninstall horovod -y
+            pip install --no-cache-dir horovod
 
             if [ ! -d ${WORKSPACE}/lpot-models ]; then
                 echo "\\"lpot-model\\" not found. Exiting..."
@@ -303,7 +313,7 @@ def binary_install() {
                 sed -i '/^neural-compressor/d' requirements.txt
                 sed -i '/^intel-tensorflow/d' requirements.txt
                 sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                sed -i '/^torch/d' requirements.txt
+                sed -i '/^torch/d;/^intel-extension-for-pytorch/d' requirements.txt
                 sed -i '/^mxnet-mkl/d' requirements.txt
                 sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
 
@@ -405,7 +415,7 @@ node(node_label){
             writeFile file: run_ut_scripts, text: ""
             writeFile file: run_tfnewapi_scripts, text: ""
             ut_cases.each{ ut_case ->
-                if (ut_case=~"tfnewapi"){
+                if ((ut_case=~"tfnewapi").find()){
                     run_ut_context = readFile file: run_tfnewapi_scripts
                     writeFile file: run_tfnewapi_scripts, text: run_ut_context + "python " + ut_case + "\n"
                 }else{
@@ -427,8 +437,7 @@ node(node_label){
                     if [[ "${tensorflow_version}" = "2.6.0" ]] || [[ "${intel_tf}" = "0" ]]; then
                         export TF_ENABLE_ONEDNN_OPTS=1
                         echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
-                    elif [[ "${tensorflow_version}" = "2.5.0" ]]; then
-                        # default use block format
+                    elif [[ "${tensorflow_version}" = "2.5.0" ]]; then # default use block format
                         export TF_ENABLE_MKL_NATIVE_FORMAT=0
                         echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                     fi
@@ -436,18 +445,20 @@ node(node_label){
                     
                     ut_log_name=${WORKSPACE}/unit_test_${test_trials}.log
                     if [ -f "${run_ut_scripts}" ]; then
+                        echo "---------- Run basic test -----------------"
                         cat ${run_ut_scripts}
                         for((j=0;$j<${test_trials};j=$(($j + 1))));
                         do
                           echo "------ Start of test around ${j} -------" >> ${ut_log_name}
                           bash ${run_ut_scripts} 2>&1 | tee -a ${ut_log_name}
                           echo "\n" >> ${ut_log_name}
-                          if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                          if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ];then
                             exit 1
                           fi
                         done
                     fi
                     if [ -f "${run_tfnewapi_scripts}" ]; then
+                        echo "---------- Run TF newAPI -----------------"
                         cat ${run_tfnewapi_scripts}
                         pip install ${WORKSPACE}/tensorflow*.whl
                         for((j=0;$j<${test_trials};j=$(($j + 1))));
@@ -483,8 +494,6 @@ node(node_label){
                         fi
                         export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                         cd ${WORKSPACE}/lpot-models/test
-                        # mute engine log
-                        export GLOG_minloglevel=2
                         lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                         
                         coverage erase

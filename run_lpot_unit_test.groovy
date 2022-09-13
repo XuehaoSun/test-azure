@@ -85,6 +85,7 @@ if (params.run_coverage != null){
 echo "run_coverage = ${run_coverage}"
 
 torchvision_versions = [
+    "1.12.1": "0.13.1",
     "1.12.0": "0.13.0",
     "1.11.0": "0.12.0",
     "1.10.1": "0.11.2",
@@ -138,14 +139,16 @@ tf_binary_build_job=""
 if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
     tf_binary_build_job = params.tf_binary_build_job
 }
-if (python_version == "3.7"){
-    tf_binary_build_job = 100
-}else if (python_version == "3.8"){
-    tf_binary_build_job = 99
-}else if (python_version == "3.9"){
-    tf_binary_build_job = 101
-}else if (python_version == "3.10"){
-    tf_binary_build_job = 102
+if (tf_binary_build_job == ""){
+    if (python_version == "3.7"){
+        tf_binary_build_job = 100
+    }else if (python_version == "3.8"){
+        tf_binary_build_job = 'lastSuccessfulBuild'
+    }else if (python_version == "3.9"){
+        tf_binary_build_job = 101
+    }else if (python_version == "3.10"){
+        tf_binary_build_job = 102
+    }
 }
 
 echo "tf_binary_build_job is ${tf_binary_build_job}"
@@ -265,24 +268,10 @@ def build_conda_env(conda_env_name) {
                     --torchvision_version="${torchvision_version}" \
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
-                    --onnxruntime_version="${onnxruntime_version}"
+                    --onnxruntime_version="${onnxruntime_version}" 
             '''
         }
     }
-    // prepare env with local files to avoid network downloading problem
-    sh'''#!/bin/bash
-        set -xe
-        declare local_file_list=("mobilenet_v1_1.0_224.tgz" "slim/inception_v1_2016_08_28.tar.gz" "saved_model.tar.gz" "ssd_resnet50_v1.tgz" "cifar-10-batches-py.tar.gz")
-        local_path="/home/tensorflow/localfile"
-        declare target_path=("/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/home/tensorflow/.keras/datasets/")
-        for((i=0; i<${#local_file_list[@]}; i++))
-        do
-            filename=${local_file_list[i]}
-            [[ ! -f ${local_path}/${filename} ]] && continue
-            [[ -d ${local_path}/${filename%/*} ]] && mkdir -p ${target_path[i]}${filename%/*}
-            cp -r ${local_path}/${filename} ${target_path[i]}${filename}
-        done
-    '''
 }
 
 def run_coverage_test(is_base=false, MR_branch=""){
@@ -329,6 +318,9 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 echo "re-install pycocotools resolve the issue with numpy..."
                 pip uninstall pycocotools -y
                 pip install --no-cache-dir pycocotools
+                echo "re-install horovod resolve the issue with fwk..."
+                pip uninstall horovod -y
+                pip install --no-cache-dir horovod
                 if [[ ${is_base} == "true" ]];then
                     target_path=${WORKSPACE}/lpot-models-base
                     export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc_base
@@ -352,7 +344,7 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     sed -i '/^neural-compressor/d' requirements.txt
                     sed -i '/^intel-tensorflow/d' requirements.txt
                     sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                    sed -i '/^torch/d' requirements.txt
+                    sed -i '/^torch/d;/^intel-extension-for-pytorch/d' requirements.txt
                     sed -i '/^mxnet-mkl/d' requirements.txt
                     sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
                     n=0
@@ -378,8 +370,6 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     export TF_ENABLE_MKL_NATIVE_FORMAT=0
                     echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                 fi
-                # mute engine log
-                export GLOG_minloglevel=2
                 lpot_path=$(python -c 'import neural_compressor; import os; print(os.path.dirname(neural_compressor.__file__))')
                 find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
                 if [ -d "tfnewapi" ]; then 
@@ -486,6 +476,23 @@ node(node_label){
         }
 
         stage('env_build') {
+            // prepare env with local files to avoid network downloading problem
+            sh'''#!/bin/bash
+                set -xe
+                declare local_file_list=("mobilenet_v1_1.0_224.tgz" "slim/inception_v1_2016_08_28.tar.gz" "saved_model.tar.gz" "ssd_resnet50_v1.tgz" "cifar-10-batches-py.tar.gz" "resnet_v2")
+                local_path="/home/tensorflow/localfile"
+                declare target_path=("/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/home/tensorflow/.keras/datasets/" "/tmp/.neural_compressor/inc_ut/")  
+                mkdir -p /tmp/.neural_compressor/
+                mkdir -p /home/tensorflow/.keras/datasets
+                rm -rf /tmp/.neural_compressor/inc_ut/resnet_v2
+                for((i=0; i<${#local_file_list[@]}; i++))
+                do
+                    filename=${local_file_list[i]}
+                    [[ ! -f ${local_path}/${filename} && ! -d ${local_path}/${filename} ]] && continue
+                    [[ -d ${local_path}/${filename%/*} ]] && mkdir -p ${target_path[i]}${filename%/*} && cp -r ${local_path}/${filename} ${target_path[i]} && continue
+                    cp -r ${local_path}/${filename} ${target_path[i]}${filename}
+                done
+            '''
             if (MR_source_branch != "" && run_coverage) {
                 // Pre-CI
                 parallel(
@@ -615,6 +622,9 @@ node(node_label){
                             echo "re-install pycocotools resolve the issue with numpy..."
                             pip uninstall pycocotools -y
                             pip install --no-cache-dir pycocotools
+                            echo "re-install horovod resolve the issue with fwk..."
+                            pip uninstall horovod -y
+                            pip install --no-cache-dir horovod
                             if [ ! -d ${WORKSPACE}/lpot-models ]; then
                                 echo "\\"lpot-model\\" not found. Exiting..."
                                 exit 1
@@ -625,7 +635,7 @@ node(node_label){
                                 sed -i '/^neural-compressor/d' requirements.txt
                                 sed -i '/^intel-tensorflow/d' requirements.txt
                                 sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                                sed -i '/^torch/d' requirements.txt
+                                sed -i '/^torch/d;/^intel-extension-for-pytorch/d' requirements.txt
                                 sed -i '/^mxnet-mkl/d' requirements.txt
                                 sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
                                 n=0
@@ -650,8 +660,6 @@ node(node_label){
                                 export TF_ENABLE_MKL_NATIVE_FORMAT=0
                                 echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
                             fi
-                            # mute engine log
-                            export GLOG_minloglevel=2
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                             ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
                             

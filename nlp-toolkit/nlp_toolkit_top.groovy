@@ -124,7 +124,7 @@ if ('tensorflow_models' in params && params.tensorflow_models != '') {
 }
 echo "tensorflow_models: ${tensorflow_models}"
 // ncores_per_instance:bs for nlp_excutor inference
-inferencer_config = "4:64,4:128,24:1"
+inferencer_config = "4:64,4:128,28:1"
 if ('inferencer_config' in params && params.inferencer_config != '') {
     inferencer_config=params.inferencer_config
 }
@@ -210,6 +210,12 @@ if (params.multi_instance != null) {
 }
 echo "Multi instance: ${multi_instance}"
 
+perf_bs = "1"
+if ('perf_bs' in params && params.perf_bs != '') {
+    perf_bs = params.perf_bs
+}
+echo "Performance batch size: ${perf_bs}"
+
 log_level = "DEBUG"
 if ('log_level' in params && params.log_level != '') {
     log_level=params.log_level
@@ -256,7 +262,7 @@ if (params.RUN_UT_BAK != null) {
 }
 echo "RUN UT BACKEND = ${RUN_UT_BAK}"
 
-RUN_COVERAGE = true
+RUN_COVERAGE = false
 if (params.RUN_COVERAGE != null) {
     RUN_COVERAGE=params.RUN_COVERAGE
 }
@@ -337,6 +343,12 @@ lpot_branch="master"
 if ('lpot_branch' in params && params.lpot_branch) {
     lpot_branch=params.lpot_branch
 }
+
+launcher_mode = ""
+if ('launcher_mode' in params && params.launcher_mode != '') {
+    launcher_mode=params.launcher_mode
+}
+echo "launcher_mode: ${launcher_mode}"
 
 def parseStrToList(srtingElements, delimiter=',') {
     if (srtingElements == '') {
@@ -606,52 +618,51 @@ def copyrightCheck() {
     }
 }
 
-def unitTestBackend() {
-    def unit_test_mode_list = ["pytest", "gtest"]
+def unitTestBackend(unit_test_mode) {
     def ut_jobs = [:]
-    for (def unit_test_mode : unit_test_mode_list) {
-        List UTBuildParams = [
-            string(name: "nlp_url", value: "${nlp_url}"),
-            string(name: "nlp_branch", value: "${nlp_commit}"),
-            string(name: "PR_source_branch", value: "${source_branch}"),
-            string(name: "PR_target_branch", value: "${target_branch}"),
-            string(name: "val_branch", value: "${val_branch}"),
-            string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
-            string(name: "binary_build_job", value: "${binary_build_job}"),
-            booleanParam(name: "run_coverage", value: RUN_COVERAGE),
-            string(name: "unit_test_mode", value: "${unit_test_mode}")
-        ]
-        ut_jobs[unit_test_mode] = {
-            downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
-            catchError {
-                copyArtifacts(
-                        projectName: "nlp-toolkit-backend-ut",
-                        selector: specific("${downstreamJob.getNumber()}"),
-                        filter: '*.log, *.txt, **/coverage_results_backend/**/*',
-                        fingerprintArtifacts: true,
-                        target: "unittest")
-
-                archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+    List UTBuildParams = [
+        string(name: "nlp_url", value: "${nlp_url}"),
+        string(name: "nlp_branch", value: "${nlp_commit}"),
+        string(name: "PR_source_branch", value: "${source_branch}"),
+        string(name: "PR_target_branch", value: "${target_branch}"),
+        string(name: "python_version", value: "${python_version}"),
+        string(name: "val_branch", value: "${val_branch}"),
+        string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
+        string(name: "binary_build_job", value: "${binary_build_job}"),
+        booleanParam(name: "run_coverage", value: RUN_COVERAGE),
+        string(name: "unit_test_mode", value: "${unit_test_mode}")
+    ]
+    ut_jobs[unit_test_mode] = {
+        downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
+        catchError {
+            copyArtifacts(
+                    projectName: "nlp-toolkit-backend-ut",
+                    selector: specific("${downstreamJob.getNumber()}"),
+                    filter: '*.log, *.txt, **/coverage_results_backend/**/*, **/coverage_results_base_backend/**/*',
+                    fingerprintArtifacts: true,
+                    target: "unittest")
+            archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+        }
+        if (downstreamJob.result != 'SUCCESS') {
+            def sub_job_url = downstreamJob.absoluteUrl
+            withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
+                sh '''#!/bin/bash
+                overviewLog="${WORKSPACE}/summary_overview.log"
+                echo "deep-engine_ut_${ut_mode},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
+                '''
             }
-            if (downstreamJob.result != 'SUCCESS') {
-                def sub_job_url = downstreamJob.absoluteUrl
-                withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
-                    sh '''#!/bin/bash
-                    overviewLog="${WORKSPACE}/summary_overview.log"
-                    echo "deep-engine_ut_${ut_mode},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
-                    '''
-                }
+            currentBuild.result = "FAILURE"
+            error("---${unit_test_mode} test failed---")
+        }
+        println(RUN_COVERAGE)
+        println(unit_test_mode)
+        if (RUN_COVERAGE && unit_test_mode == "pytest"){
+            overview = readFile file: "${overviewLog}"
+            coverage_status_engine = readFile file: "unittest/coverage_status_engine.txt"
+            writeFile file: "${overviewLog}", text: overview + coverage_status_engine + "\n"
+            // Coverage decrease is not allowed in MRs
+            if (test_mode == "pre-CI" && coverage_status_engine.split(",")[1] != "SUCCESS") {
                 currentBuild.result = "FAILURE"
-                error("---${unit_test_mode} test failed---")
-            } 
-            if (RUN_COVERAGE && unit_test_mode == "pytest") {
-                overview = readFile file: "${overviewLog}"
-                coverage_status = readFile file: "unittest/coverage_status_engine.txt"
-                writeFile file: "${overviewLog}", text: overview + coverage_status + "\n"
-                // Coverage decrease is not allowed in MRs
-                if (test_mode == "pre-CI" && coverage_status.split(",")[1] != "SUCCESS") {
-                    currentBuild.result = "FAILURE"
-                }
             }
         }
     }
@@ -666,7 +677,7 @@ def unitTestJobsOptimize() {
             copyArtifacts(
                     projectName: "nlp-toolkit-optimize-ut",
                     selector: specific("${downstreamJob.getNumber()}"),
-                    filter: '*.log, *.txt, **/coverage_results/**/*',
+                    filter: '*.log, *.txt, **/coverage_results/**/*, **/coverage_results_base/**/*',
                     fingerprintArtifacts: true,
                     target: "unittest")
 
@@ -861,6 +872,8 @@ def BuildParams(job_framework, model, cpu, os){
     ParamsPerJob += string(name: "log_level", value: "${log_level}")
     ParamsPerJob += string(name: "install_nlp_toolkit", value: "${install_nlp_toolkit}")
     ParamsPerJob += string(name: "inferencer_config", value: "${inferencer_config}")
+    ParamsPerJob += string(name: "launcher_mode", value: "${launcher_mode}")
+    ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
 
     return ParamsPerJob
 }
@@ -966,7 +979,7 @@ def model_test_deploy() {
                             copyArtifacts(
                                     projectName: sub_jenkins_job,
                                     selector: specific("${downstreamJob.getNumber()}"),
-                                    filter: "*.log, ${job_framework}*.json, engine-${job_model}/**",
+                                    filter: "*.log, *.csv, ${job_framework}*.json, engine-${job_model}/**, launcher*/**",
                                     fingerprintArtifacts: true,
                                     target: "${workflow}/${job_framework}/${job_model}",
                                     optional: true)
@@ -1093,6 +1106,7 @@ def collect_deploy_Log() {
                         else
                             echo "${system};Unknown;${workflow};${job_framework};N/A;INT8;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                             echo "${system};Unknown;${workflow};${job_framework};N/A;FP32;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
+                            echo "${system};Unknown;${workflow};${job_framework};N/A;BF16;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                         fi
                     """
                     echo "Getting benchmark results for ${job_framework} - ${job_model}"
@@ -1102,6 +1116,17 @@ def collect_deploy_Log() {
                         else
                             echo "${job_framework},throughput,${job_model},,,,,INT8," >> ${WORKSPACE}/inferencer_summary.log
                             echo "${job_framework},throughput,${job_model},,,,,FP32," >> ${WORKSPACE}/inferencer_summary.log
+                            echo "${job_framework},throughput,${job_model},,,,,BF16," >> ${WORKSPACE}/inferencer_summary.log
+                        fi
+                    """
+                    echo "Getting launcher results for ${job_framework} - ${job_model}"
+                    sh """#!/bin/bash -x
+                        if [[ -f ${WORKSPACE}/${workflow}/${job_framework}/${job_model}/launcher_summary.log ]]; then
+                            cat ${WORKSPACE}/${workflow}/${job_framework}/${job_model}/launcher_summary.log >> ${WORKSPACE}/launcher_summary.log
+                        else
+                            echo "${job_framework},none,${job_model},,,,INT8," >> ${WORKSPACE}/launcher_summary.log
+                            echo "${job_framework},none,${job_model},,,,FP32," >> ${WORKSPACE}/launcher_summary.log
+                            echo "${job_framework},none,${job_model},,,,BF16," >> ${WORKSPACE}/launcher_summary.log
                         fi
                     """
                 }
@@ -1126,7 +1151,7 @@ def generateReport() {
             copyArtifacts(
                 projectName: refer_job_name,
                 selector: specific("${refer_build}"),
-                filter: 'summary.log,tuning_info.log,inferencer_summary.log',
+                filter: 'summary.log,tuning_info.log,inferencer_summary.log,launcher_summary.log',
                 fingerprintArtifacts: true,
                 target: "reference")
         } catch(err) {
@@ -1135,11 +1160,11 @@ def generateReport() {
             sh '''#!/bin/bash -x
                 if [[ ! -f ${tuneLogLast} ]]; then
                     [[ ! -d ${WORKSPACE}/reference ]] && sudo mkdir ${WORKSPACE}/reference
-                    touch ${tuneLogLast}
+                    sudo touch ${tuneLogLast} || touch ${tuneLogLast}
                 fi
                 if [[ ! -f ${summaryLogLast} ]]; then
                     [[ ! -d ${WORKSPACE}/reference ]] && sudo mkdir ${WORKSPACE}/reference
-                    touch ${summaryLogLast}
+                    sudo touch ${summaryLogLast} || touch ${summaryLogLast}
                 fi
             '''
             }
@@ -1158,6 +1183,8 @@ def generateReport() {
             "summaryLogLast=${summaryLogLast}",
             "inferencerSummaryLog=${inferencerSummaryLog}",
             "inferencerSummaryLogLast=${inferencerSummaryLogLast}",
+            "launcherSummaryLog=${launcherSummaryLog}",
+            "launcherSummaryLogLast=${launcherSummaryLogLast}",
             "tuneLog=${tuneLog}",
             "tuneLogLast=${tuneLogLast}",
             "overviewLog=${overviewLog}",
@@ -1290,6 +1317,9 @@ node( node_label ) {
         inferencerSummaryLog = "${WORKSPACE}/inferencer_summary.log"
         inferencerSummaryLogLast = "${WORKSPACE}/reference/inferencer_summary.log"
 
+        launcherSummaryLog = "${WORKSPACE}/launcher_summary.log"
+        launcherSummaryLogLast = "${WORKSPACE}/reference/launcher_summary.log"
+
         // over view log
         overviewLog = "${WORKSPACE}/summary_overview.log"
         writeFile file: overviewLog, text: "Jenkins Job, Build Status, Build ID\n"
@@ -1348,9 +1378,10 @@ node( node_label ) {
             def ut_jobs = unitTestJobsOptimize()
             job_list = job_list + ut_jobs
         }
-        if (RUN_UT_OPT) {
-            def ut_jobs = unitTestBackend()
-            job_list = job_list + ut_jobs
+        if (RUN_UT_BAK) {
+            def ut_jobs_pytest = unitTestBackend("pytest")
+            def ut_jobs_gtest = unitTestBackend("gtest")
+            job_list = job_list + ut_jobs_pytest + ut_jobs_gtest
         }
         if (RUN_PYLINT) {
             job_list["Pylint Scan"] = {
@@ -1373,7 +1404,7 @@ node( node_label ) {
                 codeScan("pyspelling")
             }
         }
-        if (CHECK_COPYRIGHT && test_mode == "pre-CI") {
+        if (CHECK_COPYRIGHT) {
             job_list["Copyright Check"] = {
                 copyrightCheck()
             }
@@ -1427,25 +1458,25 @@ node( node_label ) {
                 }
             }
         }
-            try {
-                stage("Generate report") {
-                    generateReport()
-                }
-            } catch(error) {
-                recipient_list = "suyue.chen@intel.com,wenxin.zhang@intel.com"
-                emailext attachLog: true, body: "Generate report failed (see ${env.BUILD_URL}): ${error}", subject: "${email_subject}", to: "${recipient_list}"
-                throw error
-            } finally {
-                if (EXCEL_REPORT) {
-                    stage("Generate excel report") {
-                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                            retry(3) {
-                                generateExcelReport()
-                            }
+        try {
+            stage("Generate report") {
+                generateReport()
+            }
+        } catch(error) {
+            recipient_list = "suyue.chen@intel.com,wenxin.zhang@intel.com"
+            emailext attachLog: true, body: "Generate report failed (see ${env.BUILD_URL}): ${error}", subject: "${email_subject}", to: "${recipient_list}"
+            throw error
+        } finally {
+            if (EXCEL_REPORT) {
+                stage("Generate excel report") {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        retry(3) {
+                            generateExcelReport()
                         }
                     }
                 }
             }
+        }
         
         stage("Send report") {
             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {

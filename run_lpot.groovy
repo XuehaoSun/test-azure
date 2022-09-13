@@ -156,6 +156,7 @@ if ('inferencer_config' in params && params.inferencer_config != ''){
 echo "inferencer_config: ${inferencer_config}"
 
 torchvision_versions = [
+        "1.12.1": "0.13.1",
         "1.12.0": "0.13.0",
         "1.11.0": "0.12.0",
         "1.10.1": "0.11.2",
@@ -687,6 +688,11 @@ def collectLogs() {
                 }
         }
         required = required.substring(0, required.length() - 1) + "]"
+
+        if (tune_only){
+            required = []
+        }
+
         cmd += " --required=\"${required}\""
         withEnv(["conda_env_name=${conda_env_name}"]) {
             sh """#!/bin/bash
@@ -834,6 +840,10 @@ node( sub_node_label ) {
                             fingerprintArtifacts: true,
                             flatten: true,
                             target: "${WORKSPACE}")
+                }else{
+                    if (framework == "tensorflow"){
+                        tf_new_api="false"
+                    }
                 }
             }
 
@@ -936,15 +946,33 @@ node( sub_node_label ) {
                         torchvision_version='0.9.0+cpu'
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
+                    if(model == "bert_large_ipex"){
+                        framework_version_base = framework_version.split('\\.')[1]
+                        if(framework_version_base.toInteger() < 12){
+                            framework_version = '1.12.1+cpu'
+                            torchvision_version='0.13.1+cpu'
+                            conda_env_name="${framework}-${framework_version}-${python_version}"
+                        }
+                    }
+                    if(model == "bert_large_1_10_ipex"){
+                        framework_version_base = framework_version.split('\\.')[1]
+                        if(framework_version_base.toInteger() > 11){
+                            framework_version = '1.11.0+cpu'
+                            torchvision_version='0.12.0+cpu'
+                            conda_env_name="${framework}-${framework_version}-${python_version}"
+                        }
+                    }
                 }
                 if (framework == "tensorflow") {
                     label=model.split('_')
                     if((model == 'bert_base_mrpc' || label[-1] == 'slim') && (!(framework_version=~'1.15').find())){
                         framework_version = '1.15UP3'
+                        python_version=3.7
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
                     if(model == 'yolo_v3'){
                         framework_version = '1.15UP3'
+                        python_version=3.7
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
                 }

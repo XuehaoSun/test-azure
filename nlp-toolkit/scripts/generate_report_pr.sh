@@ -115,7 +115,7 @@ function createOverview {
     fi
 
     if [ -f "${coverage_summary_optimize}" ] && [ -f "${coverage_summary_optimize_base}" ]; then
-        coverage=($(grep 'coverage_status' ${overview_log} | head -1 |sed 's/,/ /g'))
+        coverage=($(grep 'coverage_status,' ${overviewLog} | head -1 |sed 's/,/ /g'))
         echo "Coverage for optimize: ${coverage}"
         if [[ "${coverage[1]}" == *"FAIL"* ]];then
             coverage_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
@@ -127,11 +127,11 @@ function createOverview {
     fi
 
     if [ -f "${coverage_summary_deploy}" ] && [ -f "${coverage_summary_deploy_base}" ]; then
-        coverage_engine=($(grep 'coverage_status_engine' ${overview_log} |sed 's/,/ /g'))
-        echo "Coverage for deploy: ${coverage}"
-        if [[ "${coverage[1]}" == *"FAIL"* ]];then
+        coverage_engine=($(grep 'coverage_status_engine,' ${overviewLog} |sed 's/,/ /g'))
+        echo "Coverage for deploy: ${coverage_engine}"
+        if [[ "${coverage_engine[1]}" == *"FAIL"* ]];then
             coverage_status_engine="<td style=\"background-color:#FFD2D2\">Fail</td>"
-        elif [[ "${coverage[1]}" == *"SUCC"* ]];then
+        elif [[ "${coverage_engine[1]}" == *"SUCC"* ]];then
             coverage_status_engine="<td style=\"background-color:#90EE90\">Pass</td>"
         else
             coverage_status_engine="<td style=\"background-color:#f2ea0a\">Verify</td>"
@@ -192,12 +192,12 @@ function createOverview {
             fi
             if [ ${#coverage_engine[@]} -gt 0 ] && [ "${coverage_engine[1]}" != "" ]; then
                 echo "<tr><td>Coverage for deploy</td>"
-                echo "<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results_engine/htmlcov/index.html\">Coverage report</a></td>"
+                echo "<td style=\"text-align:left\"><a href=\"${BUILD_URL}/artifact/unittest/coverage_results_backend/htmlcov/index.html\">Coverage report</a></td>"
                 echo "${coverage_status_engine}</tr>"
             fi
             if [ "${copyright_check[2]}" != "" ]; then
                  echo "<tr><td>Copyright Check</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${copyright_check[0]}/${copyright_check[2]}/artifact/copyright_issue_summary.log\">${copyright_check[0]}#${copyright_check[2]}</a></td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}intel-lpot-copyright-check/${copyright_check[2]}/artifact/copyright_issue_summary.log\">${copyright_check[0]}#${copyright_check[2]}</a></td>"
                  echo "${copyright_check_status}</tr>"
             fi
         )
@@ -492,6 +492,9 @@ function generate_perf_core {
     ' >> ${WORKSPACE}/report.html
     job_state=$(tail -1 ${WORKSPACE}/report.html)
     sed -i '$s/.*//' ${WORKSPACE}/report.html
+    if [ ${job_state} == 'fail' ]; then
+      echo "performance regression" >> ${WORKSPACE}/perf_regression.log
+    fi
 }
 
 function generate_optimize_results {

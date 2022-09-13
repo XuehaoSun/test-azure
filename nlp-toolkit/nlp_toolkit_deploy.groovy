@@ -119,6 +119,12 @@ if (params.tune_only != null) {
 }
 echo "tune_only = ${tune_only}"
 
+performance_only = false
+if (params.performance_only != null) {
+    performance_only=params.performance_only
+}
+echo "performance_only = ${performance_only}"
+
 val_branch = "main"
 if ('val_branch' in params && params.val_branch != '') {
     val_branch=params.val_branch
@@ -182,17 +188,32 @@ if ('install_nlp_toolkit' in params && params.install_nlp_toolkit != '') {
     install_nlp_toolkit=params.install_nlp_toolkit
 }
 echo "install_nlp_toolkit: ${install_nlp_toolkit}"
+
+launcher_mode = ""
+if ('launcher_mode' in params && params.launcher_mode != '') {
+    launcher_mode=params.launcher_mode
+}
+echo "launcher_mode: ${launcher_mode}"
+launcher_mode_list = parseStrToList(launcher_mode)
+
 lpot_url = "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
 lpot_branch = "master"
 if ('lpot_branch' in params && params.lpot_branch) {
     lpot_branch=params.lpot_branch
 }
+
+perf_bs = "1"
+if ('perf_bs' in params && params.perf_bs != '') {
+    perf_bs = params.perf_bs
+}
+echo "Performance batch size: ${perf_bs}"
+
 workflow = "deploy"
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 upstreamBuild = ""
 upstreamJobName = ""
 upstreamUrl = ""
-
+performance_only_list = ["bert_mini_sparse"]
 MAX_RERUNS = 3
 
 @NonCPS
@@ -265,6 +286,10 @@ def create_conda_env(install_ipex){
 
 def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
     def local_benchmark_cmd = benchmark_cmd
+    def batch_size = 0
+    if (perf_bs != "default" && mode != "accuracy") {
+        batch_size = perf_bs
+    }
     benchmark_cmd_params.each{ k, v -> 
         if (k == "mode") {
             v = mode
@@ -273,10 +298,12 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             }
         }
         if (k == "input_model") {
-            v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
+            if (! v.find("/tf_dataset")) {
+                v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
+            }
         }
-        if (multi_instance && k == "batch_size"){
-            v=1
+        if (k == "batch_size" && batch_size != 0){
+            v = batch_size
         }
        local_benchmark_cmd += " --${k}=${v}" 
     }
@@ -288,7 +315,15 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             echo "=======run benchmark======="
             export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
+            export PATH=${HOME}/miniconda3/bin/:$PATH
             source activate ${conda_env_name}
+            if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]];then
+                export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
+                export LD_LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib:$LD_LIBRARY_PATH
+                export CC=/opt/rh/gcc-toolset-11/root/usr/bin/gcc
+                export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
+                gcc -v
+            fi
             cp -r ${data_path} ${WORKSPACE}/data
             echo "final benchmark cmd of precision ${precision} is ${benchmark_cmd}"
             cd ${working_dir}
@@ -349,6 +384,48 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
     }
 }
 
+def runLauncherTest(mode, precision, launcher_cmd, launcher_cmd_params) {
+    def local_launcher_cmd = launcher_cmd
+    def local_launcher_cmd_params = launcher_cmd_params."${mode}"
+    local_launcher_cmd_params.each{ k, v -> 
+       local_launcher_cmd += " --${k}=${v}" 
+    }
+    def local_benchmark_cmd = "${working_dir}/run_executor.py"
+    def batch_size = 0
+    if (perf_bs != "default" && mode != "accuracy") {
+        batch_size = perf_bs
+    }
+    benchmark_cmd_params.each{ k, v -> 
+        if (k == "mode") {
+            v = "performance"
+        }
+        if (k == "input_model") {
+            if (! v.find("/tf_dataset")) {
+                v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
+            }
+        }
+        if (k == "batch_size" && batch_size != 0){
+            v = batch_size
+        }
+       local_benchmark_cmd += " --${k}=${v}" 
+    }
+    echo "launcher cmd is ${local_launcher_cmd} ${local_benchmark_cmd}"
+    withEnv(["framework=${framework}","model=${model}","precision=${precision}","data_path=${data_dir}","benchmark_cmd=${local_benchmark_cmd}", "conda_env_name=${conda_env_name}", "launcher_cmd=${local_launcher_cmd}"]) {
+        sh '''#!/bin/bash -x
+            echo "Running ---- ${framework}, ${model},${precision} ---- Benchmarking"
+            echo "=======cache clean======="
+            sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+            echo "=======launcher benchmark======="
+            export PATH=${HOME}/miniconda3/bin/:$PATH
+            source activate ${conda_env_name}
+            cp -r ${data_path} ${WORKSPACE}/data
+            echo "final launcher benchmark cmd of precision ${precision} is ${launcher_cmd}"
+            cd ${WORKSPACE}/lpot-models/examples/
+            echo "working in ${WORKSPACE}/lpot-models/examples"
+            GLOG_minloglevel=2 python ${launcher_cmd} ${benchmark_cmd}
+        '''
+    }
+}
 def prepare_models(local_precision, prepare_cmd) {
     def local_prepare_cmd = prepare_cmd
     prepare_cmd_params.each{ k, v -> 
@@ -369,6 +446,13 @@ def prepare_models(local_precision, prepare_cmd) {
             echo "Running ---- ${framework}, ${model}----Tuning"
             export PATH=${HOME}/miniconda3/bin/:$PATH
             source activate ${conda_env_name}
+            if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]]; then
+                export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
+                export LD_LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib:$LD_LIBRARY_PATH
+                export CC=/opt/rh/gcc-toolset-11/root/usr/bin/gcc
+                export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
+                gcc -v
+            fi
             cd ${working_dir}
             echo "Working in ${working_dir}"
             echo -e "\nInstalling model requirements..."
@@ -415,17 +499,23 @@ def run_inferencer(ncores_per_instance, bs, precision) {
     if (upstreamUrl != "") {
         logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/deploy/${framework}/${model}/"
     }
-    withEnv(["conda_env_name=${conda_env_name}", "working_dir_fullpath=${working_dir_fullpath}", "model=${model}", "ncores_per_instance=${ncores_per_instance}", "bs=${bs}", "precision=${precision}", "logs_prefix_url=${logs_prefix_url}"]){
+    if (model in performance_only_list) {
+        model_path = benchmark_cmd_params."input_model"
+    } else {
+        model_path = "${working_dir_fullpath}/ir"
+    }
+    withEnv(["conda_env_name=${conda_env_name}", "working_dir_fullpath=${working_dir_fullpath}", "model=${model}", "ncores_per_instance=${ncores_per_instance}", "bs=${bs}", "precision=${precision}", "logs_prefix_url=${logs_prefix_url}", "ir_path=${model_path}"]){
         sh'''#!/bin/bash -x
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env_name}
         cd ${working_dir_fullpath}
         if [[ "${precision}" == "fp32" ]]; then
             python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/fp32-model.onnx"); graph.save("./ir")'
+        elif [[ "${precision}" == "bf16" ]]; then
+            python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/bf16-model.onnx"); graph.save("./ir")'
         else
             python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/int8-model.onnx"); graph.save("./ir")'
         fi
-        ir_path=${working_dir_fullpath}/ir
         echo "ir_path for model ${model} is ${ir_path}"
         cd -
         echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
@@ -634,6 +724,35 @@ def collectLogs() {
     }
 }
 
+def collectLauncherLogs(launchermode, precision) {
+    logs_prefix_url = ""
+    if (upstreamUrl != "") {
+        logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/deploy/${framework}/${model}/launcher_${precision}_${launchermode}/"
+    }
+    withEnv(["conda_env_name=${conda_env_name}", "logs_prefix_url=${logs_prefix_url}", "framework=${framework}", "model=${model}", "precision=${precision}", "mode=${launchermode}"]) {
+        sh '''#!/bin/bash
+            set -x
+            export PATH=${HOME}/miniconda3/bin/:$PATH
+            source activate ${conda_env_name}
+            output_file=${WORKSPACE}/lpot-models/examples/out.csv
+            echo "working in"
+            pwd
+            if [[ ! -f ${output_file} ]]; then
+                echo "${framework},${mode},${model},batch,cores per instance,Troughput,${precision}," >> ${WORKSPACE}/launcher_summary.log
+            else
+                throughput=$(grep -A 2 "best," ${output_file} | tail -1 | awk -F "," '{print $1","$3","$4}')
+                log_file=$(grep -A 2 "best," ${output_file} | tail -1 | awk -F "=" '{print $NF}' | awk '{print $1}' | sed 's|\"||g')
+                logfile=${log_file##*/}
+                logfile=${logs_prefix_url}${logfile}
+                echo "${framework},${mode},${model},${throughput},${precision},${logfile}" >> ${WORKSPACE}/launcher_summary.log
+                [[ -d ${WORKSPACE}/launcher_${precision}_${mode} ]] && rm -fr ${WORKSPACE}/launcher_${precision}_${mode}
+                mkdir -p ${WORKSPACE}/launcher_${precision}_${mode}
+                mv ${WORKSPACE}/lpot-models/examples/*.log ${WORKSPACE}/launcher_${precision}_${mode}/
+                mv ${WORKSPACE}/lpot-models/examples/out.csv ${WORKSPACE}/out_${precision}_${mode}.csv
+            fi
+        '''
+    }
+}
 def syncConfigFile(){
     sh '''#!/bin/bash
         set -x
@@ -816,49 +935,140 @@ node( sub_node_label ) {
                     
                     benchmark_cmd = modelConf."benchmark"."cmd"
                     benchmark_cmd_params = modelConf."benchmark"."params"
+
+                    launcher_cmd = modelConf."launcher"."cmd"
+                    launcher_cmd_params = modelConf."launcher"."params"
                 } catch(e) {
                     error("Could not genereate cmd for ${framework} ${model}")
                 }
             }
-
-            stage("FP32 workflow") {
-                echo "--------START TUNING----------"
-                echo "Tuning timeout ${timeout}"
-                prepare_models("fp32", prepare_cmd)
-                echo "--------START BENCHMARK----------"
-                if (!tune_only) {
-                    mode_list.each { mode ->
-                        runPerfTest(mode, "fp32", benchmark_cmd)
+            if (model in performance_only_list) {
+                performance_only = true
+                // although no need quantiza, still need to install requirement.txt
+                withEnv(["working_dir=${working_dir_fullpath}","conda_env_name=${conda_env_name}"]) {
+                    sh '''#!/bin/bash -x
+                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    source activate ${conda_env_name}
+                    cd ${working_dir}
+                    echo "Working in ${working_dir}"
+                    echo -e "\nInstalling model requirements..."
+                    if [ -f "requirements.txt" ]; then
+                        sed -i '/neural-compressor/d' requirements.txt
+                        n=0
+                        until [ "$n" -ge 5 ]
+                        do
+                            python -m pip install -r requirements.txt && break
+                            n=$((n+1))
+                            sleep 5
+                        done
+                        pip list
+                    else
+                        echo "Not found requirements.txt file."
+                    fi
+                    '''
+                }
+            }
+            if ("fp32" in precision_list) {
+                stage("FP32 workflow") {
+                    if (performance_only) {
+                        echo "no need quantization"
+                    } else {
+                        echo "--------START TUNING----------"
+                        echo "Tuning timeout ${timeout}"
+                        prepare_models("fp32", prepare_cmd)
                     }
-                    stage("Inferencer Benchmark"){
-                        println("==========run inferencer benchmark========")
-                        inferencer_config.split(',').each { each_ben_conf ->
-                            def ncores_per_instance = each_ben_conf.split(':')[0]
-                            def bs = each_ben_conf.split(':')[1]
-                            run_inferencer(ncores_per_instance, bs, "fp32")
+                    if (!tune_only) {
+                        echo "--------START BENCHMARK----------"
+                        mode_list.each { mode ->
+                            runPerfTest(mode, "fp32", benchmark_cmd)
+                            if ( mode == "throughput" && launcher_mode != "") {
+                                stage("Launcher Benchmark"){
+                                    println("==========run launcher benchmark========")
+                                    launcher_mode_list.each { launch_mode ->
+                                        runLauncherTest(launch_mode, "fp32", launcher_cmd, launcher_cmd_params)
+                                        collectLauncherLogs(launch_mode, "fp32")
+                                    }
+                                }
+                            }
+                        }
+                        stage("Inferencer Benchmark"){
+                            println("==========run inferencer benchmark========")
+                            inferencer_config.split(',').each { each_ben_conf ->
+                                def ncores_per_instance = each_ben_conf.split(':')[0]
+                                def bs = each_ben_conf.split(':')[1]
+                                run_inferencer(ncores_per_instance, bs, "fp32")
+                            }
                         }
                     }
                 }
             }
-
-            stage("INT8 workflow") {
-                echo "--------START TUNING----------"
-                echo "Tuning timeout ${timeout}"
-                prepare_models("int8", prepare_cmd)
-                echo "--------START BENCHMARK----------"
-                if (!tune_only) {
-                    mode_list.each { mode ->
-                        runPerfTest(mode, "int8", benchmark_cmd)
+            if ("int8" in precision_list) {
+                stage("INT8 workflow") {
+                    if (performance_only) {
+                        echo "no need quantization"
+                    } else {
+                        echo "--------START TUNING----------"
+                        echo "Tuning timeout ${timeout}"
+                        prepare_models("int8", prepare_cmd)
                     }
-                    stage("Inferencer Benchmark"){
-                        println("==========run inferencer benchmark========")
-                        inferencer_config.split(',').each { each_ben_conf ->
-                            def ncores_per_instance = each_ben_conf.split(':')[0]
-                            def bs = each_ben_conf.split(':')[1]
-                            run_inferencer(ncores_per_instance, bs, "int8")
+                    if (!tune_only) {
+                        echo "--------START BENCHMARK----------"
+                        mode_list.each { mode ->
+                            runPerfTest(mode, "int8", benchmark_cmd)
+                            if ( mode == "throughput" && launcher_mode != "") {
+                                stage("Launcher Benchmark"){
+                                    println("==========run launcher benchmark========")
+                                    launcher_mode_list.each { launch_mode ->
+                                        runLauncherTest(launch_mode, "int8", launcher_cmd, launcher_cmd_params)
+                                        collectLauncherLogs(launch_mode, "int8")
+                                    }
+                                }
+                            }
                         }
-                    }  
-                }      
+                        stage("Inferencer Benchmark"){
+                            println("==========run inferencer benchmark========")
+                            inferencer_config.split(',').each { each_ben_conf ->
+                                def ncores_per_instance = each_ben_conf.split(':')[0]
+                                def bs = each_ben_conf.split(':')[1]
+                                run_inferencer(ncores_per_instance, bs, "int8")
+                            }
+                        }  
+                    }      
+                }
+            }
+            if ("bf16" in precision_list) {
+                stage("BF16 workflow") {
+                    if (performance_only) {
+                        echo "no need quantization"
+                    } else {
+                        echo "--------START TUNING----------"
+                        echo "Tuning timeout ${timeout}"
+                        prepare_models("bf16", prepare_cmd)
+                    }
+                    if (!tune_only) {
+                        echo "--------START BENCHMARK----------"
+                        mode_list.each { mode ->
+                            runPerfTest(mode, "bf16", benchmark_cmd)
+                            if ( mode == "throughput" && launcher_mode != "") {
+                                stage("Launcher Benchmark"){
+                                    println("==========run launcher benchmark========")
+                                    launcher_mode_list.each { launch_mode ->
+                                        runLauncherTest(launch_mode, "bf16", launcher_cmd, launcher_cmd_params)
+                                        collectLauncherLogs(launch_mode, "bf16")
+                                    }
+                                }
+                            }
+                        }
+                        stage("Inferencer Benchmark"){
+                            println("==========run inferencer benchmark========")
+                            inferencer_config.split(',').each { each_ben_conf ->
+                                def ncores_per_instance = each_ben_conf.split(':')[0]
+                                def bs = each_ben_conf.split(':')[1]
+                                run_inferencer(ncores_per_instance, bs, "bf16")
+                            }
+                        }  
+                    }      
+                }
             }
 
         } catch(e) {
@@ -874,7 +1084,7 @@ node( sub_node_label ) {
     } finally {
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,engine-${model}/**,inferencer_summary.log,summary.log,tuning_info.log,reference_data.json", excludes: null
+            archiveArtifacts artifacts: "${framework}*.log,${framework}*.json,${framework}-${model}/**,engine-${model}/**,launcher*/**,*.csv,launcher_summary.log,inferencer_summary.log,summary.log,tuning_info.log,reference_data.json", excludes: null
             fingerprint: true
             if (collect_tuned_model){
                 archiveArtifacts artifacts: "${framework}-${model}-tune*", excludes: null

@@ -1,3 +1,4 @@
 ruamel.yaml==0.17.4
 hyperopt>=0.2.7
 protobuf==3.20.1
+matplotlib

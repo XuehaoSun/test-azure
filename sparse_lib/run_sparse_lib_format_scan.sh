@@ -25,8 +25,6 @@ do
             SCAN_TOOL=`echo $i | sed "s/${PATTERN}//"`;;
         --python_version=*)
             python_version=`echo $i | sed "s/${PATTERN}//"`;; 
-         --engine_only=*)
-            engine_only=`echo $i | sed "s/${PATTERN}//"`;; 
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -34,11 +32,11 @@ done
 
 main() {
     export PATH=${HOME}/miniconda3/bin/:$PATH
-    source activate neural-coder-format_scan-${python_version}-${CPU_NAME} 
+    source activate sparse-lib-format_scan-${python_version}-${CPU_NAME} 
     pip -V
     python -V
     pip install -U pip
-
+    
     cd ${REPO_DIR}
     echo "Executing code scan on branch: $(git name-rev --name-only HEAD)."
     if [ -f "requirements.txt" ]; then
@@ -48,7 +46,7 @@ main() {
         echo "Not found requirements.txt file."
     fi
     # Install test requirements
-    cd ${REPO_DIR}/test
+    cd ${REPO_DIR}/tests
     if [ -f "requirements.txt" ]; then
         sed -i '/neural-compressor/d;/tensorflow==/d;/torch==/d;/pytorch-ignite$/d;/mxnet==/d;/mxnet-mkl==/d;/torchvision==/d;/onnx$/d;/onnx==/d;/onnxruntime$/d;/onnxruntime==/d' requirements.txt
         python -m pip install --default-timeout=100 -r requirements.txt
@@ -56,11 +54,12 @@ main() {
     else
         echo "Not found requirements.txt file."
     fi
-
+    
     echo "Executing code scan on branch: $(git name-rev --name-only HEAD)."
     cd ${REPO_DIR}
     echo "Code scan working path ${REPO_DIR} ..."
     case ${SCAN_TOOL} in
+        "cpplint") run_cpplint;;
         "pylint") run_pylint;;
         "bandit") run_bandit;;
         "pyspelling") run_pyspelling;;
@@ -71,15 +70,23 @@ main() {
     esac
 }
 
+run_cpplint() {
+    pip install cpplint
+    log_path=${WORKSPACE}/engine_cpplint.log
+    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/SparseLib 2>&1| tee ${log_path}
+    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/test 2>&1| tee -a ${log_path}
+    if [[ ! -f ${log_path} ]] || [[ $(grep -c "Total errors found:" ${log_path}) != 0 ]]; then
+        exit 1
+    fi
+    exit 0
+}
+
 run_pylint() {
     pip install pylint==2.12.1
-    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ./neural_coder > ${WORKSPACE}/lpot-pylint.json
-    exit_code1=$?
-    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ./neural_compressor/ux >> ${WORKSPACE}/lpot-pylint.json
-    exit_code2=$?
+    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ${REPO_DIR}/nlp_toolkit > ${WORKSPACE}/lpot-pylint.json
     # tf_utils.util will import some deps installed by tensorflow
     pip install intel-tensorflow
-    exit_code=$((${exit_code1} + ${exit_code2}))
+    exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "PyLint exited with non-zero exit code."; exit 1
     fi
@@ -88,7 +95,7 @@ run_pylint() {
 
 run_bandit() {
     pip install bandit
-    python -m bandit -r -lll -iii neural_coder > ${WORKSPACE}/lpot-bandit.log
+    python -m bandit -r -lll -iii ${REPO_DIR} > ${WORKSPACE}/lpot-bandit.log
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "Bandit exited with non-zero exit code."; exit 1
@@ -101,11 +108,11 @@ run_pyspelling() {
     # Update paths to validation and lpot repositories
     VAL_REPO=${WORKSPACE}
 
-    sed -i "s|\${VAL_REPO}|$VAL_REPO|g" ${VAL_REPO}/neural_coder/pyspelling_conf.yaml
-    sed -i "s|\${LPOT_REPO}|$REPO_DIR|g" ${VAL_REPO}/neural_coder/pyspelling_conf.yaml
+    sed -i "s|\${VAL_REPO}|$VAL_REPO|g" ${VAL_REPO}/sparse_lib/pyspelling_conf.yaml
+    sed -i "s|\${SCAN_REPO}|$REPO_DIR|g" ${VAL_REPO}/sparse_lib/pyspelling_conf.yaml
     echo "Modified config:"
-    cat ${VAL_REPO}/neural_coder/pyspelling_conf.yaml
-    pyspelling -c ${VAL_REPO}/neural_coder/pyspelling_conf.yaml > ${WORKSPACE}/pyspelling_output.log
+    cat ${VAL_REPO}/sparse_lib/pyspelling_conf.yaml
+    pyspelling -c ${VAL_REPO}/sparse_lib/pyspelling_conf.yaml > ${WORKSPACE}/pyspelling_output.log
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "Pyspelling exited with non-zero exit code."; exit 1
@@ -114,12 +121,12 @@ run_pyspelling() {
 }
 
 run_cloc() {
-    cloc --include-lang=Python --csv --out=${WORKSPACE}/nc_code_lines_summary.csv ${REPO_DIR}/neural_coder
+    cloc --include-lang=Python --csv --out=${WORKSPACE}/nc_code_lines_summary.csv ${REPO_DIR}
 }
 
 run_pydocstyle() {
     pip install pydocstyle
-    pydocstyle --convention=google ${REPO_DIR}/neural_coder > ${WORKSPACE}/docstring.log
+    pydocstyle --convention=google ${REPO_DIR} > ${WORKSPACE}/docstring.log
 }
 
 main

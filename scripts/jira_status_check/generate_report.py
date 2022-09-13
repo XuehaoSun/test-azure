@@ -173,6 +173,7 @@ def main(args: Namespace) -> None:
 
     html_title = f"{args.project} BUG status summary"
     if args.version != "" and args.version != "ALL":
+        args.version = args.version.replace("%20", " ")
         html_title = f"{args.project} v{args.version} BUG status summary"
 
 

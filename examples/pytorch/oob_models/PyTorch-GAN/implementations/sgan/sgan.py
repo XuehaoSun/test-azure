@@ -161,7 +161,7 @@ class Discriminator(nn.Module):
 
     def forward(self, img):
         out = self.conv_blocks(img)
-        out = out.view(out.shape[0], -1)
+        out = out.reshape(out.shape[0], -1)
         validity = self.adv_layer(out)
         label = self.aux_layer(out)
 
