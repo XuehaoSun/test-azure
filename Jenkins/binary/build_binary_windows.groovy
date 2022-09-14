@@ -91,7 +91,8 @@ def cloneINCRepository() {
                     dir('lpot-validation') {
                         checkout scm
                     }
-
+                }
+                retry(5) {
                     if(MR_source_branch != ''){
                         checkout changelog: true, poll: true, scm: [
                                 $class                           : 'GitSCM',
@@ -111,21 +112,14 @@ def cloneINCRepository() {
                         ]
                     }
                     else {
-                        checkout changelog: true, poll: true, scm: [
-                                $class                           : 'GitSCM',
-                                branches                         : [[name: "${lpot_branch}"]],
-                                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                                doGenerateSubmoduleConfigurations: false,
-                                extensions                       : [
-                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                                        [$class: 'CloneOption', timeout: 60]
-                                ],
-                                submoduleCfg                     : [],
-                                userRemoteConfigs                : [
-                                        [credentialsId: "${credential}",
-                                        url          : "${lpot_url}"]
-                                ]
-                        ]
+                        withCredentials([usernamePassword(credentialsId: credential, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                            URI lpot_uri = new URI(lpot_url)
+                            bat """
+                                git clone https://${USERNAME}:${PASSWORD}@${lpot_uri.host}${lpot_uri.path} lpot-models
+                                cd lpot-models
+                                git checkout ${lpot_branch}
+                            """
+                        }
                     }
                 }
             }

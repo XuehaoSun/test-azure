@@ -575,21 +575,14 @@ node( sub_node_label ) {
                         ]
                     }
                     else {
-                        checkout changelog: true, poll: true, scm: [
-                                $class                           : 'GitSCM',
-                                branches                         : [[name: "${lpot_branch}"]],
-                                browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
-                                doGenerateSubmoduleConfigurations: false,
-                                extensions                       : [
-                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                                        [$class: 'CloneOption', timeout: 5]
-                                ],
-                                submoduleCfg                     : [],
-                                userRemoteConfigs                : [
-                                        [credentialsId: "${credential}",
-                                        url          : "${lpot_url}"]
-                                ]
-                        ]
+                        withCredentials([usernamePassword(credentialsId: credential, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                            URI lpot_uri = new URI(lpot_url)
+                            bat """
+                                git clone https://${USERNAME}:${PASSWORD}@${lpot_uri.host}${lpot_uri.path} lpot-models
+                                cd lpot-models
+                                git checkout ${lpot_branch}
+                            """
+                        }
                     }
                 }
             }
