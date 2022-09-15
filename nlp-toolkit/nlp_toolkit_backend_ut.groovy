@@ -201,6 +201,7 @@ def run_pytest_with_coverage_count(repo_name){
         pip install coverage
         ## workaround for transformer version
         pip install transformers==4.21.3
+        pip install torch==1.11.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
         pip install nlpaug
         pip install datasets>=1.8.0
         
