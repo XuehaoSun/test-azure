@@ -199,11 +199,10 @@ def run_pytest_with_coverage_count(repo_name){
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env}
         pip install coverage
-        pip install transformers
-        pip install torch==1.10.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        ## workaround for transformer version
+        pip install transformers==4.21.3
         pip install nlpaug
         pip install datasets>=1.8.0
-        pip install protobuf==3.20.1
         
         cd ${WORKSPACE}/${repo_name}/nlp_toolkit/backends/neural_engine/test/pytest
         
