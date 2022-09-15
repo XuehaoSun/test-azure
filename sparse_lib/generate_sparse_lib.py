@@ -13,7 +13,7 @@ name_no_ext = new_summary_file.split('/')[-1][:-4]
 
 def to_df(fname):
     try:
-        df = pd.read_csv(fname, sep=";")
+        df = pd.read_csv(fname, sep=";", na_values='na')
         df = df.iloc[:, :-1]
         df.set_index([c for c in df.columns if not c.startswith(
             "Unnamed") and not c in ["acc", "perf"]], inplace=True)
@@ -25,16 +25,26 @@ def to_df(fname):
         df = pd.DataFrame()
     return df
 
+def sync_idx_name(df_target: pd.DataFrame, df_source: pd.DataFrame):
+    for iname in df_source.index.names:
+        if iname not in df_target.index.names:
+            df_target.loc[:, iname] = np.array(None, dtype=df_source.index.dtypes[iname])
+            df_target.set_index(iname, append=True, inplace=True)
 
 df_new = to_df(new_summary_file)
 df_last_raw = to_df(last_summary_file)
 
+# sync index names
+sync_idx_name(df_new, df_last_raw)
+sync_idx_name(df_last_raw, df_new)
+df_last_raw = df_last_raw.reorder_levels(df_new.index.names)
+
 # need to make sure their idx is identical
 df_last = pd.DataFrame(index=df_new.index, columns=df_new.columns)
 for idx, val in df_last_raw.iterrows():
-    df_last.loc[idx, :] = val
+    df_last.loc[idx] = val
     if idx not in df_new.index:
-        df_new.loc[idx, :] = np.nan
+        df_new.loc[idx] = pd.Series(dtype=object)
 
 df_comp = df_new.compare(df_last, keep_equal=True, keep_shape=True)
 df_comp.rename(columns={
