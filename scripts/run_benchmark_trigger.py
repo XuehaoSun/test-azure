@@ -83,7 +83,8 @@ def main():
     # pytorch int8 still use fp32 input_model
     if args.precision == "int8" and args.framework != "pytorch":
         input_model = q_model
-
+    if args.precision == "int8" and args.framework == "pytorch":
+        input_model = "saved_results"
     print("\nStart run function...")
     if args.mode == "accuracy":
         run_accuracy(input_model=input_model, topology=topology, yaml_path=yaml_path)
@@ -321,13 +322,13 @@ def get_windows_parameters(framework: str, input_model: str, model: str, topolog
                 "--tuned_checkpoint", "saved_results",
             ],
             "distilbert_base_MRPC": [
-                "--model_name_or_path", f"{input_model}",
+                "--model_name_or_path", "saved_results",
                 "--task_name", "MRPC",
                 "--do_eval",
                 "--max_seq_length", "128",
                 "--per_gpu_eval_batch_size", f"{batch_size}",
                 "--no_cuda",
-                "--output_dir", "saved_results",
+                "--output_dir", "output_results",
             ]
         }
     }
