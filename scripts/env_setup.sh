@@ -127,7 +127,7 @@ function set_environment {
             sleep 5
         done
         ## workaround for transformers
-        pip install transformers==4.21.3
+        #pip install transformers==4.21.3
     fi
     echo "Install neural-compressor binary..."
     n=0

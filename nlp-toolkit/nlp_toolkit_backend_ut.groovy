@@ -76,6 +76,12 @@ if ('tensorflow_version' in params && params.tensorflow_version != '') {
 }
 echo "Tensorflow version: ${tensorflow_version}"
 
+torch_version="1.11.0+cpu"
+if ('torch_version' in params && params.torch_version != '') {
+    torch_version = params.torch_version
+}
+echo "torch version: ${torch_version}"
+
 def cleanup() {
     try {
         sh '''#!/bin/bash -x
@@ -194,14 +200,14 @@ def run_pytest_with_coverage_count(repo_name){
         coverage_package='coverage_results_base_backend'
         coverage_summary_log='coverage_summary_deploy_base.log'
     }
-    withEnv(["repo_name=${repo_name}","ut_log_name=${ut_log_name}", "coverage_package=${coverage_package}", "coverage_summary_log=${coverage_summary_log}", "conda_env=${conda_env}", "CPU_NAME=${CPU_NAME}"]){
+    withEnv(["torch_version=${torch_version}", "repo_name=${repo_name}","ut_log_name=${ut_log_name}", "coverage_package=${coverage_package}", "coverage_summary_log=${coverage_summary_log}", "conda_env=${conda_env}", "CPU_NAME=${CPU_NAME}"]){
         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env}
         pip install coverage
         ## workaround for transformer version
-        pip install transformers==4.21.3
-        pip install torch==1.11.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        pip install transformers
+        pip install torch==${torch_version} -f https://download.pytorch.org/whl/torch_stable.html
         pip install nlpaug
         pip install datasets>=1.8.0
         
