@@ -644,8 +644,8 @@
       "params": {
         "batch_size": 8,
         "seq_len": 128,
-        "warm_up": 8,
-        "iteration": 100,
+        "warm_up": 100,
+        "iteration": 1000,
         "input_model": "/tf_dataset2/models/nlp_toolkit/bert_mini_sst2_sparse",
         "mode": "accuracy/throughput"        
       }
