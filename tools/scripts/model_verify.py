@@ -64,6 +64,7 @@ int8_list = [
     [['BatchMatMul', 'BatchMatMulV2'], 'Mul', ['Add', 'AddV2', 'AddN']],
     [['Conv2D', 'MatMul', "DepthwiseConv2D", 'ConcatV2', 'MaxPool', 'MaxPool3D', 'AvgPool', 'FusedInstanceNorm', 'InstanceNorm']],
     [['FusedBatchNorm', 'FusedBatchNormV2', 'FusedBatchNormV3'], ('Relu')],
+    [['Conv2D', 'Conv3D', 'DepthwiseConv2dNative'], 'Mul']
 ]
 
 
