@@ -13,7 +13,7 @@ if ('lpot_url' in params && params.lpot_url != ''){
 
 echo "lpot_url is ${lpot_url}"
 
-python_version="3.6"
+python_version="3.8"
 if ('python_version' in params && params.python_version != ''){
     python_version = params.python_version
 }
