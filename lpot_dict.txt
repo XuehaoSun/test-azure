@@ -2257,3 +2257,10 @@ ofa
 pareto
 pragma
 supernet
+Governers
+OpenMP
+cpufreq
+governer
+powersave
+MarkDown
+quantizations
