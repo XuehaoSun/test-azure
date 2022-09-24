@@ -8,6 +8,7 @@ ir_path=$2
 ncores_per_instance=$3
 bs=$4
 precision=$5
+working_dir_fullpath=$6
 
 framework="nlp_executor"
 seq_len=128
@@ -23,6 +24,21 @@ if [ "$bs" = "1" ]; then
     iteration=1000
     cp /tf_dataset2/models/deep-engine/libiomp5.so .
     export LD_PRELOAD=${WORKSPACE}/libiomp5.so
+fi
+
+if [[ ${ir_path} == "sparse_.*_ir" ]]; then
+    echo "ir_path for model ${model} is ${ir_path}"
+else
+    cd ${working_dir_fullpath}
+    if [[ "${precision}" == "fp32" ]]; then
+        python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/fp32-model.onnx"); graph.save("./ir")'
+    elif [[ "${precision}" == "bf16" ]]; then
+        python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/bf16-model.onnx"); graph.save("./ir")'
+    else
+        python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/int8-model.onnx"); graph.save("./ir")'
+    fi
+    echo "ir_path for model ${model} is ${ir_path}"
+    cd -
 fi
 
 export OMP_NUM_THREADS=${ncores_per_instance}

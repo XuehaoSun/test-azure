@@ -208,12 +208,13 @@ if ('perf_bs' in params && params.perf_bs != '') {
 }
 echo "Performance batch size: ${perf_bs}"
 
+sparse_model_list = ["distilbert_base_uncased_squad_sparse", "bert_mini_sparse"]
 workflow = "deploy"
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 upstreamBuild = ""
 upstreamJobName = ""
 upstreamUrl = ""
-performance_only_list = ["bert_mini_sparse"]
+performance_only_list = []
 MAX_RERUNS = 3
 
 @NonCPS
@@ -298,7 +299,9 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             }
         }
         if (k == "input_model") {
-            if (! v.find("/tf_dataset")) {
+            if (v == "sparse_ir") {
+                v = "${working_dir_fullpath}/sparse_${precision}_ir"
+            } else if (! v.find("/tf_dataset")) {
                 v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
             }
         }
@@ -400,7 +403,9 @@ def runLauncherTest(mode, precision, launcher_cmd, launcher_cmd_params) {
             v = "performance"
         }
         if (k == "input_model") {
-            if (! v.find("/tf_dataset")) {
+            if (v == "sparse_ir") {
+                v = "${working_dir_fullpath}/sparse_${precision}_ir"
+            } else if (! v.find("/tf_dataset")) {
                 v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
             }
         }
@@ -501,26 +506,18 @@ def run_inferencer(ncores_per_instance, bs, precision) {
     }
     if (model in performance_only_list) {
         model_path = benchmark_cmd_params."input_model"
-    } else {
+    } else if (model in sparse_model_list)
+        model_path = "${working_dir_fullpath}/sparse_${precision}_ir"
+    else {
         model_path = "${working_dir_fullpath}/ir"
     }
     withEnv(["conda_env_name=${conda_env_name}", "working_dir_fullpath=${working_dir_fullpath}", "model=${model}", "ncores_per_instance=${ncores_per_instance}", "bs=${bs}", "precision=${precision}", "logs_prefix_url=${logs_prefix_url}", "ir_path=${model_path}"]){
         sh'''#!/bin/bash -x
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env_name}
-        cd ${working_dir_fullpath}
-        if [[ "${precision}" == "fp32" ]]; then
-            python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/fp32-model.onnx"); graph.save("./ir")'
-        elif [[ "${precision}" == "bf16" ]]; then
-            python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/bf16-model.onnx"); graph.save("./ir")'
-        else
-            python -c 'from nlp_toolkit.backends.neural_engine.compile import compile; graph = compile("./model_and_tokenizer/int8-model.onnx"); graph.save("./ir")'
-        fi
-        echo "ir_path for model ${model} is ${ir_path}"
-        cd -
         echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
         sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-        bash ${WORKSPACE}/lpot-validation/nlp-toolkit/scripts/launch_benchmark.sh ${model} ${ir_path} ${ncores_per_instance} ${bs} ${precision}
+        bash ${WORKSPACE}/lpot-validation/nlp-toolkit/scripts/launch_benchmark.sh ${model} ${ir_path} ${ncores_per_instance} ${bs} ${precision} ${working_dir_fullpath}
         '''
     }
 }
@@ -979,6 +976,16 @@ node( sub_node_label ) {
                     }
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
+                        if (model in sparse_model_list) {
+                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
+                            sh """#!/bin/bash
+                                cd ${working_dir_fullpath}
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env_name}
+                                echo "cmd is ${cmd}"
+                                ${cmd}
+                            """
+                        }
                         mode_list.each { mode ->
                             runPerfTest(mode, "fp32", benchmark_cmd)
                             if ( mode == "throughput" && launcher_mode != "") {
@@ -1013,6 +1020,16 @@ node( sub_node_label ) {
                     }
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
+                        if (model in sparse_model_list) {
+                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
+                            sh """#!/bin/bash
+                                cd ${working_dir_fullpath}
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env_name}
+                                echo "cmd is ${cmd}"
+                                ${cmd}
+                            """
+                        }
                         mode_list.each { mode ->
                             runPerfTest(mode, "int8", benchmark_cmd)
                             if ( mode == "throughput" && launcher_mode != "") {
@@ -1047,6 +1064,16 @@ node( sub_node_label ) {
                     }
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
+                        if (model in sparse_model_list) {
+                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
+                            sh """#!/bin/bash
+                                cd ${working_dir_fullpath}
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                source activate ${conda_env_name}
+                                echo "cmd is ${cmd}"
+                                ${cmd}
+                            """
+                        }
                         mode_list.each { mode ->
                             runPerfTest(mode, "bf16", benchmark_cmd)
                             if ( mode == "throughput" && launcher_mode != "") {
