@@ -25,16 +25,24 @@ def to_df(fname):
         df = pd.DataFrame()
     return df
 
+
 def sync_idx_name(df_target: pd.DataFrame, df_source: pd.DataFrame):
+    if (df_source.shape == (0, 0)):
+        return
     for iname in df_source.index.names:
         if iname not in df_target.index.names:
-            df_target.loc[:, iname] = np.array(None, dtype=df_source.index.dtypes[iname])
+            dtype = df_source.index.dtypes[iname]
+            df_target.loc[:, iname] = np.array(
+                0 if dtype in [np.int32, np.int64] else None, dtype=dtype)
             df_target.set_index(iname, append=True, inplace=True)
+
 
 df_new = to_df(new_summary_file)
 df_last_raw = to_df(last_summary_file)
 
 # sync index names
+if df_last_raw.shape == (0, 0):
+    df_last_raw = pd.DataFrame(index=df_new.index, columns=df_new.columns)
 sync_idx_name(df_new, df_last_raw)
 sync_idx_name(df_last_raw, df_new)
 df_last_raw = df_last_raw.reorder_levels(df_new.index.names)

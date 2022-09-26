@@ -128,14 +128,12 @@ node( sub_node_label ) {
                 }
             }
             stage("benchmarking") {
-                sh'''#!/bin/bash -x
-                conda_env_name="sparse_lib"
-                if [[ ! $(conda info -e | grep ${conda_env_name}) ]]; then
-                    conda create -n ${conda_env_name} python=3.8 -y
-                fi
-                '''
                 output_log_dir="${WORKSPACE}/benchmark_log"
                 sh """#!/bin/bash -x
+                    conda_env_name="sparse_lib"
+                    if [[ ! \$(conda info -e | grep \$conda_env_name) ]]; then
+                        conda create -n \$conda_env_name python=3.8 -y
+                    fi
                     bash -x ${WORKSPACE}/lpot-validation/sparse_lib/run_ci_trigger.sh ${output_log_dir}
                 """
             }

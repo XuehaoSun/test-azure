@@ -1,7 +1,8 @@
 output_log_dir=$1
 
 conda_env_name="sparse_lib"
-conda activate ${conda_env_name} || source activate ${conda_env_name}
+export PATH=${HOME}/miniconda3/bin/:$PATH
+conda activate $conda_env_name || source activate $conda_env_name
 conda install -c conda-forge gxx gcc cmake -y
 
 rm -rf ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark/build
@@ -11,7 +12,7 @@ cd nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark
 mkdir build
 cd build
 if [[ -n $(lscpu | grep amx_tile) ]]; then cmake_amx="-DSPARSE_LIB_USE_AMX=True"; fi
-cmake .. $cmake_amx
+CC=gcc CXX=g++ cmake .. $cmake_amx
 make -j
 
 bash -x ../ci/run_ci.sh $output_log_dir

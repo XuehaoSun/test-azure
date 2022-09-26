@@ -9,6 +9,7 @@ ncores_per_instance=$3
 bs=$4
 precision=$5
 working_dir_fullpath=$6
+mono_socket=$7
 
 framework="nlp_executor"
 seq_len=128
@@ -19,6 +20,7 @@ if [ "$precision" = "fp32" ]; then
 fi
 sockets=$(lscpu | grep 'Socket(s)' | cut -d: -f2 | xargs echo -n)
 ncores_per_socket=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)
+if [ $mono_socket = "1" ] ; then sockets=1; fi
 cores=$(($sockets*$ncores_per_socket))
 if [ "$bs" = "1" ]; then
     iteration=1000
@@ -45,9 +47,11 @@ export OMP_NUM_THREADS=${ncores_per_instance}
 run_cmd=" neural_engine --config=${ir_path}/conf.yaml --weight=${ir_path}/model.bin -w=${warm_up_steps} --iterations=${iteration} --batch_size=${bs} --seq_len=${seq_len}"
 log_dir=${WORKSPACE}/engine-${model}/${seq_len}_${cores}_${ncores_per_instance}_${bs}
 mkdir -p ${log_dir}
-for((j=0;$j<${cores};j=$(($j + ${ncores_per_instance}))));
+memory_bind_opt=""
+if [ $mono_socket = "1" ] ; then memory_bind_opt="-m 0"; fi
+for((j=0;$(($j + $ncores_per_instance))<=${cores};j=$(($j + $ncores_per_instance))));
 do
-    numactl -C "$j-$((j + ncores_per_instance -1))" \
+    numactl -C "$j-$((j + ncores_per_instance -1))" $memory_bind_opt \
     ${run_cmd} 2>&1|tee ${log_dir}/${cores}_${ncores_per_instance}_${bs}_${precision}_${j}.log &
 done
 wait

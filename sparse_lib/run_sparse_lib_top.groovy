@@ -40,22 +40,32 @@ def autoCancel = false
 test_mode = params.test_mode ?: "pre-CI"
 echo "test mode ${test_mode}"
 
+// conda env mode: pypi / conda / source
+conda_env_mode = params.conda_env_mode ?: "pypi"
+echo "conda_env_mode ${conda_env_mode}"
+
 python_version = params.python_version ?: "3.8"
 echo "python_version: ${python_version}"
 
 // setting node_label
-node_label = params.node_label ?: "master"
-sub_node_label = params.sub_node_label ?: ""
-echo "Running on node ${node_label} - ${sub_node_label}"
+node_label = params.node_label ?: "lpot"
+sub_node_label = params.sub_node_label ?: "lpot"
+echo "Running on node ${node_label}; sub-job node ${sub_node_label}"
 
 //other settings
 nlp_url = params.nlp_url ?: "https://github.com/intel-innersource/frameworks.ai.nlp-toolkit.intel-nlp-toolkit.git"
 echo "nlp_url is ${nlp_url}"
 
+lpot_url = params.lpot_url ?: "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+echo "lpot_url is ${lpot_url}"
+
+lpot_branch = params.lpot_branch ?: "master"
+echo "lpot_branch is ${lpot_branch}"
+
 pipeline_failFast = params.pipeline_failFast != null ? params.pipeline_failFast : false
 echo "pipeline_failFast = ${pipeline_failFast}"
 
-val_branch = params.val_branch ?: "master"
+val_branch = params.val_branch ?: "main"
 echo "val_branch: ${val_branch}"
 
 format_scan_only = params.format_scan_only != null ? params.format_scan_only : false
@@ -84,6 +94,23 @@ echo "ABORT_DUPLICATE_TEST is ${ABORT_DUPLICATE_TEST}"
 
 sparse_ut_only = params.sparse_ut_only != null ? params.sparse_ut_only : false
 echo "sparse_ut_only is ${sparse_ut_only}"
+
+sparse_model_job = params.sparse_model_job ?: "nlp_toolkit_deploy_validation_localtest"
+echo "sparse_model_job is ${sparse_model_job}"
+sparse_model_framework = params.sparse_model_framework ?: "nlp_excutor"
+echo "sparse_model_framework is ${sparse_model_framework}"
+sparse_models = params.sparse_models ?: ""
+echo "sparse_models is ${sparse_models}"
+
+// provide previous build to skip
+build_job_nlp = params.build_job_nlp
+build_job_lpot = params.build_job_lpot
+
+
+// ncores_per_instance:bs for nlp_excutor inference
+inferencer_config = params.inferencer_config ?: "4:8,7:8,24:1"
+echo "inferencer_config: ${inferencer_config}"
+
 
 /////////
 MR_source_branch = ""
@@ -131,6 +158,43 @@ refer_build = params.refer_build ?: "x0"
 echo "Refer build is ${refer_build}"
 
 target_path="./nlp_toolkit/backends/neural_engine/SparseLib"
+
+
+// Processing PR comment params
+echo "params.GITHUB_PR_COMMENT_BODY_MATCH = ${params.GITHUB_PR_COMMENT_BODY_MATCH}"
+arg_map = [:]
+if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
+    params.GITHUB_PR_COMMENT_BODY_MATCH.split('\\s').each { arg ->
+        def arg_kv = arg.split('=')
+        arg_map[arg_kv[0]] = arg_kv.length > 1 ? arg_kv[1] : true
+    }
+    echo "arg_map=${arg_map}"
+
+    //! Update README accordingly after changing the way reading arg_map
+    RUN_UT = arg_map.ut as Boolean
+    if (arg_map.ut == 'sparse_only') sparse_ut_only = true
+    RUN_BENCHMARK = arg_map.benchmark as Boolean
+    RUN_CPPLINT = arg_map.cpplint as Boolean
+    RUN_BANDIT = arg_map.bandit as Boolean
+    RUN_SPELLCHECK = arg_map.spell as Boolean
+    CHECK_COPYRIGHT = arg_map.copyright as Boolean
+    sparse_models = arg_map.models == true ? sparse_models : (arg_map.models ?: "")
+    inferencer_config = arg_map.inferencer_config ?: inferencer_config
+    refer_build = arg_map.refer_build ?: refer_build
+    echo """ PR comment args changes params:
+        sparse_models=${sparse_models}
+        RUN_UT=${RUN_UT}
+        sparse_ut_only=${sparse_ut_only}
+        RUN_BENCHMARK=${RUN_BENCHMARK}
+        RUN_CPPLINT=${RUN_CPPLINT}
+        RUN_BANDIT=${RUN_BANDIT}
+        RUN_SPELLCHECK=${RUN_SPELLCHECK}
+        CHECK_COPYRIGHT=${CHECK_COPYRIGHT}
+        inferencer_config=${inferencer_config}
+        refer_build=${refer_build}
+    """
+}
+
 
 def parseStrToList(srtingElements, delimiter=',') {
     if (srtingElements == '') {
@@ -409,25 +473,22 @@ def collectUT_backend_Log() {
         fi
     '''
 }
-
-def BuildParams(){
-    List ParamsPerJob = []
-    ParamsPerJob += string(name: "sub_node_label", value: "${sub_node_label}")
-    ParamsPerJob += string(name: "nlp_url", value: "${nlp_url}")
-    ParamsPerJob += string(name: "nlp_branch", value: "${nlp_commit}")
-    ParamsPerJob += string(name: "MR_source_branch", value: "${MR_source_branch}")
-    ParamsPerJob += string(name: "MR_target_branch", value: "${MR_target_branch}")
-    ParamsPerJob += string(name: "python_version", value: "${python_version}")
-    ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
-    ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
-    return ParamsPerJob
-}
-
-def model_test_deploy() {
+def sparse_benchmark_jobs() {
     def jobs = [:]
+
+    List benchmark_job_prarms = []
+    benchmark_job_prarms += string(name: "sub_node_label", value: "${sub_node_label}")
+    benchmark_job_prarms += string(name: "nlp_url", value: "${nlp_url}")
+    benchmark_job_prarms += string(name: "nlp_branch", value: "${nlp_commit}")
+    benchmark_job_prarms += string(name: "MR_source_branch", value: "${MR_source_branch}")
+    benchmark_job_prarms += string(name: "MR_target_branch", value: "${MR_target_branch}")
+    benchmark_job_prarms += string(name: "python_version", value: "${python_version}")
+    benchmark_job_prarms += string(name: "test_mode", value: "${test_mode}")
+    benchmark_job_prarms += string(name: "val_branch", value: "${val_branch}")
+
     jobs["sparse lib benchmark"] = {
         println("adding sparse lib test")
-        downstreamJob = build job: "local_sparse_lib_test", propagate: false, parameters: BuildParams()
+        downstreamJob = build job: "local_sparse_lib_test", propagate: false, parameters: benchmark_job_prarms
         catchError {
             copyArtifacts(
                     projectName: "local_sparse_lib_test",
@@ -456,6 +517,183 @@ def model_test_deploy() {
     return jobs
 }
 
+
+def buildBinaryLpot(){
+    println("Building INC binary ...")
+    List binaryBuildParams = [
+            string(name: "python_version", value: "${python_version}"),
+            string(name: "lpot_url", value: "${lpot_url}"),
+            string(name: "lpot_branch", value: "${lpot_branch}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "build_mode", value: "basic")
+    ]
+    if(conda_env_mode == "conda") {
+        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
+        binaryBuildParams += string(name: "binary_class", value: "conda")
+    }
+    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
+    def job_id = downstreamJob.getNumber()
+    echo "job_id: ${job_id}"
+    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+    if (downstreamJob.getResult() != "SUCCESS") {
+        currentBuild.result = "FAILURE"
+        failed_build_url = downstreamJob.absoluteUrl
+        echo "failed_build_url: ${failed_build_url}"
+        error("---- nlp wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+    }
+    return job_id
+}
+
+def buildBinaryNLP() {
+    println("Building nlp-toolkit binary ...")
+    List binaryBuildParamsNLP = [
+        string(name: "python_version", value: "${python_version}"),
+        string(name: "nlp_url", value: "${nlp_url}"),
+        string(name: "nlp_branch", value: "${nlp_branch}"),
+        string(name: "MR_source_branch", value: "${MR_source_branch}"),
+        string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        string(name: "val_branch", value: "${val_branch}"),
+        string(name: "conda_env", value: "nlp_binary_build"),
+        string(name: "binary_class", value: "wheel"),
+
+    ]
+    downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
+    def job_id = downstreamJob.getNumber()
+    echo "job_id: ${job_id}"
+    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+    if (downstreamJob.getResult() != "SUCCESS") {
+        currentBuild.result = "FAILURE"
+        failed_build_url = downstreamJob.absoluteUrl
+        echo "failed_build_url: ${failed_build_url}"
+        error("---- nlp wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+    }
+    return job_id
+}
+
+
+def model_deploy_jobs(binary_build_lopt_job, binary_build_nlp_job) {
+    def jobs = [:]
+    def workflow = "deploy"
+    sparse_models.split(',').each { job_model ->
+        List model_job_params = [
+            string(name: "sub_node_label", value: "${sub_node_label}"),
+            string(name: "mode", value: "accuracy,throughput"),
+            string(name: "framework", value: "${sparse_model_framework}"),
+            string(name: "framework_version", value: "na"),
+            string(name: "model", value: "${job_model}"),
+            string(name: "nlp_url", value: "${nlp_url}"),
+            string(name: "nlp_branch", value: "${nlp_commit}"),
+            string(name: "MR_source_branch", value: "${MR_source_branch}"),
+            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "python_version", value: "${python_version}"),
+            string(name: "binary_build_job", value: "${binary_build_lopt_job}"),
+            string(name: "binary_build_job_nlp", value: "${binary_build_nlp_job}"),
+            booleanParam(name: "multi_instance", value: true),
+            booleanParam(name: "tune_only", value: false),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "cpu", value: "*"),
+            string(name: "os", value: "linux"),
+            string(name: "precision", value: "int8"),
+            string(name: "conda_env_mode", value: "pypi"),
+            string(name: "log_level", value: "DEBUG"),
+            string(name: "install_nlp_toolkit", value: "true"),
+            string(name: "inferencer_config", value: "${inferencer_config}"),
+            string(name: "perf_bs", value: "1"),
+            booleanParam(name: "mono_socket", value: true), // use the first socket only
+        ]
+
+        jobs["model_${job_model}"] = {
+            // execute build
+            def downstreamJob = build job: sparse_model_job, propagate: false, parameters: model_job_params
+            catchError {
+                copyArtifacts(
+                        projectName: sparse_model_job,
+                        selector: specific("${downstreamJob.getNumber()}"),
+                        filter: "*.log, *.csv, ${sparse_model_framework}*.json, engine-${job_model}/**, launcher*/**",
+                        fingerprintArtifacts: true,
+                        target: "${workflow}/${sparse_model_framework}/${job_model}",
+                        optional: true)
+                // Archive in Jenkins
+                archiveArtifacts artifacts: "${workflow}/${sparse_model_framework}/${job_model}/**", allowEmptyArchive: true
+            }
+            downstreamJobStatus = downstreamJob.result
+            def failed_build_result = downstreamJob.result
+            def failed_build_url = downstreamJob.absoluteUrl
+            if (failed_build_result != 'SUCCESS') {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    if (test_mode != 'nightly') {
+                        currentBuild.result = "FAILURE"
+                    }
+                    sh " tail -n 50 ${workflow}/${sparse_model_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                    failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
+                    error("---- ${workflow}_${sparse_model_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                }
+            }
+        }
+    }
+    return jobs
+}
+
+
+def collect_deploy_Log() {
+    echo "------------  running collect Log for deploy -------------"
+    echo "---------------------------------------------------------"
+    def workflow = "deploy"
+    def system = "linux"
+
+    // Get models list
+    echo "${sparse_models}"
+    echo "framwork-----> ${sparse_model_framework}"
+    dir(WORKSPACE) {
+        sparse_models.split(',').each { job_model ->
+            echo "--------- ${system} - ${sparse_model_framework} - ${job_model} --------"
+                // Generate tuning info log
+            sh """#!/bin/bash -x
+                if [[ -f ${WORKSPACE}/${workflow}/${sparse_model_framework}/${job_model}/tuning_info.log ]]; then
+                    cat ${WORKSPACE}/${workflow}/${sparse_model_framework}/${job_model}/tuning_info.log >> ${modelTuneLog}
+                else
+                    echo "${system};Unknown;${workflow};${sparse_model_framework};N/A;${job_model};;;${RUN_DISPLAY_URL};;;" >> ${modelTuneLog}
+                fi
+            """
+            echo "Getting results for ${sparse_model_framework} - ${job_model}"
+            sh """#!/bin/bash -x
+                if [[ -f ${WORKSPACE}/${workflow}/${sparse_model_framework}/${job_model}/summary.log ]]; then
+                    cat ${WORKSPACE}/${workflow}/${sparse_model_framework}/${job_model}/summary.log >> ${modelSummaryLog}
+                else
+                    echo "${system};Unknown;${workflow};${sparse_model_framework};N/A;INT8;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${modelSummaryLog}
+                    echo "${system};Unknown;${workflow};${sparse_model_framework};N/A;FP32;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${modelSummaryLog}
+                    echo "${system};Unknown;${workflow};${sparse_model_framework};N/A;BF16;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${modelSummaryLog}
+                fi
+            """
+            echo "Getting benchmark results for ${sparse_model_framework} - ${job_model}"
+            sh """#!/bin/bash -x
+                if [[ -f ${WORKSPACE}/${workflow}/${sparse_model_framework}/${job_model}/inferencer_summary.log ]]; then
+                    cat ${WORKSPACE}/${workflow}/${sparse_model_framework}/${job_model}/inferencer_summary.log >> ${modelInferencerSummaryLog}
+                else
+                    echo "${sparse_model_framework},throughput,${job_model},,,,,INT8," >> ${modelInferencerSummaryLog}
+                    echo "${sparse_model_framework},throughput,${job_model},,,,,FP32," >> ${modelInferencerSummaryLog}
+                    echo "${sparse_model_framework},throughput,${job_model},,,,,BF16," >> ${modelInferencerSummaryLog}
+                fi
+            """
+            echo "Getting launcher results for ${sparse_model_framework} - ${job_model}"
+            sh """#!/bin/bash -x
+                if [[ -f ${WORKSPACE}/${workflow}/${sparse_model_framework}/${job_model}/launcher_summary.log ]]; then
+                    cat ${WORKSPACE}/${workflow}/${sparse_model_framework}/${job_model}/launcher_summary.log >> ${modelLauncherSummaryLog}
+                else
+                    echo "${sparse_model_framework},none,${job_model},,,,INT8," >> ${modelLauncherSummaryLog}
+                    echo "${sparse_model_framework},none,${job_model},,,,FP32," >> ${modelLauncherSummaryLog}
+                    echo "${sparse_model_framework},none,${job_model},,,,BF16," >> ${modelLauncherSummaryLog}
+                fi
+            """
+        }
+    }
+
+    echo "done running collectLog ......."
+    stash allowEmpty: true, includes: "*.log, *.json", name: "logfile"
+}
+
 def generateReport() {
     if (refer_build != 'x0') {
         try{
@@ -477,7 +715,19 @@ def generateReport() {
         }
         println("summary_dir = ${summary_dir}")
         println("summary_dir_last = ${summary_dir_last}")
+        println("modelSummaryLog = ${modelSummaryLog}")
+        println("modelSummaryLogLast = ${modelSummaryLogLast}")
+        println("modelTuneLog = ${modelTuneLog}")
+        println("modelTuneLogLast = ${modelTuneLogLast}")
+        println("modelInferencerSummaryLog = ${modelInferencerSummaryLog}")
+        println("modelInferencerSummaryLogLast = ${modelInferencerSummaryLogLast}")
+        println("modelLauncherSummaryLog = ${modelLauncherSummaryLog}")
+        println("modelLauncherSummaryLogLast = ${modelLauncherSummaryLogLast}")
+
+        
         withEnv([
+            "report_title=${test_mode} test",
+            "job_params=${arg_map}",
             "qtools_branch=${nlp_branch}",
             "qtools_commit=${nlp_commit}",
             "summary_dir=${summary_dir}",
@@ -488,7 +738,13 @@ def generateReport() {
             "ghprbPullLink=${ghprbPullLink}",
             "ghprbPullId=${ghprbPullId}",
             "MR_source_branch=${MR_source_branch}",
-            "MR_target_branch=${MR_target_branch}"
+            "MR_target_branch=${MR_target_branch}",
+            "modelSummaryLog=${modelSummaryLog}",
+            "modelSummaryLogLast=${modelSummaryLogLast}",
+            "modelInferencerSummaryLog=${modelInferencerSummaryLog}",
+            "modelInferencerSummaryLogLast=${modelInferencerSummaryLogLast}",
+            "modelTuneLog=${modelTuneLog}",
+            "modelTuneLogLast=${modelTuneLogLast}",
         ]) {
             sh '''
                 chmod 775 ./lpot-validation/sparse_lib/generate_sparse_lib.sh
@@ -521,8 +777,8 @@ def sendReport() {
     }
 }
 
-///// full process /////
 
+///// full process /////
 node( node_label ) {
     if (test_mode == "pre-CI") {
         if (ABORT_DUPLICATE_TEST) {
@@ -551,6 +807,18 @@ node( node_label ) {
         writeFile file: overview_log, text: "Jenkins Job, Build Status, Build ID\n"
         summary_dir = "${WORKSPACE}/sparse_test/benchmark_log"
         summary_dir_last = "${WORKSPACE}/reference/sparse_test/benchmark_log"
+
+        modelSummaryLog = "${WORKSPACE}/model_summary.log"
+        modelSummaryLogLast = "${WORKSPACE}/reference/model_summary.log"
+        modelTuneLog = "${WORKSPACE}/model_tuning_info.log"
+        modelTuneLogLast = "${WORKSPACE}/reference/model_tuning_info.log"
+        modelInferencerSummaryLog = "${WORKSPACE}/model_inferencer_summary.log"
+        modelInferencerSummaryLogLast = "${WORKSPACE}/reference/model_inferencer_summary.log"
+        modelLauncherSummaryLog = "${WORKSPACE}/model_launcher_summary.log"
+        modelLauncherSummaryLogLast = "${WORKSPACE}/reference/model_launcher_summary.log"
+        writeFile file: modelSummaryLog, text: "OS;Platform;Workflow;Backend;Version;Precision;Model;Mode;Type;BS;Value;Url\n"
+        writeFile file: modelTuneLog, text: "OS;Platform;Workflow;Backend;Version;Model;Tune_time\n"
+
         // Setup logs path
         download()
         if (test_mode == "pre-CI") {
@@ -577,7 +845,7 @@ node( node_label ) {
             //    }
             //}
         }
-        println("start assigning jobs")
+        println("start assigning tests jobs")
         def job_list = [:]
         if (RUN_UT) {
             println("Add unittest to job...")
@@ -609,14 +877,43 @@ node( node_label ) {
         
         if (RUN_BENCHMARK) {
             println("Add benchmark to job...")
-            def perf_jobs = model_test_deploy()
-            job_list = job_list + perf_jobs
+            def benchmark_jobs = sparse_benchmark_jobs()
+            job_list = job_list + benchmark_jobs
         }
-        
+
         //if (test_mode == "pre-CI" || pipeline_failFast) {
         //    echo "enable failFast"
         //    job_list.failFast = true
         //}
+
+
+        if (sparse_models.split(',').size() > 0) {
+            def job_id_lpot = ""
+            def job_id_nlp = ""
+            stage("build") {
+                def build_jobs = [:]
+                build_jobs["build inc"] = {
+                    if (build_job_lpot) {
+                        println("Using given lpot build: #${build_job_lpot}")
+                        job_id_lpot = build_job_lpot
+                    } else {
+                        job_id_lpot = buildBinaryLpot()
+                    }
+                }
+                build_jobs["build nlp"] = {
+                    if (build_job_nlp) {
+                        println("Using given lpot build: #${build_job_nlp}")
+                        job_id_nlp = build_job_nlp
+                    } else {
+                        job_id_nlp = buildBinaryNLP()
+                    }
+                }
+                parallel build_jobs
+            }
+            def model_jobs = model_deploy_jobs(job_id_lpot, job_id_nlp)
+            job_list = job_list + model_jobs
+        }
+
         if (job_list.size() > 0) {
             stage("Execute tests") {
                 parallel job_list
@@ -636,6 +933,9 @@ node( node_label ) {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 if (RUN_UT) {
                     collectUT_backend_Log()
+                }
+                if (sparse_models.split(',').size() > 0) {
+                    collect_deploy_Log()
                 }
             }
         }

@@ -209,6 +209,9 @@ if ('perf_bs' in params && params.perf_bs != '') {
 echo "Performance batch size: ${perf_bs}"
 
 sparse_model_list = ["distilbert_base_uncased_squad_sparse", "bert_mini_sparse"]
+mono_socket = params.mono_socket as Boolean
+echo "mono_socket: ${mono_socket}"
+
 workflow = "deploy"
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 upstreamBuild = ""
@@ -511,13 +514,24 @@ def run_inferencer(ncores_per_instance, bs, precision) {
     else {
         model_path = "${working_dir_fullpath}/ir"
     }
-    withEnv(["conda_env_name=${conda_env_name}", "working_dir_fullpath=${working_dir_fullpath}", "model=${model}", "ncores_per_instance=${ncores_per_instance}", "bs=${bs}", "precision=${precision}", "logs_prefix_url=${logs_prefix_url}", "ir_path=${model_path}"]){
+    def mono_socket_opt = mono_socket ? '1' : '0'
+    withEnv([
+        "conda_env_name=${conda_env_name}",
+        "working_dir_fullpath=${working_dir_fullpath}",
+        "model=${model}",
+        "ncores_per_instance=${ncores_per_instance}",
+        "bs=${bs}",
+        "precision=${precision}",
+        "logs_prefix_url=${logs_prefix_url}",
+        "ir_path=${model_path}",
+        "mono_socket_opt=${mono_socket_opt}",
+    ]){
         sh'''#!/bin/bash -x
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env_name}
         echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
         sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-        bash ${WORKSPACE}/lpot-validation/nlp-toolkit/scripts/launch_benchmark.sh ${model} ${ir_path} ${ncores_per_instance} ${bs} ${precision} ${working_dir_fullpath}
+        bash ${WORKSPACE}/lpot-validation/nlp-toolkit/scripts/launch_benchmark.sh ${model} ${ir_path} ${ncores_per_instance} ${bs} ${precision} ${working_dir_fullpath} ${mono_socket_opt}
         '''
     }
 }
