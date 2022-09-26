@@ -151,15 +151,20 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
             f"--batch_size={args.batch_size}"
         ])
 
+    if args.framework == "tensorflow" and args.model in ["resnet101_keras", "inception_v3_keras", "inception_resnet_v2_keras", "resnetv2_50_keras", "resnetv2_101_keras", "mobilenetv2_keras", "xception"]:
+        parameters.extend([
+            f"--eval_data={args.dataset_location}"
+        ])
+
     # Workaround for ONNXRT LT models
     if args.framework == "onnxrt" and args.model in ["bert_squad_model_zoo", "mobilebert_squad_mlperf", "densenet", "ssd-12", "ssd-12_qdq"]:
-            onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
-            parameters = [
-                f"--config={yaml_path}",
-                f"--input_model={input_model}",
-                f"--mode={onnxrt_lt_mode}",
-                f"--data_path={args.dataset_location}"
-            ]
+        onnxrt_lt_mode = "accuracy" if args.mode == "accuracy" else "performance"
+        parameters = [
+            f"--config={yaml_path}",
+            f"--input_model={input_model}",
+            f"--mode={onnxrt_lt_mode}",
+            f"--data_path={args.dataset_location}"
+        ]
 
     # Workaround for ONNXRT googlenet-12,squeezenet,caffenet,alexnet
     if args.framework == "onnxrt" and args.model in ["googlenet-12", "squeezenet", "caffenet", "alexnet", "zfnet", "inception_v1", "alexnet_qdq", "caffenet_qdq", "googlenet-12_qdq", "zfnet_qdq", "inception_v1_qdq", "squeezenet_qdq"]:
@@ -188,14 +193,6 @@ def run_accuracy(parameters: List[str], yaml_path: str, log_file: str, input_mod
         parameters.extend([
             f"--data_path={args.dataset_location}",
             f"--label_path=/tf_dataset2/datasets/gtFine/val"
-        ])
-    # Workaround for engine
-    if args.framework == "baremetal":
-        tokenizer_dir=os.path.dirname(args.input_model)
-        parameters.extend([
-            f"--dataset_location={args.dataset_location}",
-            f"--batch_size={args.batch_size}",
-            f"--tokenizer_dir={tokenizer_dir}/test_tokenizer"
         ])
 
     cmd = get_executable("benchmark")
@@ -281,6 +278,11 @@ def run_benchmark(parameters: List[str], yaml_path: str, log_file: str, mode: st
             f"--dataset_location={args.dataset_location}",
             f"--init_checkpoint={args.input_model}",
             f"--batch_size={batch_size}"
+        ])
+
+    if args.framework == "tensorflow" and args.model in ["resnet101_keras", "inception_v3_keras", "inception_resnet_v2_keras", "resnetv2_50_keras", "resnetv2_101_keras", "mobilenetv2_keras", "xception"]:
+        parameters.extend([
+            f"--eval_data={args.dataset_location}"
         ])
 
     # Workaround for ONNXRT LT models

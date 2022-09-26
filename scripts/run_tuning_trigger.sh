@@ -257,6 +257,10 @@ main() {
     if [ "${framework}" == "tensorflow" ]; then
         new_config_dirs=("image_recognition" "object_detection/tensorflow_models" "nlp/bert" "semantic_image_segmentation" "keras" "SavedModel")
         for model_dir in ${new_config_dirs[*]}; do
+            if [[ "${model_src_dir}" == *"keras_models"* ]]; then
+                parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --eval_data=${dataset_location} --calib_data=${dataset_location}"
+                break
+            fi
             if [[ "${model_src_dir}" == *"${model_dir}"* ]]; then
                 parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
                 break

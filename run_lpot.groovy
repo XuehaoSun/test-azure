@@ -423,17 +423,8 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                 --batch_size=${batch_size} \
                 --yaml=${yaml} \
                 --cpu=${cpu} \
-                --output_path=${output_path}"
-        if (framework == "onnxrt") {
-            cmd += " --dataset_location=\"${dataset_prefix}${dataset_location}\""
-        }
-        if (framework == "tensorflow" && model == "bert_base_mrpc") {
-            cmd += " --dataset_location=\"${dataset_prefix}${dataset_location}\""
-        }
-        if (framework == "baremetal") {
-            cmd += " --dataset_location=\"${WORKSPACE}/data\""
-        }
-
+                --output_path=${output_path} \
+                --dataset_location=${dataset_prefix}${dataset_location}"
         if (multi_instance) {
             cmd += " --multi_instance"
         }
