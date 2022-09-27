@@ -526,6 +526,7 @@ node(node_label){
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
+                                pip install torchprofile
                                 python -m pip install -r requirements.txt && break
                                 n=$((n+1))
                                 sleep 5
