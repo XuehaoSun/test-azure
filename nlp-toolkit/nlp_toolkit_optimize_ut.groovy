@@ -384,6 +384,7 @@ node(node_label){
                         pip install pytest
                         pip install datasets==2.2.2
                         pip install sacremoses
+                        pip install torchprofile
 
                         echo -e "\\nInstalling ut requirements..."
                         cd ${WORKSPACE}/lpot-models/tests
@@ -526,7 +527,6 @@ node(node_label){
                                 n=0
                                 until [ "$n" -ge 5 ]
                                 do
-                                pip install torchprofile
                                 python -m pip install -r requirements.txt && break
                                 n=$((n+1))
                                 sleep 5
@@ -539,6 +539,7 @@ node(node_label){
                             pip install nlpaug
                             pip install pytest
                             pip install datasets
+                            pip install torchprofile
                             
                             export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                             cat ${COVERAGE_RCFILE}
@@ -660,6 +661,8 @@ node(node_label){
                             pip install nlpaug
                             pip install pytest
                             pip install datasets
+                            pip install torchprofile
+                            
                             echo "Setting SigOpt strategy env variables"
                             export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"
                             export SIGOPT_PROJECT_ID="lpot"
