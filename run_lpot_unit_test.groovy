@@ -268,7 +268,7 @@ def build_conda_env(conda_env_name) {
                     --torchvision_version="${torchvision_version}" \
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
-                    --onnxruntime_version="${onnxruntime_version}" 
+                    --onnxruntime_version="${onnxruntime_version}"
             '''
         }
     }
@@ -281,10 +281,13 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
                 ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                 export PATH=${HOME}/miniconda3/bin/:$PATH
+                ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
                 if [[ ${is_base} == "true" ]];then
                     source activate ${conda_env}_base
+                    numa_prefix="numactl --localalloc -C $ncores_per_socket-$((ncores_per_socket*2-1))"
                 else
                     source activate ${conda_env}
+                    numa_prefix="numactl --localalloc -C 0-$((ncores_per_socket-1))"
                 fi
                 # pip config set global.index-url https://pypi.douban.com/simple/
                 echo "Checking lpot..."
@@ -378,16 +381,28 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     echo "cat run_tfnewapi.sh..."
                     cat run_tfnewapi.sh 
                 fi
+                if [ -d "benchmark" ]; then 
+                    grep "benchmark/" run.sh > run_benchmark.sh
+                    sed -i '/benchmark/d' run.sh
+                    echo "cat run_benchmark.sh..."
+                    cat run_benchmark.sh 
+                fi
+                
                 echo "cat run.sh..."
                 cat run.sh 
                 coverage erase
-                bash run.sh 2>&1 | tee ${ut_log_name}
+                ${numa_prefix} bash run.sh 2>&1 | tee ${ut_log_name}
+                bash run_benchmark.sh 2>&1 | tee -a ${ut_log_name}
                 if [ -d "tfnewapi" ]; then 
-                    echo "Run special UT with TFnewAPI..."
-                    pip uninstall intel-tensorflow -y
+                    echo "\n\nRun special UT with TFnewAPI...\n" | tee -a ${ut_log_name}
+                    pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                    pip uninstall tensorflow -y | tee -a ${ut_log_name}
                     pip install ${WORKSPACE}/tensorflow*.whl
+                    if [ $? == 1 ]; then
+                       exit 1
+                    fi
                     echo "-------------"
-                    bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
+                    ${numa_prefix} bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
                 fi
                 coverage report -m --rcfile=${COVERAGE_RCFILE} | tee -a ${ut_log_name}
                 coverage html -d ${WORKSPACE}/${coverage_path}/htmlcov --rcfile=${COVERAGE_RCFILE}
@@ -675,9 +690,13 @@ node(node_label){
                             bash run.sh 2>&1 | tee ${ut_log_name}
                 
                             if [ -d "tfnewapi" ]; then
-                                echo "Run special UT with TFnewAPI..."
-                                pip uninstall intel-tensorflow -y
+                                echo "\n\nRun special UT with TFnewAPI...\n" | tee -a ${ut_log_name}
+                                pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                                pip uninstall tensorflow -y | tee -a ${ut_log_name}
                                 pip install ${WORKSPACE}/tensorflow*.whl
+                                if [ $? == 1 ]; then
+                                   exit 1
+                                fi
                                 echo "-------------"
                                 bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
                             fi
