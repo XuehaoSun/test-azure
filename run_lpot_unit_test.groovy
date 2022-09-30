@@ -387,6 +387,12 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     echo "cat run_benchmark.sh..."
                     cat run_benchmark.sh 
                 fi
+                if [ -f "metric/test_register_metric_transform.py" ]; then 
+                    grep "metric/test_register_metric_transform.py" run.sh >> run_benchmark.sh
+                    sed -i '/metric\\/test_register_metric_transform.py/d' run.sh
+                    echo "cat run_benchmark.sh..."
+                    cat run_benchmark.sh 
+                fi
                 
                 echo "cat run.sh..."
                 cat run.sh 
