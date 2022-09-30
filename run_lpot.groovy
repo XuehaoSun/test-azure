@@ -93,6 +93,12 @@ if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
 }
 echo "tf_binary_build_job is ${tf_binary_build_job}"
 
+pyt_binary_build_job=""  
+if ('pyt_binary_build_job' in params && params.pyt_binary_build_job != ''){
+    pyt_binary_build_job = params.pyt_binary_build_job
+}
+echo "pyt_binary_build_job is ${pyt_binary_build_job}"
+
 test_mode="nightly"
 if ('test_mode' in params && params.test_mode != ''){
     test_mode = params.test_mode
@@ -156,6 +162,7 @@ if ('inferencer_config' in params && params.inferencer_config != ''){
 echo "inferencer_config: ${inferencer_config}"
 
 torchvision_versions = [
+        "nightly": "nightly",
         "1.12.1": "0.13.1",
         "1.12.0": "0.13.0",
         "1.11.0": "0.12.0",
@@ -825,7 +832,7 @@ node( sub_node_label ) {
                 if (framework_version == "spr-base"){
                     tf_new_api="true"
                     copyArtifacts(
-                            projectName: 'TF-spr-base-wheel-build',
+                            projectName: 'TF-spr-base-wheel-build', 
                             selector: specific("${tf_binary_build_job}"),
                             filter: 'tensorflow*.whl',
                             fingerprintArtifacts: true,
@@ -835,6 +842,15 @@ node( sub_node_label ) {
                     if (framework == "tensorflow"){
                         tf_new_api="false"
                     }
+                }
+                if (framework_version == "nightly" && framework == "pytorch"){
+                    copyArtifacts(
+                            projectName: 'ipex-binary-build',
+                            selector: specific("${pyt_binary_build_job}"),
+                            filter: "torch*.whl,intel_extension_for_pytorch*.whl,torchvision*.whl",
+                            fingerprintArtifacts: true,
+                            flatten: true,
+                            target: "${WORKSPACE}")
                 }
             }
 
@@ -937,7 +953,7 @@ node( sub_node_label ) {
                         torchvision_version='0.9.0+cpu'
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
-                    if(model == "bert_large_ipex"){
+                    if(model == "bert_large_ipex"  && framework_version != 'nightly'){
                         framework_version_base = framework_version.split('\\.')[1]
                         if(framework_version_base.toInteger() < 12){
                             framework_version = '1.12.1+cpu'
@@ -988,6 +1004,7 @@ node( sub_node_label ) {
                     }else if(framework=='baremetal'){
                         engine_version=framework_version
                     }
+                    println("Start to create conda env...")
                     create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, engine_version, install_ipex)
                 }else{
                     println("Test need a special local conda env, DO NOT create again!!!")

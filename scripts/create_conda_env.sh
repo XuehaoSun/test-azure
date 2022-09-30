@@ -132,7 +132,19 @@ else
 fi
 
 # Install PyTorch
-if [[ "${pytorch_version}" != "" ]]; then
+if [[ "${pytorch_version}" == "nightly" ]]; then
+    pip install sklearn onnx
+    pip install lark-parser hypothesis
+    conda install numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses psutil
+    torch_whl=${WORKSPACE}/torch-*.whl
+    if [ -f ${torch_whl} ]; then
+        pip install ${torch_whl}
+    fi
+    torchvision_whl=${WORKSPACE}/torchvision-*.whl
+    if [ -f ${torchvision_whl} ]; then
+        pip install ${torchvision_whl}
+    fi
+elif [[ "${pytorch_version}" != "" ]]; then
     torch_whl_path=/tf_dataset/pytorch/pypi
     torch_whl=${torch_whl_path}/${python_version}/torch-${pytorch_version}-*.whl
     if [ -f ${torch_whl} ]; then
@@ -232,6 +244,12 @@ if [[ "${install_ipex}" == "true" ]]; then
             esac
             [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.12.1 -f https://software.intel.com/ipex-whl-stable";;
 
+        "nightly")
+            case "${python_version}" in
+                 3.8)
+                    ipex_whl="intel_extension_for_pytorch*.whl";;
+             esac
+            [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}"
 
             #pip install cmake
             #cmake_path=`which cmake`

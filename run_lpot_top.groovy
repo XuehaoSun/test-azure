@@ -377,6 +377,12 @@ if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
     tf_binary_build_job=params.tf_binary_build_job
 }
 echo "tf_binary_build_job: ${tf_binary_build_job}"
+    
+pyt_binary_build_job = "" 
+if ('pyt_binary_build_job' in params && params.pyt_binary_build_job != ''){
+    pyt_binary_build_job=params.pyt_binary_build_job
+}
+echo "pyt_binary_build_job: ${pyt_binary_build_job}"
 
 val_branch="master"
 if ('val_branch' in params && params.val_branch != ''){
@@ -606,6 +612,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
     ParamsPerJob += string(name: "tf_binary_build_job", value: "${tf_binary_build_job}")
+    ParamsPerJob += string(name: "pyt_binary_build_job", value: "${pyt_binary_build_job}")
     ParamsPerJob += string(name: "mode", value: "${pass_mode}")
     ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
     ParamsPerJob += booleanParam(name: "multi_instance", value: multi_instance)
@@ -1112,6 +1119,24 @@ def buildBinary(){
 
         tf_binary_build_job = downstreamJob.getNumber()
         echo "tf_binary_build_job: ${tf_binary_build_job}"
+        echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+            failed_build_url = downstreamJob.absoluteUrl
+            echo "failed_build_url: ${failed_build_url}"
+            error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        }
+    }
+
+    if (pytorch_version == "nightly" && pyt_binary_build_job == ""){
+        List PYTBinaryBuildParams = [
+                string(name: "python_version", value: "${python_version}"),
+                string(name: "val_branch", value: "${val_branch}"),
+        ]
+        downstreamJob = build job: "ipex-binary-build", propagate: false, parameters: PYTBinaryBuildParams
+
+        pyt_binary_build_job = downstreamJob.getNumber()
+        echo "pyt_binary_build_job: ${pyt_binary_build_job}"
         echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
         if (downstreamJob.getResult() != "SUCCESS") {
             currentBuild.result = "FAILURE"
