@@ -293,6 +293,18 @@ if (params.ABORT_DUPLICATE_TEST != null) {
 }
 echo "ABORT_DUPLICATE_TEST is ${ABORT_DUPLICATE_TEST}"
 
+FEATURE_TESTS=false
+if (params.FEATURE_TESTS != null){
+    FEATURE_TESTS=params.FEATURE_TESTS
+}
+echo "FEATURE_TESTS = ${FEATURE_TESTS}"
+
+feature_list = ""
+if ("feature_list" in params && params.feature_list != "") {
+    feature_list = params.feature_list
+}
+echo "feature_list: ${feature_list}"
+
 /////////
 source_branch = ""
 target_branch = ""
@@ -614,6 +626,38 @@ def copyrightCheck() {
         currentBuild.result = "FAILURE"
         if (test_mode == "pre-CI") {
             error("Copyright check failed!")
+        }
+    }
+}
+
+def featureTests() {
+    List featureTestsParams = [
+            string(name: "nlp_url", value: "${nlp_url}"),
+            string(name: "nlp_branch", value: "${nlp_branch}"),
+            string(name: "python_version", value: "${python_version}"),
+            string(name: "binary_build_job", value: "${binary_build_job}"),
+            string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "feature_list", value: "${feature_list}")
+    ]
+
+    downstreamJob = build job: "nlp-toolkit-feature-test-top", propagate: false, parameters: featureTestsParams
+
+    copyArtifacts(
+            projectName: "nlp-toolkit-feature-test-top",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.log',
+            fingerprintArtifacts: true,
+            target: "featureTests",
+            optional: true)
+
+    // Archive in Jenkins
+    archiveArtifacts artifacts: "featureTests/**", allowEmptyArchive: true
+
+    if (downstreamJob.result != 'SUCCESS') {
+        currentBuild.result = "FAILURE"
+        if (PR_source_branch != '') {
+            error("Feature tests check failed!")
         }
     }
 }
@@ -1192,6 +1236,7 @@ def generateReport() {
             "coverage_summary_optimize_base=${coverage_summary_optimize_base}",
             "coverage_summary_deploy=${coverage_summary_deploy}",
             "coverage_summary_deploy_base=${coverage_summary_deploy_base}",
+            "feature_tests_summary=${WORKSPACE}/featureTests/summary.log",
             "Jenkins_job_status=${Jenkins_job_status}",
             "ghprbActualCommit=${ghprbActualCommit}",
             "ghprbPullLink=${ghprbPullLink}",
@@ -1416,6 +1461,11 @@ node( node_label ) {
         if ( "deploy" in workflows_list && deploy_backends != "") {
             def perf_jobs = model_test_deploy()
             job_list = job_list + perf_jobs
+        }
+        if (FEATURE_TESTS && feature_list != '') {
+            job_list["Feature tests"] = {
+                featureTests()
+            }
         }
         //if (test_mode == "pre-CI" || pipeline_failFast) {
         //    echo "enable failFast"

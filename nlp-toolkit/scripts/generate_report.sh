@@ -15,6 +15,7 @@ function main {
     echo "coverage_summary_deploy_base: ${coverage_summary_deploy_base}"
     echo "launcherSummaryLog: ${launcherSummaryLog}"
     echo "launcherSummaryLogLast: ${launcherSummaryLogLast}"
+    echo "feature_tests_summary: ${feature_tests_summary}"
 
     generate_html_head
     generate_html_overview
@@ -205,6 +206,7 @@ eof
 
 createOverview
 createCoverageOverview
+createFeatureTestsOverview
 
 }
 
@@ -315,6 +317,50 @@ function createCoverageOverview {
         </tr>
         </table>
     """ >> ${WORKSPACE}/report.html
+}
+
+function createFeatureTestsOverview {
+    echo "Generating feature tests overview."
+    if [ ! -f ${feature_tests_summary} ]; then
+        return 0
+    fi
+
+    echo """
+        <h2>Feature Test</h2>
+        <table class=\"features-table\" style=\"width: auto;margin: 0 auto 0 0;\">
+        <tr>
+            <th style=\"padding: 5px 40px;\">Task</th>
+            <th style=\"padding: 5px 40px;\">Platform</th>
+            <th style=\"padding: 5px 20px;\">Status</th>
+        </tr>
+    """ >> ${WORKSPACE}/report.html
+
+    features=$(sed '1d' ${feature_tests_summary} | cut -d';' -f2 | awk '!a[$0]++')
+
+    for feature in ${features[@]}
+    do
+        feature_result=($(grep ${feature} ${feature_tests_summary} |sed 's/;/ /g'))
+        feature_url=${feature_result[3]}
+        platform=${feature_result[0]}
+        if [[ "${feature_result[2]}" == "fail" ]];then
+            feature_status=${fail_status}
+        elif [[ "${feature_result[2]}" == "pass" ]];then
+            feature_status=${pass_status}
+        else
+            feature_status=${verify_status}
+        fi
+
+        if [ "${feature_result[2]}" != "" ]; then
+            echo """
+            <tr>
+            <td style=\"text-align:left;padding: 0 40px;\"><a href=\"${feature_url}\">${feature}</a></td>
+            <td style=\"text-align:center;padding: 0 40px;\">${platform}</td>
+            ${feature_status}
+            </tr>
+            """ >> ${WORKSPACE}/report.html
+        fi
+    done
+    echo "</table>" >> ${WORKSPACE}/report.html
 }
 
 function generate_deploy_benchmark {
