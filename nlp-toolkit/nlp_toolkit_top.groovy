@@ -293,6 +293,18 @@ if (params.ABORT_DUPLICATE_TEST != null) {
 }
 echo "ABORT_DUPLICATE_TEST is ${ABORT_DUPLICATE_TEST}"
 
+FEATURE_TESTS=false
+if (params.FEATURE_TESTS != null){
+    FEATURE_TESTS=params.FEATURE_TESTS
+}
+echo "FEATURE_TESTS = ${FEATURE_TESTS}"
+
+feature_list = ""
+if ("feature_list" in params && params.feature_list != "") {
+    feature_list = params.feature_list
+}
+echo "feature_list: ${feature_list}"
+
 /////////
 source_branch = ""
 target_branch = ""
@@ -532,28 +544,21 @@ def buildBinaryNLP() {
 
 def buildBinary(){
     List binaryBuildParams = [
-            string(name: "python_version", value: "${python_version}"),
-            string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}"),
-            string(name: "MR_source_branch", value: "${source_branch}"),
-            string(name: "MR_target_branch", value: "${target_branch}"),
+            string(name: "inc_url", value: "${lpot_url}"),
+            string(name: "inc_branch", value: "${lpot_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
-            string(name: "pypi_version", value: "${pypi_version}"),
-            string(name: "build_mode", value: "basic")
+            string(name: "LINUX_BINARY_CLASSES", value: "wheel"),
+            string(name: "LINUX_PYTHON_VERSIONS", value: "${python_version}"),
+            string(name: "WINDOWS_BINARY_CLASSES", value: ""),
+            string(name: "WINDOWS_PYTHON_VERSIONS", value: ""),
     ]
-    if(conda_env_mode == "conda") {
-        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
-        binaryBuildParams += string(name: "binary_class", value: "conda")
-    }
-    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
+    def downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildParams
+
     binary_build_job = downstreamJob.getNumber()
-    echo "binary_build_job: ${binary_build_job}"
-    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
     if (downstreamJob.getResult() != "SUCCESS") {
         currentBuild.result = "FAILURE"
         failed_build_url = downstreamJob.absoluteUrl
-        echo "failed_build_url: ${failed_build_url}"
-        error("---- nlp wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
     }
 }
 
@@ -617,6 +622,39 @@ def copyrightCheck() {
         }
     }
 }
+
+def featureTests() {
+    List featureTestsParams = [
+            string(name: "nlp_url", value: "${nlp_url}"),
+            string(name: "nlp_branch", value: "${nlp_branch}"),
+            string(name: "python_version", value: "${python_version}"),
+            string(name: "binary_build_job", value: "${binary_build_job}"),
+            string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "feature_list", value: "${feature_list}")
+    ]
+
+    downstreamJob = build job: "nlp-toolkit-feature-test-top", propagate: false, parameters: featureTestsParams
+
+    copyArtifacts(
+            projectName: "nlp-toolkit-feature-test-top",
+            selector: specific("${downstreamJob.getNumber()}"),
+            filter: '*.log',
+            fingerprintArtifacts: true,
+            target: "featureTests",
+            optional: true)
+
+    // Archive in Jenkins
+    archiveArtifacts artifacts: "featureTests/**", allowEmptyArchive: true
+
+    if (downstreamJob.result != 'SUCCESS') {
+        currentBuild.result = "FAILURE"
+        if (PR_source_branch != '') {
+            error("Feature tests check failed!")
+        }
+    }
+}
+
 
 def unitTestBackend(unit_test_mode) {
     def ut_jobs = [:]
@@ -1192,6 +1230,7 @@ def generateReport() {
             "coverage_summary_optimize_base=${coverage_summary_optimize_base}",
             "coverage_summary_deploy=${coverage_summary_deploy}",
             "coverage_summary_deploy_base=${coverage_summary_deploy_base}",
+            "feature_tests_summary=${WORKSPACE}/featureTests/summary.log",
             "Jenkins_job_status=${Jenkins_job_status}",
             "ghprbActualCommit=${ghprbActualCommit}",
             "ghprbPullLink=${ghprbPullLink}",
@@ -1416,6 +1455,11 @@ node( node_label ) {
         if ( "deploy" in workflows_list && deploy_backends != "") {
             def perf_jobs = model_test_deploy()
             job_list = job_list + perf_jobs
+        }
+        if (FEATURE_TESTS && feature_list != '') {
+            job_list["Feature tests"] = {
+                featureTests()
+            }
         }
         //if (test_mode == "pre-CI" || pipeline_failFast) {
         //    echo "enable failFast"
