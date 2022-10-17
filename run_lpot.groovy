@@ -162,6 +162,7 @@ if ('inferencer_config' in params && params.inferencer_config != ''){
 echo "inferencer_config: ${inferencer_config}"
 
 torchvision_versions = [
+        "stock-nightly": "stock-nightly",
         "nightly": "nightly",
         "1.12.1": "0.13.1",
         "1.12.0": "0.13.0",
