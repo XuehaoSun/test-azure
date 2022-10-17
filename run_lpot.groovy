@@ -1047,7 +1047,6 @@ node( sub_node_label ) {
                             --conda_env_mode=${conda_env_mode} \
                             --log_level=${log_level} \
                             --dtype=${dtype} \
-                            --tf_new_api=${tf_new_api} \
                             2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
                     """
                 }

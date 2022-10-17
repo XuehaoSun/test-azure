@@ -36,8 +36,6 @@ do
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
         --dtype=*)
             dtype=`echo $i | sed "s/${PATTERN}//"`;;
-        --tf_new_api=*)
-            tf_new_api=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -450,10 +448,6 @@ function update_yaml_config {
 
     if [ "${dtype}" != "" ]; then
         update_yaml_params="${update_yaml_params} --dtype=${dtype}"
-    fi
-
-    if [ "${tf_new_api}" != "" ] && [ "${framework}" == "tensorflow" ]; then
-        update_yaml_params="${update_yaml_params} --tf_new_api=${tf_new_api}"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then
