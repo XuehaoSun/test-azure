@@ -320,6 +320,12 @@ function createCoverageOverview {
 }
 
 function createFeatureTestsOverview {
+<<<<<<< HEAD
+=======
+    pass_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    fail_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    verify_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+>>>>>>> 83a6a3002825098fea1b8b4525c8e536c9772499
     echo "Generating feature tests overview."
     if [ ! -f ${feature_tests_summary} ]; then
         return 0

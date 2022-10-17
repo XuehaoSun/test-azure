@@ -521,29 +521,21 @@ def sparse_benchmark_jobs() {
 def buildBinaryLpot(){
     println("Building INC binary ...")
     List binaryBuildParams = [
-            string(name: "python_version", value: "${python_version}"),
-            string(name: "lpot_url", value: "${lpot_url}"),
-            string(name: "lpot_branch", value: "${lpot_branch}"),
-            string(name: "MR_source_branch", value: "${MR_source_branch}"),
-            string(name: "MR_target_branch", value: "${MR_target_branch}"),
+            string(name: "inc_url", value: "${lpot_url}"),
+            string(name: "inc_branch", value: "${lpot_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
-            string(name: "build_mode", value: "basic")
+            string(name: "LINUX_BINARY_CLASSES", value: "wheel"),
+            string(name: "LINUX_PYTHON_VERSIONS", value: "${python_version}"),
+            string(name: "WINDOWS_BINARY_CLASSES", value: ""),
+            string(name: "WINDOWS_PYTHON_VERSIONS", value: ""),
     ]
-    if(conda_env_mode == "conda") {
-        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
-        binaryBuildParams += string(name: "binary_class", value: "conda")
-    }
-    downstreamJob = build job: "lpot-release-wheel-build", propagate: false, parameters: binaryBuildParams
-    def job_id = downstreamJob.getNumber()
-    echo "job_id: ${job_id}"
-    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+    def downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildPar
+    binary_build_job = downstreamJob.getNumber()
     if (downstreamJob.getResult() != "SUCCESS") {
         currentBuild.result = "FAILURE"
         failed_build_url = downstreamJob.absoluteUrl
-        echo "failed_build_url: ${failed_build_url}"
-        error("---- nlp wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
     }
-    return job_id
 }
 
 def buildBinaryNLP() {

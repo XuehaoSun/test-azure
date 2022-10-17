@@ -144,6 +144,8 @@ if [[ "${pytorch_version}" == "nightly" ]]; then
     if [ -f ${torchvision_whl} ]; then
         pip install ${torchvision_whl}
     fi
+elif [[ "${pytorch_version}" == "stock-nightly" ]]; then
+    pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 elif [[ "${pytorch_version}" != "" ]]; then
     torch_whl_path=/tf_dataset/pytorch/pypi
     torch_whl=${torch_whl_path}/${python_version}/torch-${pytorch_version}-*.whl

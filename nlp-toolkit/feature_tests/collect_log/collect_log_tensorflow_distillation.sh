@@ -5,6 +5,9 @@ echo "feature_name: ${feature_name}"
 echo "summaryLog: ${summaryLog}"
 
 CPU_NAME=$(cat "${WORKSPACE}/${feature_name}/cpu_name.log")
+if [[ -z $CPU_NAME ]]; then
+    CPU_NAME=$(env | grep CPU_NAME | head -1)
+fi
 test_status="check"
 tuning_status=$(grep -c "Model distillation is done" ${WORKSPACE}/${feature_name}/tensorflow_distillation.log)
 accuracy=$(grep -c "metric (sst2) Accuracy:" ${WORKSPACE}/${feature_name}/tensorflow_distillation.log | tail -1)
