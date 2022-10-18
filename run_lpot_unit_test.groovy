@@ -45,28 +45,28 @@ if ('binary_build_job' in params && params.binary_build_job != ''){
 echo "binary_build_job is ${binary_build_job}"
 
 
-python_version = "3.6"
+python_version = "3.8"
 if ('python_version' in params && params.python_version != '') {
     python_version = params.python_version
 }
 echo "Python version: ${python_version}"
 
 // setting tensorflow_version
-tensorflow_version = '1.15.2'
+tensorflow_version = '2.10.0'
 if ('tensorflow_version' in params && params.tensorflow_version != '') {
     tensorflow_version = params.tensorflow_version
 }
 echo "tensorflow_version: ${tensorflow_version}"
 
 // setting mxnet_version
-mxnet_version = '1.6.0'
+mxnet_version = '1.9.0'
 if ('mxnet_version' in params && params.mxnet_version != '') {
     mxnet_version = params.mxnet_version
 }
 echo "mxnet_version: ${mxnet_version}"
 
 // setting pytorch_version
-pytorch_version = '1.5.0+cpu'
+pytorch_version = '1.12.0+cpu'
 if ('pytorch_version' in params && params.pytorch_version != '') {
     pytorch_version = params.pytorch_version
 }
@@ -154,6 +154,12 @@ if (tf_binary_build_job == ""){
 }
 
 echo "tf_binary_build_job is ${tf_binary_build_job}"
+
+pyt_binary_build_job = "lastSuccessfulBuild"
+if ('pyt_binary_build_job' in params && params.pyt_binary_build_job != ''){
+    pyt_binary_build_job=params.pyt_binary_build_job
+}
+echo "pyt_binary_build_job: ${pyt_binary_build_job}"
 
 lines_coverage_threshold = 80
 branches_coverage_threshold = 75
@@ -477,6 +483,17 @@ node(node_label){
                         error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
                     }
                 }
+
+                if (pytorch_version == "nightly"){
+                    copyArtifacts(
+                            projectName: 'ipex-binary-build',
+                            selector: specific("${pyt_binary_build_job}"),
+                            filter: "torch*.whl,intel_extension_for_pytorch*.whl,torchvision*.whl",
+                            fingerprintArtifacts: true,
+                            flatten: true,
+                            target: "${WORKSPACE}")
+                }
+
             }
         }
 
