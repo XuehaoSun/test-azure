@@ -655,7 +655,6 @@ def featureTests() {
     }
 }
 
-
 def unitTestBackend(unit_test_mode) {
     def ut_jobs = [:]
     List UTBuildParams = [
