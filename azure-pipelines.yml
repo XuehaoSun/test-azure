@@ -16,4 +16,9 @@ steps:
 - script: |
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
+    echo --------------------------------
+    echo $(System.TeamProject)
+    echo --------------------------------
+    echo $(System.DefinitionId)
+    echo --------------------------------
   displayName: 'Run a multi-line script'
