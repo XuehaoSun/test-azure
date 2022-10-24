@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export BENCHMARK_ITER=100
 export BENCHMARK_NO_REFRESH=0
 op=$1

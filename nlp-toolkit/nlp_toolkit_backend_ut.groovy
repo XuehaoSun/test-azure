@@ -388,11 +388,13 @@ node(node_label){
 
                         find . -maxdepth 1 -name "test*" > run.sh
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
+
                         bash run.sh 2>&1 | tee ${ut_log_name}
-                        if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ];then
-                            exit 1
-                        fi
-                        if [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                        if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
+                            [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
+                            [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ] ||
+                            [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] ||
+                            [ $(grep -c "==ERROR:" ${ut_log_name}) != 0 ]; then
                             exit 1
                         fi
                         ''')
@@ -421,10 +423,11 @@ node(node_label){
                         echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
                         
                         bash run.sh 2>&1 | tee -a ${ut_log_name}
-                        if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
-                            exit 1
-                        fi
-                        if [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                        if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
+                            [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
+                            [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ] ||
+                            [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] ||
+                            [ $(grep -c "==ERROR:" ${ut_log_name}) != 0 ]; then
                             exit 1
                         fi
                         ''')
