@@ -1,3 +1,5 @@
+#!/bin/bash
+
 output_log_dir=$1
 
 conda_env_name="sparse_lib"

@@ -166,7 +166,9 @@ arg_map = [:]
 if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
     params.GITHUB_PR_COMMENT_BODY_MATCH.split('\\s').each { arg ->
         def arg_kv = arg.split('=')
-        arg_map[arg_kv[0]] = arg_kv.length > 1 ? arg_kv[1] : true
+        def arg_k = arg_kv[0]
+        if (arg_k.startsWith('--')) arg_k = arg_k[2..arg_k.length()-1]
+        arg_map[arg_k] = arg_kv.size() > 1 ? arg_kv[1] : true
     }
     echo "arg_map=${arg_map}"
 
@@ -361,7 +363,7 @@ def codeScan(tool) {
         string(name: "python_version", value: "${python_version}")
     ]
 
-    downstreamJob = build job: "sparse-lib-format-scan", propagate: false, parameters: codeScanParams
+    def downstreamJob = build job: "sparse-lib-format-scan", propagate: false, parameters: codeScanParams
     copyArtifacts(
         projectName: "sparse-lib-format-scan",
         selector: specific("${downstreamJob.getNumber()}"),
@@ -391,7 +393,7 @@ def copyrightCheck() {
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "target_path", value: "${target_path}")
     ]
-    downstreamJob = build job: "intel-lpot-copyright-check", propagate: false, parameters: copyrightCheckParams
+    def downstreamJob = build job: "intel-lpot-copyright-check", propagate: false, parameters: copyrightCheckParams
     copyArtifacts(
             projectName: "intel-lpot-copyright-check",
             selector: specific("${downstreamJob.getNumber()}"),
@@ -431,7 +433,7 @@ def unitTestBackend() {
     println("ut params buildup")
     ut_jobs[unit_test_mode] = {
         println("building sparse lib UT")
-        downstreamJob = build job: sub_job_name, propagate: false, parameters: UTBuildParams
+        def downstreamJob = build job: sub_job_name, propagate: false, parameters: UTBuildParams
         catchError {
             copyArtifacts(
                     projectName: sub_job_name,
@@ -464,7 +466,11 @@ def collectUT_backend_Log() {
         ut_log_name=$WORKSPACE/unittest/unit_test_gtest.log
         if [ -f ${ut_log_name} ];then
             sed -i '/deep-engine_ut_gtest/d' ${overview_log}
-            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
+                [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
+                [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ] ||
+                [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] ||
+                [ $(grep -c "==ERROR:" ${ut_log_name}) != 0 ]; then
                 ut_status='FAILURE'
             else
                 ut_status='SUCCESS'
@@ -488,7 +494,7 @@ def sparse_benchmark_jobs() {
 
     jobs["sparse lib benchmark"] = {
         println("adding sparse lib test")
-        downstreamJob = build job: "local_sparse_lib_test", propagate: false, parameters: benchmark_job_prarms
+        def downstreamJob = build job: "local_sparse_lib_test", propagate: false, parameters: benchmark_job_prarms
         catchError {
             copyArtifacts(
                     projectName: "local_sparse_lib_test",
@@ -499,7 +505,6 @@ def sparse_benchmark_jobs() {
             // Archive in Jenkins
             archiveArtifacts artifacts: "sparse_test/**", allowEmptyArchive: true
         }
-        downstreamJobStatus = downstreamJob.result
         def failed_build_result = downstreamJob.result
         def failed_build_url = downstreamJob.absoluteUrl
         if (failed_build_result != 'SUCCESS') {
@@ -529,13 +534,20 @@ def buildBinaryLpot(){
             string(name: "WINDOWS_BINARY_CLASSES", value: ""),
             string(name: "WINDOWS_PYTHON_VERSIONS", value: ""),
     ]
-    def downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildPar
-    binary_build_job = downstreamJob.getNumber()
+    if(conda_env_mode == "conda") {
+        binaryBuildParams += string(name: "conda_env", value: "lpot_conda_build")
+        binaryBuildParams += string(name: "binary_class", value: "conda")
+    }
+    def downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildParams
+    def job_id = downstreamJob.getNumber()
+    echo "job_id: ${job_id}"
+    echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
     if (downstreamJob.getResult() != "SUCCESS") {
         currentBuild.result = "FAILURE"
         failed_build_url = downstreamJob.absoluteUrl
         error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
     }
+    return job_id
 }
 
 def buildBinaryNLP() {
@@ -551,7 +563,7 @@ def buildBinaryNLP() {
         string(name: "binary_class", value: "wheel"),
 
     ]
-    downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
+    def downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
     def job_id = downstreamJob.getNumber()
     echo "job_id: ${job_id}"
     echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
@@ -610,7 +622,6 @@ def model_deploy_jobs(binary_build_lopt_job, binary_build_nlp_job) {
                 // Archive in Jenkins
                 archiveArtifacts artifacts: "${workflow}/${sparse_model_framework}/${job_model}/**", allowEmptyArchive: true
             }
-            downstreamJobStatus = downstreamJob.result
             def failed_build_result = downstreamJob.result
             def failed_build_url = downstreamJob.absoluteUrl
             if (failed_build_result != 'SUCCESS') {
@@ -879,7 +890,7 @@ node( node_label ) {
         //}
 
 
-        if (sparse_models.split(',').size() > 0) {
+        if (sparse_models != "") {
             def job_id_lpot = ""
             def job_id_nlp = ""
             stage("build") {
@@ -926,7 +937,7 @@ node( node_label ) {
                 if (RUN_UT) {
                     collectUT_backend_Log()
                 }
-                if (sparse_models.split(',').size() > 0) {
+                if (sparse_models != "") {
                     collect_deploy_Log()
                 }
             }
