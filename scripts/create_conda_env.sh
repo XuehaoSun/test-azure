@@ -160,18 +160,6 @@ elif [[ "${pytorch_version}" != "" ]]; then
     else
         pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
     fi
-    if [[ ${model} == '3dunet' ]] && [[ ${python_version} != "3.10" ]]; then
-        # Install mlperf_loadgen
-        pip install absl-py
-        mlperf_loadgen_whl=/tf_dataset/pytorch/mlperf_3dunet/mlperf_loadgen-0.5a0-cp${python_version//./}-*.whl
-        pip install ${mlperf_loadgen_whl}
-    elif [[ ${model} == '3dunet' ]] && [[ ${python_version} == "3.10" ]]; then
-        git clone https://github.com/mlcommons/inference.git --recursive
-        cd inference/loadgen
-        pip install absl-py
-        python setup.py install
-        cd -
-    fi
 else
     echo "Won't install PyTorch!"
 fi

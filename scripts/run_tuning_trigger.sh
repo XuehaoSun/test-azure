@@ -6,6 +6,8 @@ PATTERN='[-a-zA-Z0-9_]*='
 for i in "$@"
 do
     case $i in
+        --python_version=*)
+            python_version=`echo $i | sed "s/${PATTERN}//"`;;
         --framework=*)
             framework=`echo $i | sed "s/${PATTERN}//"`;;
         --model=*)
@@ -107,6 +109,18 @@ main() {
     fi
     
     if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
+        # Install mlperf_loadgen
+        pip install absl-py
+        if [[ ${model} == '3dunet' ]] && [[ ${python_version} != "3.10" ]]; then
+            mlperf_loadgen_whl=/tf_dataset/pytorch/mlperf_3dunet/mlperf_loadgen-0.5a0-cp${python_version//./}-*.whl
+            pip install ${mlperf_loadgen_whl}
+        elif [[ ${model} == '3dunet' ]] && [[ ${python_version} == "3.10" ]]; then
+            git clone https://github.com/mlcommons/inference.git --recursive
+            cd inference/loadgen
+            python setup.py install
+            cd -
+        fi
+
         # Install nnUnet
         cd nnUnet
         pip install -r requirements.txt
