@@ -1033,6 +1033,7 @@ node( sub_node_label ) {
                         echo "-------w-------"
                         echo "input path is ${dataset_prefix}${input_model}"
                         ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger.sh \
+                            --python_version=${python_version} \
                             --framework=${framework} \
                             --model=${model} \
                             --model_src_dir=${model_src_dir} \
