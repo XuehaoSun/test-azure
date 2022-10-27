@@ -38,6 +38,10 @@ do
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
         --dtype=*)
             dtype=`echo $i | sed "s/${PATTERN}//"`;;
+        --backend=*)
+            backend=`echo $i | sed "s/${PATTERN}//"`;;
+        --itex_mode=*)
+            itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -47,7 +51,8 @@ done
 main() {
     # Import common functions
     source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
-         --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level}
+         --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} \
+         --itex_mode=${itex_mode} --install_inc="true"
 
     echo -e "\nSetting environment..."
     set_environment
@@ -462,6 +467,10 @@ function update_yaml_config {
 
     if [ "${dtype}" != "" ]; then
         update_yaml_params="${update_yaml_params} --dtype=${dtype}"
+    fi
+
+    if [ "${backend}" != "" ]; then
+        update_yaml_params="${update_yaml_params} --backend=${backend}"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then

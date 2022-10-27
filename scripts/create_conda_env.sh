@@ -11,10 +11,10 @@ do
             python_version=`echo $i | sed "s/${PATTERN}//"`;;
         --tensorflow_version=*)
             tensorflow_version=`echo $i | sed "s/${PATTERN}//"`;;
+        --itex_version=*)
+            itex_version=`echo $i | sed "s/${PATTERN}//"`;;
         --pytorch_version=*)
             pytorch_version=`echo $i | sed "s/${PATTERN}//"`;;
-        --torchvision_version=*)
-            torchvision_version=`echo $i | sed "s/${PATTERN}//"`;;
         --mxnet_version=*)
             mxnet_version=`echo $i | sed "s/${PATTERN}//"`;;
         --onnx_version=*)
@@ -33,7 +33,6 @@ do
 done
 
 # update conda env name
-
 
 # step 0: export conda
 if [[ ${model} = "dlrm"* ]] && [[ "${pytorch_version}" != "" ]]; then
@@ -129,6 +128,71 @@ elif [[ "${tensorflow_version}" != "" ]]; then
     pip install protobuf==3.20.1
 else
     echo "Won't install TensorFlow!"
+fi
+
+# Install itex
+if [ "${itex_version}" == '1.0.0' ]; then
+    itex_whl_path=/tf_dataset2/custom_tf/itex_whl
+    itex_whl=${itex_whl_path}/${python_version}/intel_extension_for_tensorflow-1.0.0-*.whl
+    itex_lib_whl=${itex_whl_path}/${python_version}/intel_extension_for_tensorflow_lib-1.0.0.0-*.whl
+    if [ -f ${itex_whl} ]; then
+        pip install ${itex_whl}
+        pip install ${itex_lib_whl}
+    else
+        echo "No such local itex binary..."
+    fi
+elif [[ "${itex_version}" == "nightly" ]]; then
+    itex_whl=${WORKSPACE}/intel_extension_for_tensorflow-*.whl
+    if [ -f ${itex_whl} ]; then
+        pip install ${itex_whl}
+    else
+        echo "No local itex binary..."
+        exit 1
+    fi
+    itex_lib_whl=${WORKSPACE}/intel_extension_for_tensorflow_lib-*.whl
+    if [ -f ${itex_lib_whl} ]; then
+        pip install ${itex_lib_whl}
+    else
+        echo "No local itex lib binary..."
+        exit 1
+    fi
+elif [[ "${itex_version}" != "" ]]; then
+    echo "No such local itex binary..."
+else
+    echo "Won't install ITEX!"
+fi
+
+# Find paired torchvision version
+if [[ "${pytorch_version}" != "" ]]; then
+    case "${pytorch_version}" in
+        stock-nightly)
+            torchvision_version="stock-nightly";;
+        nightly)
+            torchvision_version="nightly";;
+        1.12.1*)
+            torchvision_version="0.13.1";;
+        1.12.0*)
+            torchvision_version="0.13.0";;
+        1.11.0*)
+            torchvision_version="0.12.0";;
+        1.10.1*)
+            torchvision_version="0.11.2";;
+        1.10.0*)
+            torchvision_version="0.11.0";;
+        1.9.0*)
+            torchvision_version="0.10.0";;
+        1.8.0*)
+            torchvision_version="0.9.0";;
+        1.7.0*)
+            torchvision_version="0.8.0";;
+        1.6.0*)
+            torchvision_version="0.7.0";;
+        *)
+            echo "Could not found torchvision for pytorch ${python_version}, pls define..."
+            exit 1
+    esac
+    pt_postfix=$(echo ${pytorch_version} | cut -d'+' -f2)
+    torchvision_version=$torchvision_version"+"$pt_postfix
 fi
 
 # Install PyTorch

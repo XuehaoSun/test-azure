@@ -17,6 +17,10 @@ do
             conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
         --log_level=*)
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
+        --itex_mode=*)
+            itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
+        --install_inc=*)
+            install_inc=`echo $i | sed "s/${PATTERN}//"`;;
         --install_nlp_toolkit=*)
             install_nlp_toolkit=`echo $i | sed "s/${PATTERN}//"`;;
         *)
@@ -45,8 +49,16 @@ function set_TF_env {
     intel_tf=$(pip list | grep 'tensorflow' | grep -c 'intel') || true
     if [[ "${tf_version}" = "2.6.1" ]] || [[ "${tf_version}" = "2.6.2" ]] || [[ "${intel_tf}" = "0" ]]; then
         # default use block format
-        export TF_ENABLE_ONEDNN_OPTS=1
         echo "export TF_ENABLE_ONEDNN_OPTS=1 ..."
+        export TF_ENABLE_ONEDNN_OPTS=1
+    fi
+
+    if [[ "${itex_mode}" == "native" ]]; then
+        echo "export ITEX_ONEDNN_GRAPH=0 ..."
+        export ITEX_ONEDNN_GRAPH=0
+    elif [[ "${itex_mode}" == "onednn_graph" ]]; then
+        echo "export ITEX_ONEDNN_GRAPH=1 ..."
+        export ITEX_ONEDNN_GRAPH=1
     fi
 }
 
@@ -126,38 +138,40 @@ function set_environment {
             n=$((n+1))
             sleep 5
         done
-        ## workaround for transformers
-        #pip install transformers==4.21.3
     fi
-    echo "Install neural-compressor binary..."
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        if [ "${conda_env_mode}" == "conda" ];then
-            export PATH=$PATH:/usr/lib64/openmpi/bin
-            cd ${WORKSPACE}/lpot-models
-            lpot_bz2_path="$(find ${WORKSPACE} -name neural-compressor*.tar.* |tail -1)"
-            lpot_bz2_file="$(basename ${lpot_bz2_path})"
-            lpot_version="$(echo ${lpot_bz2_file} |sed 's/\.tar\..*//' |awk -F '-' '{print $3}')"
-            lpot_build="$(echo ${lpot_bz2_file} |sed 's/\.tar\..*//' |awk -F '-' '{print $4}')"
-            sed -i "s+LPOT_BZ2_FILE+${lpot_bz2_file}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
-            sed -i "s+LPOT_VERSION+${lpot_version}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
-            sed -i "s+LPOT_BUILD+${lpot_build}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
-            cp ${lpot_bz2_path} ${WORKSPACE}/lpot-validation/config/conda/noarch/
-            pip uninstall neural-compressor-full -y || true
-            conda install neural-compressor-conda -c file:/${WORKSPACE}/lpot-validation/config/conda -c conda-forge -c intel -y && break
-        elif [ "${conda_env_mode}" == "source" ];then
-            cd ${WORKSPACE}/lpot-models
-            pip install -r requirements.txt
-            python setup.py clean || true
-            python setup.py install && break
-            cd -
-        else
-            pip install neural_compressor*.whl && break
-        fi
-        n=$((n+1))
-        sleep 5
-    done
+
+    if [[ "$install_inc" == "true" ]]; then
+        echo "Install neural-compressor binary..."
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+            if [ "${conda_env_mode}" == "conda" ];then
+                export PATH=$PATH:/usr/lib64/openmpi/bin
+                cd ${WORKSPACE}/lpot-models
+                lpot_bz2_path="$(find ${WORKSPACE} -name neural-compressor*.tar.* |tail -1)"
+                lpot_bz2_file="$(basename ${lpot_bz2_path})"
+                lpot_version="$(echo ${lpot_bz2_file} |sed 's/\.tar\..*//' |awk -F '-' '{print $3}')"
+                lpot_build="$(echo ${lpot_bz2_file} |sed 's/\.tar\..*//' |awk -F '-' '{print $4}')"
+                sed -i "s+LPOT_BZ2_FILE+${lpot_bz2_file}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
+                sed -i "s+LPOT_VERSION+${lpot_version}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
+                sed -i "s+LPOT_BUILD+${lpot_build}+g" ${WORKSPACE}/lpot-validation/config/conda/noarch/repodata.json
+                cp ${lpot_bz2_path} ${WORKSPACE}/lpot-validation/config/conda/noarch/
+                pip uninstall neural-compressor-full -y || true
+                conda install neural-compressor-conda -c file:/${WORKSPACE}/lpot-validation/config/conda -c conda-forge -c intel -y && break
+            elif [ "${conda_env_mode}" == "source" ];then
+                cd ${WORKSPACE}/lpot-models
+                pip install -r requirements.txt
+                python setup.py clean || true
+                python setup.py install && break
+                cd -
+            else
+                pip install neural_compressor*.whl && break
+            fi
+            n=$((n+1))
+            sleep 5
+        done
+    fi
+
     echo "Checking lpot..."
     if [[ "${conda_env_mode}" == "conda" ]]; then
         #python_version=$(python --version | grep -Po [0-9]+.[0-9]+)

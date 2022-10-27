@@ -280,7 +280,7 @@ def create_conda_env(install_ipex){
             withEnv(["framework=${framework}","conda_env_name=${conda_env_name}","model=${model}","conda_env_mode=${conda_env_mode}","log_level=${log_level}","install_nlp_toolkit=${install_nlp_toolkit}"]) {
                 sh '''#!/bin/bash
                     echo -e "\nSetting environment..."
-                    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit}
+                    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit} --install_inc="true"
                     set_environment
                 '''
             }

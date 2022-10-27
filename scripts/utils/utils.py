@@ -272,7 +272,9 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
     max_trials: Optional[int] = None, algorithm: Optional[str] = None,
     timeout: Optional[int] = None, strategy_token: Optional[str] = None,
     sampling_size: Optional[Union[str,int]] = None,
-    dtype: Optional[str] = None):
+    dtype: Optional[str] = None,
+    backend: Optional[str] = None):
+
     tuning_config = {}
     with open(yaml_file) as f:
         yaml_config = yaml.round_trip_load(f, preserve_quotes=True)
@@ -393,6 +395,15 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
             print(f"Changed dtype from {prev_dtype} to {dtype}")
         except Exception as e:
             print(f"[ WARNING ] {e}")
+    if backend:
+        try:
+            model = yaml_config.get("model", {})
+            prev_framework = model.get("framework", None)
+            model.update({"framework": backend})
+            print(f"Changed framework from {prev_framework} to {backend}")
+        except Exception as e:
+            print(f"[ WARNING ] {e}")
+
 
     print(f"Saving yaml config back to {yaml_file}")
 

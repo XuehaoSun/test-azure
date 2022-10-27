@@ -94,44 +94,6 @@ if (params.run_coverage != null){
 }
 echo "run_coverage = ${run_coverage}"
 
-torchvision_versions = [
-    "1.12.1": "0.13.1",
-    "1.12.0": "0.13.0",
-    "1.11.0": "0.12.0",
-    "1.10.1": "0.11.2",
-    "1.10.0": "0.11.0",
-    "1.9.0": "0.10.0",
-    "1.8.0": "0.9.0",
-    "1.7.0": "0.8.0",
-    "1.6.0": "0.7.0",
-    "1.5.1": "0.6.1",
-    "1.5.0": "0.6.0",
-    "1.4.0": "0.5.0",
-    "1.3.1": "0.4.2",
-    "1.3.0": "0.4.1",
-    "1.2.0": "0.4.0",
-    "1.1.0": "0.3.0",
-]
-
-pytorch_version_base = pytorch_version.split('\\+')[0]
-try {
-    pytorch_version_postfix = pytorch_version.split('\\+')[1]
-} catch(e) {
-    pytorch_version_postfix = ""
-}
-
-torchvision_version = torchvision_versions[pytorch_version_base]
-
-if (!torchvision_version) {
-    error("Could not found torchvision for pytorch " + pytorch_version)
-}
-
-if (pytorch_version_postfix != "") {
-    torchvision_version = torchvision_version + "+" + pytorch_version_postfix
-}
-println("torchvision_version: " + torchvision_version)
-
-
 // setting onnx and onnxruntime version
 onnx_version = '1.7.0'
 if ('onnx_version' in params && params.onnx_version != '') {
@@ -239,7 +201,6 @@ def download() {
 def build_conda_env() {
     withEnv([
         "pytorch_version=${pytorch_version}",
-        "torchvision_version=${torchvision_version}",
         "tensorflow_version=${tensorflow_version}",
         "mxnet_version=${mxnet_version}",
         "onnx_version=${onnx_version}",
@@ -255,7 +216,6 @@ def build_conda_env() {
                     --python_version="${python_version}" \
                     --tensorflow_version="${tensorflow_version}" \
                     --pytorch_version="${pytorch_version}" \
-                    --torchvision_version="${torchvision_version}" \
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
                     --onnxruntime_version="${onnxruntime_version}"

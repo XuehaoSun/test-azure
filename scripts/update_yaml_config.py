@@ -25,6 +25,7 @@ def parse_args():
     parser.add_argument("--sampling_size", type=str, required=False, help="Sampling size for calibration.")
     parser.add_argument("--timeout", type=int, required=False, help="Tuning timeout.")
     parser.add_argument("--dtype", type=str, required=False, help="Quantize model precision type.")
+    parser.add_argument("--backend", type=str, required=False, help="Framework backend.")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -40,5 +41,6 @@ if __name__ == "__main__":
         timeout=args.timeout,
         strategy_token=args.strategy_token,
         sampling_size=args.sampling_size,
-        dtype=args.dtype
+        dtype=args.dtype,
+        backend=args.backend
     )
