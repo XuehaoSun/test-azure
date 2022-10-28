@@ -734,19 +734,19 @@
       }
     }
   },
-  "bert_base_squad_ipex": {
-    "working_dir": "optimization/pytorch/huggingface/question-answering/quantization/ipex",
+  "bert_large_squad_ipex": {
+    "working_dir": "optimization/pytorch/huggingface/question-answering/quantization/inc",
     "tune": {
       "cmd": "run_tuning.sh",
       "params": {
-        "topology": "bert_base_squad_ipex",
+        "topology": "bert_large_squad_ipex",
         "output_model": "saved_results"
       }
     },
     "benchmark": {
       "cmd": "run_benchmark.sh",
       "params": {
-        "topology": "bert_base_squad_ipex",
+        "topology": "bert_large_squad_ipex",
         "mode": "accuracy",
         "batch_size": "64",
         "iters": "100",
@@ -756,7 +756,7 @@
     }
   },
   "distilbert_base_squad_ipex": {
-    "working_dir": "optimization/pytorch/huggingface/question-answering/quantization/ipex",
+    "working_dir": "optimization/pytorch/huggingface/question-answering/quantization/inc",
     "tune": {
       "cmd": "run_tuning.sh",
       "params": {
