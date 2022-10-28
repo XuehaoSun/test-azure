@@ -682,7 +682,7 @@ function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
             <tr>
-                <td colspan="22"><font color="#d6776f">Note: </font>All data tested on TensorFlow Dedicated Server.</td>
+                <td colspan="22"><font color="#d6776f">Note: </font>All data tested on INC Dedicated Server.</td>
                 <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
             </tr>
         </table>
