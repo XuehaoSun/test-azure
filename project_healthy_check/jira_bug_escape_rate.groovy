@@ -28,42 +28,17 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version: ${python_version}"
 
-issue_type="Bug,Feature,Task"
-if ('python_version' in params && params.issue_type != ''){
-    issue_type=params.issue_type
+start_days="2022-09-01"
+if ('start_days' in params && params.start_days != ''){
+    start_days=params.start_days
 }
-echo "issue_type: ${issue_type}"
-
-inc_version="1.14.1"
-if ('inc_version' in params && params.inc_version != ''){
-    inc_version=params.inc_version
-}
-echo "inc_version: ${inc_version}"
-
-days="365"
-if ('days' in params && params.days != ''){
-    days=params.days
-}
-echo "days: ${days}"
-
-jenkins_job_name='project_healthy_check'
-if ('jenkins_job_name' in params && params.jenkins_job_name != ''){
-    jenkins_job_name=params.jenkins_job_name
-}
-echo "jenkins_job_name: ${jenkins_job_name}"
+echo "start_days: ${start_days}"
 
 project="INC"
 if ('project' in params && params.project != ''){
     project=params.project
 }
 echo "project: ${project}"
-
-pr_repo_name="frameworks.ai.lpot.lpot-validation"
-if ('pr_repo_name' in params && params.pr_repo_name != ''){
-    pr_repo_name=params.pr_repo_name
-}
-echo "pr_repo_name: ${pr_repo_name}"
-
 
 def cleanup() {
 
@@ -126,37 +101,12 @@ def build_conda_env() {
                 pip install -U pip
                 pip install xlsxwriter
                 pip install requests
+                pip install python-dateutil
             '''
         }
     }
 }
 
-// @NonCPS
-def checkJenkinsStatus(){
-    def jobNames = "${jenkins_job_name}".split(',')
-    def daysBack = "${days}".toLong()  // adjust to how many days back to report on
-    def timeToDays = 24*60*60*1000  // converts msec to days
-    def filePath = "${WORKSPACE}/logfile/trigger_data.txt"
-    def triggerMsg = ""
-    
-    println "Job Name: ( # builds: last ${daysBack} days / overall )  Last Status\n   Number | Trigger | Status | Date | Duration\n" 
-
-    for (jobName in jobNames){
-        def job = Jenkins.instance.getItemByFullName(jobName)
-        def builds = job.getBuilds().byTimestamp(System.currentTimeMillis() - daysBack*timeToDays, System.currentTimeMillis())
-
-        println job.fullName + ' ( ' + builds.size() + ' / ' + job.builds.size() + ' )  ' + job.getLastBuild()?.result
-
-        for (build in builds){
-            println jobName + '   ' + build.number + ' | ' + build.getCauses()[0].getShortDescription() + ' | ' + build.result + ' | ' + build.getTimestampString2() + ' | ' + build.getDurationString()
-            triggerMsg = triggerMsg + "${jobName}|${build.number.toString()}|${build.getCauses()[0].getShortDescription().toString()}|${build.result.toString()}|${build.getTimestampString2().toString()}|${build.getDurationString().toString()}\n"
-        }        
-    }
-
-    writeFile file: filePath, text: triggerMsg
-
-    return 0
-}
 
 node(node_label){
     try {
@@ -170,18 +120,10 @@ node(node_label){
             println "now conda env is " + conda_env
         }
 
-        stage('get jenkins job'){
-            try{
-                checkJenkinsStatus()
-            }catch(e){
-                println e
-            }
-        }
-
-        stage('healthy check'){
-            run_healthy_check_scripts = "${WORKSPACE}/lpot-validation/project_healthy_check/pre_ci_trigger_frequency_trend.py"
+        stage('analyse bug escape rate'){
+            run_jira_bug_escape_rate_scripts = "${WORKSPACE}/lpot-validation/project_healthy_check/jira_bug_escape_rate.py"
             println("run healthy check...")
-            withEnv(["run_healthy_check_scripts=${run_healthy_check_scripts}", "conda_env=${conda_env}"]){
+            withEnv(["run_jira_bug_escape_rate_scripts=${run_jira_bug_escape_rate_scripts}", "conda_env=${conda_env}"]){
                     sh'''#!/bin/bash
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
@@ -189,8 +131,8 @@ node(node_label){
                     mkdir logfile
                     cd ${WORKSPACE}/lpot-validation/project_healthy_check
                     
-                    if [ -f "${run_healthy_check_scripts}" ]; then
-                        python ${run_healthy_check_scripts} --logfile_path ${WORKSPACE}/logfile --type_list ${issue_type} --version ${inc_version} --jenkins_data_path ${WORKSPACE}/logfile/trigger_data.txt --days ${days} --project ${project} --jenkins_job_name ${jenkins_job_name} --pr_repo_name ${pr_repo_name}
+                    if [ -f "${run_jira_bug_escape_rate_scripts}" ]; then
+                        python ${run_jira_bug_escape_rate_scripts} --logfile_path=${WORKSPACE}/logfile --start_days=${start_days} --project=${project}
                     fi
                 '''
             }

@@ -4,7 +4,7 @@ import xlsxwriter
 import os
 
 
-def drawing(workbook, worksheet, chart_type, chart_sheet, multiList, chart_title, insert_sheet, chart_x_title, chart_y_title):
+def drawing(workbook, worksheet, chart_type, chart_sheet, multiList, chart_title, insert_sheet, chart_x_title, chart_y_title, y_axis_max_value=None):
     # auto graph - multiLine
     chart = workbook.add_chart({'type': chart_type})
 
@@ -13,15 +13,12 @@ def drawing(workbook, worksheet, chart_type, chart_sheet, multiList, chart_title
             'name': '={}!${}${}'.format(chart_sheet, item['chart_name_col'], item['chart_name_row']),
             'categories': '={}!${}${}:${}${}'.format(chart_sheet, item['chart_categories_from_col'], item['chart_categories_from_row'], item['chart_categories_to_col'], (item['chart_categories_to_row'] + 1)),
             'values': '={}!${}${}:${}${}'.format(chart_sheet, item['chart_values_from_col'], item['chart_values_from_row'], item['chart_values_to_col'], (item['chart_values_to_row'] + 1)),
-            # 'line': {
-            #     'color': item['chartColor']
-            # },
         })
 
     chart.set_title({'name': chart_title})
     chart.set_style(10)
     chart.set_x_axis({'name': chart_x_title})
-    chart.set_y_axis({'name':  chart_y_title})
+    chart.set_y_axis({'name': chart_y_title, 'max': y_axis_max_value})
     worksheet.insert_chart(insert_sheet, chart)
 
 
@@ -34,15 +31,16 @@ def create(log_file, file_name='status_report.xlsx'):
 def jira_status_trend(workbook, worksheet, status_data, days):
     # Add an Excel date format.
     date_format = workbook.add_format({'num_format': 'mmm d'})
+    str_format = workbook.add_format({'align': 'center', 'valign': 'vcenter'})
 
     # Adjust the column width.
     worksheet.set_column(0, 0, 20)
 
     # Write some data headers.
-    worksheet.write('A1', 'Date')
-    worksheet.write('B1', 'Open')
-    worksheet.write('C1', 'Closed')
-    worksheet.write('D1', 'WIP')
+    worksheet.write('A1', 'Date', str_format)
+    worksheet.write('B1', 'Open', str_format)
+    worksheet.write('C1', 'Closed', str_format)
+    worksheet.write('D1', 'WIP', str_format)
 
     # Start from the first cell below the headers.
     row = 1
@@ -52,9 +50,9 @@ def jira_status_trend(workbook, worksheet, status_data, days):
         # Convert the date string into a datetime object.
         date = datetime.strptime(key, "%Y-%m-%d")
         worksheet.write_datetime(row, col, date, date_format)
-        worksheet.write_number(row, col + 1, value['open'])
-        worksheet.write_number(row, col + 2, value['closed'])
-        worksheet.write_number(row, col + 3, value['in_progress'])
+        worksheet.write_number(row, col + 1, value['open'], str_format)
+        worksheet.write_number(row, col + 2, value['closed'], str_format)
+        worksheet.write_number(row, col + 3, value['in_progress'], str_format)
         row += 1
 
     chart_type = 'line'
@@ -78,7 +76,7 @@ def jira_status_trend(workbook, worksheet, status_data, days):
             "chart_values_to_col"      : chr(ord(first_col) + index),
             "chart_values_to_row"      : days,
         } for index in range(2)
-    ]    
+    ]
 
     WIP_chart_title = 'jira bug WIP'
     WIP_x_title = 'Date'
@@ -189,7 +187,7 @@ def write_jira_live_days(workbook, worksheet, issue_data):
 
     P1_LI_chart_title = 'P1 issue live days'
     P1_LI_x_title = 'Live days'
-    P1_LI_y_title = 'count'    
+    P1_LI_y_title = 'count'
     P1_LI_insert_sheet = 'J3'
     first_col = 'B'
     P1_LI_multiList = [
@@ -205,11 +203,11 @@ def write_jira_live_days(workbook, worksheet, issue_data):
             "chart_values_to_col"      : chr(ord(first_col) + index),
             "chart_values_to_row"      : len(days_list),
         } for index in range(3)
-    ]    
+    ]
 
     P2_LI_chart_title = 'P2 or lower issue live days'
     P2_LI_x_title = 'Live days'
-    P2_LI_y_title = 'count'      
+    P2_LI_y_title = 'count'
     P2_LI_insert_sheet = 'J21'
     P2_first_col = 'E'
     P2_LI_multiList = [
@@ -225,8 +223,8 @@ def write_jira_live_days(workbook, worksheet, issue_data):
             "chart_values_to_col"      : chr(ord(P2_first_col) + index),
             "chart_values_to_row"      : len(days_list),
         } for index in range(3)
-    ]    
-   
+    ]
+
     drawing(workbook, worksheet, chart_type, chart_sheet, P1_LI_multiList, P1_LI_chart_title, P1_LI_insert_sheet, P1_LI_x_title, P1_LI_y_title)
     drawing(workbook, worksheet, chart_type, chart_sheet, P2_LI_multiList, P2_LI_chart_title, P2_LI_insert_sheet, P2_LI_x_title, P2_LI_y_title)
 
@@ -278,7 +276,7 @@ def write_jenkins_trigger_status(workbook, worksheet, jenkins_data, jenkins_job_
 
     TR_chart_title = 'Trigger count'
     TR_x_title = 'Date'
-    TR_y_title = 'count'     
+    TR_y_title = 'count'
     first_col = 'B'
     TR_multiList = [
         {
@@ -345,7 +343,7 @@ def pr_duration(workbook, worksheet, pr_list, days=10):
 
     PR_chart_title = 'Pr duration'
     PR_x_title = 'Pr duration'
-    PR_y_title = 'count'      
+    PR_y_title = 'count'
     PR_insert_sheet = 'G3'
     first_col = 'B'
     PR_multiList = [
@@ -366,6 +364,84 @@ def pr_duration(workbook, worksheet, pr_list, days=10):
     drawing(workbook, worksheet, chart_type, chart_sheet, PR_multiList, PR_chart_title, PR_insert_sheet, PR_x_title, PR_y_title)
 
 
+def bug_escape_rate(workbook, worksheet_name, bug_data, title, time_interval, project):
+    worksheet = workbook.add_worksheet(worksheet_name)
+
+    # Add an Excel date format.
+    num_format = workbook.add_format({'num_format': '0.00%', 'align': 'center', 'valign': 'vcenter'})
+    str_format = workbook.add_format({'align': 'center', 'valign': 'vcenter'})
+
+    # Adjust the column width.
+    worksheet.set_column(0, 0, 20)
+
+    # Write some data headers.
+    worksheet.write('A1', 'Date', str_format)
+    worksheet.write('B1', 'external', str_format)
+    worksheet.write('C1', 'internal', str_format)
+    worksheet.write('D1', 'total', str_format)
+    worksheet.write('E1', 'rate', str_format)
+
+    # Start from the first cell below the headers.
+    row = 1
+    col = 0
+    length = 0
+
+    for date, value in bug_data.items():
+        rate = value['external'] / value['total'] if value['total'] else 0
+        worksheet.write_string(row, col, date, str_format)
+        worksheet.write_number(row, col + 1, value['external'], str_format)
+        worksheet.write_number(row, col + 2, value['internal'], str_format)
+        worksheet.write_number(row, col + 3, value['total'], str_format)
+        worksheet.write_number(row, col + 4, rate, num_format)
+        row += 1
+        length += 1
+
+    chart_type = 'column'
+    chart_sheet = worksheet_name
+
+    bug_count_chart_title = f'{project} bug escape count'
+    bug_count_x_title = title
+    bug_count_y_title = 'Count'
+    bug_count_insert_sheet = 'G3'
+    first_col = 'B'
+    bug_count_multiList = [
+        {
+            "chart_name_col"           : chr(ord(first_col) + index),
+            "chart_name_row"           : 1,
+            "chart_categories_from_col": 'A',
+            "chart_categories_from_row": 2,
+            "chart_categories_to_col"  : 'A',
+            "chart_categories_to_row"  : length,
+            "chart_values_from_col"    : chr(ord(first_col) + index),
+            "chart_values_from_row"    : 2,
+            "chart_values_to_col"      : chr(ord(first_col) + index),
+            "chart_values_to_row"      : length,
+        } for index in range(3)
+    ]
+
+    bug_rate_chart_title = f'{project} bug escape rate'
+    bug_rate_x_title = title
+    bug_rate_y_title = 'Rate'
+    bug_rate_insert_sheet = 'G21'
+    bug_rate_multiList = [
+        {
+            "chart_name_col"           : 'E',
+            "chart_name_row"           : 1,
+            "chart_categories_from_col": 'A',
+            "chart_categories_from_row": 2,
+            "chart_categories_to_col"  : 'A',
+            "chart_categories_to_row"  : length,
+            "chart_values_from_col"    : 'E',
+            "chart_values_from_row"    : 2,
+            "chart_values_to_col"      : 'E',
+            "chart_values_to_row"      : length,
+        }
+    ]
+
+    drawing(workbook, worksheet, chart_type, chart_sheet, bug_count_multiList, bug_count_chart_title, bug_count_insert_sheet, bug_count_x_title, bug_count_y_title)
+    drawing(workbook, worksheet, chart_type, chart_sheet, bug_rate_multiList, bug_rate_chart_title, bug_rate_insert_sheet, bug_rate_x_title, bug_rate_y_title)
+
+
 def report(summary_dict, issue_list, jenkins_data, jenkins_job_name, log_file, days, pr_list):
     workbook = create(log_file)
     jira_status_trend(workbook, workbook.add_worksheet('jira_bug_trend'), summary_dict, days)
@@ -374,6 +450,12 @@ def report(summary_dict, issue_list, jenkins_data, jenkins_job_name, log_file, d
     pr_duration(workbook, workbook.add_worksheet('pr_duration'), pr_list)
     workbook.close()
 
+def report_bug_escape_rate(bug_data, log_file, time_interval, project):
+    workbook = create(log_file, 'bug_escape_rate.xlsx')
+    bug_escape_rate(workbook, 'bug_escape_rate_monthly', bug_data['monthly'], 'Month', time_interval, project)
+    bug_escape_rate(workbook, 'bug_escape_rate_quarterly', bug_data['quarterly'], 'Quarter', time_interval, project)
+    bug_escape_rate(workbook, 'bug_escape_rate_yearly', bug_data['yearly'], 'Year', time_interval, project)
+    workbook.close()
 
 if __name__ == "__main__":
     report()
