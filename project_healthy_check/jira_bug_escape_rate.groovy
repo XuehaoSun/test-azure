@@ -85,15 +85,10 @@ def build_conda_env() {
             sh'''#!/bin/bash
                 set -xe
                 echo "Create new conda env for ..."
-                if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
-                    (conda remove --name ${conda_env_name} --all -y) || true
+                if [ $(conda info -e | grep ${conda_env_name} | wc -l) == 0 ]; then
+                    conda config --add channels defaults
+                    conda create python=${python_version} -y -n ${conda_env_name}
                 fi
-                conda_dir=$(dirname $(dirname $(which conda)))
-                if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
-                    rm -rf ${conda_dir}/envs/${conda_env_name}
-                fi
-                conda config --add channels defaults
-                conda create python=${python_version} -y -n ${conda_env_name}
 
                 source activate ${conda_env_name}
 
