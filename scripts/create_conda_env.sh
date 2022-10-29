@@ -131,17 +131,7 @@ else
 fi
 
 # Install itex
-if [ "${itex_version}" == '1.0.0' ]; then
-    itex_whl_path=/tf_dataset2/custom_tf/itex_whl
-    itex_whl=${itex_whl_path}/${python_version}/intel_extension_for_tensorflow-1.0.0-*.whl
-    itex_lib_whl=${itex_whl_path}/${python_version}/intel_extension_for_tensorflow_lib-1.0.0.0-*.whl
-    if [ -f ${itex_whl} ]; then
-        pip install ${itex_whl}
-        pip install ${itex_lib_whl}
-    else
-        echo "No such local itex binary..."
-    fi
-elif [[ "${itex_version}" == "nightly" ]]; then
+if [[ "${itex_version}" == "nightly" ]]; then
     itex_whl=${WORKSPACE}/intel_extension_for_tensorflow-*.whl
     if [ -f ${itex_whl} ]; then
         pip install ${itex_whl}
@@ -157,7 +147,7 @@ elif [[ "${itex_version}" == "nightly" ]]; then
         exit 1
     fi
 elif [[ "${itex_version}" != "" ]]; then
-    echo "No such local itex binary..."
+    pip install --upgrade intel-extension-for-tensorflow[cpu]==${itex_version}
 else
     echo "Won't install ITEX!"
 fi
@@ -304,15 +294,6 @@ if [[ "${install_ipex}" == "true" ]]; then
                     ipex_whl="intel_extension_for_pytorch*.whl";;
              esac
             [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}"
-
-            #pip install cmake
-            #cmake_path=`which cmake`
-            #ln -s $cmake_path ${cmake_path}3
-            #git clone https://github.com/intel-innersource/frameworks.ai.pytorch.ipex-cpu.git
-            #cd frameworks.ai.pytorch.ipex-cpu
-            #git submodule sync && git submodule update --init --recursive
-            #python setup.py install
-            #cd -
     esac
     if [[ ! -z ${install_params} ]]; then
         pip install ${install_params}
