@@ -2304,3 +2304,5 @@ TorchDynamo
 aliblade
 automixedprecisionmkl
 ofi
+itex
+extmanager
