@@ -2306,3 +2306,14 @@ automixedprecisionmkl
 ofi
 itex
 extmanager
+AMD
+Graviton
+TensorRT
+aldk
+cj
+cwad
+ec
+gnq
+scalable
+twlt
+xlarge
