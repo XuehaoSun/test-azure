@@ -32,7 +32,7 @@
     "benchmark": {
       "cmd": "run_benchmark.sh",
       "params": {
-        "topology": "gpt_neo_clm_static",
+        "topology": "gpt_neo_clm_dynamic",
         "mode": "accuracy",
         "batch_size": "8",
         "iters": "100",
