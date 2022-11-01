@@ -1104,11 +1104,13 @@ node( sub_node_label ) {
                                              'resnet50_keras', 'resnet50_keras_h5',
                                              'mobilenetv1_saved', 'mobilenetv2_saved',
                                              'efficientnet_v2_b0']
+                        onnx_perf_only_list = ['unet']
                         precision_list.each { precision ->
                             echo "precision is ${precision}"
                             // oob only support dummy data
                             if ((model_src_dir=~'oob_models').find()
-                                 || (framework == "tensorflow" && tf_perf_only_list.contains(model))) {
+                                 || (framework == "tensorflow" && tf_perf_only_list.contains(model))
+                                 || (framework == "onnxrt" && onnx_perf_only_list.contains(model))) {
                                 mode_list = mode_list - 'accuracy'
                                 echo "mode list is ${mode_list}"
                             }
