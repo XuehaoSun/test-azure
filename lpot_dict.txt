@@ -2325,3 +2325,14 @@ grafftti
 initializer
 learnable
 nezha
+Supprted
+mrm
+qa
+salti
+spanbert
+squadv
+Alireza
+MiniLM
+Supprted
+english
+philschmid
