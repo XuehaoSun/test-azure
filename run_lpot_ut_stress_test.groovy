@@ -422,6 +422,12 @@ node(node_label){
                         echo "---------- Run TF newAPI -----------------"
                         cat ${run_tfnewapi_scripts}
                         pip install ${WORKSPACE}/tensorflow*.whl
+                        if [ $? == 1 ]; then
+                           exit 1
+                        fi
+                        echo "re-install horovod resolve the issue with fwk..."
+                        pip uninstall horovod -y
+                        pip install --no-cache-dir horovod
                         for((j=0;$j<${test_trials};j=$(($j + 1))));
                         do
                           echo "------ Start of test around ${j} -------" >> ${ut_log_name}

@@ -374,6 +374,10 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     if [ $? == 1 ]; then
                        exit 1
                     fi
+                    echo "re-install horovod resolve the issue with fwk..."
+                    pip uninstall horovod -y
+                    pip install --no-cache-dir horovod
+                    
                     echo "-------------"
                     ${numa_prefix} bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
                 fi
