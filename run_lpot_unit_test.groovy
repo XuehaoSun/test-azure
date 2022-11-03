@@ -685,6 +685,9 @@ node(node_label){
                                 if [ $? == 1 ]; then
                                    exit 1
                                 fi
+                                echo "re-install horovod resolve the issue with fwk..."
+                                pip uninstall horovod -y
+                                pip install --no-cache-dir horovod
                                 echo "-------------"
                                 bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
                             fi
