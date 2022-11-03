@@ -2336,3 +2336,5 @@ MiniLM
 Supprted
 english
 philschmid
+sd
+youtooz
