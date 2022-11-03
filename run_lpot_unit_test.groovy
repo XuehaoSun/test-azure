@@ -361,6 +361,13 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     cat run_benchmark.sh 
                 fi
                 
+                if [ -d "itex" ]; then
+                    grep "itex/" run.sh > run_itex.sh
+                    sed -i '/itex/d' run.sh
+                    echo "cat run_itex.sh..."
+                    cat run_itex.sh
+                fi 
+                
                 echo "cat run.sh..."
                 cat run.sh 
                 coverage erase
@@ -377,10 +384,27 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     echo "re-install horovod resolve the issue with fwk..."
                     pip uninstall horovod -y
                     pip install --no-cache-dir horovod
-                    
                     echo "-------------"
                     ${numa_prefix} bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
                 fi
+                
+                if [ -d "itex" ]; then
+                    echo "\n\nRun special UT with itex...\n" | tee -a ${ut_log_name}
+                    pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                    pip uninstall tensorflow -y | tee -a ${ut_log_name}
+                    pip install tensorflow 
+                    pip install --upgrade intel-extension-for-tensorflow[cpu]
+                    if [ $? == 1 ]; then
+                       exit 1
+                    fi
+                    echo "re-install horovod resolve the issue with fwk..."
+                    pip uninstall horovod -y
+                    pip install --no-cache-dir horovod
+                    echo "-------------"
+                    pip list | tee -a ${ut_log_name}
+                    ${numa_prefix} bash run_itex.sh 2>&1 | tee -a ${ut_log_name}
+                fi
+                
                 coverage report -m --rcfile=${COVERAGE_RCFILE} | tee -a ${ut_log_name}
                 coverage html -d ${WORKSPACE}/${coverage_path}/htmlcov --rcfile=${COVERAGE_RCFILE}
                 coverage xml -o ${WORKSPACE}/${coverage_path}/coverage.xml --rcfile=${COVERAGE_RCFILE}
@@ -672,6 +696,14 @@ node(node_label){
                                 echo "cat run_tfnewapi.sh..."
                                 cat run_tfnewapi.sh 
                             fi
+                            
+                            if [ -d "itex" ]; then
+                                grep "itex/" run.sh > run_itex.sh
+                                sed -i '/itex/d' run.sh
+                                echo "cat run_itex.sh..."
+                                cat run_itex.sh
+                            fi 
+                            
                             echo "cat run.sh..."
                             cat run.sh 
                             echo "-------------"
@@ -689,7 +721,25 @@ node(node_label){
                                 pip uninstall horovod -y
                                 pip install --no-cache-dir horovod
                                 echo "-------------"
+                                pip list | tee -a ${ut_log_name}
                                 bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
+                            fi
+                            
+                            if [ -d "itex" ]; then
+                                echo "\n\nRun special UT with itex...\n" | tee -a ${ut_log_name}
+                                pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                                pip uninstall tensorflow -y | tee -a ${ut_log_name}
+                                pip install tensorflow 
+                                pip install --upgrade intel-extension-for-tensorflow[cpu]
+                                if [ $? == 1 ]; then
+                                   exit 1
+                                fi
+                                echo "re-install horovod resolve the issue with fwk..."
+                                pip uninstall horovod -y
+                                pip install --no-cache-dir horovod
+                                echo "-------------"
+                                pip list | tee -a ${ut_log_name}
+                                bash run_itex.sh 2>&1 | tee -a ${ut_log_name}
                             fi
 
                             if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
