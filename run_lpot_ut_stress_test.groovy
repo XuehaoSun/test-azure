@@ -376,9 +376,12 @@ node(node_label){
             writeFile file: run_ut_scripts, text: ""
             writeFile file: run_tfnewapi_scripts, text: ""
             ut_cases.each{ ut_case ->
-                if ((ut_case=~"tfnewapi").find()){
+                if ((ut_case=~"tfnewapi").find()) {
                     run_ut_context = readFile file: run_tfnewapi_scripts
                     writeFile file: run_tfnewapi_scripts, text: run_ut_context + "python " + ut_case + "\n"
+                }else if ((ut_case=~"itex").find()){
+                    run_ut_context = readFile file: run_itex_scripts
+                    writeFile file: run_itex_scripts, text: run_ut_context + "python " + ut_case + "\n"
                 }else{
                     run_ut_context = readFile file: run_ut_scripts
                     writeFile file: run_ut_scripts, text: run_ut_context + "python " + ut_case + "\n"
@@ -432,6 +435,30 @@ node(node_label){
                         do
                           echo "------ Start of test around ${j} -------" >> ${ut_log_name}
                           bash ${run_tfnewapi_scripts} 2>&1 | tee -a ${ut_log_name}
+                          echo "\n" >> ${ut_log_name}
+                          if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                            exit 1
+                          fi
+                        done
+                    fi
+                    
+                    if [ -f "${run_itex_scripts}" ]; then
+                        echo "---------- Run ITEX -----------------"
+                        cat ${run_itex_scripts}
+                        pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                        pip uninstall tensorflow -y | tee -a ${ut_log_name}
+                        pip install tensorflow 
+                        pip install --upgrade intel-extension-for-tensorflow[cpu]
+                        if [ $? == 1 ]; then
+                           exit 1
+                        fi
+                        echo "re-install horovod resolve the issue with fwk..."
+                        pip uninstall horovod -y
+                        pip install --no-cache-dir horovod
+                        for((j=0;$j<${test_trials};j=$(($j + 1))));
+                        do
+                          echo "------ Start of test around ${j} -------" >> ${ut_log_name}
+                          bash ${run_itex_scripts} 2>&1 | tee -a ${ut_log_name}
                           echo "\n" >> ${ut_log_name}
                           if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                             exit 1
