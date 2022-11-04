@@ -373,8 +373,11 @@ node(node_label){
             ut_cases = test_case_list.split(',')
             run_ut_scripts = "${WORKSPACE}/lpot-models/test/run.sh"
             run_tfnewapi_scripts = "${WORKSPACE}/lpot-models/test/run_tfnewapi.sh"
+            run_itex_scripts = "${WORKSPACE}/lpot-models/test/run_itex.sh"
             writeFile file: run_ut_scripts, text: ""
             writeFile file: run_tfnewapi_scripts, text: ""
+            writeFile file: run_itex_scripts, text: ""
+
             ut_cases.each{ ut_case ->
                 if ((ut_case=~"tfnewapi").find()) {
                     run_ut_context = readFile file: run_tfnewapi_scripts
