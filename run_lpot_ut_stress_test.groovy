@@ -390,7 +390,7 @@ node(node_label){
             if (UT_STRESS_TEST){
                 println("UT_STRESS_TEST...")
                 println "when ut stress test, conda env is " + conda_env
-                withEnv(["run_ut_scripts=${run_ut_scripts}", "run_tfnewapi_scripts=${run_tfnewapi_scripts}", "test_trials=${test_trials}", "log_level=${log_level}", "conda_env=${conda_env}"]){
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "run_tfnewapi_scripts=${run_tfnewapi_scripts}", "run_itex_scripts=${run_itex_scripts}", "test_trials=${test_trials}", "log_level=${log_level}", "conda_env=${conda_env}"]){
                     sh'''#!/bin/bash
                     if [ "${log_level}" != "DEFAULT" ]; then
                       export LOGLEVEL=${log_level}
