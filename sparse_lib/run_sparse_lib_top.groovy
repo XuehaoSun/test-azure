@@ -426,7 +426,7 @@ def unitTestBackend() {
         string(name: "python_version", value: "${python_version}"),
         string(name: "val_branch", value: "${val_branch}"),
         string(name: "unit_test_mode", value: "${unit_test_mode}"),
-        string(name: "sub_node_label", value: "${sub_node_label}")
+        string(name: "node_label", value: "${sub_node_label}")
     ]
     if (sparse_ut_only) {
         sub_job_name = "sparse-lib-ut"
