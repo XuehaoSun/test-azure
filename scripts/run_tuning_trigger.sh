@@ -241,6 +241,12 @@ main() {
               cp -r ${bert_dirname}/uncased_L-12_H-768_A-12 ${model_src_dir}/
             fi
         fi
+        if [[ "${model_src_dir}" == *"unet"* ]]; then
+            unet_dirname=$(dirname ${input_model})
+            if [[ -f "${unet_dirname}/weights.pb" ]]; then
+              cp -r ${unet_dirname}/weights.pb ${WORKSPACE}/
+            fi
+        fi
         copy_model
     fi
 
