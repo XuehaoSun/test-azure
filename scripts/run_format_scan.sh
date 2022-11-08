@@ -116,7 +116,7 @@ run_cloc() {
 
 run_pydocstyle() {
     pip install pydocstyle
-    pydocstyle --convention=google ${REPO_DIR}/neural_compressor > ${WORKSPACE}/docstring.log
+    pydocstyle --convention=google ${REPO_DIR}/neural_compressor/experimental > ${WORKSPACE}/docstring.log
 }
 
 main
