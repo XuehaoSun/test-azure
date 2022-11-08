@@ -161,7 +161,6 @@ def do_binary_build() {
                 pip install cmake
                 cmake_path=$(which cmake)
                 ln -s ${cmake_path} ${cmake_path}3 || true
-    
                 echo "Build Pypi binary..."
                 cd nlp_repo
                 if [ "${pypi_version}" != "default" ]; then
@@ -175,6 +174,7 @@ def do_binary_build() {
                     pip install -r requirements.txt
                 fi
                 python3 setup.py sdist bdist_wheel
+                pip install patchelf>=0.14
                 pip install auditwheel
                 auditwheel repair dist/nlp_toolkit*.whl
                 cp wheelhouse/nlp_toolkit*.whl ${WORKSPACE}/
