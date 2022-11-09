@@ -235,7 +235,7 @@ main() {
 
     # Workaround for ONNX models from remote storage
     if [ "${framework}" == "onnxrt" ]; then
-        if [[ "${model_src_dir}" == *"language_translation"* ]]; then
+        if [[ "${model_src_dir}" == *"nlp"* ]]; then
             bert_dirname=$(dirname ${input_model})
             if [[ -d "${bert_dirname}/uncased_L-12_H-768_A-12" ]]; then
               cp -r ${bert_dirname}/uncased_L-12_H-768_A-12 ${model_src_dir}/
@@ -298,14 +298,7 @@ main() {
     fi
 
     if [ "${framework}" == "onnxrt" ] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
-        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
-    fi
-
-    if [ "${framework}" == "onnxrt" ]; then
-        onnxrt_ds_location_models=("bert_squad_model_zoo" "mobilebert_squad_mlperf" "gpt2_lm_head_wikitext_model_zoo" "densenet" "ssd-12" "ssd-12_qdq")
-        if [[ " ${onnxrt_ds_location_models[@]} " =~ " ${model} " ]]; then
-            parameters="${parameters} --data_path=${dataset_location}"
-        fi
+        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
 
         onnxrt_ds_full_input_models=("googlenet-12" "squeezenet" "squeezenet_qdq" "caffenet" "alexnet" "zfnet" "inception_v1" "googlenet-12_qdq" "caffenet_qdq" "alexnet_qdq" "zfnet_qdq" "inception_v1_qdq")
         if [[ " ${onnxrt_ds_full_input_models[@]} " =~ " ${model} " ]]; then
@@ -314,20 +307,9 @@ main() {
         if [[ ${model} == "fcn" ]] || [[ ${model} == "fcn_qdq" ]]; then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../annotations/instances_val2017.json"
         fi
-
-        qdq_model_list=("bert_squad_model_zoo_qdq" "mobilebert_squad_mlperf_qdq" "mask_rcnn_qdq" "ssd_mobilenet_v1-2_qdq" "faster_rcnn_qdq")
-        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "tiny_yolov3" ]] || [[ ${model} == "ultraface" ]] || [[ ${model} == "emotion_ferplus" ]] || [[ ${model} == "arcface" ]] || [[ ${model} == "BiDAF" ]] || [[ " ${qdq_model_list[@]} " =~ " ${model} " ]];then
-            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
-        fi       
         if [[ ${model} == "duc" ]];then
             parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=/tf_dataset2/datasets/gtFine/val"
         fi
-    fi
-
-    if [ "${framework}" == "baremetal" ]; then
-        copy_dataset
-        tokenizer_dir=$(dirname ${input_model})
-        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --dataset_location=${dataset_location} --tokenizer_dir=${tokenizer_dir}/test_tokenizer"
     fi
 
     update_yaml_config
@@ -424,7 +406,7 @@ function update_yaml_config {
             fi
         fi
         if [ "${framework}" == "onnxrt" ]; then
-            if [[ "${model_src_dir}" == *"/language_translation/"* ]]; then
+            if [[ "${model_src_dir}" == *"/nlp/"* ]]; then
                 sed -i "/\/path\/to\/dataset/s|data_dir:.*|data_dir: $dataset_location|g" ${yaml}
             fi
             image_raw_models=("resnet50-v1-12" "vgg16_model_zoo" "mobilenetv2-12" "googlenet-12" "shufflenet-v2-12" "efficientnet")
