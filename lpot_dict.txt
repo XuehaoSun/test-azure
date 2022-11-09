@@ -2338,3 +2338,5 @@ english
 philschmid
 sd
 youtooz
+DyNas
+amd
