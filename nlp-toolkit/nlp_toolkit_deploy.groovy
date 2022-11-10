@@ -322,6 +322,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             echo "=======run benchmark======="
             export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
             export PATH=${HOME}/miniconda3/bin/:$PATH
+            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]];then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
@@ -425,6 +426,7 @@ def runLauncherTest(mode, precision, launcher_cmd, launcher_cmd_params) {
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             echo "=======launcher benchmark======="
             export PATH=${HOME}/miniconda3/bin/:$PATH
+            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             cp -r ${data_path} ${WORKSPACE}/data
             echo "final launcher benchmark cmd of precision ${precision} is ${launcher_cmd}"
@@ -453,6 +455,7 @@ def prepare_models(local_precision, prepare_cmd) {
         sh '''#!/bin/bash -x
             echo "Running ---- ${framework}, ${model}----Tuning"
             export PATH=${HOME}/miniconda3/bin/:$PATH
+            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]]; then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
@@ -528,6 +531,7 @@ def run_inferencer(ncores_per_instance, bs, precision) {
     ]){
         sh'''#!/bin/bash -x
         export PATH=${HOME}/miniconda3/bin/:$PATH
+        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
         source activate ${conda_env_name}
         echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
         sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
@@ -958,6 +962,7 @@ node( sub_node_label ) {
                 withEnv(["working_dir=${working_dir_fullpath}","conda_env_name=${conda_env_name}"]) {
                     sh '''#!/bin/bash -x
                     export PATH=${HOME}/miniconda3/bin/:$PATH
+                    export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                     source activate ${conda_env_name}
                     cd ${working_dir}
                     echo "Working in ${working_dir}"
@@ -994,6 +999,7 @@ node( sub_node_label ) {
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
+                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
@@ -1038,6 +1044,7 @@ node( sub_node_label ) {
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
+                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
@@ -1082,6 +1089,7 @@ node( sub_node_label ) {
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
+                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
