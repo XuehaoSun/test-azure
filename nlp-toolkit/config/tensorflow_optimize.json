@@ -82,5 +82,47 @@
         "config": "saved_results"
       }
     }
+  },
+  "distilbert_qa": {
+    "working_dir": "optimization/tensorflow/huggingface/question-answering/quantization/inc",
+    "tune":{
+      "cmd": "run_tuning.sh",
+      "params": {
+        "topology": "distilbert_qa",
+        "output_model": "saved_results"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "topology": "distilbert_qa",
+        "mode": "accuracy",
+        "batch_size": "16",
+        "iters": "100",
+        "int8": "false",
+        "config": "saved_results"
+      }
+    }
+  },
+  "distilbert_swag": {
+    "working_dir": "optimization/tensorflow/huggingface/multiple-choice/quantization/inc",
+    "tune":{
+      "cmd": "run_tuning.sh",
+      "params": {
+        "topology": "distilbert_swag",
+        "output_model": "saved_results"
+      }
+    },
+    "benchmark": {
+      "cmd": "run_benchmark.sh",
+      "params": {
+        "topology": "distilbert_swag",
+        "mode": "accuracy",
+        "batch_size": "16",
+        "iters": "100",
+        "int8": "false",
+        "config": "saved_results"
+      }
+    }
   }
 }
