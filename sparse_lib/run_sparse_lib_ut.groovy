@@ -222,6 +222,7 @@ node(node_label){
                 retry(3){
                     sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
+                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
                            (conda remove --name ${conda_env} --all -y) || true
                         fi
@@ -236,6 +237,7 @@ node(node_label){
                 retry(3) {
                     sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
+                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         source activate ${conda_env}
                         cd ${WORKSPACE}
                         pip install nlpaug
@@ -254,6 +256,7 @@ node(node_label){
                     echo "+---------------- gtest for sparseLib ----------------+"
                     ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                     export PATH=${HOME}/miniconda3/bin/:$PATH
+                    export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                     source activate ${conda_env}
                     cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine/test/gtest/SparseLib
                     conda install -c conda-forge gxx gcc sysroot_linux-64 -y
