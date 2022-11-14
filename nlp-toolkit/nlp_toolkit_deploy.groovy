@@ -1043,8 +1043,7 @@ node( sub_node_label ) {
                             cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
-                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
+                                export PATH=${HOME}/miniconda3/bin/:$PATH                            
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
