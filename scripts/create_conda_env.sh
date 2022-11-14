@@ -183,7 +183,7 @@ if [[ "${pytorch_version}" != "" ]]; then
             echo "Could not found torchvision for pytorch ${python_version}, pls define..."
             exit 1
     esac
-    pt_postfix=$(echo ${pytorch_version} | cut -d'+' -f2)
+    pt_postfix=$(echo ${pytorch_version} | grep '+' | cut -d'+' -f2)
     torchvision_version=$torchvision_version"+"$pt_postfix
 fi
 
