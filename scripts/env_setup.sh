@@ -46,6 +46,14 @@ function set_TF_env {
         export TF_ENABLE_MKL_NATIVE_FORMAT=0
         echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
     fi
+
+    if [[ "${tf_version}" = "2.11.0202242" ]]
+        export TF_ONEDNN_ENABLE_FAST_CONV=1
+        export TF_ONEDNN_THREADPOOL_USE_CALLER_THREAD=true
+        export TF_ONEDNN_THREAD_PINNING_MODE=none
+        echo "export TF_ONEDNN_ENABLE_FAST_CONV=1, TF_ONEDNN_THREADPOOL_USE_CALLER_THREAD=true, TF_ONEDNN_THREAD_PINNING_MODE=none ..."
+    fi
+
     intel_tf=$(pip list | grep 'tensorflow' | grep -c 'intel') || true
     if [[ "${tf_version}" = "2.6.1" ]] || [[ "${tf_version}" = "2.6.2" ]] || [[ "${intel_tf}" = "0" ]]; then
         # default use block format
