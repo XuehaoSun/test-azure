@@ -47,7 +47,7 @@ function set_TF_env {
         echo "export TF_ENABLE_MKL_NATIVE_FORMAT=0 ..."
     fi
 
-    if [[ "${tf_version}" = "2.11.0202242" ]]
+    if [[ "${tf_version}" = "2.11.0202242" ]]; then
         export TF_ONEDNN_ENABLE_FAST_CONV=1
         export TF_ONEDNN_THREADPOOL_USE_CALLER_THREAD=true
         export TF_ONEDNN_THREAD_PINNING_MODE=none
