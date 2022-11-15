@@ -53,7 +53,7 @@ function create_conda_env {
     n=0
     until [ "$n" -ge 5 ]
     do
-        conda create python=${python_version} -y -n ${conda_env_name}
+        conda create python=${python_version} -y -n ${conda_env_name} || true
         conda deactivate || source deactivate
         source activate ${conda_env_name} && break
         n=$((n+1))

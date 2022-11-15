@@ -999,7 +999,6 @@ node( sub_node_label ) {
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
@@ -1088,7 +1087,6 @@ node( sub_node_label ) {
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
