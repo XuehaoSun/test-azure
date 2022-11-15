@@ -67,7 +67,7 @@ def get_bug_escape_status(issue_list):
         open_month = item['created time'].month
         open_quarter = math.ceil(item['created time'].month / 3)
 
-        if (item['Labels'] == 'external' or item['Labels'] == 'External'):
+        if (('external' in item['Labels']) or ('External' in item['Labels'])):
             monthly_data_dict[f"{open_year}-{open_month}"]['external'] += 1
             quarterly_data_dict[f"{open_year}-Q{open_quarter}"]['external'] += 1
             yearly_data_dict[f"{open_year}"]['external'] += 1
