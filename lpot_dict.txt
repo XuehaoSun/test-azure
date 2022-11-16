@@ -2356,3 +2356,5 @@ oneccl
 setvars
 Affine
 ZeroPoint
+ModelProto
+graphDef
