@@ -134,7 +134,7 @@ def getBuildJobByOS(osName) {
 }
 
 def getBuildParams(osName, binaryClass, pythonVersion) {
-    def subnode_label = node_label + " && " + osName;
+    def subnode_label = node_label;
 
     List jobParams = []
 
