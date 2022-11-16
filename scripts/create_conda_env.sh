@@ -69,6 +69,7 @@ function update_conda_env {
     source activate ${conda_env_name}
 
     # Upgrade pip
+    pip config set global.trusted-host "pypi.org files.pythonhosted.org pypi.python.org"
     pip install -U pip
 
 }
