@@ -336,6 +336,7 @@ node(node_label){
                         echo "re-install pycocotools resolve the issue with numpy..."
                         pip uninstall pycocotools -y
                         pip install --no-cache-dir pycocotools
+                        pip install onnxruntime-extensions
                         if [ ! -d ${WORKSPACE}/lpot-models ]; then
                             echo "\\"lpot-model\\" not found. Exiting..."
                             exit 1
@@ -476,6 +477,7 @@ node(node_label){
                             echo "re-install pycocotools resolve the issue with numpy..."
                             pip uninstall pycocotools -y
                             pip install --no-cache-dir pycocotools
+                            pip install onnxruntime-extensions
                             cd ${WORKSPACE}/lpot-models-base/tests
                             if [ -f "requirements.txt" ]; then
                                 sed -i '/^neural-compressor/d' requirements.txt
@@ -594,6 +596,7 @@ node(node_label){
                             echo "re-install pycocotools resolve the issue with numpy..."
                             pip uninstall pycocotools -y
                             pip install --no-cache-dir pycocotools
+                            pip install onnxruntime-extensions
                             if [ ! -d ${WORKSPACE}/lpot-models ]; then
                                 echo "\\"lpot-model\\" not found. Exiting..."
                                 exit 1
