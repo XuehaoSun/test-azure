@@ -82,6 +82,12 @@ if ('pytorch_version' in params && params.pytorch_version != '') {
 }
 echo "pytorch_version: ${pytorch_version}"
 
+ipex_version = '1.11.0'
+if ('ipex_version' in params && params.ipex_version != '') {
+    ipex_version = params.ipex_version
+}
+echo "ipex_version: ${ipex_version}"
+
 // setting onnx_version
 onnx_version = '1.9.0'
 if ('onnx_version' in params && params.onnx_version != '') {
@@ -118,6 +124,11 @@ if ('nlp_excutor_models' in params && params.nlp_excutor_models != '') {
 echo "nlp_excutor_models: ${nlp_excutor_models}"
 
 ipex_models = ""
+if ('ipex_models' in params && params.ipex_models != '') {
+    ipex_models=params.ipex_models
+}
+echo "ipex_models: ${ipex_models}"
+
 tensorflow_models = ""
 if ('tensorflow_models' in params && params.tensorflow_models != '') {
     tensorflow_models=params.tensorflow_models
@@ -871,6 +882,8 @@ def BuildParams(job_framework, model, cpu, os){
         framework_version = "na"
     } else if (job_framework == "tensorflow"){
         framework_version = "${tensorflow_version}"
+    } else if (job_framework == "ipex"){
+        framework_version = "${ipex_version}"
     }
     println("llsu-----> ${cpu} : ${os} : ${job_framework} : ${framework_version}")
     pass_mode=mode

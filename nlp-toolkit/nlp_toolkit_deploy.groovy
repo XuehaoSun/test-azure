@@ -304,7 +304,10 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
         if (k == "input_model") {
             if (v == "sparse_ir") {
                 v = "${working_dir_fullpath}/sparse_${precision}_ir"
-            } else if (! v.find("/tf_dataset")) {
+            } else if (framework == "ipex") {
+                v = "${working_dir_fullpath}/${v}/${precision}"
+            }
+            else if (! v.find("/tf_dataset")) {
                 v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
             }
         }
@@ -338,7 +341,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             if [[ ${mode} == "accuracy" ]]; then
                 logFile="${output_path}/${framework}-${model}-${precision}-accuracy-${os}-${cpu}.log"
                 echo "------------ACCURACY BENCHMARK---------"
-                bash ${benchmark_cmd} 2>&1 | tee ${logFile} 
+                ${benchmark_cmd} 2>&1 | tee ${logFile} 
                 status=$?
                 if [ ${status} != 0 ]; then
                     echo "Benchmark process returned non-zero exit code."
@@ -353,7 +356,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                 logFile="${output_path}/${framework}-${model}-${precision}-throughput-${os}-${cpu}"
                 if [ "${multi_instance}" == "false" ]; then
                     echo "Executing single instance benchmark"
-                    bash ${benchmark_cmd} 2>&1|tee ${logFile}.log &
+                    ${benchmark_cmd} 2>&1|tee ${logFile}.log &
                     benchmark_pids+=($!)
                 else
                     echo "Executing multi instance benchmark"
@@ -364,7 +367,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                         end_core_num=$((ncores_per_socket-1))
                     fi
                     numactl -m 0 -C "$j-$end_core_num" \
-                        bash ${benchmark_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
+                        ${benchmark_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
                         benchmark_pids+=($!)
                     done
                 fi
@@ -444,6 +447,9 @@ def prepare_models(local_precision, prepare_cmd) {
         }
         if (k == "output_dir") {
             v = "${working_dir_fullpath}/${v}"
+            if (framework == "ipex") {
+                v = "${v}/${local_precision}"
+            }
         }
         local_prepare_cmd += " --${k}=${v}" 
     }
@@ -480,7 +486,7 @@ def prepare_models(local_precision, prepare_cmd) {
             else
                 echo "Not found requirements.txt file."
             fi
-            ${timeout} bash ${prepare_cmd} 2>&1 | tee -a ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
+            ${timeout} ${prepare_cmd} 2>&1 | tee -a ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
         '''
     }
     // Check tuning status
@@ -928,6 +934,10 @@ node( sub_node_label ) {
                     conda_env_name="pt-ipex-${framework_version}-${python_version}"
                     install_ipex = true
                 }
+                if (framework == "ipex") {
+                    conda_env_name="ipex-${framework_version}-${python_version}"
+                    install_ipex = false
+                }
                 if ("${CPU_NAME}" != "") {
                     conda_env_name="${conda_env_name}-${CPU_NAME}"
                 }
@@ -1004,24 +1014,29 @@ node( sub_node_label ) {
                                 ${cmd}
                             """
                         }
+                        
                         mode_list.each { mode ->
                             runPerfTest(mode, "fp32", benchmark_cmd)
-                            if ( mode == "throughput" && launcher_mode != "") {
-                                stage("Launcher Benchmark"){
-                                    println("==========run launcher benchmark========")
-                                    launcher_mode_list.each { launch_mode ->
-                                        runLauncherTest(launch_mode, "fp32", launcher_cmd, launcher_cmd_params)
-                                        collectLauncherLogs(launch_mode, "fp32")
+                            if (framework == "nlp_excutor") {
+                                if ( mode == "throughput" && launcher_mode != "") {
+                                    stage("Launcher Benchmark"){
+                                        println("==========run launcher benchmark========")
+                                        launcher_mode_list.each { launch_mode ->
+                                            runLauncherTest(launch_mode, "fp32", launcher_cmd, launcher_cmd_params)
+                                            collectLauncherLogs(launch_mode, "fp32")
+                                        }
                                     }
                                 }
                             }
                         }
-                        stage("Inferencer Benchmark"){
-                            println("==========run inferencer benchmark========")
-                            inferencer_config.split(',').each { each_ben_conf ->
-                                def ncores_per_instance = each_ben_conf.split(':')[0]
-                                def bs = each_ben_conf.split(':')[1]
-                                run_inferencer(ncores_per_instance, bs, "fp32")
+                        if (framework == "nlp_excutor") {
+                            stage("Inferencer Benchmark"){
+                                println("==========run inferencer benchmark========")
+                                inferencer_config.split(',').each { each_ben_conf ->
+                                    def ncores_per_instance = each_ben_conf.split(':')[0]
+                                    def bs = each_ben_conf.split(':')[1]
+                                    run_inferencer(ncores_per_instance, bs, "fp32")
+                                }
                             }
                         }
                     }
@@ -1050,16 +1065,20 @@ node( sub_node_label ) {
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "int8", benchmark_cmd)
-                            if ( mode == "throughput" && launcher_mode != "") {
-                                stage("Launcher Benchmark"){
-                                    println("==========run launcher benchmark========")
-                                    launcher_mode_list.each { launch_mode ->
-                                        runLauncherTest(launch_mode, "int8", launcher_cmd, launcher_cmd_params)
-                                        collectLauncherLogs(launch_mode, "int8")
+                            if (framework == "nlp_excutor") {
+                                if ( mode == "throughput" && launcher_mode != "") {
+                                    stage("Launcher Benchmark"){
+                                        println("==========run launcher benchmark========")
+                                        launcher_mode_list.each { launch_mode ->
+                                            runLauncherTest(launch_mode, "int8", launcher_cmd, launcher_cmd_params)
+                                            collectLauncherLogs(launch_mode, "int8")
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
+                    if (framework == "nlp_excutor") {
                         stage("Inferencer Benchmark"){
                             println("==========run inferencer benchmark========")
                             inferencer_config.split(',').each { each_ben_conf ->
@@ -1094,24 +1113,28 @@ node( sub_node_label ) {
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "bf16", benchmark_cmd)
-                            if ( mode == "throughput" && launcher_mode != "") {
-                                stage("Launcher Benchmark"){
-                                    println("==========run launcher benchmark========")
-                                    launcher_mode_list.each { launch_mode ->
-                                        runLauncherTest(launch_mode, "bf16", launcher_cmd, launcher_cmd_params)
-                                        collectLauncherLogs(launch_mode, "bf16")
+                            if (framework == "nlp_excutor") {
+                                if ( mode == "throughput" && launcher_mode != "") {
+                                    stage("Launcher Benchmark"){
+                                        println("==========run launcher benchmark========")
+                                        launcher_mode_list.each { launch_mode ->
+                                            runLauncherTest(launch_mode, "bf16", launcher_cmd, launcher_cmd_params)
+                                            collectLauncherLogs(launch_mode, "bf16")
+                                        }
                                     }
                                 }
                             }
                         }
-                        stage("Inferencer Benchmark"){
-                            println("==========run inferencer benchmark========")
-                            inferencer_config.split(',').each { each_ben_conf ->
-                                def ncores_per_instance = each_ben_conf.split(':')[0]
-                                def bs = each_ben_conf.split(':')[1]
-                                run_inferencer(ncores_per_instance, bs, "bf16")
-                            }
-                        }  
+                        if (framework == "nlp_excutor") {
+                            stage("Inferencer Benchmark"){
+                                println("==========run inferencer benchmark========")
+                                inferencer_config.split(',').each { each_ben_conf ->
+                                    def ncores_per_instance = each_ben_conf.split(':')[0]
+                                    def bs = each_ben_conf.split(':')[1]
+                                    run_inferencer(ncores_per_instance, bs, "bf16")
+                                }
+                            }  
+                        }
                     }      
                 }
             }

@@ -361,7 +361,7 @@ def runPerfTest(mode, precision) {
             
             if [[ ${mode} == "accuracy" ]]; then
                 echo "------------ACCURACY BENCHMARK---------"
-                bash ${benchmark_cmd} 2>&1 | tee ${logFile}.log 
+                ${benchmark_cmd} 2>&1 | tee ${logFile}.log 
                 status=$?
                 if [ ${status} != 0 ]; then
                     echo "Benchmark process returned non-zero exit code."
@@ -385,7 +385,7 @@ def runPerfTest(mode, precision) {
                     end_core_num=$((ncores_per_socket-1))
                 fi
                 numactl -m 0 -C "$j-$end_core_num" \
-                    bash ${benchmark_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
+                    ${benchmark_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
                     benchmark_pids+=($!)
                 done
             
@@ -811,7 +811,7 @@ node( sub_node_label ) {
                         else
                             echo "Not found requirements.txt file."
                         fi
-                        ${timeout} bash ${tune_cmd} 2>&1 | tee ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
+                        ${timeout} ${tune_cmd} 2>&1 | tee ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
                     '''
                 }
                 // Check tuning status

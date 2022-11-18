@@ -128,6 +128,8 @@ function set_environment {
             set_ENGINE_env;;
         nlp_excutor)
             set_ENGINE_env;;
+        ipex)
+            set_PT_env;;
         *)
             echo "Framework ${framework} not recognized."; exit 1;;
     esac
