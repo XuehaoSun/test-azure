@@ -174,8 +174,7 @@ def do_binary_build() {
                     pip install -r requirements.txt
                 fi
                 python3 setup.py sdist bdist_wheel
-                pip install patchelf>=0.14
-                pip install auditwheel
+                pip install auditwheel==5.1.2
                 auditwheel repair dist/nlp_toolkit*.whl
                 cp wheelhouse/nlp_toolkit*.whl ${WORKSPACE}/
                 cp dist/nlp_toolkit*.tar.gz ${WORKSPACE}/
