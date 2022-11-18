@@ -69,7 +69,7 @@ if ('tensorflow_version' in params && params.tensorflow_version != '') {
 echo "tensorflow_version: ${tensorflow_version}"
 
 // setting mxnet_version
-mxnet_version = '1.6.0'
+mxnet_version = ''
 if ('mxnet_version' in params && params.mxnet_version != '') {
     mxnet_version = params.mxnet_version
 }
