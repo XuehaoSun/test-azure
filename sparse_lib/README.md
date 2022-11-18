@@ -11,7 +11,7 @@ Options:
 | Option | Description |
 |--------|-------------|
 | `--ut`                            | Run UT (sparselib and engine)
-| `--ut=sparse_ut_only`             | Run sparselib UT only
+| `--ut=sparse_only`             | Run sparselib UT only
 | `--benchmark`                     | Run sparselib benchmark
 | `--cpplint`                       | Run cpplint check
 | `--bandit`                        | Run bendit check
