@@ -367,6 +367,12 @@ if ('max_trials' in params && params.max_trials != ''){
 }
 echo "max_trials: ${max_trials}"
 
+accuracy_criterion=""
+if ('accuracy_criterion' in params && params.accuracy_criterion != ''){
+    accuracy_criterion=params.accuracy_criterion
+}
+echo "accuracy_criterion: ${accuracy_criterion}"
+
 tune_only=false
 if (params.tune_only != null){
     tune_only=params.tune_only
@@ -629,6 +635,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu
     ParamsPerJob += booleanParam(name: "multi_instance", value: multi_instance)
     ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
     ParamsPerJob += string(name: "max_trials", value: "${max_trials}")
+    ParamsPerJob += string(name: "accuracy_criterion", value: "${accuracy_criterion}")
     ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
     ParamsPerJob += booleanParam(name: "RUN_PROFILING", value: RUN_PROFILING)
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")

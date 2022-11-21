@@ -270,6 +270,7 @@ def update_yaml(yaml, framework, topology, dataset_location = None, strategy = N
 def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Optional[str] = None,
     batch_size: Optional[int] = None, iteration: Optional[int] = None,
     max_trials: Optional[int] = None, algorithm: Optional[str] = None,
+    criterion_rule: Optional[str] = None, criterion_data: Optional[float] = None,
     timeout: Optional[int] = None, strategy_token: Optional[str] = None,
     sampling_size: Optional[Union[str,int]] = None,
     dtype: Optional[str] = None,
@@ -332,6 +333,20 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
                 prev_max_trials = prev_exit_policy.get("max_trials", None)
                 prev_exit_policy.update({"max_trials": max_trials})
                 print(f"Changed {prev_max_trials} to {max_trials}")
+        except Exception as e:
+            print(f"[ WARNING ] {e}")
+
+    if criterion_rule:
+        try:
+            tuning_config = yaml_config.get("tuning", {})
+            prev_accuracy_criterion = tuning_config.get("accuracy_criterion", {})
+            if not prev_accuracy_criterion:
+                tuning_config.update({"accuracy_criterion": {
+                    criterion_rule: criterion_data
+                }})
+            else:
+                tuning_config.update({"accuracy_criterion": {criterion_rule: criterion_data}})
+                print(f"Changed {prev_accuracy_criterion} to {accuracy_criterion}")
         except Exception as e:
             print(f"[ WARNING ] {e}")
 
