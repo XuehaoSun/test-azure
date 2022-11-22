@@ -26,6 +26,8 @@ do
             strategy_token=`echo $i | sed "s/${PATTERN}//"`;;
         --max_trials=*)
             max_trials=`echo $i | sed "s/${PATTERN}//"`;;
+        --accuracy_criterion=*)
+            accuracy_criterion=`echo $i | sed "s/${PATTERN}//"`;;
         --algorithm=*)
             algorithm=`echo $i | sed "s/${PATTERN}//"`;;
         --sampling_size=*)
@@ -443,6 +445,12 @@ function update_yaml_config {
 
     if [ "${max_trials}" != "" ]; then
         update_yaml_params="${update_yaml_params} --max-trials=${max_trials}"
+    fi
+
+    if [ "${accuracy_criterion}" != "" ]; then
+        criterion_rule=$(echo ${accuracy_criterion} | cut -d'=' -f1 )
+        criterion_data=$(echo ${accuracy_criterion} | cut -d'=' -f2 )
+        update_yaml_params="${update_yaml_params} --criterion_rule=${criterion_rule} --criterion_data=${criterion_data}"
     fi
 
     if [ "${algorithm}" != "" ]; then

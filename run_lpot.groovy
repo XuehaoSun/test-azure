@@ -172,6 +172,12 @@ if ('max_trials' in params && params.max_trials != ''){
 }
 echo "max_trials: ${max_trials}"
 
+accuracy_criterion=""
+if ('accuracy_criterion' in params && params.accuracy_criterion != ''){
+    accuracy_criterion=params.accuracy_criterion
+}
+echo "accuracy_criterion: ${accuracy_criterion}"
+
 tune_only=false
 if (params.tune_only != null){
     tune_only=params.tune_only
@@ -1060,6 +1066,7 @@ node( sub_node_label ) {
                             --strategy=${strategy} \
                             --strategy_token=${SIGOPT_TOKEN} \
                             --max_trials=${max_trials} \
+                            --accuracy_criterion=${accuracy_criterion} \
                             --algorithm=${algorithm} \
                             --sampling_size="${sampling_size}" \
                             --conda_env_name=${conda_env_name} \
