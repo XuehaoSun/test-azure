@@ -299,18 +299,21 @@ main() {
         fi
     fi
 
-    if [ "${framework}" == "onnxrt" ] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
+    if [ "${framework}" == "onnxrt" ]; then
         parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
 
         onnxrt_ds_full_input_models=("googlenet-12" "squeezenet" "squeezenet_qdq" "caffenet" "alexnet" "zfnet" "inception_v1" "googlenet-12_qdq" "caffenet_qdq" "alexnet_qdq" "zfnet_qdq" "inception_v1_qdq")
         if [[ " ${onnxrt_ds_full_input_models[@]} " =~ " ${model} " ]]; then
-            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../val.txt"
+            parameters="${parameters} --label_path=${dataset_location}/../val.txt"
         fi
         if [[ ${model} == "fcn" ]] || [[ ${model} == "fcn_qdq" ]]; then
-            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../annotations/instances_val2017.json"
+            parameters="${parameters} --label_path=${dataset_location}/../annotations/instances_val2017.json"
         fi
         if [[ ${model} == "duc" ]];then
-            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=/tf_dataset2/datasets/gtFine/val"
+            parameters="${parameters} --label_path=/tf_dataset2/datasets/gtFine/val"
+        fi
+        if [[ ${model} == "gpt2_lm_head_wikitext_model_zoo" ]];then
+            parameters="--topology=${topology} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
         fi
     fi
 
