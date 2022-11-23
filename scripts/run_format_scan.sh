@@ -95,14 +95,13 @@ run_bandit() {
 
 run_pyspelling() {
     pip install pyspelling
-    # Update paths to validation and lpot repositories
-    VAL_REPO=${WORKSPACE}
+    DICT_DIR="${REPO_DIR}/.azure-pipelines/scripts/codeScan/pyspelling"
 
-    sed -i "s|\${VAL_REPO}|$VAL_REPO|g" ${VAL_REPO}/pyspelling_conf.yaml
-    sed -i "s|\${LPOT_REPO}|$REPO_DIR|g" ${VAL_REPO}/pyspelling_conf.yaml
+    sed -i "s|\${DICT_DIR}|$DICT_DIR|g" ${DICT_DIR}/pyspelling_conf.yaml
+    sed -i "s|\${REPO_DIR}|$REPO_DIR|g" ${DICT_DIR}/pyspelling_conf.yaml
     echo "Modified config:"
-    cat ${VAL_REPO}/pyspelling_conf.yaml
-    pyspelling -c ${VAL_REPO}/pyspelling_conf.yaml > ${WORKSPACE}/pyspelling_output.log
+    cat ${DICT_DIR}/pyspelling_conf.yaml
+    pyspelling -c ${DICT_DIR}/pyspelling_conf.yaml > ${WORKSPACE}/pyspelling_output.log
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "Pyspelling exited with non-zero exit code."; exit 1
