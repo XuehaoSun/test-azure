@@ -1476,7 +1476,7 @@ def upstreanNightlySource(){
         cd lpot-models
         git branch
         git remote -v
-        git remote add upstream https://github.com/intel/neural-compressor.git
+        git remote add upstream https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git
         git remote -v
         git push upstream HEAD:master
     """
@@ -1663,11 +1663,7 @@ node( node_label ) {
         if (upstream_nightly_source){
             stage("upstream nightly source"){
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    if (currentBuild.result != 'FAILURE' && currentBuild.result != 'ABORTED') {
-                        upstreanNightlySource()
-                    }else{
-                        println('Nightly build not succeed, will not upstream source code.')
-                    }
+                    upstreanNightlySource()
                 }
             }
         }
