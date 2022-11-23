@@ -4,6 +4,7 @@ set -x
 function main {
 
   init_params "$@"
+  copy_dataset
   run_tuning
 
 }
@@ -33,6 +34,14 @@ function init_params {
     esac
   done
 
+}
+
+#copy dataset
+function copy_dataset {
+   cd ../..
+   mkdir data
+   cp -r  /tf_dataset2/pytorch_oobmodels/mnist ./data
+   cd PyTorch-GAN/implementations
 }
 
 # run_tuning
