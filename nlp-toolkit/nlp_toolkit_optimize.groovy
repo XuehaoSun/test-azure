@@ -717,7 +717,7 @@ node( sub_node_label ) {
                     copyArtifacts(
                             projectName: 'nlp-toolkit-release-wheel-build',
                             selector: specific("${binary_build_job_nlp}"),
-                            filter: 'nlp_toolkit*.whl, nlp-toolkit-*.tar.bz2, nlp_toolkit-*.tar.gz',
+                            filter: 'intel_extension_for_transformers*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
                 }

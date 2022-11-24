@@ -163,8 +163,9 @@ def do_binary_build() {
                 ln -s ${cmake_path} ${cmake_path}3 || true
                 echo "Build Pypi binary..."
                 cd nlp_repo
+                git submodule update --init --recursive
                 if [ "${pypi_version}" != "default" ]; then
-                    cd nlp_toolkit
+                    cd intel_extension_for_transformers
                     sed -i '/__version__ =/d' version.py
                     sed -i '$a\\__version__ = \\"'$pypi_version'\\"' version.py
                     cat version.py
@@ -175,9 +176,9 @@ def do_binary_build() {
                 fi
                 python3 setup.py sdist bdist_wheel
                 pip install auditwheel==5.1.2
-                auditwheel repair dist/nlp_toolkit*.whl
-                cp wheelhouse/nlp_toolkit*.whl ${WORKSPACE}/
-                cp dist/nlp_toolkit*.tar.gz ${WORKSPACE}/
+                auditwheel repair dist/intel_extension_for_transformers*.whl
+                cp wheelhouse/intel_extension_for_transformers*.whl ${WORKSPACE}/
+                cp dist/intel_extension_for_transformers*.tar.gz ${WORKSPACE}/
             '''
         }
     } else if (binary_class == 'conda') {
@@ -207,23 +208,26 @@ def do_binary_build() {
 
                 echo "Build Pypi binary..."
                 cd nlp_repo
-
+                git submodule update --init --recursive
+                if [[ -f requirements.txt ]]; then
+                    pip install -r requirements.txt
+                fi
                 python3 setup.py sdist bdist_wheel
                 pip install auditwheel
-                auditwheel repair dist/nlp_toolkit*.whl
-                cp wheelhouse/nlp_toolkit*.whl ${WORKSPACE}/
-                cp dist/nlp_toolkit*.tar.gz ${WORKSPACE}/
+                auditwheel repair dist/intel_extension_for_transformers*.whl
+                cp wheelhouse/intel_extension_for_transformers*.whl ${WORKSPACE}/
+                cp dist/intel_extension_for_transformers*.tar.gz ${WORKSPACE}/
 
                 echo "Build Conda binary..."
                 conda clean -i
                 conda_py=$(echo ${python_version} | tr -d '.')
-                nc_whl_path=${WORKSPACE}/nlp_repo/wheelhouse/nlp_toolkit*.whl
-                export NC_WHL=${nc_whl_path}
+                nc_whl_path=${WORKSPACE}/nlp_repo/wheelhouse/intel_extension_for_transformers*.whl
+                export IMEX_WHL=${nc_whl_path}
                 conda install patchelf conda-build conda-verify -y
                 conda config --add channels conda-forge
                 conda config --add channels fastai
-                conda build meta.yaml --python=${conda_py}
-                cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/linux-64/nlp-toolkit-*.tar.bz2 ${WORKSPACE}/
+                conda build conda_meta/meta.yaml --python=${conda_py} -c intel
+                cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/linux-64/intel_extension_for_transformers*.tar.bz2 ${WORKSPACE}/
             '''
         }
     } else {
@@ -249,7 +253,7 @@ node(node_label){
     }finally {
         // archive artifacts
         stage("Artifacts") {
-            archiveArtifacts artifacts: 'nlp_toolkit*.whl, nlp-toolkit-*.tar.bz2, nlp_toolkit-*.tar.gz', excludes: null
+            archiveArtifacts artifacts: 'intel_extension_for_transformers*.whl, intel_extension_for_transformers-*.tar.bz2, intel_extension_for_transformers-*.tar.gz', excludes: null
             fingerprint: true
         }
     }

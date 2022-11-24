@@ -158,7 +158,7 @@ echo "Refer project is ${refer_proj}"
 refer_build = params.refer_build ?: "x0"
 echo "Refer build is ${refer_build}"
 
-target_path="./nlp_toolkit/backends/neural_engine/SparseLib"
+target_path="./intel_extension_for_transformers/backends/neural_engine/kernels"
 
 
 // Processing PR comment params

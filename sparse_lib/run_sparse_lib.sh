@@ -24,25 +24,25 @@ echo -e ${post_op}
 echo -e ${dim_list}
 conda activate ${conda_env_name} || source activate ${conda_env_name}
 if [[ ${precision} == "bf16" ]] && [[ ${op} == "sparse_matmul" ]]; then
-    [[ -d ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark/build ]] && rm -fr ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark/build
+    [[ -d ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build ]] && rm -fr ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build
     cd ${WORKSPACE}/lpot-models
     git submodule update --init --recursive
-    cd nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark
+    cd intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark
     mkdir build
     cd build
     cmake .. -DSPARSE_LIB_USE_AMX=True
     make -j
 else
-    if [[ ! -d ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark/build ]]; then
+    if [[ ! -d ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build ]]; then
         cd ${WORKSPACE}/lpot-models
         git submodule update --init --recursive
-        cd nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark
+        cd intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark
         mkdir build
         cd build
         cmake .. 
         make -j
     else
-        cd ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark/build
+        cd ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build
     fi
 fi
 

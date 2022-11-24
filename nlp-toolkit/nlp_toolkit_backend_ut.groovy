@@ -206,16 +206,16 @@ def run_pytest_with_coverage_count(repo_name){
         source activate ${conda_env}
         pip install coverage
         ## workaround for transformer version
-        pip install transformers
-        pip install torch==${torch_version} -f https://download.pytorch.org/whl/torch_stable.html
-        pip install nlpaug
-        pip install datasets>=1.8.0
+        #pip install transformers
+        #pip install torch==${torch_version} -f https://download.pytorch.org/whl/torch_stable.html
+        #pip install nlpaug
+        #pip install datasets>=1.8.0
         
-        cd ${WORKSPACE}/${repo_name}/nlp_toolkit/backends/neural_engine/test/pytest
+        cd ${WORKSPACE}/${repo_name}/intel_extension_for_transformers/backends/neural_engine/test/pytest
         
         export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/nlp-toolkit/.coveragerc
         cat ${COVERAGE_RCFILE}
-        engine_path=$(python -c 'import nlp_toolkit; import os; print(os.path.dirname(nlp_toolkit.__file__))')
+        engine_path=$(python -c 'import intel_extension_for_transformers; import os; print(os.path.dirname(intel_extension_for_transformers.__file__))')
         engine_path="${engine_path}/backends/neural_engine"
         echo "engine path is ${engine_path}"
         find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${engine_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
@@ -313,7 +313,7 @@ node(node_label){
                     copyArtifacts(
                             projectName: 'nlp-toolkit-release-wheel-build',
                             selector: specific("${binary_build_job_nlp}"),
-                            filter: 'nlp_toolkit*.whl, nlp-toolkit-*.tar.bz2, nlp_toolkit-*.tar.gz',
+                            filter: 'intel_extension_for_transformers*.whl, nlp-toolkit-*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
             }
@@ -346,8 +346,8 @@ node(node_label){
                         export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         source activate ${conda_env}
                         cd ${WORKSPACE}
-                        pip install nlpaug
-                        pip install nlp_toolkit*.whl 2>&1 | tee $WORKSPACE/binary_install.log
+                        #pip install nlpaug
+                        pip install intel_extension_for_transformers*.whl 2>&1 | tee $WORKSPACE/binary_install.log
                         pip install neural_compressor*.whl 2>&1 | tee -a $WORKSPACE/binary_install.log
                         echo "pip list after install..."
                         pip list
@@ -359,8 +359,8 @@ node(node_label){
                         sh(returnStatus: true, script: '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH
                             source activate ${conda_env}
-                            pip install intel_tensorflow==${tensorflow_version}
-                            cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine/test/pytest
+                            #pip install intel_tensorflow==${tensorflow_version}
+                            cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/pytest
                             if [ -f "requirements.txt" ]; then
                                 pip install -r requirements.txt
                                 echo "pip list after install requirements.txt..."
@@ -386,10 +386,9 @@ node(node_label){
                         pip install cmake
                         cmake_path=$(which cmake)
                         ln -s ${cmake_path} ${cmake_path}3 || true
-                        cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine
+                        cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine
                         mkdir build && cd build && cmake .. -DNE_WITH_SPARSELIB=ON -DNE_WITH_TESTS=ON -DPYTHON_EXECUTABLE=$(which python) && make -j 2>&1 |
                             tee -a $WORKSPACE/gtest_cmake_build.log
-
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
 
                         ctest -V -L "engine_test" 2>&1 | tee ${ut_log_name}
@@ -401,12 +400,13 @@ node(node_label){
                             exit 1
                         fi
                         ''')
+                        
                         echo "+---------------- gtest for sparseLib ----------------+"
                         def ut_status_kernel = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
                         export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         source activate ${conda_env}
-                        cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine/build
+                        cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/build
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
                         echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
                         
@@ -476,7 +476,7 @@ node(node_label){
                                     pip install cmake
                                     cmake_path=$(which cmake)
                                     ln -s ${cmake_path} ${cmake_path}3 || true
-                                    pip uninstall nlp_toolkit -y
+                                    pip uninstall intel_extension_for_transformers -y
                                     cd ${WORKSPACE}/deep-engine-base
                                     git submodule update --init --recursive
                                     python setup.py install
@@ -516,10 +516,10 @@ node(node_label){
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
                                 source activate ${conda_env}
-                                pip install protobuf==3.20.1
+                                #pip install protobuf==3.20.1
                                 echo "Current conda ENV is ${conda_env}..."
 
-                                cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine/test/pytest
+                                cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/pytest
                                 echo "==================run pytest=================="
                                 find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                                 ut_log_name=$WORKSPACE/unit_test_pytest.log

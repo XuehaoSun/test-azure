@@ -75,9 +75,9 @@ main() {
 run_cpplint() {
     pip install cpplint
     log_path=${WORKSPACE}/engine_cpplint.log
-    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/compile 2>&1| tee ${log_path}
-    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/executor 2>&1| tee -a ${log_path}
-    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/nlp_toolkit/backends/neural_engine/test 2>&1| tee -a ${log_path}
+    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/intel_extension_for_transformers/backends/neural_engine/compile 2>&1| tee ${log_path}
+    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/intel_extension_for_transformers/backends/neural_engine/executor 2>&1| tee -a ${log_path}
+    cpplint  --filter=-build/include_subdir,-build/header_guard --recursive --quiet --linelength=120 ${REPO_DIR}/intel_extension_for_transformers/backends/neural_engine/test 2>&1| tee -a ${log_path}
     if [[ ! -f ${log_path} ]] || [[ $(grep -c "Total errors found:" ${log_path}) != 0 ]]; then
         exit 1
     fi
@@ -86,9 +86,9 @@ run_cpplint() {
 
 run_pylint() {
     pip install pylint==2.12.1
-    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ${REPO_DIR}/nlp_toolkit > ${WORKSPACE}/lpot-pylint.json
+    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,neural_compressor,engine_py,neural_engine_py ${REPO_DIR}/intel_extension_for_transformers > ${WORKSPACE}/lpot-pylint.json
     # tf_utils.util will import some deps installed by tensorflow
-    pip install intel-tensorflow
+    #pip install intel-tensorflow
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "PyLint exited with non-zero exit code."; exit 1

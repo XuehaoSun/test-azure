@@ -7,10 +7,10 @@ export PATH=${HOME}/miniconda3/bin/:$PATH
 conda activate $conda_env_name || source activate $conda_env_name
 conda install -c conda-forge gxx gcc cmake -y
 
-rm -rf ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/build
+rm -rf ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/build
 cd ${WORKSPACE}/lpot-models
 git submodule update --init --recursive
-cd nlp_toolkit/backends/neural_engine
+cd intel_extension_for_transformers/backends
 mkdir build
 cd build
 if [[ -n $(lscpu | grep amx_tile) ]]; then cmake_amx="-DSPARSE_LIB_USE_AMX=True"; fi
@@ -18,6 +18,7 @@ CC=gcc CXX=g++ cmake .. -DNE_WITH_SPARSELIB=ON -DNE_WITH_TESTS=ON -DNE_WITH_SPAR
 make -j
 cd bin
 bash -x ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark/ci/run_ci.sh $output_log_dir
+
 for caselog in $(find $output_log_dir/*); do
     case_name=$(echo $caselog | sed -e 's/\.log$//')
     echo "case_name=$case_name"

@@ -207,7 +207,7 @@ node(node_label){
                     copyArtifacts(
                             projectName: 'nlp-toolkit-release-wheel-build',
                             selector: specific("${binary_build_job_nlp}"),
-                            filter: 'nlp_toolkit*.whl, nlp-toolkit-*.tar.bz2, nlp_toolkit-*.tar.gz',
+                            filter: 'intel_extension_for_transformers*.whl, nlp-toolkit-*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
             }
@@ -241,7 +241,7 @@ node(node_label){
                         source activate ${conda_env}
                         cd ${WORKSPACE}
                         pip install nlpaug
-                        pip install nlp_toolkit*.whl 2>&1 | tee $WORKSPACE/binary_install.log
+                        pip install intel_extension_for_transformers*.whl 2>&1 | tee $WORKSPACE/binary_install.log
                         pip install neural_compressor*.whl 2>&1 | tee -a $WORKSPACE/binary_install.log
                         echo "pip list after install..."
                         pip list
@@ -258,7 +258,7 @@ node(node_label){
                     export PATH=${HOME}/miniconda3/bin/:$PATH
                     export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                     source activate ${conda_env}
-                    cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine/test/gtest/SparseLib
+                    cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/gtest/kernels
                     conda install -c conda-forge gxx gcc sysroot_linux-64 -y
                     pip install cmake
                     echo "SparseLib gtest build..."  2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log 

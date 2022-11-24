@@ -913,7 +913,7 @@ node( sub_node_label ) {
                     copyArtifacts(
                             projectName: 'nlp-toolkit-release-wheel-build',
                             selector: specific("${binary_build_job_nlp}"),
-                            filter: 'nlp_toolkit*.whl, nlp-toolkit-*.tar.bz2, nlp_toolkit-*.tar.gz',
+                            filter: 'intel_extension_for_transformers*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
                 }
@@ -1005,7 +1005,7 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
+                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -1054,10 +1054,10 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
+                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
-                                export PATH=${HOME}/miniconda3/bin/:$PATH                            
+                                export PATH=${HOME}/miniconda3/bin/:$PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
@@ -1102,7 +1102,7 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
+                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
