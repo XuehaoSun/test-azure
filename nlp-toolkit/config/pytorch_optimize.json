@@ -817,5 +817,47 @@
         "config": "saved_results"
       }
     }
+  },
+  "sd_pokemon_diffusers_static": {
+    "working_dir": "optimization/pytorch/huggingface/text-to-image/quantization/inc",
+    "tune": {
+      "cmd": "bash run_tuning.sh",
+      "params": {
+        "topology": "sd_pokemon_diffusers_static",
+        "output_model": "saved_results"
+      }
+    },
+    "benchmark": {
+      "cmd": "bash run_benchmark.sh",
+      "params": {
+        "topology": "sd_pokemon_diffusers_static",
+        "mode": "accuracy",
+        "batch_size": "64",
+        "iters": "100",
+        "int8": "false",
+        "config": "saved_results"
+      }
+    }
+  },
+  "sd_pokemon_diffusers_dynamic": {
+    "working_dir": "optimization/pytorch/huggingface/text-to-image/quantization/inc",
+    "tune": {
+      "cmd": "bash run_tuning.sh",
+      "params": {
+        "topology": "sd_pokemon_diffusers_dynamic",
+        "output_model": "saved_results"
+      }
+    },
+    "benchmark": {
+      "cmd": "bash run_benchmark.sh",
+      "params": {
+        "topology": "sd_pokemon_diffusers_dynamic",
+        "mode": "accuracy",
+        "batch_size": "64",
+        "iters": "100",
+        "int8": "false",
+        "config": "saved_results"
+      }
+    }
   }
 }
