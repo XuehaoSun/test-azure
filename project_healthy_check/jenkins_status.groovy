@@ -179,7 +179,7 @@ node(node_label){
         }
 
         stage('healthy check'){
-            run_healthy_check_scripts = "${WORKSPACE}/lpot-validation/project_healthy_check/pre-ci_trigger_frequency_trend.py"
+            run_healthy_check_scripts = "${WORKSPACE}/lpot-validation/project_healthy_check/pre_ci_trigger_frequency_trend.py"
             println("run healthy check...")
             withEnv(["run_healthy_check_scripts=${run_healthy_check_scripts}", "conda_env=${conda_env}"]){
                     sh'''#!/bin/bash

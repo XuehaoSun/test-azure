@@ -137,47 +137,6 @@ if (params.collect_tuned_model != null) {
 }
 echo "collect_tuned_model = ${collect_tuned_model}"
 
-torchvision_versions = [
-        "1.12.1": "0.13.1",
-        "1.12.0": "0.13.0",
-        "1.11.0": "0.12.0",
-        "1.10.1": "0.11.2",
-        "1.10.0": "0.11.0",
-        "1.9.0": "0.10.0",
-        "1.8.0": "0.9.0",
-        "1.7.0": "0.8.0",
-        "1.6.0": "0.7.0",
-        "1.5.1": "0.6.1",
-        "1.5.0": "0.6.0",
-        "1.4.0": "0.5.0",
-        "1.3.1": "0.4.2",
-        "1.3.0": "0.4.1",
-        "1.2.0": "0.4.0",
-        "1.1.0": "0.3.0",
-]
-
-torchvision_version = ""
-if (framework == "pytorch") {
-
-    pytorch_version_base = framework_version.split('\\+')[0]
-    try {
-        pytorch_version_postfix = framework_version.split('\\+')[1]
-    } catch(e) {
-        pytorch_version_postfix = ""
-    }
-
-    torchvision_version = torchvision_versions[pytorch_version_base]
-
-    if (!torchvision_version) {
-        error("Could not found torchvision for pytorch " + pytorch_version_base)
-    }
-
-    if (pytorch_version_postfix != "") {
-        torchvision_version = torchvision_version + "+" + pytorch_version_postfix
-    }
-}
-println("torchvision_version: " + torchvision_version)
-
 multi_instance=false
 if (params.multi_instance != null){
     multi_instance = params.multi_instance
@@ -327,7 +286,6 @@ def create_conda_env(tensorflow_version, pytorch_version, onnxruntime_version, i
                     --python_version=\"${python_version}\" \
                     --tensorflow_version=\"${tensorflow_version}\" \
                     --pytorch_version=\"${pytorch_version}\" \
-                    --torchvision_version=\"${torchvision_version}\" \
                     --onnx_version=\"${onnx_version}\" \
                     --onnxruntime_version=\"${onnxruntime_version}\" \
                     --conda_env_name=\"${conda_env_name}\""
@@ -344,7 +302,7 @@ def create_conda_env(tensorflow_version, pytorch_version, onnxruntime_version, i
         withEnv(["framework=${framework}","conda_env_name=${conda_env_name}","model=${model}","conda_env_mode=${conda_env_mode}","log_level=${log_level}","install_nlp_toolkit=${install_nlp_toolkit}"]) {
             sh '''#!/bin/bash
                     echo -e "\nSetting environment..."
-                    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit}
+                    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit} --install_inc="true"
                     set_environment
                 '''
         }
@@ -403,7 +361,7 @@ def runPerfTest(mode, precision) {
             
             if [[ ${mode} == "accuracy" ]]; then
                 echo "------------ACCURACY BENCHMARK---------"
-                bash ${benchmark_cmd} 2>&1 | tee ${logFile}.log 
+                ${benchmark_cmd} 2>&1 | tee ${logFile}.log 
                 status=$?
                 if [ ${status} != 0 ]; then
                     echo "Benchmark process returned non-zero exit code."
@@ -427,7 +385,7 @@ def runPerfTest(mode, precision) {
                     end_core_num=$((ncores_per_socket-1))
                 fi
                 numactl -m 0 -C "$j-$end_core_num" \
-                    bash ${benchmark_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
+                    ${benchmark_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
                     benchmark_pids+=($!)
                 done
             
@@ -853,7 +811,7 @@ node( sub_node_label ) {
                         else
                             echo "Not found requirements.txt file."
                         fi
-                        ${timeout} bash ${tune_cmd} 2>&1 | tee ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
+                        ${timeout} ${tune_cmd} 2>&1 | tee ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
                     '''
                 }
                 // Check tuning status

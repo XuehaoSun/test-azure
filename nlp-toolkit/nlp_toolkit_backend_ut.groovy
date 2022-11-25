@@ -328,6 +328,7 @@ node(node_label){
                 retry(3){
                     sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
+                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
                            (conda remove --name ${conda_env} --all -y) || true
                         fi
@@ -342,6 +343,7 @@ node(node_label){
                 retry(3) {
                     sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
+                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         source activate ${conda_env}
                         cd ${WORKSPACE}
                         pip install nlpaug
@@ -377,19 +379,20 @@ node(node_label){
                 timeout(30){
                     if (unit_test_mode == 'gtest'){
                         echo "+---------------- gtest ----------------+"
-                        ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                        def ut_status_engine = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
+                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         source activate ${conda_env}
                         pip install cmake
                         cmake_path=$(which cmake)
                         ln -s ${cmake_path} ${cmake_path}3 || true
-                        cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine/test/gtest
-                        mkdir build && cd build && cmake .. && make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
+                        cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine
+                        mkdir build && cd build && cmake .. -DNE_WITH_SPARSELIB=ON -DNE_WITH_TESTS=ON -DPYTHON_EXECUTABLE=$(which python) && make -j 2>&1 |
+                            tee -a $WORKSPACE/gtest_cmake_build.log
 
-                        find . -maxdepth 1 -name "test*" > run.sh
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
 
-                        bash run.sh 2>&1 | tee ${ut_log_name}
+                        ctest -V -L "engine_test" 2>&1 | tee ${ut_log_name}
                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
                             [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
                             [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ] ||
@@ -398,31 +401,16 @@ node(node_label){
                             exit 1
                         fi
                         ''')
-                        if (ut_status != 0) {
-                            currentBuild.result = 'FAILURE'
-                            error("gtest failed!")
-                        }
                         echo "+---------------- gtest for sparseLib ----------------+"
-                        ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                        def ut_status_kernel = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
+                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         source activate ${conda_env}
-                        cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine/test/gtest/SparseLib
-                        conda install -c conda-forge gxx gcc sysroot_linux-64 -y
-                        
-                        echo "SparseLib gtest build..."  2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log 
-                        mkdir build && cd build 
-                        cmake .. -DSPARSE_LIB_USE_AMX=True
-                        make -j 2>&1 | tee -a $WORKSPACE/gtest_cmake_build.log
-                        
-                        if [ $(find . -maxdepth 1 -name "test*" | wc -l) == 0 ]; then
-                            echo "--------build failure---------"
-                            exit 1
-                        fi
-                        find . -maxdepth 1 -name "test*" > run.sh
+                        cd ${WORKSPACE}/deep-engine/nlp_toolkit/backends/neural_engine/build
                         ut_log_name=$WORKSPACE/unit_test_gtest.log
                         echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
                         
-                        bash run.sh 2>&1 | tee -a ${ut_log_name}
+                        ctest -V -L "kernel_test" 2>&1 | tee -a ${ut_log_name}
                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
                             [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
                             [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ] ||
@@ -431,6 +419,7 @@ node(node_label){
                             exit 1
                         fi
                         ''')
+                        ut_status = ut_status_engine ?: ut_status_kernel
                         if (ut_status != 0) {
                             currentBuild.result = 'FAILURE'
                             error("gtest failed!")

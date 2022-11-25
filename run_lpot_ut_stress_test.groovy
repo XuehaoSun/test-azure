@@ -88,46 +88,6 @@ if ('log_level' in params && params.log_level != ''){
 }
 echo "log_level: ${log_level}"
 
-torchvision_versions = [
-        "stock-nightly": "stock-nightly",
-        "nightly": "nightly",
-        "1.12.1": "0.13.1",
-        "1.12.0": "0.13.0",
-        "1.11.0": "0.12.0",
-        "1.10.1": "0.11.2",
-        "1.10.0": "0.11.0",
-        "1.9.0": "0.10.0",
-        "1.8.0": "0.9.0",
-        "1.7.0": "0.8.0",
-        "1.6.0": "0.7.0",
-        "1.5.1": "0.6.1",
-        "1.5.0": "0.6.0",
-        "1.4.0": "0.5.0",
-        "1.3.1": "0.4.2",
-        "1.3.0": "0.4.1",
-        "1.2.0": "0.4.0",
-        "1.1.0": "0.3.0",
-]
-
-pytorch_version_base = pytorch_version.split('\\+')[0]
-try {
-    pytorch_version_postfix = pytorch_version.split('\\+')[1]
-} catch(e) {
-    pytorch_version_postfix = ""
-}
-
-torchvision_version = torchvision_versions[pytorch_version_base]
-
-if (!torchvision_version) {
-    error("Could not found torchvision for pytorch " + pytorch_version)
-}
-
-if (pytorch_version_postfix != "") {
-    torchvision_version = torchvision_version + "+" + pytorch_version_postfix
-}
-println("torchvision_version: " + torchvision_version)
-
-
 // setting onnx and onnxruntime version
 onnx_version = '1.7.0'
 if ('onnx_version' in params && params.onnx_version != '') {
@@ -230,7 +190,6 @@ def build_conda_env() {
     println("full conda_env_name = " + conda_env)
     withEnv([
             "pytorch_version=${pytorch_version}",
-            "torchvision_version=${torchvision_version}",
             "tensorflow_version=${tensorflow_version}",
             "mxnet_version=${mxnet_version}",
             "onnx_version=${onnx_version}",
@@ -246,7 +205,6 @@ def build_conda_env() {
                     --python_version="${python_version}" \
                     --tensorflow_version="${tensorflow_version}" \
                     --pytorch_version="${pytorch_version}" \
-                    --torchvision_version="${torchvision_version}" \
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
                     --onnxruntime_version="${onnxruntime_version}" \
@@ -415,12 +373,18 @@ node(node_label){
             ut_cases = test_case_list.split(',')
             run_ut_scripts = "${WORKSPACE}/lpot-models/test/run.sh"
             run_tfnewapi_scripts = "${WORKSPACE}/lpot-models/test/run_tfnewapi.sh"
+            run_itex_scripts = "${WORKSPACE}/lpot-models/test/run_itex.sh"
             writeFile file: run_ut_scripts, text: ""
             writeFile file: run_tfnewapi_scripts, text: ""
+            writeFile file: run_itex_scripts, text: ""
+
             ut_cases.each{ ut_case ->
-                if ((ut_case=~"tfnewapi").find()){
+                if ((ut_case=~"tfnewapi").find()) {
                     run_ut_context = readFile file: run_tfnewapi_scripts
                     writeFile file: run_tfnewapi_scripts, text: run_ut_context + "python " + ut_case + "\n"
+                }else if ((ut_case=~"itex").find()){
+                    run_ut_context = readFile file: run_itex_scripts
+                    writeFile file: run_itex_scripts, text: run_ut_context + "python " + ut_case + "\n"
                 }else{
                     run_ut_context = readFile file: run_ut_scripts
                     writeFile file: run_ut_scripts, text: run_ut_context + "python " + ut_case + "\n"
@@ -429,7 +393,7 @@ node(node_label){
             if (UT_STRESS_TEST){
                 println("UT_STRESS_TEST...")
                 println "when ut stress test, conda env is " + conda_env
-                withEnv(["run_ut_scripts=${run_ut_scripts}", "run_tfnewapi_scripts=${run_tfnewapi_scripts}", "test_trials=${test_trials}", "log_level=${log_level}", "conda_env=${conda_env}"]){
+                withEnv(["run_ut_scripts=${run_ut_scripts}", "run_tfnewapi_scripts=${run_tfnewapi_scripts}", "run_itex_scripts=${run_itex_scripts}", "test_trials=${test_trials}", "log_level=${log_level}", "conda_env=${conda_env}"]){
                     sh'''#!/bin/bash
                     if [ "${log_level}" != "DEFAULT" ]; then
                       export LOGLEVEL=${log_level}
@@ -464,10 +428,40 @@ node(node_label){
                         echo "---------- Run TF newAPI -----------------"
                         cat ${run_tfnewapi_scripts}
                         pip install ${WORKSPACE}/tensorflow*.whl
+                        if [ $? == 1 ]; then
+                           exit 1
+                        fi
+                        echo "re-install horovod resolve the issue with fwk..."
+                        pip uninstall horovod -y
+                        pip install --no-cache-dir horovod
                         for((j=0;$j<${test_trials};j=$(($j + 1))));
                         do
                           echo "------ Start of test around ${j} -------" >> ${ut_log_name}
                           bash ${run_tfnewapi_scripts} 2>&1 | tee -a ${ut_log_name}
+                          echo "\n" >> ${ut_log_name}
+                          if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                            exit 1
+                          fi
+                        done
+                    fi
+                    
+                    if [ -f "${run_itex_scripts}" ]; then
+                        echo "---------- Run ITEX -----------------"
+                        cat ${run_itex_scripts}
+                        pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                        pip uninstall tensorflow -y | tee -a ${ut_log_name}
+                        pip install tensorflow 
+                        pip install --upgrade intel-extension-for-tensorflow[cpu]
+                        if [ $? == 1 ]; then
+                           exit 1
+                        fi
+                        echo "re-install horovod resolve the issue with fwk..."
+                        pip uninstall horovod -y
+                        pip install --no-cache-dir horovod
+                        for((j=0;$j<${test_trials};j=$(($j + 1))));
+                        do
+                          echo "------ Start of test around ${j} -------" >> ${ut_log_name}
+                          bash ${run_itex_scripts} 2>&1 | tee -a ${ut_log_name}
                           echo "\n" >> ${ut_log_name}
                           if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
                             exit 1

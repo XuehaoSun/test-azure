@@ -280,7 +280,7 @@ def create_conda_env(install_ipex){
             withEnv(["framework=${framework}","conda_env_name=${conda_env_name}","model=${model}","conda_env_mode=${conda_env_mode}","log_level=${log_level}","install_nlp_toolkit=${install_nlp_toolkit}"]) {
                 sh '''#!/bin/bash
                     echo -e "\nSetting environment..."
-                    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit}
+                    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit} --install_inc="true"
                     set_environment
                 '''
             }
@@ -304,7 +304,10 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
         if (k == "input_model") {
             if (v == "sparse_ir") {
                 v = "${working_dir_fullpath}/sparse_${precision}_ir"
-            } else if (! v.find("/tf_dataset")) {
+            } else if (framework == "ipex") {
+                v = "${working_dir_fullpath}/${v}/${precision}"
+            }
+            else if (! v.find("/tf_dataset")) {
                 v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
             }
         }
@@ -322,6 +325,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             echo "=======run benchmark======="
             export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
             export PATH=${HOME}/miniconda3/bin/:$PATH
+            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]];then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
@@ -337,7 +341,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             if [[ ${mode} == "accuracy" ]]; then
                 logFile="${output_path}/${framework}-${model}-${precision}-accuracy-${os}-${cpu}.log"
                 echo "------------ACCURACY BENCHMARK---------"
-                bash ${benchmark_cmd} 2>&1 | tee ${logFile} 
+                ${benchmark_cmd} 2>&1 | tee ${logFile} 
                 status=$?
                 if [ ${status} != 0 ]; then
                     echo "Benchmark process returned non-zero exit code."
@@ -352,7 +356,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                 logFile="${output_path}/${framework}-${model}-${precision}-throughput-${os}-${cpu}"
                 if [ "${multi_instance}" == "false" ]; then
                     echo "Executing single instance benchmark"
-                    bash ${benchmark_cmd} 2>&1|tee ${logFile}.log &
+                    ${benchmark_cmd} 2>&1|tee ${logFile}.log &
                     benchmark_pids+=($!)
                 else
                     echo "Executing multi instance benchmark"
@@ -363,7 +367,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                         end_core_num=$((ncores_per_socket-1))
                     fi
                     numactl -m 0 -C "$j-$end_core_num" \
-                        bash ${benchmark_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
+                        ${benchmark_cmd} 2>&1|tee ${logFile}-${ncores_per_socket}-${ncores_per_instance}-${j}.log &
                         benchmark_pids+=($!)
                     done
                 fi
@@ -425,6 +429,7 @@ def runLauncherTest(mode, precision, launcher_cmd, launcher_cmd_params) {
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             echo "=======launcher benchmark======="
             export PATH=${HOME}/miniconda3/bin/:$PATH
+            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             cp -r ${data_path} ${WORKSPACE}/data
             echo "final launcher benchmark cmd of precision ${precision} is ${launcher_cmd}"
@@ -442,6 +447,9 @@ def prepare_models(local_precision, prepare_cmd) {
         }
         if (k == "output_dir") {
             v = "${working_dir_fullpath}/${v}"
+            if (framework == "ipex") {
+                v = "${v}/${local_precision}"
+            }
         }
         local_prepare_cmd += " --${k}=${v}" 
     }
@@ -453,6 +461,7 @@ def prepare_models(local_precision, prepare_cmd) {
         sh '''#!/bin/bash -x
             echo "Running ---- ${framework}, ${model}----Tuning"
             export PATH=${HOME}/miniconda3/bin/:$PATH
+            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]]; then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
@@ -477,7 +486,7 @@ def prepare_models(local_precision, prepare_cmd) {
             else
                 echo "Not found requirements.txt file."
             fi
-            ${timeout} bash ${prepare_cmd} 2>&1 | tee -a ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
+            ${timeout} ${prepare_cmd} 2>&1 | tee -a ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
         '''
     }
     // Check tuning status
@@ -528,6 +537,7 @@ def run_inferencer(ncores_per_instance, bs, precision) {
     ]){
         sh'''#!/bin/bash -x
         export PATH=${HOME}/miniconda3/bin/:$PATH
+        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
         source activate ${conda_env_name}
         echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
         sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
@@ -924,6 +934,10 @@ node( sub_node_label ) {
                     conda_env_name="pt-ipex-${framework_version}-${python_version}"
                     install_ipex = true
                 }
+                if (framework == "ipex") {
+                    conda_env_name="ipex-${framework_version}-${python_version}"
+                    install_ipex = false
+                }
                 if ("${CPU_NAME}" != "") {
                     conda_env_name="${conda_env_name}-${CPU_NAME}"
                 }
@@ -958,6 +972,7 @@ node( sub_node_label ) {
                 withEnv(["working_dir=${working_dir_fullpath}","conda_env_name=${conda_env_name}"]) {
                     sh '''#!/bin/bash -x
                     export PATH=${HOME}/miniconda3/bin/:$PATH
+                    export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                     source activate ${conda_env_name}
                     cd ${working_dir}
                     echo "Working in ${working_dir}"
@@ -999,24 +1014,29 @@ node( sub_node_label ) {
                                 ${cmd}
                             """
                         }
+                        
                         mode_list.each { mode ->
                             runPerfTest(mode, "fp32", benchmark_cmd)
-                            if ( mode == "throughput" && launcher_mode != "") {
-                                stage("Launcher Benchmark"){
-                                    println("==========run launcher benchmark========")
-                                    launcher_mode_list.each { launch_mode ->
-                                        runLauncherTest(launch_mode, "fp32", launcher_cmd, launcher_cmd_params)
-                                        collectLauncherLogs(launch_mode, "fp32")
+                            if (framework == "nlp_excutor") {
+                                if ( mode == "throughput" && launcher_mode != "") {
+                                    stage("Launcher Benchmark"){
+                                        println("==========run launcher benchmark========")
+                                        launcher_mode_list.each { launch_mode ->
+                                            runLauncherTest(launch_mode, "fp32", launcher_cmd, launcher_cmd_params)
+                                            collectLauncherLogs(launch_mode, "fp32")
+                                        }
                                     }
                                 }
                             }
                         }
-                        stage("Inferencer Benchmark"){
-                            println("==========run inferencer benchmark========")
-                            inferencer_config.split(',').each { each_ben_conf ->
-                                def ncores_per_instance = each_ben_conf.split(':')[0]
-                                def bs = each_ben_conf.split(':')[1]
-                                run_inferencer(ncores_per_instance, bs, "fp32")
+                        if (framework == "nlp_excutor") {
+                            stage("Inferencer Benchmark"){
+                                println("==========run inferencer benchmark========")
+                                inferencer_config.split(',').each { each_ben_conf ->
+                                    def ncores_per_instance = each_ben_conf.split(':')[0]
+                                    def bs = each_ben_conf.split(':')[1]
+                                    run_inferencer(ncores_per_instance, bs, "fp32")
+                                }
                             }
                         }
                     }
@@ -1037,7 +1057,7 @@ node( sub_node_label ) {
                             cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                export PATH=${HOME}/miniconda3/bin/:$PATH                            
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
@@ -1045,16 +1065,20 @@ node( sub_node_label ) {
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "int8", benchmark_cmd)
-                            if ( mode == "throughput" && launcher_mode != "") {
-                                stage("Launcher Benchmark"){
-                                    println("==========run launcher benchmark========")
-                                    launcher_mode_list.each { launch_mode ->
-                                        runLauncherTest(launch_mode, "int8", launcher_cmd, launcher_cmd_params)
-                                        collectLauncherLogs(launch_mode, "int8")
+                            if (framework == "nlp_excutor") {
+                                if ( mode == "throughput" && launcher_mode != "") {
+                                    stage("Launcher Benchmark"){
+                                        println("==========run launcher benchmark========")
+                                        launcher_mode_list.each { launch_mode ->
+                                            runLauncherTest(launch_mode, "int8", launcher_cmd, launcher_cmd_params)
+                                            collectLauncherLogs(launch_mode, "int8")
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
+                    if (framework == "nlp_excutor") {
                         stage("Inferencer Benchmark"){
                             println("==========run inferencer benchmark========")
                             inferencer_config.split(',').each { each_ben_conf ->
@@ -1089,24 +1113,28 @@ node( sub_node_label ) {
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "bf16", benchmark_cmd)
-                            if ( mode == "throughput" && launcher_mode != "") {
-                                stage("Launcher Benchmark"){
-                                    println("==========run launcher benchmark========")
-                                    launcher_mode_list.each { launch_mode ->
-                                        runLauncherTest(launch_mode, "bf16", launcher_cmd, launcher_cmd_params)
-                                        collectLauncherLogs(launch_mode, "bf16")
+                            if (framework == "nlp_excutor") {
+                                if ( mode == "throughput" && launcher_mode != "") {
+                                    stage("Launcher Benchmark"){
+                                        println("==========run launcher benchmark========")
+                                        launcher_mode_list.each { launch_mode ->
+                                            runLauncherTest(launch_mode, "bf16", launcher_cmd, launcher_cmd_params)
+                                            collectLauncherLogs(launch_mode, "bf16")
+                                        }
                                     }
                                 }
                             }
                         }
-                        stage("Inferencer Benchmark"){
-                            println("==========run inferencer benchmark========")
-                            inferencer_config.split(',').each { each_ben_conf ->
-                                def ncores_per_instance = each_ben_conf.split(':')[0]
-                                def bs = each_ben_conf.split(':')[1]
-                                run_inferencer(ncores_per_instance, bs, "bf16")
-                            }
-                        }  
+                        if (framework == "nlp_excutor") {
+                            stage("Inferencer Benchmark"){
+                                println("==========run inferencer benchmark========")
+                                inferencer_config.split(',').each { each_ben_conf ->
+                                    def ncores_per_instance = each_ben_conf.split(':')[0]
+                                    def bs = each_ben_conf.split(':')[1]
+                                    run_inferencer(ncores_per_instance, bs, "bf16")
+                                }
+                            }  
+                        }
                     }      
                 }
             }

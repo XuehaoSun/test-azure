@@ -84,46 +84,6 @@ if (params.run_coverage != null){
 }
 echo "run_coverage = ${run_coverage}"
 
-torchvision_versions = [
-    "stock-nightly": "stock-nightly",
-    "nightly": "nightly",
-    "1.12.1": "0.13.1",
-    "1.12.0": "0.13.0",
-    "1.11.0": "0.12.0",
-    "1.10.1": "0.11.2",
-    "1.10.0": "0.11.0",
-    "1.9.0": "0.10.0",
-    "1.8.0": "0.9.0",
-    "1.7.0": "0.8.0",
-    "1.6.0": "0.7.0",
-    "1.5.1": "0.6.1",
-    "1.5.0": "0.6.0",
-    "1.4.0": "0.5.0",
-    "1.3.1": "0.4.2",
-    "1.3.0": "0.4.1",
-    "1.2.0": "0.4.0",
-    "1.1.0": "0.3.0",
-]
-
-pytorch_version_base = pytorch_version.split('\\+')[0]
-try {
-    pytorch_version_postfix = pytorch_version.split('\\+')[1]
-} catch(e) {
-    pytorch_version_postfix = ""
-}
-
-torchvision_version = torchvision_versions[pytorch_version_base]
-
-if (!torchvision_version) {
-    error("Could not found torchvision for pytorch " + pytorch_version)
-}
-
-if (pytorch_version_postfix != "") {
-    torchvision_version = torchvision_version + "+" + pytorch_version_postfix
-}
-println("torchvision_version: " + torchvision_version)
-
-
 // setting onnx and onnxruntime version
 onnx_version = '1.7.0'
 if ('onnx_version' in params && params.onnx_version != '') {
@@ -257,7 +217,6 @@ def download() {
 def build_conda_env(conda_env_name) {
     withEnv([
         "pytorch_version=${pytorch_version}",
-        "torchvision_version=${torchvision_version}",
         "tensorflow_version=${tensorflow_version}",
         "mxnet_version=${mxnet_version}",
         "onnx_version=${onnx_version}",
@@ -273,7 +232,6 @@ def build_conda_env(conda_env_name) {
                     --python_version="${python_version}" \
                     --tensorflow_version="${tensorflow_version}" \
                     --pytorch_version="${pytorch_version}" \
-                    --torchvision_version="${torchvision_version}" \
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
                     --onnxruntime_version="${onnxruntime_version}" \
@@ -403,6 +361,13 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     cat run_benchmark.sh 
                 fi
                 
+                if [ -d "itex" ]; then
+                    grep "itex/" run.sh > run_itex.sh
+                    sed -i '/itex/d' run.sh
+                    echo "cat run_itex.sh..."
+                    cat run_itex.sh
+                fi 
+                
                 echo "cat run.sh..."
                 cat run.sh 
                 coverage erase
@@ -416,9 +381,30 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     if [ $? == 1 ]; then
                        exit 1
                     fi
+                    echo "re-install horovod resolve the issue with fwk..."
+                    pip uninstall horovod -y
+                    pip install --no-cache-dir horovod
                     echo "-------------"
                     ${numa_prefix} bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
                 fi
+                
+                if [ -d "itex" ]; then
+                    echo "\n\nRun special UT with itex...\n" | tee -a ${ut_log_name}
+                    pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                    pip uninstall tensorflow -y | tee -a ${ut_log_name}
+                    pip install tensorflow 
+                    pip install --upgrade intel-extension-for-tensorflow[cpu]
+                    if [ $? == 1 ]; then
+                       exit 1
+                    fi
+                    echo "re-install horovod resolve the issue with fwk..."
+                    pip uninstall horovod -y
+                    pip install --no-cache-dir horovod
+                    echo "-------------"
+                    pip list | tee -a ${ut_log_name}
+                    ${numa_prefix} bash run_itex.sh 2>&1 | tee -a ${ut_log_name}
+                fi
+                
                 coverage report -m --rcfile=${COVERAGE_RCFILE} | tee -a ${ut_log_name}
                 coverage html -d ${WORKSPACE}/${coverage_path}/htmlcov --rcfile=${COVERAGE_RCFILE}
                 coverage xml -o ${WORKSPACE}/${coverage_path}/coverage.xml --rcfile=${COVERAGE_RCFILE}
@@ -710,6 +696,14 @@ node(node_label){
                                 echo "cat run_tfnewapi.sh..."
                                 cat run_tfnewapi.sh 
                             fi
+                            
+                            if [ -d "itex" ]; then
+                                grep "itex/" run.sh > run_itex.sh
+                                sed -i '/itex/d' run.sh
+                                echo "cat run_itex.sh..."
+                                cat run_itex.sh
+                            fi 
+                            
                             echo "cat run.sh..."
                             cat run.sh 
                             echo "-------------"
@@ -723,8 +717,29 @@ node(node_label){
                                 if [ $? == 1 ]; then
                                    exit 1
                                 fi
+                                echo "re-install horovod resolve the issue with fwk..."
+                                pip uninstall horovod -y
+                                pip install --no-cache-dir horovod
                                 echo "-------------"
+                                pip list | tee -a ${ut_log_name}
                                 bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
+                            fi
+                            
+                            if [ -d "itex" ]; then
+                                echo "\n\nRun special UT with itex...\n" | tee -a ${ut_log_name}
+                                pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                                pip uninstall tensorflow -y | tee -a ${ut_log_name}
+                                pip install tensorflow 
+                                pip install --upgrade intel-extension-for-tensorflow[cpu]
+                                if [ $? == 1 ]; then
+                                   exit 1
+                                fi
+                                echo "re-install horovod resolve the issue with fwk..."
+                                pip uninstall horovod -y
+                                pip install --no-cache-dir horovod
+                                echo "-------------"
+                                pip list | tee -a ${ut_log_name}
+                                bash run_itex.sh 2>&1 | tee -a ${ut_log_name}
                             fi
 
                             if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then

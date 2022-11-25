@@ -26,6 +26,8 @@ do
             strategy_token=`echo $i | sed "s/${PATTERN}//"`;;
         --max_trials=*)
             max_trials=`echo $i | sed "s/${PATTERN}//"`;;
+        --accuracy_criterion=*)
+            accuracy_criterion=`echo $i | sed "s/${PATTERN}//"`;;
         --algorithm=*)
             algorithm=`echo $i | sed "s/${PATTERN}//"`;;
         --sampling_size=*)
@@ -38,6 +40,10 @@ do
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
         --dtype=*)
             dtype=`echo $i | sed "s/${PATTERN}//"`;;
+        --backend=*)
+            backend=`echo $i | sed "s/${PATTERN}//"`;;
+        --itex_mode=*)
+            itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -47,7 +53,8 @@ done
 main() {
     # Import common functions
     source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
-         --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level}
+         --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} \
+         --itex_mode=${itex_mode} --install_inc="true"
 
     echo -e "\nSetting environment..."
     set_environment
@@ -230,10 +237,16 @@ main() {
 
     # Workaround for ONNX models from remote storage
     if [ "${framework}" == "onnxrt" ]; then
-        if [[ "${model_src_dir}" == *"language_translation"* ]]; then
+        if [[ "${model_src_dir}" == *"nlp"* ]]; then
             bert_dirname=$(dirname ${input_model})
             if [[ -d "${bert_dirname}/uncased_L-12_H-768_A-12" ]]; then
               cp -r ${bert_dirname}/uncased_L-12_H-768_A-12 ${model_src_dir}/
+            fi
+        fi
+        if [[ "${model_src_dir}" == *"unet"* ]]; then
+            unet_dirname=$(dirname ${input_model})
+            if [[ -f "${unet_dirname}/weights.pb" ]]; then
+              cp -r ${unet_dirname}/weights.pb ${WORKSPACE}/
             fi
         fi
         copy_model
@@ -286,37 +299,22 @@ main() {
         fi
     fi
 
-    if [ "${framework}" == "onnxrt" ] && [[ "${model}" != "gpt2_lm_head_wikitext_model_zoo" ]]; then
-        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model}"
-    fi
-
     if [ "${framework}" == "onnxrt" ]; then
-        onnxrt_ds_location_models=("bert_squad_model_zoo" "mobilebert_squad_mlperf" "gpt2_lm_head_wikitext_model_zoo" "densenet" "ssd-12" "ssd-12_qdq")
-        if [[ " ${onnxrt_ds_location_models[@]} " =~ " ${model} " ]]; then
-            parameters="${parameters} --data_path=${dataset_location}"
-        fi
+        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
 
         onnxrt_ds_full_input_models=("googlenet-12" "squeezenet" "squeezenet_qdq" "caffenet" "alexnet" "zfnet" "inception_v1" "googlenet-12_qdq" "caffenet_qdq" "alexnet_qdq" "zfnet_qdq" "inception_v1_qdq")
         if [[ " ${onnxrt_ds_full_input_models[@]} " =~ " ${model} " ]]; then
-            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../val.txt"
+            parameters="${parameters} --label_path=${dataset_location}/../val.txt"
         fi
         if [[ ${model} == "fcn" ]] || [[ ${model} == "fcn_qdq" ]]; then
-            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=${dataset_location}/../annotations/instances_val2017.json"
+            parameters="${parameters} --label_path=${dataset_location}/../annotations/instances_val2017.json"
         fi
-
-        qdq_model_list=("bert_squad_model_zoo_qdq" "mobilebert_squad_mlperf_qdq" "mask_rcnn_qdq" "ssd_mobilenet_v1-2_qdq" "faster_rcnn_qdq")
-        if [[ ${model} == "faster_rcnn" ]] || [[ ${model} == "mask_rcnn" ]] || [[ ${model} == "yolov3" ]] || [[ ${model} == "yolov4" ]] || [[ ${model} == "tiny_yolov3" ]] || [[ ${model} == "ultraface" ]] || [[ ${model} == "emotion_ferplus" ]] || [[ ${model} == "arcface" ]] || [[ ${model} == "BiDAF" ]] || [[ " ${qdq_model_list[@]} " =~ " ${model} " ]];then
-            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
-        fi       
         if [[ ${model} == "duc" ]];then
-            parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location} --label_path=/tf_dataset2/datasets/gtFine/val"
+            parameters="${parameters} --label_path=/tf_dataset2/datasets/gtFine/val"
         fi
-    fi
-
-    if [ "${framework}" == "baremetal" ]; then
-        copy_dataset
-        tokenizer_dir=$(dirname ${input_model})
-        parameters="--config=${yaml} --input_model=${input_model} --output_model=${q_model} --dataset_location=${dataset_location} --tokenizer_dir=${tokenizer_dir}/test_tokenizer"
+        if [[ ${model} == "gpt2_lm_head_wikitext_model_zoo" ]];then
+            parameters="--topology=${topology} --input_model=${input_model} --output_model=${q_model} --data_path=${dataset_location}"
+        fi
     fi
 
     update_yaml_config
@@ -413,7 +411,7 @@ function update_yaml_config {
             fi
         fi
         if [ "${framework}" == "onnxrt" ]; then
-            if [[ "${model_src_dir}" == *"/language_translation/"* ]]; then
+            if [[ "${model_src_dir}" == *"/nlp/"* ]]; then
                 sed -i "/\/path\/to\/dataset/s|data_dir:.*|data_dir: $dataset_location|g" ${yaml}
             fi
             image_raw_models=("resnet50-v1-12" "vgg16_model_zoo" "mobilenetv2-12" "googlenet-12" "shufflenet-v2-12" "efficientnet")
@@ -452,6 +450,12 @@ function update_yaml_config {
         update_yaml_params="${update_yaml_params} --max-trials=${max_trials}"
     fi
 
+    if [ "${accuracy_criterion}" != "" ]; then
+        criterion_rule=$(echo ${accuracy_criterion} | cut -d'=' -f1 )
+        criterion_data=$(echo ${accuracy_criterion} | cut -d'=' -f2 )
+        update_yaml_params="${update_yaml_params} --criterion_rule=${criterion_rule} --criterion_data=${criterion_data}"
+    fi
+
     if [ "${algorithm}" != "" ]; then
         update_yaml_params="${update_yaml_params} --algorithm=${algorithm}"
     fi
@@ -462,6 +466,10 @@ function update_yaml_config {
 
     if [ "${dtype}" != "" ]; then
         update_yaml_params="${update_yaml_params} --dtype=${dtype}"
+    fi
+
+    if [ "${backend}" != "" ]; then
+        update_yaml_params="${update_yaml_params} --backend=${backend}"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then

@@ -28,15 +28,50 @@ if ('framework' in params && params.framework != '') {
 }
 echo "framework: ${framework}"
 
-// setting framework_version
-framework_version  = '1.15.2'
-if ('framework_version' in params && params.framework_version != '') {
-    framework_version = params.framework_version
+// setting tensorflow_version
+tensorflow_version = ''
+if ('tensorflow_version' in params && params.tensorflow_version != '') {
+    tensorflow_version = params.tensorflow_version
 }
-echo "framework_version: ${framework_version}"
+echo "tensorflow_version: ${tensorflow_version}"
+
+// setting itex_version
+itex_version = ''
+if ('itex_version' in params && params.itex_version != '') {
+    itex_version = params.itex_version
+}
+echo "itex_version: ${itex_version}"
+
+// setting itex_mode: none,native,onednn_graph
+itex_mode = 'none'
+if ('itex_mode' in params && params.itex_mode != '') {
+    itex_mode = params.itex_mode
+}
+echo "itex_mode: ${itex_mode}"
+
+// setting pytorch_version
+pytorch_version = ''
+if ('pytorch_version' in params && params.pytorch_version != '') {
+    pytorch_version = params.pytorch_version
+}
+echo "pytorch_version: ${pytorch_version}"
+
+// setting mxnet_version
+mxnet_version = ''
+if ('mxnet_version' in params && params.mxnet_version != '') {
+    mxnet_version = params.mxnet_version
+}
+echo "mxnet_version: ${mxnet_version}"
+
+// setting onnxruntime version
+onnxruntime_version = ''
+if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
+    onnxruntime_version = params.onnxruntime_version
+}
+println("onnxruntime_version: " + onnxruntime_version)
 
 // setting onnx_version
-onnx_version  = '1.9.0'
+onnx_version  = ''
 if ('onnx_version' in params && params.onnx_version != '') {
     onnx_version = params.onnx_version
 }
@@ -93,6 +128,12 @@ if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
 }
 echo "tf_binary_build_job is ${tf_binary_build_job}"
 
+itex_binary_build_job = ""
+if ('itex_binary_build_job' in params && params.itex_binary_build_job != ''){
+    itex_binary_build_job=params.itex_binary_build_job
+}
+echo "itex_binary_build_job: ${itex_binary_build_job}"
+
 pyt_binary_build_job=""  
 if ('pyt_binary_build_job' in params && params.pyt_binary_build_job != ''){
     pyt_binary_build_job = params.pyt_binary_build_job
@@ -131,6 +172,12 @@ if ('max_trials' in params && params.max_trials != ''){
 }
 echo "max_trials: ${max_trials}"
 
+accuracy_criterion=""
+if ('accuracy_criterion' in params && params.accuracy_criterion != ''){
+    accuracy_criterion=params.accuracy_criterion
+}
+echo "accuracy_criterion: ${accuracy_criterion}"
+
 tune_only=false
 if (params.tune_only != null){
     tune_only=params.tune_only
@@ -161,49 +208,6 @@ if ('inferencer_config' in params && params.inferencer_config != ''){
 }
 echo "inferencer_config: ${inferencer_config}"
 
-torchvision_versions = [
-        "stock-nightly": "stock-nightly",
-        "nightly": "nightly",
-        "1.12.1": "0.13.1",
-        "1.12.0": "0.13.0",
-        "1.11.0": "0.12.0",
-        "1.10.1": "0.11.2",
-        "1.10.0": "0.11.0",
-        "1.9.0": "0.10.0",
-        "1.8.0": "0.9.0",
-        "1.7.0": "0.8.0",
-        "1.6.0": "0.7.0",
-        "1.5.1": "0.6.1",
-        "1.5.0": "0.6.0",
-        "1.4.0": "0.5.0",
-        "1.3.1": "0.4.2",
-        "1.3.0": "0.4.1",
-        "1.2.0": "0.4.0",
-        "1.1.0": "0.3.0",
-]
-
-torchvision_version = ""
-if (framework == "pytorch") {
-
-    pytorch_version_base = framework_version.split('\\+')[0]
-    try {
-        pytorch_version_postfix = framework_version.split('\\+')[1]
-    } catch(e) {
-        pytorch_version_postfix = ""
-    }
-
-    torchvision_version = torchvision_versions[pytorch_version_base]
-
-    if (!torchvision_version) {
-        error("Could not found torchvision for pytorch " + pytorch_version_base)
-    }
-
-    if (pytorch_version_postfix != "") {
-        torchvision_version = torchvision_version + "+" + pytorch_version_postfix
-    }
-}
-println("torchvision_version: " + torchvision_version)
-
 perf_bs = "1"
 if ('perf_bs' in params && params.perf_bs != '') {
     perf_bs = params.perf_bs
@@ -224,16 +228,7 @@ if(framework == 'pytorch') {
 }
 
 conda_env_name=''
-env_name_list=framework_version.split('=')
-if (env_name_list[0] == 'customized'){
-    conda_env_name="${framework}-customized-${python_version}"
-}else {
-    conda_env_name="${framework}-${framework_version}-${python_version}"
-}
-println("conda_env_name = " + conda_env_name)
-
 cpu="unknown"
-
 os="unknown"
 if ('os' in params && params.os != ''){
     os=params.os
@@ -270,6 +265,13 @@ upstreamJobName = ""
 upstreamUrl = ""
 algorithm=""
 tf_new_api=""
+
+backend=""
+if (itex_mode == "native"){
+    backend="tensorflow"
+}else if (itex_mode == "onednn_graph"){
+    backend="tensorflow_itex"
+}
 
 MAX_RERUNS = 3
 
@@ -330,18 +332,17 @@ def parseStrToList(srtingElements, delimiter=',') {
     return srtingElements[0..srtingElements.length()-1].tokenize(delimiter)
 }
 
-def create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, engine_version, install_ipex){
+def create_conda_env(_tf_ver,_itex_ver,_pt_ver,_mx_ver,_ort_ver,_onnx_ver,install_ipex){
 
     def cmd = "bash ${WORKSPACE}/lpot-validation/scripts/create_conda_env.sh \
                     --model=\"${model}\" \
                     --python_version=\"${python_version}\" \
-                    --tensorflow_version=\"${tensorflow_version}\" \
-                    --pytorch_version=\"${pytorch_version}\" \
-                    --torchvision_version=\"${torchvision_version}\" \
-                    --mxnet_version=\"${mxnet_version}\" \
-                    --onnx_version=\"${onnx_version}\" \
-                    --onnxruntime_version=\"${onnxruntime_version}\" \
-                    --engine_version=\"${engine_version}\" \
+                    --tensorflow_version=\"${_tf_ver}\" \
+                    --itex_version=\"${_itex_ver}\" \
+                    --pytorch_version=\"${_pt_ver}\" \
+                    --mxnet_version=\"${_mx_ver}\" \
+                    --onnx_version=\"${_onnx_ver}\" \
+                    --onnxruntime_version=\"${_ort_ver}\" \
                     --conda_env_name=\"${conda_env_name}\""
 
     if (install_ipex) {
@@ -456,7 +457,8 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --model=${model} \
                     --conda_env_name=${conda_env_name} \
                     --conda_env_mode=${conda_env_mode} \
-                    --log_level=${log_level}
+                    --log_level=${log_level} \
+                    --itex_mode=${itex_mode}
                 set_environment
                 echo "=================================="
 
@@ -758,7 +760,7 @@ node( sub_node_label ) {
                                 doGenerateSubmoduleConfigurations: false,
                                 extensions                       : [
                                         [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                                        [$class: 'CloneOption', timeout: 5],
+                                        [$class: 'CloneOption', timeout: 10],
                                         [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                                 ],
                                 submoduleCfg                     : [],
@@ -776,7 +778,7 @@ node( sub_node_label ) {
                                 doGenerateSubmoduleConfigurations: false,
                                 extensions                       : [
                                         [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                                        [$class: 'CloneOption', timeout: 5]
+                                        [$class: 'CloneOption', timeout: 10]
                                 ],
                                 submoduleCfg                     : [],
                                 userRemoteConfigs                : [
@@ -830,7 +832,7 @@ node( sub_node_label ) {
                             flatten: true,
                             target: "${WORKSPACE}")
                 }
-                if (framework_version == "spr-base"){
+                if (tensorflow_version == "spr-base" && framework == "tensorflow"){
                     tf_new_api="true"
                     copyArtifacts(
                             projectName: 'TF-spr-base-wheel-build', 
@@ -844,7 +846,16 @@ node( sub_node_label ) {
                         tf_new_api="false"
                     }
                 }
-                if (framework_version == "nightly" && framework == "pytorch"){
+                if (itex_version == "nightly" && framework == "tensorflow"){
+                    copyArtifacts(
+                            projectName: 'ITEX-binary-build',
+                            selector: specific("${itex_binary_build_job}"),
+                            filter: "intel_extension_for_tensorflow*.whl",
+                            fingerprintArtifacts: true,
+                            flatten: true,
+                            target: "${WORKSPACE}")
+                }
+                if (pytorch_version == "nightly" && framework == "pytorch"){
                     copyArtifacts(
                             projectName: 'ipex-binary-build',
                             selector: specific("${pyt_binary_build_job}"),
@@ -930,86 +941,98 @@ node( sub_node_label ) {
                 def install_ipex = false
                 if(framework == 'pytorch'){
                     label=model_src_dir.split('/')
-                    if(label[1] == 'language_translation' && framework_version == '1.5.0+cpu'){
+                    if(label[1] == 'language_translation' && pytorch_version == '1.5.0+cpu'){
                         new_conda_env=false
                         conda_env_name='pytorch-bert-1.6'
                     }
                     if(label[-1] == 'ipex'){
-                        conda_env_name="pt-ipex-${framework_version}-${python_version}"
+                        conda_env_name="pt-ipex-${pytorch_version}-${python_version}"
                         install_ipex = true
                     }
-                    if(label[-1] == 'qat'&& framework_version == '1.5.0+cpu'){
-                        framework_version='1.8.0+cpu'
-                        torchvision_version='0.9.0+cpu'
-                        conda_env_name="${framework}-${framework_version}-${python_version}"
+                    if(label[-1] == 'qat'&& pytorch_version == '1.5.0+cpu'){
+                        pytorch_version='1.8.0+cpu'
+                        conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
                     label=model.split('_')
-                    if(label[-1] == 'fx' && framework_version == '1.5.0+cpu'){
-                        framework_version = '1.8.0+cpu'
-                        torchvision_version='0.9.0+cpu'
-                        conda_env_name="${framework}-${framework_version}-${python_version}"
+                    if(label[-1] == 'fx' && pytorch_version == '1.5.0+cpu'){
+                        pytorch_version = '1.8.0+cpu'
+                        conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
                     if(model == "bert_base_MRPC_qat"){
-                        framework_version = '1.8.0+cpu'
-                        torchvision_version='0.9.0+cpu'
-                        conda_env_name="${framework}-${framework_version}-${python_version}"
+                        pytorch_version = '1.8.0+cpu'
+                        conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
-                    if(model == "bert_large_ipex"  && framework_version != 'nightly'){
-                        framework_version_base = framework_version.split('\\.')[1]
+                    if(model == "bert_large_ipex"  && pytorch_version != 'nightly'){
+                        framework_version_base = pytorch_version.split('\\.')[1]
                         if(framework_version_base.toInteger() < 12){
-                            framework_version = '1.12.1+cpu'
-                            torchvision_version='0.13.1+cpu'
-                            conda_env_name="${framework}-${framework_version}-${python_version}"
+                            pytorch_version = '1.12.1+cpu'
+                            conda_env_name="${framework}-${pytorch_version}-${python_version}"
                         }
                     }
                     if(model == "bert_large_1_10_ipex"){
-                        framework_version_base = framework_version.split('\\.')[1]
+                        framework_version_base = pytorch_version.split('\\.')[1]
                         if(framework_version_base.toInteger() > 11){
-                            framework_version = '1.11.0+cpu'
-                            torchvision_version='0.12.0+cpu'
-                            conda_env_name="${framework}-${framework_version}-${python_version}"
+                            pytorch_version = '1.11.0+cpu'
+                            conda_env_name="${framework}-${pytorch_version}-${python_version}"
                         }
                     }
                 }
                 if (framework == "tensorflow") {
                     label=model.split('_')
-                    if((model == 'bert_base_mrpc' || label[-1] == 'slim') && (!(framework_version=~'1.15').find())){
-                        framework_version = '1.15UP3'
+                    if((model == 'bert_base_mrpc' || label[-1] == 'slim') && (!(tensorflow_version=~'1.15').find())){
+                        tensorflow_version = '1.15UP3'
                         python_version=3.7
-                        conda_env_name="${framework}-${framework_version}-${python_version}"
+                        conda_env_name="${framework}-${tensorflow_version}-${python_version}"
                     }
                     if(model == 'yolo_v3'){
-                        framework_version = '1.15UP3'
+                        tensorflow_version = '1.15UP3'
                         python_version=3.7
+                        conda_env_name="${framework}-${tensorflow_version}-${python_version}"
+                    }
+                }
+
+                if (new_conda_env){
+                    println("Start to create conda env...")
+                    def _tf_ver=''
+                    def _itex_ver=''
+                    def _pt_ver=''
+                    def _mx_ver=''
+                    def _ort_ver=''
+                    def _onnx_ver=''
+                    def framework_version=''
+                    if (framework=='tensorflow'){
+                        framework_version=tensorflow_version
+                        _tf_ver=tensorflow_version
+                        if (itex_mode != "none"){
+                            _itex_ver=itex_version
+                            framework_version="$tensorflow_version-itex-$itex_version"
+                        }
+                    }else if(framework=='pytorch'){
+                        framework_version=pytorch_version
+                        _pt_ver=pytorch_version
+                    }else if(framework=='mxnet'){
+                        framework_version=mxnet_version
+                        _mx_ver=mxnet_version
+                    }else if(framework=='onnxrt'){
+                        framework_version=onnxruntime_version
+                        _ort_ver=onnxruntime_version
+                        _onnx_ver=onnx_version
+                    }
+                    env_name_list=framework_version.split('=')
+                    if (env_name_list[0] == 'customized'){
+                        conda_env_name="${framework}-customized-${python_version}"
+                    }else {
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
-                }
-                if ("${CPU_NAME}" != ""){
-                    conda_env_name="${conda_env_name}-${CPU_NAME}"
-                }
-                println("full conda_env_name = " + conda_env_name)
-                if (new_conda_env){
-                    def tensorflow_version=''
-                    def pytorch_version=''
-                    def mxnet_version=''
-                    def onnxruntime_version=''
-                    def engine_version=''
-                    if (framework=='tensorflow'){
-                        tensorflow_version=framework_version
-                    }else if(framework=='pytorch'){
-                        pytorch_version=framework_version
-                    }else if(framework=='mxnet'){
-                        mxnet_version=framework_version
-                    }else if(framework=='onnxrt'){
-                        onnxruntime_version=framework_version
-                    }else if(framework=='baremetal'){
-                        engine_version=framework_version
+
+                    if ("${CPU_NAME}" != ""){
+                        conda_env_name="${conda_env_name}-${CPU_NAME}"
                     }
-                    println("Start to create conda env...")
-                    create_conda_env(tensorflow_version, pytorch_version, mxnet_version, onnxruntime_version, engine_version, install_ipex)
+                    create_conda_env(_tf_ver,_itex_ver,_pt_ver,_mx_ver,_ort_ver,_onnx_ver,install_ipex)
                 }else{
                     println("Test need a special local conda env, DO NOT create again!!!")
                 }
+
                 println("Final conda env name is: $conda_env_name")
             }
 
@@ -1043,12 +1066,14 @@ node( sub_node_label ) {
                             --strategy=${strategy} \
                             --strategy_token=${SIGOPT_TOKEN} \
                             --max_trials=${max_trials} \
+                            --accuracy_criterion=${accuracy_criterion} \
                             --algorithm=${algorithm} \
                             --sampling_size="${sampling_size}" \
                             --conda_env_name=${conda_env_name} \
                             --conda_env_mode=${conda_env_mode} \
                             --log_level=${log_level} \
                             --dtype=${dtype} \
+                            --backend=${backend} \
                             2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
                     """
                 }
@@ -1086,11 +1111,13 @@ node( sub_node_label ) {
                                              'resnet50_keras', 'resnet50_keras_h5',
                                              'mobilenetv1_saved', 'mobilenetv2_saved',
                                              'efficientnet_v2_b0']
+                        onnx_perf_only_list = ['unet']
                         precision_list.each { precision ->
                             echo "precision is ${precision}"
                             // oob only support dummy data
                             if ((model_src_dir=~'oob_models').find()
-                                 || (framework == "tensorflow" && tf_perf_only_list.contains(model))) {
+                                 || (framework == "tensorflow" && tf_perf_only_list.contains(model))
+                                 || (framework == "onnxrt" && onnx_perf_only_list.contains(model))) {
                                 mode_list = mode_list - 'accuracy'
                                 echo "mode list is ${mode_list}"
                             }

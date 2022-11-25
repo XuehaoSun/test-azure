@@ -173,6 +173,7 @@ def do_binary_build() {
                     '''
                 if (binary_class == 'conda') {
                     sh '''#!/bin/bash
+                        export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
             
                         echo "Build Conda binary..."

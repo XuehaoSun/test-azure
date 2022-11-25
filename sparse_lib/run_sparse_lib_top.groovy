@@ -50,7 +50,8 @@ echo "python_version: ${python_version}"
 // setting node_label
 node_label = params.node_label ?: "lpot"
 sub_node_label = params.sub_node_label ?: "lpot"
-echo "Running on node ${node_label}; sub-job node ${sub_node_label}"
+sub_node_ut = params.sub_node_ut ?: sub_node_label
+echo "Running on node ${node_label}; sub-job node ${sub_node_label}; ut node ${sub_node_ut}"
 
 //other settings
 nlp_url = params.nlp_url ?: "https://github.com/intel-innersource/frameworks.ai.nlp-toolkit.intel-nlp-toolkit.git"
@@ -183,6 +184,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
     sparse_models = arg_map.models == true ? sparse_models : (arg_map.models ?: "")
     inferencer_config = arg_map.inferencer_config ?: inferencer_config
     refer_build = arg_map.refer_build ?: refer_build
+    sub_node_label = arg_map.node ?: sub_node_label
     echo """ PR comment args changes params:
         sparse_models=${sparse_models}
         RUN_UT=${RUN_UT}
@@ -194,6 +196,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
         CHECK_COPYRIGHT=${CHECK_COPYRIGHT}
         inferencer_config=${inferencer_config}
         refer_build=${refer_build}
+        sub_node_label=${sub_node_label}
     """
 }
 
@@ -415,7 +418,7 @@ def copyrightCheck() {
 
 def unitTestBackend() {
     def ut_jobs = [:]
-    def unit_test_mode = "gtest"
+    def unit_test_mode = "gtest" 
     List UTBuildParams = [
         string(name: "nlp_url", value: "${nlp_url}"),
         string(name: "nlp_branch", value: "${nlp_commit}"),
@@ -423,7 +426,8 @@ def unitTestBackend() {
         string(name: "PR_target_branch", value: "${MR_target_branch}"),
         string(name: "python_version", value: "${python_version}"),
         string(name: "val_branch", value: "${val_branch}"),
-        string(name: "unit_test_mode", value: "${unit_test_mode}")
+        string(name: "unit_test_mode", value: "${unit_test_mode}"),
+        string(name: "node_label", value: "${sub_node_ut}")
     ]
     if (sparse_ut_only) {
         sub_job_name = "sparse-lib-ut"

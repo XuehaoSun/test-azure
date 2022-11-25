@@ -11,10 +11,10 @@ do
             python_version=`echo $i | sed "s/${PATTERN}//"`;;
         --tensorflow_version=*)
             tensorflow_version=`echo $i | sed "s/${PATTERN}//"`;;
+        --itex_version=*)
+            itex_version=`echo $i | sed "s/${PATTERN}//"`;;
         --pytorch_version=*)
             pytorch_version=`echo $i | sed "s/${PATTERN}//"`;;
-        --torchvision_version=*)
-            torchvision_version=`echo $i | sed "s/${PATTERN}//"`;;
         --mxnet_version=*)
             mxnet_version=`echo $i | sed "s/${PATTERN}//"`;;
         --onnx_version=*)
@@ -33,7 +33,6 @@ do
 done
 
 # update conda env name
-
 
 # step 0: export conda
 if [[ ${model} = "dlrm"* ]] && [[ "${pytorch_version}" != "" ]]; then
@@ -70,6 +69,7 @@ function update_conda_env {
     source activate ${conda_env_name}
 
     # Upgrade pip
+    pip config set global.trusted-host "pypi.org files.pythonhosted.org pypi.python.org"
     pip install -U pip
 
 }
@@ -129,6 +129,63 @@ elif [[ "${tensorflow_version}" != "" ]]; then
     pip install protobuf==3.20.1
 else
     echo "Won't install TensorFlow!"
+fi
+
+# Install itex
+if [[ "${itex_version}" == "nightly" ]]; then
+    itex_whl=${WORKSPACE}/intel_extension_for_tensorflow-*.whl
+    if [ -f ${itex_whl} ]; then
+        pip install ${itex_whl}
+    else
+        echo "No local itex binary..."
+        exit 1
+    fi
+    itex_lib_whl=${WORKSPACE}/intel_extension_for_tensorflow_lib-*.whl
+    if [ -f ${itex_lib_whl} ]; then
+        pip install ${itex_lib_whl}
+    else
+        echo "No local itex lib binary..."
+        exit 1
+    fi
+elif [[ "${itex_version}" != "" ]]; then
+    pip install --upgrade intel-extension-for-tensorflow[cpu]==${itex_version}
+else
+    echo "Won't install ITEX!"
+fi
+
+# Find paired torchvision version
+if [[ "${pytorch_version}" != "" ]]; then
+    case "${pytorch_version}" in
+        stock-nightly)
+            torchvision_version="stock-nightly";;
+        nightly)
+            torchvision_version="nightly";;
+        1.13.0*)
+            torchvision_version="0.14.0";;
+        1.12.1*)
+            torchvision_version="0.13.1";;
+        1.12.0*)
+            torchvision_version="0.13.0";;
+        1.11.0*)
+            torchvision_version="0.12.0";;
+        1.10.1*)
+            torchvision_version="0.11.2";;
+        1.10.0*)
+            torchvision_version="0.11.0";;
+        1.9.0*)
+            torchvision_version="0.10.0";;
+        1.8.0*)
+            torchvision_version="0.9.0";;
+        1.7.0*)
+            torchvision_version="0.8.0";;
+        1.6.0*)
+            torchvision_version="0.7.0";;
+        *)
+            echo "Could not found torchvision for pytorch ${python_version}, pls define..."
+            exit 1
+    esac
+    pt_postfix=$(echo ${pytorch_version} | grep '+' | cut -d'+' -f2)
+    torchvision_version=$torchvision_version"+"$pt_postfix
 fi
 
 # Install PyTorch
@@ -233,22 +290,24 @@ if [[ "${install_ipex}" == "true" ]]; then
                     ipex_whl="http://intel-optimized-pytorch.s3.cn-north-1.amazonaws.com.cn/wheels/v1.12.100/intel_extension_for_pytorch-1.12.100%2Bcpu-cp310-cp310-linux_x86_64.whl";;
             esac
             [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.12.1 -f https://software.intel.com/ipex-whl-stable";;
-
+        1.13.0*)
+            case "${python_version}" in
+                3.7)
+                    ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.0%2Bcpu/intel_extension_for_pytorch-1.13.0-cp37-cp37m-manylinux2014_x86_64.whl";;
+                3.8)
+                    ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.0%2Bcpu/intel_extension_for_pytorch-1.13.0-cp38-cp38-manylinux2014_x86_64.whl";;
+                3.9)
+                    ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.0%2Bcpu/intel_extension_for_pytorch-1.13.0-cp39-cp39-manylinux2014_x86_64.whl";;
+                3.10)
+                    ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.0%2Bcpu/intel_extension_for_pytorch-1.13.0-cp310-cp310-manylinux2014_x86_64.whl";;
+            esac
+            [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.13.0 -f https://software.intel.com/ipex-whl-stable";;    
         "nightly")
             case "${python_version}" in
                  3.8)
                     ipex_whl="intel_extension_for_pytorch*.whl";;
              esac
             [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}"
-
-            #pip install cmake
-            #cmake_path=`which cmake`
-            #ln -s $cmake_path ${cmake_path}3
-            #git clone https://github.com/intel-innersource/frameworks.ai.pytorch.ipex-cpu.git
-            #cd frameworks.ai.pytorch.ipex-cpu
-            #git submodule sync && git submodule update --init --recursive
-            #python setup.py install
-            #cd -
     esac
     if [[ ! -z ${install_params} ]]; then
         pip install ${install_params}

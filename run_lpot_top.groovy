@@ -50,11 +50,25 @@ if ('Frameworks' in params && params.Frameworks != '') {
 echo "Frameworks: ${Frameworks}"
 
 // setting tensorflow_version
-tensorflow_version = '2.2.0'
+tensorflow_version = '2.10.0'
 if ('tensorflow_version' in params && params.tensorflow_version != '') {
     tensorflow_version = params.tensorflow_version
 }
 echo "tensorflow_version: ${tensorflow_version}"
+
+// setting itex_version
+itex_version = ''
+if ('itex_version' in params && params.itex_version != '') {
+    itex_version = params.itex_version
+}
+echo "itex_version: ${itex_version}"
+
+// setting itex_mode: none,native,onednn_graph
+itex_mode = 'none'
+if ('itex_mode' in params && params.itex_mode != '') {
+    itex_mode = params.itex_mode
+}
+echo "itex_mode: ${itex_mode}"
 
 // setting tensorflow models
 tensorflow_models = ""
@@ -85,7 +99,7 @@ if ('mxnet_models' in params && params.mxnet_models != '') {
 echo "mxnet_models: ${mxnet_models}"
 
 // setting pytorch_version
-pytorch_version = '1.5.0+cpu'
+pytorch_version = '1.12.0+cpu'
 if ('pytorch_version' in params && params.pytorch_version != '') {
     pytorch_version = params.pytorch_version
 }
@@ -106,14 +120,14 @@ if ('pytorch_oob_models' in params && params.pytorch_oob_models != '') {
 echo "pytorch_oob_models: ${pytorch_oob_models}"
 
 // setting onnx_version
-onnx_version = '1.7.0'
+onnx_version = '1.11.0'
 if ('onnx_version' in params && params.onnx_version != '') {
     onnx_version = params.onnx_version
 }
 echo "onnx_version: ${onnx_version}"
 
 // setting onnxruntime version
-onnxruntime_version = '1.5.2'
+onnxruntime_version = '1.12.1'
 if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
     onnxruntime_version = params.onnxruntime_version
 }
@@ -353,6 +367,12 @@ if ('max_trials' in params && params.max_trials != ''){
 }
 echo "max_trials: ${max_trials}"
 
+accuracy_criterion=""
+if ('accuracy_criterion' in params && params.accuracy_criterion != ''){
+    accuracy_criterion=params.accuracy_criterion
+}
+echo "accuracy_criterion: ${accuracy_criterion}"
+
 tune_only=false
 if (params.tune_only != null){
     tune_only=params.tune_only
@@ -377,6 +397,12 @@ if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
     tf_binary_build_job=params.tf_binary_build_job
 }
 echo "tf_binary_build_job: ${tf_binary_build_job}"
+
+itex_binary_build_job = ""
+if ('itex_binary_build_job' in params && params.itex_binary_build_job != ''){
+    itex_binary_build_job=params.itex_binary_build_job
+}
+echo "itex_binary_build_job: ${itex_binary_build_job}"
     
 pyt_binary_build_job = "" 
 if ('pyt_binary_build_job' in params && params.pyt_binary_build_job != ''){
@@ -541,7 +567,7 @@ def download() {
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
                             [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                            [$class: 'CloneOption', timeout: 5],
+                            [$class: 'CloneOption', timeout: 10],
                             [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${PR_target_branch}"]]
                     ],
                     submoduleCfg                     : [],
@@ -559,7 +585,7 @@ def download() {
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
                             [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
-                            [$class: 'CloneOption', timeout: 5]
+                            [$class: 'CloneOption', timeout: 10]
                     ],
                     submoduleCfg                     : [],
                     userRemoteConfigs                : [
@@ -573,34 +599,24 @@ def download() {
 
 def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu, os){
 
-    framework_version = ''
-    if (job_framework == 'tensorflow'){
-        framework_version = "${tensorflow_version}"
-    }else if (job_framework == 'pytorch'){
-        framework_version = "${pytorch_version}"
-    }else if (job_framework == 'mxnet'){
-        framework_version = "${mxnet_version}"
-    }else if (job_framework == 'onnxrt'){
-        framework_version = "${onnxruntime_version}"
-    }
-    println("llsu-----> ${cpu} : ${os} : ${job_framework} : ${framework_version}")
-
     pass_mode=mode
-    println("llsu-----> ${pass_mode}")
-
+    println("llsu-----> ${cpu} : ${os} : ${job_framework}: ${pass_mode}")
 
     def subnode_label = sub_node_label + " && " + os;
-
     if (!['any', '*'].contains(cpu)) {
         subnode_label += " && " + cpu
     }
-
 
     List ParamsPerJob = []
 
     ParamsPerJob += string(name: "sub_node_label", value: "${subnode_label}")
     ParamsPerJob += string(name: "framework", value: "${job_framework}")
-    ParamsPerJob += string(name: "framework_version", value: "${framework_version}")
+    ParamsPerJob += string(name: "tensorflow_version", value: "${tensorflow_version}")
+    ParamsPerJob += string(name: "itex_version", value: "${itex_version}")
+    ParamsPerJob += string(name: "itex_mode", value: "${itex_mode}")
+    ParamsPerJob += string(name: "pytorch_version", value: "${pytorch_version}")
+    ParamsPerJob += string(name: "mxnet_version", value: "${mxnet_version}")
+    ParamsPerJob += string(name: "onnxruntime_version", value: "${onnxruntime_version}")
     ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
     ParamsPerJob += string(name: "model", value: "${job_model}")
     ParamsPerJob += string(name: "lpot_url", value: "${lpot_url}")
@@ -612,12 +628,14 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
     ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
     ParamsPerJob += string(name: "tf_binary_build_job", value: "${tf_binary_build_job}")
+    ParamsPerJob += string(name: "itex_binary_build_job", value: "${itex_binary_build_job}")
     ParamsPerJob += string(name: "pyt_binary_build_job", value: "${pyt_binary_build_job}")
     ParamsPerJob += string(name: "mode", value: "${pass_mode}")
     ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
     ParamsPerJob += booleanParam(name: "multi_instance", value: multi_instance)
     ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
     ParamsPerJob += string(name: "max_trials", value: "${max_trials}")
+    ParamsPerJob += string(name: "accuracy_criterion", value: "${accuracy_criterion}")
     ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
     ParamsPerJob += booleanParam(name: "RUN_PROFILING", value: RUN_PROFILING)
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
@@ -996,6 +1014,8 @@ def UTBuildParams(tf_version, pt_version, run_coverage){
     ParamsPerJob += string(name: "MR_target_branch", value: "${PR_target_branch}")
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
     ParamsPerJob += string(name: "tensorflow_version", value: "${tf_version}")
+    ParamsPerJob += string(name: "itex_version", value: "${itex_version}")
+    ParamsPerJob += string(name: "itex_mode", value: "${itex_mode}")
     ParamsPerJob += string(name: "mxnet_version", value: "${mxnet_version}")
     ParamsPerJob += string(name: "pytorch_version", value: "${pt_version}")
     ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
@@ -1119,6 +1139,24 @@ def buildBinary(){
 
         tf_binary_build_job = downstreamJob.getNumber()
         echo "tf_binary_build_job: ${tf_binary_build_job}"
+        echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+        if (downstreamJob.getResult() != "SUCCESS") {
+            currentBuild.result = "FAILURE"
+            failed_build_url = downstreamJob.absoluteUrl
+            echo "failed_build_url: ${failed_build_url}"
+            error("---- lpot wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
+        }
+    }
+
+    if (itex_version == "nightly" && itex_binary_build_job == ""){
+        List ITEXBinaryBuildParams = [
+                string(name: "python_version", value: "${python_version}"),
+                string(name: "val_branch", value: "${val_branch}"),
+        ]
+        downstreamJob = build job: "ITEX-binary-build", propagate: false, parameters: ITEXBinaryBuildParams
+
+        itex_binary_build_job = downstreamJob.getNumber()
+        echo "itex_binary_build_job: ${itex_binary_build_job}"
         echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
         if (downstreamJob.getResult() != "SUCCESS") {
             currentBuild.result = "FAILURE"
@@ -1438,7 +1476,7 @@ def upstreanNightlySource(){
         cd lpot-models
         git branch
         git remote -v
-        git remote add upstream https://github.com/intel/neural-compressor.git
+        git remote add upstream https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git
         git remote -v
         git push upstream HEAD:master
     """
@@ -1625,11 +1663,7 @@ node( node_label ) {
         if (upstream_nightly_source){
             stage("upstream nightly source"){
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    if (currentBuild.result != 'FAILURE' && currentBuild.result != 'ABORTED') {
-                        upstreanNightlySource()
-                    }else{
-                        println('Nightly build not succeed, will not upstream source code.')
-                    }
+                    upstreanNightlySource()
                 }
             }
         }

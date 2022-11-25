@@ -270,9 +270,12 @@ def update_yaml(yaml, framework, topology, dataset_location = None, strategy = N
 def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Optional[str] = None,
     batch_size: Optional[int] = None, iteration: Optional[int] = None,
     max_trials: Optional[int] = None, algorithm: Optional[str] = None,
+    criterion_rule: Optional[str] = None, criterion_data: Optional[float] = None,
     timeout: Optional[int] = None, strategy_token: Optional[str] = None,
     sampling_size: Optional[Union[str,int]] = None,
-    dtype: Optional[str] = None):
+    dtype: Optional[str] = None,
+    backend: Optional[str] = None):
+
     tuning_config = {}
     with open(yaml_file) as f:
         yaml_config = yaml.round_trip_load(f, preserve_quotes=True)
@@ -330,6 +333,20 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
                 prev_max_trials = prev_exit_policy.get("max_trials", None)
                 prev_exit_policy.update({"max_trials": max_trials})
                 print(f"Changed {prev_max_trials} to {max_trials}")
+        except Exception as e:
+            print(f"[ WARNING ] {e}")
+
+    if criterion_rule:
+        try:
+            tuning_config = yaml_config.get("tuning", {})
+            prev_accuracy_criterion = tuning_config.get("accuracy_criterion", {})
+            if not prev_accuracy_criterion:
+                tuning_config.update({"accuracy_criterion": {
+                    criterion_rule: criterion_data
+                }})
+            else:
+                tuning_config.update({"accuracy_criterion": {criterion_rule: criterion_data}})
+                print(f"Changed {prev_accuracy_criterion} to {accuracy_criterion}")
         except Exception as e:
             print(f"[ WARNING ] {e}")
 
@@ -393,6 +410,15 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
             print(f"Changed dtype from {prev_dtype} to {dtype}")
         except Exception as e:
             print(f"[ WARNING ] {e}")
+    if backend:
+        try:
+            model = yaml_config.get("model", {})
+            prev_framework = model.get("framework", None)
+            model.update({"framework": backend})
+            print(f"Changed framework from {prev_framework} to {backend}")
+        except Exception as e:
+            print(f"[ WARNING ] {e}")
+
 
     print(f"Saving yaml config back to {yaml_file}")
 
