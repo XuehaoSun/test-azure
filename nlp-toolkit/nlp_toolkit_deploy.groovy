@@ -209,6 +209,7 @@ if ('perf_bs' in params && params.perf_bs != '') {
 echo "Performance batch size: ${perf_bs}"
 
 sparse_model_list = ["distilbert_base_uncased_squad_sparse", "bert_mini_sparse"]
+not_support_inferencer_list = ["length_adaptive_dynamic"]
 mono_socket = params.mono_socket as Boolean
 echo "mono_socket: ${mono_socket}"
 
@@ -306,10 +307,11 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                 v = "${working_dir_fullpath}/sparse_${precision}_ir"
             } else if (framework == "ipex") {
                 v = "${working_dir_fullpath}/${v}/${precision}"
-            }
-            else if (! v.find("/tf_dataset")) {
+            } else if (v.find(".onnx")) {
+                v = "${v}"
+            } else if (! v.find("/tf_dataset")) {
                 v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
-            }
+            } 
         }
         if (k == "batch_size" && batch_size != 0){
             v = batch_size
@@ -518,8 +520,11 @@ def run_inferencer(ncores_per_instance, bs, precision) {
     }
     if (model in performance_only_list) {
         model_path = benchmark_cmd_params."input_model"
-    } else if (model in sparse_model_list)
+    } else if (model in sparse_model_list) {
         model_path = "${working_dir_fullpath}/sparse_${precision}_ir"
+    } else if (model in not_support_inferencer_list) {
+        return
+    }
     else {
         model_path = "${working_dir_fullpath}/ir"
     }
