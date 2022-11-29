@@ -23,14 +23,15 @@
   "distilgpt2_clm": {
     "working_dir": "optimization/tensorflow/huggingface/language-modeling/quantization/inc/ptq",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "distilgpt2_clm",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/language-modeling"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "distilgpt2_clm",
         "mode": "accuracy",
@@ -44,14 +45,15 @@
   "distilbert_mlm": {
     "working_dir": "optimization/tensorflow/huggingface/language-modeling/quantization/inc/ptq",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "distilbert_mlm",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/language-modeling"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "distilbert_mlm",
         "mode": "accuracy",
@@ -65,14 +67,15 @@
   "bert_base_ner": {
     "working_dir": "optimization/tensorflow/huggingface/token-classification/quantization/inc",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "bert_base_ner",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/token-classification"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "bert_base_ner",
         "mode": "accuracy",
@@ -86,14 +89,15 @@
   "distilbert_qa": {
     "working_dir": "optimization/tensorflow/huggingface/question-answering/quantization/inc",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "distilbert_qa",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/question-answering"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "distilbert_qa",
         "mode": "accuracy",
@@ -107,14 +111,15 @@
   "distilbert_swag": {
     "working_dir": "optimization/tensorflow/huggingface/multiple-choice/quantization/inc",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "distilbert_swag",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/multiple-choice"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "distilbert_swag",
         "mode": "accuracy",
@@ -128,14 +133,15 @@
   "roberta_qa": {
     "working_dir": "optimization/tensorflow/huggingface/question-answering/quantization/inc",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "roberta_qa",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/question-answering"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "roberta_qa",
         "mode": "accuracy",
@@ -149,14 +155,15 @@
   "distilroberta_mlm": {
     "working_dir": "optimization/tensorflow/huggingface/language-modeling/quantization/inc/ptq",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "distilroberta_mlm",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/language-modeling"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "distilroberta_mlm",
         "mode": "accuracy",
@@ -170,14 +177,15 @@
   "legalbert_mrpc": {
     "working_dir": "optimization/tensorflow/huggingface/text-classification/quantization/inc/ptq",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "legalbert_mrpc",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/text-classification"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "legalbert_mrpc",
         "mode": "accuracy",
@@ -191,14 +199,15 @@
   "xlnet_mrpc": {
     "working_dir": "optimization/tensorflow/huggingface/text-classification/quantization/inc/ptq",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "xlnet_mrpc",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/text-classification"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "xlnet_mrpc",
         "mode": "accuracy",
@@ -212,14 +221,15 @@
   "albert_large_mrpc": {
     "working_dir": "optimization/tensorflow/huggingface/text-classification/quantization/inc/ptq",
     "tune":{
-      "cmd": "run_tuning.sh",
+      "cmd": "bash run_tuning.sh",
       "params": {
         "topology": "albert_large_mrpc",
-        "output_model": "saved_results"
+        "output_model": "saved_results",
+        "cache_dir": "/tf_dataset2/models/nlp_toolkit/text-classification"
       }
     },
     "benchmark": {
-      "cmd": "run_benchmark.sh",
+      "cmd": "bash run_benchmark.sh",
       "params": {
         "topology": "albert_large_mrpc",
         "mode": "accuracy",
