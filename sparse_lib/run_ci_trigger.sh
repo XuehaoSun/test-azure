@@ -17,10 +17,10 @@ if [[ -n $(lscpu | grep amx_tile) ]]; then cmake_amx="-DSPARSE_LIB_USE_AMX=True"
 CC=gcc CXX=g++ cmake .. -DNE_WITH_SPARSELIB=ON -DNE_WITH_TESTS=ON -DNE_WITH_SPARSELIB_BENCHMARK=ON -DPYTHON_EXECUTABLE=$(which python) $cmake_amx 
 make -j
 cd bin
-bash -x ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/test/kernels/benchmark/ci/run_ci.sh $output_log_dir
+bash -x ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/ci/run_ci.sh $output_log_dir
 
-for caselog in $(find $output_log_dir/*); do
+for caselog in $(find $output_log_dir/*); dointel_extension_for_transformers
     case_name=$(echo $caselog | sed -e 's/\.log$//')
     echo "case_name=$case_name"
-    bash -x ${WORKSPACE}/lpot-models/nlp_toolkit/backends/neural_engine/test/SparseLib/benchmark/ci/to_summary.sh $caselog | tee "${case_name}_summary.log"
+    bash -x ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/ci/to_summary.sh $caselog | tee "${case_name}_summary.log"
 done
