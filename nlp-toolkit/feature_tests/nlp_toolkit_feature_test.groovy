@@ -19,7 +19,7 @@ if ('nlp_url' in params && params.nlp_url != ''){
 }
 echo "nlp_url is ${nlp_url}"
 
-lpot_url = "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+lpot_url = "https://github.com/intel/neural-compressor.git"
 lpot_branch = "master"
 
 requirement_list="ruamel.yaml==0.17.4"

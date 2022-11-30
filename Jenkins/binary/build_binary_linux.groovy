@@ -12,7 +12,7 @@ if ('conda_env' in params && params.conda_env != '') {
 }
 echo "Running ut on ${conda_env}"
 
-lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+lpot_url="https://github.com/intel/neural-compressor.git"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }

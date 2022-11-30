@@ -50,7 +50,7 @@ if ('build_mode' in params && params.build_mode != ''){
 }
 echo "build_mode is ${build_mode}"
 
-lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot"
+lpot_url="https://github.com/intel/neural-compressor.git"
 if ('lpot_url' in params && params.lpot_url != ''){
     lpot_url = params.lpot_url
 }
