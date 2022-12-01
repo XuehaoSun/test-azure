@@ -24,10 +24,13 @@ args = parser.parse_args()
 print(args)
 
 os_name = str(platform.system()).lower()
-cpu_name = os.environ.get("CPU_NAME", "unknown").lower()
+device_name = os.environ.get("CPU_NAME", "unknown").lower()
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
-if cpu_name in nightly_cpu_list:
-    cpu_name = cpu_name.split("-")[0]
+if device_name in nightly_cpu_list:
+    device_name = device_name.split("-")[0]
+
+if device_name == "unknown":
+    device_name = os.environ.get("GPU_NAME", "unknown").lower()
 
 result = Result()
 result.framework = args.framework
@@ -36,11 +39,11 @@ result.version = "N/A"
 result.python = args.python_version
 result.model = args.model
 result.os = os_name
-result.platform = cpu_name
+result.platform = device_name
 
 def main():
     result.version = get_framework_version(result.framework)
-    tuning_log = os.path.join(args.logs_dir, f"{args.framework}-{args.model}-{os_name}-{cpu_name}-tune.log")
+    tuning_log = os.path.join(args.logs_dir, f"{args.framework}-{args.model}-{os_name}-{device_name}-tune.log")
     if os.path.exists(tuning_log):
         read_tuning_log(tuning_log)
 
@@ -141,7 +144,7 @@ def parse_tuning_line(line):
 def read_perf_logs(precision, mode):
     logs_pattern = os.path.join(
         args.logs_dir,
-        f"{args.framework}-{args.model}-{precision}-{mode}-{os_name}-{cpu_name}*",
+        f"{args.framework}-{args.model}-{precision}-{mode}-{os_name}-{device_name}*",
     )
     log_files = glob.glob(logs_pattern)
     if len(log_files) == 0:

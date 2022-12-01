@@ -272,9 +272,8 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
     max_trials: Optional[int] = None, algorithm: Optional[str] = None,
     criterion_rule: Optional[str] = None, criterion_data: Optional[float] = None,
     timeout: Optional[int] = None, strategy_token: Optional[str] = None,
-    sampling_size: Optional[Union[str,int]] = None,
-    dtype: Optional[str] = None,
-    backend: Optional[str] = None):
+    sampling_size: Optional[Union[str,int]] = None, dtype: Optional[str] = None,
+    backend: Optional[str] = None, is_gpu: Optional[str] = None):
 
     tuning_config = {}
     with open(yaml_file) as f:
@@ -414,6 +413,13 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
             prev_framework = model.get("framework", None)
             model.update({"framework": backend})
             print(f"Changed framework from {prev_framework} to {backend}")
+        except Exception as e:
+            print(f"[ WARNING ] {e}")
+    if is_gpu:
+        try:
+            prev_device = yaml_config.get("device", None)
+            yaml_config.update({"device": "gpu"})
+            print(f"Changed device from {prev_device} to gpu")
         except Exception as e:
             print(f"[ WARNING ] {e}")
 

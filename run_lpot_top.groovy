@@ -597,14 +597,14 @@ def download() {
     }
 }
 
-def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu, os){
+def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, device, os){
 
     pass_mode=mode
-    println("llsu-----> ${cpu} : ${os} : ${job_framework}: ${pass_mode}")
+    println("llsu-----> ${device} : ${os} : ${job_framework}: ${pass_mode}")
 
     def subnode_label = sub_node_label + " && " + os;
-    if (!['any', '*'].contains(cpu)) {
-        subnode_label += " && " + cpu
+    if (!['any', '*'].contains(device)) {
+        subnode_label += " && " + device
     }
 
     List ParamsPerJob = []
@@ -639,7 +639,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu
     ParamsPerJob += booleanParam(name: "tune_only", value: tune_only)
     ParamsPerJob += booleanParam(name: "RUN_PROFILING", value: RUN_PROFILING)
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
-    ParamsPerJob += string(name: "cpu", value: "${cpu}")
+    ParamsPerJob += string(name: "device", value: "${device}")
     ParamsPerJob += string(name: "os", value: "${os}")
     ParamsPerJob += string(name: "dataset_prefix", value: "${dataset_prefix}")
     ParamsPerJob += string(name: "refer_build", value: "${refer_build}")
@@ -657,7 +657,7 @@ def getPerfJobs() {
         def system = systemConfig.split(":")[0]
         platforms = systemConfig.split(":")[1].split(",")
         platforms.each { platform ->
-            def cpu = platform
+            def device = platform
             // Get frameworks list and sub jenkins job
             job_frameworks = Frameworks.split(',')
             def sub_jenkins_job = linux_job
@@ -705,12 +705,12 @@ def getPerfJobs() {
                 echo "${job_models}"
                 echo "llsu-----> ${job_framework}"
                 job_models.each { job_model ->
-                    jobs["${job_model}_${job_framework}_${system}_${cpu}"] = {
+                    jobs["${job_model}_${job_framework}_${system}_${device}"] = {
 
                         // execute build
-                        println("${cpu}, ${system}, ${job_framework}, ${job_model}")
+                        println("${device}, ${system}, ${job_framework}, ${job_model}")
 
-                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, perf_bs, python_version, strategy, cpu, system)
+                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, perf_bs, python_version, strategy, device, system)
 
                         catchError {
                             copyArtifacts(
@@ -742,7 +742,7 @@ def getPerfJobs() {
                             catchError(buildResult: 'FAILURE', stageResult: 'FAILURE'){
                                 sh " tail -n 50 ${system}/${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                                 failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
-                                error("---- ${cpu}_${system}_${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
+                                error("---- ${device}_${system}_${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
                             }
                         }
                     }
@@ -873,7 +873,7 @@ def collectLog() {
         def system = systemConfig.split(":")[0]
         platforms = systemConfig.split(":")[1].split(",")
         platforms.each { platform ->
-            def cpu = platform
+            def device = platform
             // Get frameworks list
             job_frameworks = Frameworks.split(',')
             if (system == "windows") {
@@ -916,7 +916,7 @@ def collectLog() {
                 }
 
                 job_models.each { job_model ->
-                    echo "-------- ${cpu} - ${system} - ${job_framework} - ${job_model} --------"
+                    echo "-------- ${device} - ${system} - ${job_framework} - ${job_model} --------"
 
                      // Generate tuning info log
 

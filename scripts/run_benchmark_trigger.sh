@@ -34,8 +34,8 @@ do
             profiling=`echo $i | sed "s/${PATTERN}//"`;;
         --os=*)
             os=`echo $i | sed "s/${PATTERN}//"`;;
-        --cpu=*)
-            cpu=`echo $i | sed "s/${PATTERN}//"`;;
+        --device=*)
+            device=`echo $i | sed "s/${PATTERN}//"`;;
         --output_path=*)
             output_path=`echo $i | sed "s/${PATTERN}//"`;;
         --multi_instance=*)
@@ -188,7 +188,7 @@ function run_accuracy {
         exit 1
     fi
 
-    logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}.log
+    logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
     echo "ACCURACY BENCHMARK RUNCMD: $run_cmd " >& ${logFile}
     eval "${run_cmd}" 2>&1|tee -a ${logFile}
     status=$?
@@ -262,7 +262,7 @@ function run_benchmark {
     fi
 
     echo "PERFORMANCE BENCHMARK RUNCMD: $run_cmd "
-    logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}
+    logFile=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}
 
     if [ "${profiling}" == "true" ]; then
         # enable timeline for oob model

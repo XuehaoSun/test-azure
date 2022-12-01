@@ -26,7 +26,7 @@ parser.add_argument("--mode", type=str, choices=consts.SUPPORTED_MODES, required
 parser.add_argument("--batch_size", type=int, required=True)
 parser.add_argument("--multi_instance", action='store_true')
 parser.add_argument("--yaml", type=str, required=True)
-parser.add_argument("--cpu", type=str, required=True)
+parser.add_argument("--device", type=str, required=True)
 parser.add_argument("--output_path", type=str, default=os.environ.get("WORKSPACE"))
 parser.add_argument("--dataset_location", type=str, required=False, help="Dataset location for ONNXRT LT models.")
 
@@ -83,7 +83,7 @@ def main():
     log_file = os.path.join(
         args.output_path,
         f"{args.framework}-{args.model}-{args.precision}-"
-        f"{args.mode}-{operating_system.lower()}-{args.cpu}.log",
+        f"{args.mode}-{operating_system.lower()}-{args.device}.log",
     )
 
     if args.mode == "accuracy":

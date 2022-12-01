@@ -39,6 +39,26 @@ function set_TF_env {
     echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
 
+    if [[ "${itex_mode}" == "native" ]]; then
+        echo "export ITEX_ONEDNN_GRAPH=0 ..."
+        export ITEX_ONEDNN_GRAPH=0
+        compiler_path=${HOME}/intel/oneapi/compiler/latest/env/vars.sh
+        if [ -f "${compiler_path}" ]; then
+            source ${compiler_path}
+        fi
+        tbb_path=${HOME}/intel/oneapi/tbb/latest/env/vars.sh
+        if [ -f "${tbb_path}" ]; then
+            source ${tbb_path}
+        fi
+        mkl_path=${HOME}/intel/oneapi/mkl/latest/env/vars.sh
+        if [ -f "${mkl_path}" ]; then
+            source ${mkl_path}
+        fi
+    elif [[ "${itex_mode}" == "onednn_graph" ]]; then
+        echo "export ITEX_ONEDNN_GRAPH=1 ..."
+        export ITEX_ONEDNN_GRAPH=1
+    fi
+
     tf_version=$(python -c "import tensorflow as tf; print(tf.__version__)")
     echo "tf_version: \"${tf_version}\""
     if [[ "${tf_version}" = "2.5.0" ]]; then
@@ -61,13 +81,6 @@ function set_TF_env {
         export TF_ENABLE_ONEDNN_OPTS=1
     fi
 
-    if [[ "${itex_mode}" == "native" ]]; then
-        echo "export ITEX_ONEDNN_GRAPH=0 ..."
-        export ITEX_ONEDNN_GRAPH=0
-    elif [[ "${itex_mode}" == "onednn_graph" ]]; then
-        echo "export ITEX_ONEDNN_GRAPH=1 ..."
-        export ITEX_ONEDNN_GRAPH=1
-    fi
 }
 
 function set_MXNet_env {

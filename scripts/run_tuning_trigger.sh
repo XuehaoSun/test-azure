@@ -44,6 +44,8 @@ do
             backend=`echo $i | sed "s/${PATTERN}//"`;;
         --itex_mode=*)
             itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
+        --is_gpu=*)
+            is_gpu=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -470,6 +472,10 @@ function update_yaml_config {
 
     if [ "${backend}" != "" ]; then
         update_yaml_params="${update_yaml_params} --backend=${backend}"
+    fi
+
+    if [ "${is_gpu}" != "" ]; then
+        update_yaml_params="${update_yaml_params} --is_gpu=${is_gpu}"
     fi
 
     if [ "${update_yaml_params}" != "" ]; then

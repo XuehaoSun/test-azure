@@ -147,6 +147,8 @@ if [[ "${itex_version}" == "nightly" ]]; then
         echo "No local itex lib binary..."
         exit 1
     fi
+elif [[ "${itex_version}" == *"-gpu" ]]; then
+    pip install --upgrade intel-extension-for-tensorflow[gpu]==${itex_version%-gpu}
 elif [[ "${itex_version}" != "" ]]; then
     pip install --upgrade intel-extension-for-tensorflow[cpu]==${itex_version}
 else

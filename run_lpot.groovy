@@ -228,7 +228,7 @@ if(framework == 'pytorch') {
 }
 
 conda_env_name=''
-cpu="unknown"
+device="unknown"
 os="unknown"
 if ('os' in params && params.os != ''){
     os=params.os
@@ -265,6 +265,7 @@ upstreamJobName = ""
 upstreamUrl = ""
 algorithm=""
 tf_new_api=""
+is_gpu=""
 
 backend=""
 if (itex_mode == "native"){
@@ -292,7 +293,7 @@ def cleanup() {
         sh '''#!/bin/bash 
         set -x
         cd $WORKSPACE
-        if [[ "${CPU_NAME}" == "clx8280-07"* ]] || [[ "${CPU_NAME}" == "clx8260"* ]]; then
+        if [[ "${device}" == "clx8280-07"* ]] || [[ "${device}" == "clx8260"* ]]; then
             rm -rf *
             rm -rf .git
             # set perf BKC
@@ -431,7 +432,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                 --mode=${mode} \
                 --batch_size=${batch_size} \
                 --yaml=${yaml} \
-                --cpu=${cpu} \
+                --device=${device} \
                 --output_path=${output_path} \
                 --dataset_location=${dataset_prefix}${dataset_location}"
         if (multi_instance) {
@@ -494,10 +495,11 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --conda_env_mode=${conda_env_mode} \
                     --yaml=${yaml} \
                     --os=${os} \
-                    --cpu=${cpu} \
+                    --device=${device} \
                     --profiling=${RUN_PROFILING} \
                     --output_path=${output_path} \
-                    --log_level=${log_level}
+                    --log_level=${log_level} \
+                    --itex_mode=${itex_mode}
                 """
         }
     }
@@ -586,9 +588,9 @@ def findPerfDrops(result_json, os="", platform="", precision="", mode="") {
 def checkReferenceData() {
     stage("Check reference data") {
         def drops = findPerfDrops(
-            "${WORKSPACE}/${framework}-${model}-${os}-${cpu}.json",
+            "${WORKSPACE}/${framework}-${model}-${os}-${device}.json",
             "${os}",
-            "${cpu}"
+            "${device}"
         )
         println("Drops: ${drops}")
         println("Drops.size(): ${drops.size()}")
@@ -607,7 +609,7 @@ def checkReferenceData() {
                 // Copy tuning log to rerun path
                 sh """
                     mkdir -p ${rerun_path}
-                    cp ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log ${rerun_path}/
+                    cp ${WORKSPACE}/${framework}-${model}-${os}-${device}-tune.log ${rerun_path}/
                 """
 
                 // Collect logs
@@ -618,22 +620,24 @@ def checkReferenceData() {
                         --logs_dir=\"${rerun_path}\" \
                         --output_dir=\"${rerun_path}\""
 
-                sh """#!/bin/bash
-                    set -x
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-                        export PATH=${HOME}/anaconda3/bin/:$PATH
-                    fi
-                    source activate ${conda_env_name}
-                    pip list
+                sh """#!/bin/bash        
+                    echo "======= Activate conda env ======="
+                    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh \\
+                        --framework=${framework} \\
+                        --model=${model} \\
+                        --conda_env_name=${conda_env_name} \\
+                        --conda_env_mode=${conda_env_mode} \\
+                        --itex_mode=${itex_mode}
+                    set_environment
+                    echo "=================================="
                     ${cmd}
                 """
 
                 // Check drop
                 def mode_drops = findPerfDrops(
-                    "${rerun_path}/${framework}-${model}-${os}-${cpu}.json",
+                    "${rerun_path}/${framework}-${model}-${os}-${device}.json",
                     "${os}",
-                    "${cpu}",
+                    "${device}",
                     "${precision}",
                     "${mode}",
                 )
@@ -641,14 +645,14 @@ def checkReferenceData() {
                     println("Found stable performance for ${mode} ${precision} in ${rerun_path}")  // Need to replace rerun logs to new one and re-collect result
                     sh """
                         # Remove previous summary
-                        rm ${WORKSPACE}/${framework}-${model}-${os}-${cpu}.json
+                        rm ${WORKSPACE}/${framework}-${model}-${os}-${device}.json
                         rm ${WORKSPACE}/summary.log
 
                         # Remove old logs
-                        rm ${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}*
+                        rm ${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${device}*
 
                         # Copy logs without drop
-                        cp ${rerun_path}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}* ${WORKSPACE}/
+                        cp ${rerun_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}* ${WORKSPACE}/
                     """
                     collectLogs()
                     break
@@ -697,13 +701,15 @@ def collectLogs() {
         cmd += " --required=\"${required}\""
         withEnv(["conda_env_name=${conda_env_name}"]) {
             sh """#!/bin/bash
-                set -x
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-                    export PATH=${HOME}/anaconda3/bin/:$PATH
-                fi
-                source activate ${conda_env_name}
-                pip list
+                echo "======= Activate conda env ======="
+                source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh \\
+                    --framework=${framework} \\
+                    --model=${model} \\
+                    --conda_env_name=${conda_env_name} \\
+                    --conda_env_mode=${conda_env_mode} \\
+                    --itex_mode=${itex_mode}
+                set_environment
+                echo "=================================="
                 ${cmd}
             """
         }
@@ -723,14 +729,20 @@ def syncConfigFile(){
 
 node( sub_node_label ) {
     // Get CPU name
-    if (['unknown','any', '*'].contains(cpu)) {
-        cpu = env.CPU_NAME
-        echo "Detected cpu: ${cpu}"
-        if (cpu == '' && 'cpu' in params && params.cpu != ''){
-            cpu=params.cpu
+    if (['unknown','any', '*'].contains(device)) {
+        if (env.CPU_NAME != null){
+            device = env.CPU_NAME
+        }
+        if (env.GPU_NAME != null){
+            device = env.GPU_NAME
+            is_gpu = true
+        }
+        echo "Detected device: ${device}"
+        if (device == '' && 'device' in params && params.device != ''){
+            device=params.device
         }
     }
-    if (cpu in nightly_cpu_list){
+    if (device in nightly_cpu_list){
         dataset_prefix="/home2/tensorflow-broad-product/oob"
         echo "run tuning, dataset_prefix: ${dataset_prefix}"
     }
@@ -1025,8 +1037,8 @@ node( sub_node_label ) {
                         conda_env_name="${framework}-${framework_version}-${python_version}"
                     }
 
-                    if ("${CPU_NAME}" != ""){
-                        conda_env_name="${conda_env_name}-${CPU_NAME}"
+                    if ("${device}" != "unknown"){
+                        conda_env_name="${conda_env_name}-${device}"
                     }
                     create_conda_env(_tf_ver,_itex_ver,_pt_ver,_mx_ver,_ort_ver,_onnx_ver,install_ipex)
                 }else{
@@ -1038,9 +1050,9 @@ node( sub_node_label ) {
 
             stage("Tuning") {
                 echo "Tuning timeout ${timeout}"
-                echo "CPU_NAME is ${CPU_NAME}"
-                if (cpu in nightly_cpu_list){
-                    cpu = cpu.split("-")[0]
+                echo "device is ${device}"
+                if (device in nightly_cpu_list){
+                    device = device.split("-")[0]
                 }
                 if (framework=='pytorch' && (model_src_dir=~'oob_models').find()){
                     model_src_dir="${WORKSPACE}/lpot-validation/examples/${framework}/${model_src_dir}"
@@ -1074,7 +1086,9 @@ node( sub_node_label ) {
                             --log_level=${log_level} \
                             --dtype=${dtype} \
                             --backend=${backend} \
-                            2>&1 | tee ${framework}-${model}-${os}-${cpu}-tune.log
+                            --itex_mode=${itex_mode} \
+                            --is_gpu=${is_gpu} \
+                            2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
                     """
                 }
                 // Check tuning status
@@ -1083,13 +1097,13 @@ node( sub_node_label ) {
                             "framework=${framework}",
                             "model=${model}",
                             "os=${os}",
-                            "cpu=${cpu}"]) {
+                            "device=${device}"]) {
                         sh '''#!/bin/bash -x
                             control_phrase="model which meet accuracy goal."
-                            if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | wc -l) == 0 ];then
+                            if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | wc -l) == 0 ];then
                                 exit 1
                             fi
-                            if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${cpu}-tune.log | grep "Not found" | wc -l) == 1 ];then
+                            if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | grep "Not found" | wc -l) == 1 ];then
                                 exit 1
                             fi
                         '''
