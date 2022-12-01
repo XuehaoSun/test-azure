@@ -718,17 +718,17 @@
          "dataset_name": "squad",
          "precision": "fp32",
          "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/length_adaptive_dynamic",
-         "output_dir": "/model_and_tokenizer"
+         "output_dir": "model_and_tokenizer"
       }
     },
     "benchmark": {
-      "cmd": "bash run_benchmark.sh",
+      "cmd": "python run_executor.py",
       "params": {
         "batch_size": 8,
-        "seq_len": 128,
+        "seq_len": 384,
         "warm_up": 100,
         "iteration": 1000,
-        "input_model": "./model_and_tokenizer/minilmv2.onnx",
+        "input_model": "./fp32-model.onnx",
         "mode": "accuracy/throughput"        
       }
     },
