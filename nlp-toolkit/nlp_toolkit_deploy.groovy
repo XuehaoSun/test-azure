@@ -196,7 +196,7 @@ if ('launcher_mode' in params && params.launcher_mode != '') {
 echo "launcher_mode: ${launcher_mode}"
 launcher_mode_list = parseStrToList(launcher_mode)
 
-lpot_url = "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+lpot_url = "https://github.com/intel/neural-compressor.git"
 lpot_branch = "master"
 if ('lpot_branch' in params && params.lpot_branch) {
     lpot_branch=params.lpot_branch
@@ -891,7 +891,7 @@ node( sub_node_label ) {
                             string(name: "MR_target_branch", value: "${MR_target_branch}"),
                             string(name: "val_branch", value: "${val_branch}")
                     ]
-                    downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
+                    downstreamJob = build job: "nlp-release-build", propagate: false, parameters: binaryBuildParamsNLP
                     binary_build_job_nlp = downstreamJob.getNumber()
                     echo "binary_build_job_nlp: ${binary_build_job_nlp}"
                     echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
@@ -916,9 +916,9 @@ node( sub_node_label ) {
                 }
                 catchError {
                     copyArtifacts(
-                            projectName: 'nlp-toolkit-release-wheel-build',
+                            projectName: 'nlp-release-build',
                             selector: specific("${binary_build_job_nlp}"),
-                            filter: 'intel_extension_for_transformers*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
+                            filter: 'linux_binaries/wheel/intel_extension_for_transformers*.whl, linux_binaries/wheel/intel_extension_for_transformers-*.tar.bz2, linux_binaries/wheel/intel_extension_for_transformers-*.tar.gz',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
                 }
@@ -1010,14 +1010,15 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
-                            sh """#!/bin/bash
+                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
+                            sh '''#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
+                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:${LD_LIBRARY_PATH}
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
-                            """
+                            '''
                         }
                         
                         mode_list.each { mode ->
@@ -1059,14 +1060,15 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
-                            sh """#!/bin/bash
+                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
+                            sh '''#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
+                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
-                            """
+                            '''
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "int8", benchmark_cmd)
@@ -1107,14 +1109,15 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
-                            sh """#!/bin/bash
+                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
+                            sh '''#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
+                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
-                            """
+                            '''
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "bf16", benchmark_cmd)

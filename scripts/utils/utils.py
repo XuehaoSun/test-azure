@@ -315,8 +315,6 @@ def update_yaml_config(yaml_file: str, strategy: Optional[str] = None, mode: Opt
                     "sigopt_project_id": "lpot",
                     "sigopt_experiment_name": "lpot-tune",
                     })
-            if strategy == "hawq":
-                prev_strategy.update({"loss": "CrossEntropyLoss"})
             print(f"Changed {strategy_name} to {strategy}")
         except Exception as e:
             print(f"[ WARNING ] {e}")

@@ -361,7 +361,7 @@ echo "test title ${test_title}"
 pypi_version='default'
 install_nlp_toolkit="true"
 target_path="./intel_extension_for_transformers"
-lpot_url="https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+lpot_url="https://github.com/intel/neural-compressor.git"
 lpot_branch="master"
 if ('lpot_branch' in params && params.lpot_branch) {
     lpot_branch=params.lpot_branch

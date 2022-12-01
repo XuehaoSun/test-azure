@@ -348,8 +348,8 @@ def create_conda_env(_tf_ver,_itex_ver,_pt_ver,_mx_ver,_ort_ver,_onnx_ver,instal
     if (install_ipex) {
         cmd += " --install_ipex=\"true\""
     }
-    retry(20){
-        timeout(10){
+    retry(10){
+        timeout(20){
             sh """#!/bin/bash
                 ${cmd}
             """

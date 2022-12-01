@@ -6,7 +6,7 @@ if ('node_label' in params && params.node_label != '') {
 }
 echo "Running on node ${node_label}"
 
-lpot_url = "https://github.com/intel-innersource/frameworks.ai.lpot.intel-lpot.git"
+lpot_url = "https://github.com/intel/neural-compressor.git"
 nlp_url = "https://github.com/intel-innersource/frameworks.ai.nlp-toolkit.intel-nlp-toolkit.git"
 if ('nlp_url' in params && params.nlp_url != ''){
     nlp_url = params.nlp_url
