@@ -891,7 +891,7 @@ node( sub_node_label ) {
                             string(name: "MR_target_branch", value: "${MR_target_branch}"),
                             string(name: "val_branch", value: "${val_branch}")
                     ]
-                    downstreamJob = build job: "nlp-release-build", propagate: false, parameters: binaryBuildParamsNLP
+                    downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
                     binary_build_job_nlp = downstreamJob.getNumber()
                     echo "binary_build_job_nlp: ${binary_build_job_nlp}"
                     echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
@@ -916,9 +916,9 @@ node( sub_node_label ) {
                 }
                 catchError {
                     copyArtifacts(
-                            projectName: 'nlp-release-build',
+                            projectName: 'nlp-toolkit-release-wheel-build',
                             selector: specific("${binary_build_job_nlp}"),
-                            filter: 'linux_binaries/wheel/intel_extension_for_transformers*.whl, linux_binaries/wheel/intel_extension_for_transformers-*.tar.bz2, linux_binaries/wheel/intel_extension_for_transformers-*.tar.gz',
+                            filter: 'intel_extension_for_transformers*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
                 }
@@ -1010,7 +1010,7 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
+                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
                             sh '''#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -1060,7 +1060,7 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
+                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
                             sh '''#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
@@ -1109,7 +1109,7 @@ node( sub_node_label ) {
                     if (!tune_only) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
-                            cmd = "python export_tranpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
+                            cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
                             sh '''#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
