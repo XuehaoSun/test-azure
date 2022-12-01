@@ -19,7 +19,7 @@ make -j
 cd bin
 bash -x ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/ci/run_ci.sh $output_log_dir
 
-for caselog in $(find $output_log_dir/*); dointel_extension_for_transformers
+for caselog in $(find $output_log_dir/*); do
     case_name=$(echo $caselog | sed -e 's/\.log$//')
     echo "case_name=$case_name"
     bash -x ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/ci/to_summary.sh $caselog | tee "${case_name}_summary.log"
