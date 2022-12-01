@@ -1011,14 +1011,13 @@ node( sub_node_label ) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
                             cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
-                            sh '''#!/bin/bash
+                            sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:${LD_LIBRARY_PATH}
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
-                            '''
+                            """
                         }
                         
                         mode_list.each { mode ->
@@ -1061,14 +1060,13 @@ node( sub_node_label ) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
                             cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
-                            sh '''#!/bin/bash
+                            sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
-                            '''
+                            """
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "int8", benchmark_cmd)
@@ -1110,14 +1108,13 @@ node( sub_node_label ) {
                         echo "--------START BENCHMARK----------"
                         if (model in sparse_model_list) {
                             cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
-                            sh '''#!/bin/bash
+                            sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
                                 export PATH=${HOME}/miniconda3/bin/:$PATH
-                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
-                            '''
+                            """
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "bf16", benchmark_cmd)
