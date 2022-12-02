@@ -209,7 +209,7 @@ if ('perf_bs' in params && params.perf_bs != '') {
 echo "Performance batch size: ${perf_bs}"
 
 sparse_model_list = ["distilbert_base_uncased_squad_sparse", "bert_mini_sparse"]
-not_support_inferencer_list = ["length_adaptive_dynamic"]
+not_support_inferencer_list = ["length_adaptive_dynamic", "vit_large"]
 mono_socket = params.mono_socket as Boolean
 echo "mono_socket: ${mono_socket}"
 
@@ -336,7 +336,9 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                 export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
                 gcc -v
             fi
-            cp -r ${data_path} ${WORKSPACE}/data
+            if [[ "${model}" == "vit_large" ]]; then
+                cp -r ${data_path} ${working_dir}/data
+            fi
             echo "final benchmark cmd of precision ${precision} is ${benchmark_cmd}"
             cd ${working_dir}
             echo "working in ${working_dir}"
@@ -433,7 +435,6 @@ def runLauncherTest(mode, precision, launcher_cmd, launcher_cmd_params) {
             export PATH=${HOME}/miniconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
-            cp -r ${data_path} ${WORKSPACE}/data
             echo "final launcher benchmark cmd of precision ${precision} is ${launcher_cmd}"
             cd ${WORKSPACE}/lpot-models/examples/
             echo "working in ${WORKSPACE}/lpot-models/examples"
@@ -458,6 +459,13 @@ def prepare_models(local_precision, prepare_cmd) {
     echo "prepare model cmd is ${local_prepare_cmd}"
     if (cpu in nightly_cpu_list){
         cpu = cpu.split("-")[0]
+    }
+    if (model == "vit_large") {
+        withEnv(["data_dir=${data_dir}"]) {
+            sh '''#!/bin/bash -x
+                cp -r ${data_dir} /home/tensorflow/.cache/nlp_toolkit/vit
+            '''
+        }    
     }
     withEnv(["framework=${framework}","model=${model}","timeout=${timeout}","os=${os}","cpu=${cpu}","working_dir=${working_dir_fullpath}","prepare_cmd=${local_prepare_cmd}","conda_env_name=${conda_env_name}"]) {
         sh '''#!/bin/bash -x
