@@ -22,10 +22,54 @@ if ('framework' in params && params.framework != '') {
 }
 echo "framework: ${framework}"
 
+// setting tensorflow_version
+tensorflow_version = ''
+if ('tensorflow_version' in params && params.tensorflow_version != '') {
+    tensorflow_version = params.tensorflow_version
+}
+echo "tensorflow_version: ${tensorflow_version}"
+
+// setting pytorch_version
+pytorch_version = ''
+if ('pytorch_version' in params && params.pytorch_version != '') {
+    pytorch_version = params.pytorch_version
+}
+echo "pytorch_version: ${pytorch_version}"
+
+// setting onnx_version
+onnx_version  = ''
+if ('onnx_version' in params && params.onnx_version != '') {
+    onnx_version = params.onnx_version
+}
+echo "onnx_version: ${onnx_version}"
+
+// setting onnxruntime_version
+onnxruntime_version = ''
+if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
+    onnxruntime_version = params.onnxruntime_version
+}
+echo "onnxruntime_version: ${onnxruntime_version}"
+
+// setting mxnet_version
+mxnet_version = ''
+if ('mxnet_version' in params && params.mxnet_version != '') {
+    mxnet_version = params.mxnet_version
+}
+echo "mxnet_version: ${mxnet_version}"
+
 // setting framework_version
 framework_version  = '1.15.2'
-if ('framework_version' in params && params.framework_version != '') {
-    framework_version = params.framework_version
+if (framework == "tensorflow") {
+    framework_version="${tensorflow_version}"              
+} 
+else if (framework == "pytorch") {
+    framework_version="${pytorch_version}"                    
+} 
+else if (framework == "onnxrt") {
+    framework_version="${onnxruntime_version}"            
+}
+else (framework == "mxnet") {
+    framework_version="${mxnet_version}"              
 }
 echo "framework_version: ${framework_version}"
 
@@ -141,13 +185,6 @@ if ('env_type' in params && params.env_type != ''){
     env_type=params.env_type
 }
 echo "env_type: ${env_type}"
-
-
-onnx_version = '1.7.0'
-if ('onnx_version' in params && params.onnx_version != '') {
-    onnx_version = params.onnx_version
-}
-println("onnx_version: " + onnx_version)
 
 torchvision_versions = [
         "1.12.1": "0.13.1",
