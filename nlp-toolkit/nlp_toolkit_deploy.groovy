@@ -209,7 +209,7 @@ if ('perf_bs' in params && params.perf_bs != '') {
 echo "Performance batch size: ${perf_bs}"
 
 sparse_model_list = ["distilbert_base_uncased_squad_sparse", "bert_mini_sparse"]
-not_support_inferencer_list = ["length_adaptive_dynamic", "vit_large"]
+not_support_inferencer_list = ["length_adaptive_dynamic", "vit_large", "vit_base"]
 mono_socket = params.mono_socket as Boolean
 echo "mono_socket: ${mono_socket}"
 
@@ -336,7 +336,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                 export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
                 gcc -v
             fi
-            if [[ "${model}" == "vit_large" ]]; then
+            if [[ "${model}" == "vit_large" ]] || [[ "${model}" == "vit_base" ]]; then
                 cp -r ${data_path} ${working_dir}/data
             fi
             echo "final benchmark cmd of precision ${precision} is ${benchmark_cmd}"
@@ -460,7 +460,7 @@ def prepare_models(local_precision, prepare_cmd) {
     if (cpu in nightly_cpu_list){
         cpu = cpu.split("-")[0]
     }
-    if (model == "vit_large") {
+    if (model == "vit_large" || model == "vit_base") {
         withEnv(["data_dir=${data_dir}"]) {
             sh '''#!/bin/bash -x
                 cp -r ${data_dir} /home/tensorflow/.cache/nlp_toolkit/vit
