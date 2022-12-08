@@ -2196,3 +2196,5 @@ LeCun
 executorbenchmark
 pytorchbenchmark
 november
+Affine
+ZeroPoint
