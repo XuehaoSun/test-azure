@@ -216,7 +216,7 @@ def build_conda_env() {
     sh'''#!/bin/bash
         set -xe
         declare local_file_list=("mobilenet_v1_1.0_224.tgz" "slim/inception_v1_2016_08_28.tar.gz" "saved_model.tar.gz" "ssd_resnet50_v1.tgz" "cifar-10-batches-py.tar.gz" "resnet_v2")
-        local_path="/home/tensorflow/localfile"
+        local_path="/tf_dataset2/inc-ut"
         declare target_path=("/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/tmp/.neural_compressor/" "/home/tensorflow/.keras/datasets/" "/tmp/.neural_compressor/inc_ut/")
         mkdir -p /tmp/.neural_compressor/
         mkdir -p /home/tensorflow/.keras/datasets
