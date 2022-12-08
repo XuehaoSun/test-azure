@@ -764,7 +764,6 @@
       "cmd": "python run_executor.py",
       "params": {
         "batch_size": 8,
-        "seq_len": 128,
         "warm_up": 100,
         "iteration": 1000,
         "input_model": "model_and_tokenizer",
@@ -803,7 +802,6 @@
       "cmd": "python run_executor.py",
       "params": {
         "batch_size": 8,
-        "seq_len": 128,
         "warm_up": 100,
         "iteration": 1000,
         "input_model": "model_and_tokenizer",
@@ -820,6 +818,121 @@
         "min_latency": {
           "mode": "min_latency",
           "instance_num": "1"
+        }
+      }
+    }
+  }, "MiniLM-L3_mrpc": {
+    "working_dir": "deployment/neural_engine/mrpc/bert_mini",
+    "data_dir": "/tf_dataset2/datasets/mrpc_data",
+    "hf_model_name": "nreimers/MiniLM-L3-H384-uncased",
+    "prepare": {
+      "cmd": "bash prepare_model.sh",
+      "params": {
+         "input_model": "nreimers/MiniLM-L3-H384-uncased",
+         "task_name": "mrpc",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/MiniLM-L3_mrpc",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "bash run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
+    }
+  }, "MiniLM-L3_setfit_sst2": {
+    "working_dir": "deployment/neural_engine/sst2/minilm_l6_h384_uncased",
+    "data_dir": "/tf_dataset2/datasets/sst2_data",
+    "hf_model_name": "SetFit/MiniLM_L3_clinc_oos_plus_distilled",
+    "prepare": {
+      "cmd": "bash prepare_model.sh",
+      "params": {
+         "input_model": "SetFit/MiniLM_L3_clinc_oos_plus_distilled",
+         "task_name": "sst2",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/MiniLM-L3_sst2",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "bash run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
+        }
+      }
+    }
+  },
+  "MiniLM-L3_sst2": {
+    "working_dir": "deployment/neural_engine/sst2/minilm_l6_h384_uncased",
+    "data_dir": "/tf_dataset2/datasets/sst2_data",
+    "hf_model_name": "nreimers/MiniLM-L3-H384-uncased",
+    "prepare": {
+      "cmd": "bash prepare_model.sh",
+      "params": {
+         "input_model": "nreimers/MiniLM-L3-H384-uncased",
+         "task_name": "sst2",
+         "precision": "int8/fp32",
+         "cache_dir": "/home/tensorflow/.cache/nlp_toolkit/MiniLM-L3_sst2",
+         "output_dir": "/model_and_tokenizer"
+      }
+    },
+    "benchmark": {
+      "cmd": "bash run_benchmark.sh",
+      "params": {
+        "batch_size": 8,
+        "seq_len": 128,
+        "warm_up": 8,
+        "iteration": 100,
+        "input_model": "model_and_tokenizer",
+        "mode": "accuracy/throughput"        
+      }
+    },
+    "launcher": {
+      "cmd": "deployment/neural_engine/launcher.py",
+      "params": {
+        "max_throughput": {
+          "mode": "max_throughput",
+          "instance_num": "1,2,4,8"
+        },
+        "min_latency": {
+          "mode": "min_latency",
+         "instance_num": "1"
         }
       }
     }
