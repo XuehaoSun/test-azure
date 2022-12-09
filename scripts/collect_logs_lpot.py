@@ -141,6 +141,31 @@ def parse_tuning_line(line):
     if max_mem_size and max_mem_size.group(1):
         result.tuning.max_mem_size = float(max_mem_size.group(1))
 
+    total_tuning_times = re.search(r"Total Tuning Times:\s+(\d+(\.\d+)?)", line)
+    if total_tuning_times and total_tuning_times.group(1):
+        result.tuning.total_tuning_times = float(total_tuning_times.group(1))
+
+    fallbacked_started_tune = re.search(r"Fallback started at Tune \s+(\d+(\.\d+)?)", line)
+    if fallbacked_started_tune and fallbacked_started_tune.group(1):
+        result.tuning.fallbacked_started_tune = float(fallbacked_started_tune.group(1))
+
+    objective_met_tune = re.search(r"Objective(s) met at Tune \s+(\d+(\.\d+)?)", line)
+    if objective_met_tune and objective_met_tune.group(1):
+        result.tuning.objective_met_tune = float(objective_met_tune.group(1))
+
+    op_number = re.search(r"Fallbacked ops count:\s+(\d+(\.\d+)?)", line)
+    if op_number and op_number.group(1):
+        result.tuning.op_number = float(op_number.group(1))
+
+    statistics_difference = re.search(r"Difference(s) in total:\s+(\d+(\.\d+)?)", line)
+    if statistics_difference and statistics_difference.group(1):
+        result.tuning.statistics_difference = float(statistics_difference.group(1))
+    
+    fallback_stage_time = re.search(r"fallback stage time:\s+(\d+(\.\d+)?)", line)
+    if fallback_stage_time and fallback_stage_time.group(1):
+        result.tuning.fallback_stage_time = float(fallback_stage_time.group(1))
+    
+
 def read_perf_logs(precision, mode):
     logs_pattern = os.path.join(
         args.logs_dir,

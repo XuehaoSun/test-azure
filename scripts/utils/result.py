@@ -21,7 +21,14 @@ class TuningData(JsonSerializer):
         self.total_mem_size = None
         self.max_mem_size = None
         self.log = None
+        self.total_tuning_times = 0
+        self.fallbacked_started_tune = 0
+        self.objective_met_tune = 0
+        self.op_number = 0
+        self.statistics_difference = 0
+        self.fallback_stage_time = 0
 
+        
     @property
     def model_size_ratio(self):
         """Get model size ratio."""
@@ -80,7 +87,13 @@ class Result(JsonSerializer):
                 self.tuning.log,
                 self.tuning.fp32_model_size,
                 self.tuning.int8_model_size,
-                self.tuning.mem_percentage
+                self.tuning.mem_percentage,
+                self.tuning.total_tuning_times,
+                self.tuning.fallbacked_started_tune,
+                self.tuning.objective_met_tune,
+                self.tuning.op_number,
+                self.tuning.statistics_difference,
+                self.tuning.fallback_stage_time
             ]])
         if mode == "performance":
             data = []

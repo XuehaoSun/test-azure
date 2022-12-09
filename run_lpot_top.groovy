@@ -1514,7 +1514,7 @@ node( node_label ) {
         summaryLogLast = "${WORKSPACE}/reference/summary.log"
 
         TUNETXT = "${WORKSPACE}/tuning_info.log"
-        writeFile file: TUNETXT, text: "OS;Platform;Framework;Version;Model;Strategy;Tune_time\n"
+        writeFile file: TUNETXT, text: "OS;Platform;Framework;Version;Model;Strategy;Tune_time;Trials;Log;Fp32_model_size;Int8_model_size;Mem_percentage;Total_tuning_times;Fallbacked_started_tune;Objective_met_tune;Op_number;Statistics_difference;Fallback_stage_time\n"
         tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
 
         coverage_summary = "${WORKSPACE}/unittest/coverage_summary.log"
