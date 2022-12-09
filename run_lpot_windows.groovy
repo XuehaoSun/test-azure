@@ -498,7 +498,7 @@ def collectLogs() {
         println("Updating logs prefix..")
         logs_prefix_url = ""
         if (upstreamUrl != "") {
-            logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/${framework}/${model}/"
+            logs_prefix_url = JENKINS_URL + upstreamUrl + upstreamBuild + "/artifact/windows/${framework}/${model}/"
         }
 
         println("Collecting logs...")
@@ -683,6 +683,15 @@ node( sub_node_label ) {
                 yaml = modelConf."${framework}"."${model}"."yaml"
                 println("yaml = " + yaml)
 
+                new_benchmark = modelConf."${framework}"."${model}"."new_benchmark"
+                println("new_benchmark = " + new_benchmark)
+
+                if (perf_bs == "default") {
+                    perf_bs = modelConf."${framework}"."${model}"."batch_size"
+                    println("batch_size = " + batch_size)
+                }
+
+
                 //mr test will cover different strategies, the other test mode will use the passed strategy
                 if ( MR_source_branch != '' ){
                     if (framework == "tensorflow"){
@@ -784,16 +793,8 @@ node( sub_node_label ) {
                     echo "Mode list: ${mode_list}"
                 }
 
-                def configPath = "$WORKSPACE/lpot-validation/config/model_params_${framework}_win.json"
-                println("Reading config from " + configPath)
-                def modelConf =  jsonParse(readFile(configPath))
-                println(modelConf."${framework}"."${model}")
-
                 if (!tune_only && model != "helloworld_keras") {
                     println("========== Benchmark ========")
-                    if (perf_bs == "default") {
-                        perf_bs = modelConf."${framework}"."${model}"."batch_size"
-                    }
                     timeout(360) {
                         withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
                             precision_list.each { precision ->
@@ -830,6 +831,7 @@ node( sub_node_label ) {
                                             --batch_size=${perf_bs} ^
                                             --yaml=${yaml} ^
                                             --cpu=${cpu} ^
+                                            --new_benchmark=${new_benchmark} ^
                                         
                                         IF "${multi_instance}" == "true" (
                                             SET cmd=%cmd% --multi_instance

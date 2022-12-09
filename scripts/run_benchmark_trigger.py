@@ -26,6 +26,7 @@ parser.add_argument("--mode", type=str,
 parser.add_argument("--batch_size", type=int, required=True)
 parser.add_argument("--yaml", type=str, required=True)
 parser.add_argument("--cpu", type=str, required=True)
+parser.add_argument("--new_benchmark", type=str, required=True)
 parser.add_argument("--multi_instance", action="store_true")
 
 args = parser.parse_args()
@@ -47,7 +48,7 @@ def main():
     install_requirements(requirements_file=os.path.join(args.model_src_dir, "requirements.txt"),
                          exclude=excluded_requirements)
 
-    print("\nSet a modified yaml...")
+    print("\nCopy yaml for benchmark...")
     yaml_path = os.path.join(args.model_src_dir, args.yaml)
     benchmark_yaml_path = os.path.join(args.model_src_dir, "benchmark.yaml")
     print(f"{yaml_path}")
@@ -83,27 +84,20 @@ def main():
     # pytorch int8 still use fp32 input_model
     if args.precision == "int8" and args.framework != "pytorch":
         input_model = q_model
-    if args.precision == "int8" and args.framework == "pytorch":
-        input_model = "saved_results"
+
     print("\nStart run function...")
     if args.mode == "accuracy":
         run_accuracy(input_model=input_model, topology=topology, yaml_path=yaml_path)
     else:
-        run_benchmark(input_model=input_model, mode=args.mode, topology=topology, yaml_path=yaml_path)
+        run_benchmark(input_model=input_model, topology=topology, yaml_path=yaml_path)
 
 
 def run_accuracy(input_model, topology, yaml_path):
-    yaml_update_parameters = {
-        "yaml_path": yaml_path,
-        "batch_size": args.batch_size
-    }
+
+    if args.new_benchmark == "true":
+        update_yaml(yaml_path, args.mode, args.batch_size)
 
     iters = -1
-    if args.framework == "tensorflow":
-        if any(args.model_src_dir in model_dir for model_dir in ["image_recognition/tensorflow_models/quantization/ptq", "object_detection/tensorflow_models/quantization/ptq"]):
-            iters = -1
-            yaml_update_parameters.update({"iters": iters})
-
     parameters = get_benchmark_parameters(
         args.framework,
         input_model,
@@ -114,16 +108,12 @@ def run_accuracy(input_model, topology, yaml_path):
         args.precision,
         args.mode,
         args.dataset_location,
-        operating_system,
+        operating_system
     )
-
-    update_yaml(**yaml_update_parameters)
 
     cmd = get_executable("benchmark")
     if args.framework == "pytorch" and args.model == "distilbert_base_MRPC":
         cmd = ["python", "-u", "run_glue_tune.py"]
-    if args.framework == "tensorflow" and "oob_models" in args.model_src_dir:
-        cmd = ["python", "tf_benchmark.py"]
     cmd.extend(parameters)
 
     system = platform.system().lower()
@@ -137,7 +127,7 @@ def run_accuracy(input_model, topology, yaml_path):
                     file=log_file)
 
 
-def run_benchmark(input_model, mode, topology, yaml_path):
+def run_benchmark(input_model, topology, yaml_path):
     # define a low iteration list to save time
     # if latency ~ 500 ms , then set iter = 200. if latency ~ 1000 ms, then set iter = 100
     latency_high_500 = [
@@ -203,22 +193,12 @@ def run_benchmark(input_model, mode, topology, yaml_path):
                         line_pattern="models_need_disable_optimize=(",
                         string=topology)
 
-    if args.framework == "tensorflow":
-        if any(model_dir in args.model_src_dir for model_dir in ["image_recognition/tensorflow_models/quantization/ptq", "object_detection/tensorflow_models/quantization/ptq"]):
-            parameters=[
-                "--config=benchmark.yaml",
-                f"--input-graph={args.input_model}",
-                "--mode=performance",
-            ]
-
     env_vars = {
         "OMP_NUM_THREADS": str(ncores_per_instance),
         "LOGLEVEL": "DEBUG"
     }
-    
-    
-    update_yaml(yaml_path, batch_size, iters)
 
+    mode="performance"
     if args.framework == "tensorflow" and "oob_models" in args.model_src_dir:
         parameters = get_oob_models_parameters(topology, args.input_model, yaml_path, iters)
     else:
@@ -230,7 +210,7 @@ def run_benchmark(input_model, mode, topology, yaml_path):
             iters,
             args.batch_size,
             args.precision,
-            args.mode,
+            mode,
             args.dataset_location,
             operating_system,
         )
@@ -249,9 +229,11 @@ def run_benchmark(input_model, mode, topology, yaml_path):
     
     num_sockets = 1  # Use only one socket
     num_instances = (ncores_per_socket * num_sockets) // ncores_per_instance
+    if args.new_benchmark == "true":
+        update_yaml(yaml_path, args.mode, batch_size, iters, ncores_per_instance, num_instances)
 
     print(f"Execute command: {cmd}")
-    if args.multi_instance:
+    if args.multi_instance and args.new_benchmark == "false":
         execute_multi_instance(cmd=cmd,
                             cwd=args.model_src_dir,
                             instances=num_instances,
@@ -267,19 +249,48 @@ def run_benchmark(input_model, mode, topology, yaml_path):
                         file=f"{log_prefix}.log")
 
 
-def update_yaml(yaml_path, batch_size=None, iters=None):
-    if not os.path.isfile(yaml_path):
-        raise Exception(f"Not found yaml config at '{yaml_path}' location.")
-
-    update_yaml_config(
-        yaml_file=yaml_path,
-        batch_size=batch_size,
-        iteration=iters,
-        mode=args.mode
-    )
+def update_yaml(yaml_path, mode, batch_size=None, iters=None, ncores_per_instance=4, num_of_instance=1):
+    import yaml
+    with open(yaml_path, 'r') as f:
+        content = f.read()
+        lpot_config = yaml.safe_load(content)
+        if mode == "accuracy":
+            try:
+                if not lpot_config.get('evaluation') or not lpot_config['evaluation'].get('accuracy'):
+                    raise AttributeError
+                if lpot_config['evaluation'].get('performance'):
+                    lpot_config['evaluation'].pop('performance')
+                if lpot_config['evaluation']['accuracy'].get('dataloader', None):
+                    lpot_config['evaluation']['accuracy']['dataloader']['batch_size'] = batch_size
+                if lpot_config['evaluation']['accuracy'].get('configs', None):
+                    lpot_config['evaluation']['accuracy'].pop('configs')
+            except AttributeError:
+                print("[ WARNING ] Could not update accuracy config.")
+        else:
+            if not lpot_config.get('evaluation') or not lpot_config['evaluation'].get('performance'):
+                raise AttributeError
+            if lpot_config['evaluation'].get('accuracy'):
+                lpot_config['evaluation'].pop('accuracy')
+            if lpot_config['evaluation']['performance'].get('dataloader', None):
+                lpot_config['evaluation']['performance']['dataloader']['batch_size'] = batch_size
+            lpot_config['evaluation']['performance']['iteration'] = iters
+            if not lpot_config['evaluation']['performance'].get('configs'):
+                raise AttributeError
+            lpot_config['evaluation']['performance']['configs']['cores_per_instance'] = int(ncores_per_instance)
+            lpot_config['evaluation']['performance']['configs']['num_of_instance'] = int(num_of_instance)
+        # dump config
+        updated_yaml = yaml.dump(
+            data=lpot_config,
+            indent=4,
+            default_style=None,
+            sort_keys=False
+        )
+    with open(yaml_path, "w") as yaml_config:
+        yaml_config.write(updated_yaml)
     print("\nPrint updated yaml... ")
     with open(yaml_path, "r") as yaml_file:
-        print(yaml_file.read())
+        yaml_context = yaml_file.read()
+        print(yaml_context)
 
 
 def get_benchmark_parameters(framework, q_model, model, topology, iters, batch_size, precision, mode, dataset_location, system):
@@ -299,13 +310,13 @@ def get_windows_parameters(framework: str, input_model: str, model: str, topolog
         "tensorflow": [
             "--input-graph", f"{input_model}",
             "--config", "benchmark.yaml",
-            "--mode", "performance",
+            "--mode", f"{mode}",
             "--benchmark",
         ],
         "onnxrt": [
             "--model_path", f"{input_model}",
             "--config", "benchmark.yaml",
-            "--output_model", ".", # Main script requires passing "output_model" however it is not used in benchmark mode.
+            "--mode", f"{mode}",
             "--benchmark",
         ],
         "pytorch": {

@@ -267,6 +267,14 @@ if ('pytorch_models_windows' in params && params.pytorch_models_windows != '') {
 }
 echo "pytorch_models_windows: ${pytorch_models_windows}"
 
+// setting pytorch_oob_models_windows
+pytorch_oob_models_windows = ""
+if ('pytorch_oob_models_windows' in params && params.pytorch_oob_models_windows != '') {
+    pytorch_oob_models_windows = params.pytorch_oob_models_windows
+}
+echo "pytorch_oob_models_windows: ${pytorch_oob_models_windows}"
+
+
 // setting onnxrt_models_windows
 onnxrt_models_windows = ""
 if ('onnxrt_models_windows' in params && params.onnxrt_models_windows != '') {
@@ -682,6 +690,7 @@ def getPerfJobs() {
                     pt_oob_models = parseStrToList(pytorch_oob_models)
                     job_models = parseStrToList(pytorch_models)
                     if (system == "windows") {
+                        pt_oob_models = parseStrToList(pytorch_oob_models_windows)
                         job_models = parseStrToList(pytorch_models_windows)
                     }
                     job_models = job_models.plus(pt_oob_models)
@@ -894,6 +903,7 @@ def collectLog() {
                     pt_oob_models = parseStrToList(pytorch_oob_models)
                     job_models = parseStrToList(pytorch_models)
                      if (system == "windows") {
+                        pt_oob_models = parseStrToList(pytorch_oob_models_windows)
                         job_models = parseStrToList(pytorch_models_windows)
                     }
                     job_models = job_models.plus(pt_oob_models)
