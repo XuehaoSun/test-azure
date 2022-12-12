@@ -392,8 +392,9 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     echo "\n\nRun special UT with itex...\n" | tee -a ${ut_log_name}
                     pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
                     pip uninstall tensorflow -y | tee -a ${ut_log_name}
-                    pip install tensorflow 
-                    pip install --upgrade intel-extension-for-tensorflow[cpu]
+                    pip install tensorflow
+                    pip install /tf_dataset2/custom_tf/itex_whl/nightly/intel_extension_for_tensorflow-1.1.0-cp38-cp38-linux_x86_64.whl
+                    pip install /tf_dataset2/custom_tf/itex_whl/nightly/intel_extension_for_tensorflow_lib-1.1.0.0-cp38-cp38-linux_x86_64.whl
                     if [ $? == 1 ]; then
                        exit 1
                     fi
