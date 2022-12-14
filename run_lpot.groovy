@@ -263,9 +263,12 @@ nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", 
 upstreamBuild = ""
 upstreamJobName = ""
 upstreamUrl = ""
-algorithm=""
-tf_new_api=""
-is_gpu=""
+new_benchmark = false
+algorithm = ""
+sampling_size = ""
+tf_new_api = ""
+is_gpu = ""
+inc_new_api=false
 
 backend=""
 if (itex_mode == "native"){
@@ -359,70 +362,44 @@ def create_conda_env(_tf_ver,_itex_ver,_pt_ver,_mx_ver,_ort_ver,_onnx_ver,instal
 }
 
 def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
-    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
-    def model_src_dir = modelConf."model_src_dir"
-    def dataset_location = modelConf."dataset_location"
-    def input_model = modelConf."input_model"
-    def yaml = modelConf."yaml"
-    def new_benchmark = modelConf."new_benchmark"
-    def batch_size = modelConf."batch_size"
+
     if (perf_bs != "default" && mode != "accuracy") {
         batch_size = perf_bs
-    }
-
-    if ( MR_source_branch != '' ){
-        //PR test will cover different strategies, the other test mode will use the passed strategy
-        if (framework == "tensorflow"){
-            strategy = "basic"
-            if (model_src_dir == "image_recognition"){
-                dataset_location = "/tf_dataset/dataset/TF_mini_imagenet"
-                println("MR test tensorflow model_src_dir is image_recognition.")
-                println("So set dataset_location to /tf_dataset/dataset/TF_mini_imagenet")
-            }
-            if (model_src_dir == "object_detection"){
-                // set mini-coco for obj mr test, set absolute baseline replace relative one to reach the acc goal
-                dataset_location = "/tf_dataset/tensorflow/mini-coco-100.record"
-                withEnv(["model_src_dir=${model_src_dir}"]) {
-                    sh(
-                        script: 'sed -i "/relative:/s|relative:.*|absolute: 0.01|g" ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/ssd_resnet50_v1.yaml',
-                        returnStdout: true
-                    ).trim()
-                }
-            }
-            if (model == "inception_v1"){
-                // set kl test for inception_v1
-                algorithm='kl'
-            }
-            if (model == "resnet50_fashion") {
-                dataset_location = "/tf_dataset2/datasets/mnist/FashionMNIST_small"
-            }
-        }else if(framework == "pytorch") {
-            if (model == "resnet18") {
-                strategy = "bayesian"
-            }
-            if (model_src_dir.contains("image_recognition/imagenet/cpu/ptq")) {
-                dataset_location = "/tf_dataset2/datasets/mini-imageraw"
-            }
-        }else if(framework == "mxnet" && model == "resnet50v1"){
-            strategy = "mse"
-        } else if (framework == "onnxrt" && model == "resnet50-v1-12") {
-            strategy = "basic"
-            dataset_location = "/tf_dataset2/datasets/imagenet/ImagenetRaw/ImagenetRaw_small_5000/ILSVRC2012_img_val"
-        }else{
-            strategy = "basic"
-        }
-
-        // set timeout for PR test
-        timeout="timeout 5400"
-    }
-
-    // set model_src_dir for PT oob models
-    if (framework=='pytorch' && (model_src_dir=~'oob_models').find()){
-        model_src_dir="${WORKSPACE}/lpot-validation/examples/${framework}/${model_src_dir}"
     }else{
-        model_src_dir="${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}"
+        batch_size = default_batch_size
     }
-    if (new_benchmark == true) {
+
+    if (inc_new_api == true){
+        echo "Running ---- ${framework},${model},${precision},${mode},inc_new_api ---- Benchmarking"
+        sh """#!/bin/bash -x  
+        echo "-------w-------"
+        w
+        echo "-------w-------"
+        echo "=======cache clean======="
+        
+        sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
+
+        echo "=======cache clean======="
+        bash ${WORKSPACE}/lpot-validation/scripts/run_benchmark_trigger_new_api.sh \
+            --framework=${framework} \
+            --model=${model} \
+            --model_src_dir=${model_src_dir} \
+            --dataset_location=${dataset_prefix}${dataset_location} \
+            --input_model=${dataset_prefix}${input_model} \
+            --precision=${precision} \
+            --mode=${mode} \
+            --batch_size=${batch_size} \
+            --multi_instance=${multi_instance} \
+            --conda_env_name=${conda_env_name} \
+            --conda_env_mode=${conda_env_mode} \
+            --os=${os} \
+            --device=${device} \
+            --log_level=${log_level} \
+            --itex_mode=${itex_mode} \
+            --main_script=${main_script} 2>&1 | tee ${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
+        """
+    }else if (new_benchmark == true) {
+        echo "Running ---- ${framework},${model},${precision},${mode},new_benchmark ---- Benchmarking"
         def cmd = "python ${WORKSPACE}/lpot-validation/scripts/run_new_benchmark_trigger.py \
                 --framework=${framework} \
                 --model=${model} \
@@ -463,16 +440,13 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                 set_environment
                 echo "=================================="
 
-                export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
-
                 ${cmd}
                 """
         }
     } else {
         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
-            sh """#!/bin/bash -x
-                echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
-                
+            echo "Running ---- ${framework}, ${model},${precision},${mode} ---- Benchmarking"
+            sh """#!/bin/bash -x  
                 echo "-------w-------"
                 w
                 echo "-------w-------"
@@ -886,15 +860,36 @@ node( sub_node_label ) {
             stage("Get model parameters") {
                 println("Getting model parameters...")
                 try {
-                    // get params for tuning and benchmark
-                    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
-                    model_src_dir = modelConf."model_src_dir"
-                    dataset_location = modelConf."dataset_location"
-                    input_model = modelConf."input_model"
-                    yaml = modelConf."yaml"
-                    sampling_size = ""
+                    jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
                 } catch(e) {
                     error("Could not load parameters for ${framework} ${model}")
+                }
+                def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
+                model_src_dir = modelConf."model_src_dir"
+                dataset_location = modelConf."dataset_location"
+                input_model = modelConf."input_model"
+                default_batch_size = modelConf."batch_size"
+                yaml = modelConf."yaml"
+                new_benchmark = modelConf."new_benchmark"
+                main_script = modelConf."main_script"
+                if (yaml == null && main_script != null){
+                    inc_new_api = true
+                }
+                println("inc_new_api----->" + inc_new_api)
+
+                if ( !inc_new_api ){
+                    println("replace for old api examples...")
+                    dir("${WORKSPACE}"){
+                        sh """ #!/bin/bash -x
+                            git clone -b old_api_examples ${lpot_url} old-lpot-models
+                            cd old-lpot-models
+                            git branch 
+                            cd -
+                            rm -rf ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}
+                            mkdir -p ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}
+                            cp -r ${WORKSPACE}/old-lpot-models/examples/${framework}/${model_src_dir} ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/../
+                        """
+                    }
                 }
 
                 if ( MR_source_branch != '' ){
@@ -1059,10 +1054,37 @@ node( sub_node_label ) {
                 }else{
                     model_src_dir="${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}"
                 }
-                withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
-                    sh """#!/bin/bash -x
+                if (inc_new_api){
+                    withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
+                        echo "Running ---- ${framework}, ${model}, inc_new_api ----Tuning"
+                        sh """#!/bin/bash -x
+                        ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger_new_api.sh \
+                            --python_version=${python_version} \\
+                            --framework=${framework} \\
+                            --model=${model} \\
+                            --model_src_dir=${model_src_dir} \\
+                            --dataset_location=${dataset_prefix}${dataset_location} \\
+                            --input_model=${dataset_prefix}${input_model} \\
+                            --strategy=${strategy} \\
+                            --strategy_token=${SIGOPT_TOKEN} \\
+                            --max_trials=${max_trials} \\
+                            --accuracy_criterion=${accuracy_criterion} \\
+                            --algorithm=${algorithm} \\
+                            --sampling_size="${sampling_size}" \\
+                            --conda_env_name=${conda_env_name} \\
+                            --conda_env_mode=${conda_env_mode} \\
+                            --log_level=${log_level} \\
+                            --dtype=${dtype} \\
+                            --backend=${backend} \\
+                            --itex_mode=${itex_mode} \\
+                            --is_gpu=${is_gpu} \\
+                            2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
+                        """
+                    }
+                }else{
+                    withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                         echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
-                        
+                        sh """#!/bin/bash -x  
                         echo "-------w-------"
                         w
                         echo "-------w-------"
@@ -1090,6 +1112,7 @@ node( sub_node_label ) {
                             --is_gpu=${is_gpu} \
                             2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
                     """
+                    }
                 }
                 // Check tuning status
                 dir("${WORKSPACE}"){
@@ -1142,48 +1165,12 @@ node( sub_node_label ) {
                     }
                 }
             }
-
-            if (framework == 'baremetal' && (model_src_dir=~'nlp').find()){
-                stage("Inferencer Benchmark"){
-                    println("==========run inferencer benchmark========")
-                    precision_list.each { precision ->
-                        def ir_path = ''
-                        if(precision == 'fp32'){
-                            sh """#!/bin/bash -x
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
-                            source activate ${conda_env_name}
-                            python ${WORKSPACE}/lpot-validation/deep-engine/scripts/convert_ir.py --fp32_models=${input_model}
-                            """
-                            ir_path = "${WORKSPACE}/ir"
-                        }else{
-                            ir_path = "${WORKSPACE}/${framework}-${model}-tune"
-                        }
-                        inferencer_config.split(',').each { each_ben_conf ->
-                            def ncores_per_instance = each_ben_conf.split(':')[0]
-                            def bs = each_ben_conf.split(':')[1]
-
-                            timeout(120) {
-                                sh """#!/bin/bash -x
-                                echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
-                                
-                                echo "=======cache clean======="
-                                sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
-                                echo "========================="
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
-                                source activate ${conda_env_name}
-                                bash ${WORKSPACE}/lpot-validation/deep-engine/scripts/launch_benchmark.sh ${model} ${ir_path} ${ncores_per_instance} ${bs} ${precision}
-                            """
-                            }
-                        }
-                    }
-                }
-            }
         } catch(e) {
             currentBuild.result = "FAILURE"
             throw e
         } finally {
             collectLogs()
-            checkReferenceData()
+            // checkReferenceData()
         }
     } catch(e) {
         currentBuild.result = "FAILURE"
