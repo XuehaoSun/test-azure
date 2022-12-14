@@ -78,9 +78,12 @@ main() {
     if [ "$mode" == "throughput" ] || [ "$mode" == "latency" ]; then
         mode="performance"
     fi
-    parameters="--topology=${topology} --input_model=${input_model} --dataset_location=${dataset_location} --mode=${mode} --batch_size=${batch_size}"
-    if [ ${framework} == "pytorch" ] && [ ${precision} == "int8" ]; then
-        parameters="${parameters} --int8=true"
+    parameters="--input_model=${input_model} --dataset_location=${dataset_location} --mode=${mode} --batch_size=${batch_size}"
+    if [ ${framework} == "pytorch" ]; then
+        parameters="${parameters} --topology=${topology}"
+        if [ ${precision} == "int8" ]; then
+            parameters="${parameters} --int8=true"
+        fi
     fi
     echo ${parameters}
 

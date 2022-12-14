@@ -73,6 +73,16 @@ main() {
 
     echo -e "\n[VAL INFO] Setting run tuning parameters..."
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model} --output_model=${q_model}"
+    if [ "${framework}" == "onnxrt" ]; then
+        quant_format="QOperator"
+        if [[ "${model}" == *"_qdq" ]]; then
+            quant_format="QDQ"
+        fi
+        if [[ "${model}" == *"_dynamic" ]]; then
+            quant_format="default"
+        fi
+        parameters="${parameters} --quant_format=${quant_format}"
+    fi
     echo ${parameters}
 
     echo -e "\n[VAL INFO] [TODO]Update tuning config in main script..."
