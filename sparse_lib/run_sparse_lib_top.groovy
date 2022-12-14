@@ -53,6 +53,10 @@ sub_node_label = params.sub_node_label ?: "lpot"
 sub_node_ut = params.sub_node_ut ?: sub_node_label
 echo "Running on node ${node_label}; sub-job node ${sub_node_label}; ut node ${sub_node_ut}"
 
+// setting windows node_label
+windows_node = "icx-windows"
+echo "windows_node is ${windows_node}"
+
 //other settings
 nlp_url = params.nlp_url ?: "https://github.com/intel-innersource/frameworks.ai.nlp-toolkit.intel-nlp-toolkit.git"
 echo "nlp_url is ${nlp_url}"
@@ -74,6 +78,9 @@ echo "format_scan_only = ${format_scan_only}"
 
 RUN_UT = params.RUN_UT != null ? params.RUN_UT : false
 echo "RUN UT = ${RUN_UT}"
+
+RUN_WINDOWS =params.RUN_WINDOWS !=null ? params.RUN_WINDOWS : false
+echo "RUN WINDOWS = ${RUN_WINDOWS}"
 
 RUN_BENCHMARK = params.RUN_BENCHMARK != null ? params.RUN_BENCHMARK : false
 echo "RUN BENCHMARK = ${RUN_BENCHMARK}"
@@ -175,6 +182,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
 
     //! Update README accordingly after changing the way reading arg_map
     RUN_UT = arg_map.ut as Boolean
+    RUN_WINDOWS = arg_map.windows as Boolean
     if (arg_map.ut == 'sparse_only') sparse_ut_only = true
     RUN_BENCHMARK = arg_map.benchmark as Boolean
     RUN_CPPLINT = arg_map.cpplint as Boolean
@@ -416,6 +424,43 @@ def copyrightCheck() {
     }
 }
 
+def windowsJobBackend(){
+    def windows_job = [:]
+    def unit_test_mode = "gtest" 
+    List WindowsParams = [
+        string(name: "nlp_url", value: "${nlp_url}"),
+        string(name: "nlp_branch", value: "${nlp_commit}"),
+        string(name: "PR_source_branch", value: "${MR_source_branch}"),
+        string(name: "PR_target_branch", value: "${MR_target_branch}"),
+        string(name: "unit_test_mode", value: "${unit_test_mode}"),
+        string(name: "node_label", value: "${windows_node}"),
+        string(name: "lpot_url",value:"${lpot_url}"),
+        string(name: "val_branch", value: "${val_branch}"),
+    ]
+    sub_job_name = "sparse-lib-windows"
+    windows_job[unit_test_mode] = {
+        println("building windows sparse lib UT")
+        def downstreamJob = build job: sub_job_name, propagate: false, parameters: WindowsParams
+        catchError {
+            copyArtifacts(
+                    projectName: sub_job_name,
+                    selector: specific("${downstreamJob.getNumber()}"),
+                    filter: 'a/intel_extension_for_transformers/backends/neural_engine/build/*log,a/intel_extension_for_transformers/backends/neural_engine/build/bin/Debug/*log,a/*log',
+                    fingerprintArtifacts: true,
+                    target: "unittest")
+            archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+        }
+        def failed_build_url = downstreamJob.absoluteUrl
+        if (downstreamJob.result != 'SUCCESS') {
+            println("got sparse lib windows UT failed")
+            win_ut_failed_detail = readFile file: "unittest/a/win_error_log"
+            currentBuild.result = "FAILURE"
+            error("---Windows gtest test failed--- Details in ${failed_build_url}consoleText! ---- \n ${win_ut_failed_detail}")
+        }      
+    }
+    return windows_job
+}
+
 def unitTestBackend() {
     def ut_jobs = [:]
     def unit_test_mode = "gtest" 
@@ -461,6 +506,21 @@ def unitTestBackend() {
         }
     }
     return ut_jobs
+}
+
+def collectWINUT_backend_Log(){
+    echo "------------  running collect WINDOWS UT Log of backend -------------"
+    sh ''' #!/bin/bash
+        overview_log="${WORKSPACE}/summary_overview.log"
+        win_ut_log_name=$WORKSPACE/unittest/a/win_error_log
+        if [ -f ${win_ut_log_name} ];then
+            ut_status='FAILURE'
+        else
+            ut_status='SUCCESS'
+        fi
+        echo "sparselib_windows_ut_gtest,${ut_status},${BUILD_URL}artifact/unittest/a/win_error_log/*view*" | tee -a ${overview_log}
+        
+    '''
 }
 
 def collectUT_backend_Log() {
@@ -859,6 +919,11 @@ node( node_label ) {
             def ut_jobs_gtest = unitTestBackend()
             job_list = job_list + ut_jobs_gtest
         }
+        if (RUN_WINDOWS){
+            println("Add windows to jod...")
+            def windows_job = windowsJobBackend()
+            job_list = job_list + windows_job   
+        }
         if (RUN_CPPLINT) {
             println("Add cpplint scan to job...")
             job_list["cpplint Scan"] = {
@@ -940,6 +1005,9 @@ node( node_label ) {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 if (RUN_UT) {
                     collectUT_backend_Log()
+                }
+                if(RUN_WINDOWS){
+                    collectWINUT_backend_Log()
                 }
                 if (sparse_models != "") {
                     collect_deploy_Log()
