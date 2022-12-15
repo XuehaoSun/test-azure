@@ -872,12 +872,6 @@ def collectLog() {
     echo "------------  running collectLog  -------------"
     echo "---------------------------------------------------------"
 
-    def steps_print_models = [
-        "resnet50v1.5",
-        "resnet50v1",
-        "inception_v1"
-    ]
-
     PLATFORMS.split(";").each { systemConfig ->
         def system = systemConfig.split(":")[0]
         platforms = systemConfig.split(":")[1].split(",")

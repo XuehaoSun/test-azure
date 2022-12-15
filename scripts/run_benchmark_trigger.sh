@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -eo pipefail
-set -x
 PATTERN='[-a-zA-Z0-9_]*='
 output_path=${WORKSPACE}
 

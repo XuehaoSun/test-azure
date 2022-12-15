@@ -62,6 +62,14 @@ function createOverview {
     else
         gtest_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
+    win_gtest=($(grep 'sparselib_windows_ut_gtest' ${overview_log} | sed 's/,/ /g'))
+    if [[ "${win_gtest[1]}" == *"FAIL"* ]]; then
+        win_gtest_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${win_gtest[1]}" == *"SUCC"* ]]; then
+        win_gtest_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        win_gtest_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
     cpplint_scan=($(grep 'sparse-lib-format-scan,cpplint' ${overview_log} | sed 's/,/ /g'))
     if [[ "${cpplint_scan[2]}" == *"FAIL"* ]]; then
         cpplint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
@@ -108,6 +116,11 @@ function createOverview {
             echo "<tr><td>sparse_lib gtest</td>"
             echo "<td style=\"text-align:left\"><a href=\"${gtest[2]}\">ut_link</a></td>"
             echo "${gtest_status}</tr>"
+        fi
+        if [ "${win_gtest[2]}" != "" ]; then
+            echo "<tr><td>sparse_lib windows gtest</td>"
+            echo "<td style=\"text-align:left\"><a href=\"${win_gtest[2]}\">ut_link</a></td>"
+            echo "${win_gtest_status}</tr>"
         fi
         if [ "${cpplint_scan[3]}" != "" ]; then
             echo "<tr><td>cpplint Scan</td>"

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eox pipefail
+set -eo pipefail
 
 PATTERN='[-a-zA-Z0-9_]*='
 
