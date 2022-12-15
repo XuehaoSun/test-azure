@@ -328,6 +328,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
             export PATH=${HOME}/miniconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
+            export GLOG_minloglevel=2
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]];then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
