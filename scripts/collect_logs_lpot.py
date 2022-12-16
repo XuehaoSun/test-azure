@@ -105,7 +105,7 @@ def read_tuning_log(tuning_file):
 
 
 def parse_tuning_line(line):
-    tuning_strategy = re.search(r"Tuning strategy:\s+([A-Za-z]+)", line)
+    tuning_strategy = re.search(r"Tuning strategy:\s+[0-9a-zA-Z_]{1,}", line)
     if tuning_strategy and tuning_strategy.group(1):
         result.tuning.strategy = tuning_strategy.group(1)
 
