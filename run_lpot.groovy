@@ -873,7 +873,7 @@ node( sub_node_label ) {
                 }
                 println("inc_new_api----->" + inc_new_api)
 
-                if ( !inc_new_api ){
+                if ( !inc_new_api && !(framework=='pytorch' && (model_src_dir=~'oob_models').find()) ) {
                     println("replace for old api examples...")
                     dir("${WORKSPACE}"){
                         sh """ #!/bin/bash -x
