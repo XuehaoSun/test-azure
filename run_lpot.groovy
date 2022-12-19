@@ -668,10 +668,6 @@ def collectLogs() {
         }
         required = required.substring(0, required.length() - 1) + "]"
 
-        if (tune_only){
-            required = []
-        }
-
         cmd += " --required=\"${required}\""
         withEnv(["conda_env_name=${conda_env_name}"]) {
             sh """#!/bin/bash
