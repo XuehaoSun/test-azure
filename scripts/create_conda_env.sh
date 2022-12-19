@@ -63,6 +63,7 @@ function update_conda_env {
     do 
         [[ -d ${conda_dir}/pkgs/${pkg} && $(ls ${conda_dir}/pkgs/${pkg} | wc -l) != 0 ]] && rm -fr ${conda_dir}/pkgs/${pkg}
     done
+    conda config --add channels conda-forge
     conda config --add channels defaults
     conda create python=${python_version} -y -n ${conda_env_name}
 
