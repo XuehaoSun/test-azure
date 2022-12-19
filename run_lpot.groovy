@@ -110,9 +110,12 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
-strategy="basic"
+strategy=""
 if ('strategy' in params && params.strategy != ''){
     strategy = params.strategy
+}
+if (strategy == "default"){
+    strategy = ""
 }
 echo "strategy is ${strategy}"
 
@@ -467,7 +470,6 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --multi_instance=${multi_instance} \
                     --conda_env_name=${conda_env_name} \
                     --conda_env_mode=${conda_env_mode} \
-                    --yaml=${yaml} \
                     --os=${os} \
                     --device=${device} \
                     --profiling=${RUN_PROFILING} \
@@ -486,11 +488,7 @@ def getReferenceData() {
             def refer_job_name = "${JOB_NAME}"
 
             if (test_mode == "extension") {
-                if (framework=="baremetal"){
-                    refer_job_name="intel-deep-engine-validation-top-nightly"
-                }else{
-                    refer_job_name="intel-lpot-validation-top-weekly"
-                }
+                refer_job_name="intel-lpot-validation-top-weekly"
             }else if(test_mode == "mr" && framework != "baremetal" && tf_new_api != "true"){
                 refer_job_name = "intel-lpot-validation-top-PR"
             } else {
@@ -687,16 +685,6 @@ def collectLogs() {
     }
 }
 
-def syncConfigFile(){
-    sh '''#!/bin/bash
-        set -x
-        inc_config_path="${WORKSPACE}/lpot-models/examples/.config"
-        if [ -d "${inc_config_path}" ]; then
-            cp ${inc_config_path}/* ${WORKSPACE}/lpot-validation/config
-        fi
-    '''
-}
-
 node( sub_node_label ) {
     // Get CPU name
     if (['unknown','any', '*'].contains(device)) {
@@ -848,19 +836,16 @@ node( sub_node_label ) {
                 }
             }
 
-            // sync config json file
-            syncConfigFile()
-
             getReferenceData()
 
             stage("Get model parameters") {
                 println("Getting model parameters...")
                 try {
-                    jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
+                    jsonParse(readFile("$WORKSPACE/lpot-models/examples/.config/model_params_${framework}.json"))."${framework}"."${model}"
                 } catch(e) {
                     error("Could not load parameters for ${framework} ${model}")
                 }
-                def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/model_params_${framework}.json"))."${framework}"."${model}"
+                def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-models/examples/.config/model_params_${framework}.json"))."${framework}"."${model}"
                 model_src_dir = modelConf."model_src_dir"
                 dataset_location = modelConf."dataset_location"
                 input_model = modelConf."input_model"
@@ -875,8 +860,9 @@ node( sub_node_label ) {
 
                 if ( !inc_new_api && !(framework=='pytorch' && (model_src_dir=~'oob_models').find()) ) {
                     println("replace for old api examples...")
-                    dir("${WORKSPACE}"){
-                        sh """ #!/bin/bash -x
+                    retry(3){
+                        dir("${WORKSPACE}"){
+                            sh """ #!/bin/bash -x
                             git clone -b old_api_examples ${lpot_url} old-lpot-models
                             cd old-lpot-models
                             git branch 
@@ -884,7 +870,8 @@ node( sub_node_label ) {
                             rm -rf ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}
                             mkdir -p ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}
                             cp -r ${WORKSPACE}/old-lpot-models/examples/${framework}/${model_src_dir} ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/../
-                        """
+                            """
+                        }
                     }
                 }
 
@@ -1055,26 +1042,26 @@ node( sub_node_label ) {
                         echo "Running ---- ${framework}, ${model}, inc_new_api ----Tuning"
                         sh """#!/bin/bash -x
                         ${timeout} bash ${WORKSPACE}/lpot-validation/scripts/run_tuning_trigger_new_api.sh \
-                            --python_version=${python_version} \\
-                            --framework=${framework} \\
-                            --model=${model} \\
-                            --model_src_dir=${model_src_dir} \\
-                            --dataset_location=${dataset_prefix}${dataset_location} \\
-                            --input_model=${dataset_prefix}${input_model} \\
-                            --strategy=${strategy} \\
-                            --strategy_token=${SIGOPT_TOKEN} \\
-                            --max_trials=${max_trials} \\
-                            --accuracy_criterion=${accuracy_criterion} \\
-                            --algorithm=${algorithm} \\
-                            --sampling_size="${sampling_size}" \\
-                            --conda_env_name=${conda_env_name} \\
-                            --conda_env_mode=${conda_env_mode} \\
-                            --log_level=${log_level} \\
-                            --dtype=${dtype} \\
-                            --backend=${backend} \\
-                            --itex_mode=${itex_mode} \\
-                            --is_gpu=${is_gpu} \\
-                            2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
+                            --python_version=${python_version} \
+                            --framework=${framework} \
+                            --model=${model} \
+                            --model_src_dir=${model_src_dir} \
+                            --dataset_location=${dataset_prefix}${dataset_location} \
+                            --input_model=${dataset_prefix}${input_model} \
+                            --strategy=${strategy} \
+                            --strategy_token=${SIGOPT_TOKEN} \
+                            --max_trials=${max_trials} \
+                            --accuracy_criterion=${accuracy_criterion} \
+                            --algorithm=${algorithm} \
+                            --sampling_size="${sampling_size}" \
+                            --conda_env_name=${conda_env_name} \
+                            --conda_env_mode=${conda_env_mode} \
+                            --log_level=${log_level} \
+                            --dtype=${dtype} \
+                            --backend=${backend} \
+                            --itex_mode=${itex_mode} \
+                            --is_gpu=${is_gpu} \
+                            --main_script=${main_script} 2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
                         """
                     }
                 }else{
@@ -1116,15 +1103,25 @@ node( sub_node_label ) {
                             "framework=${framework}",
                             "model=${model}",
                             "os=${os}",
-                            "device=${device}"]) {
+                            "device=${device}",
+                            "inc_new_api=${inc_new_api}"]) {
                         sh '''#!/bin/bash -x
-                            control_phrase="model which meet accuracy goal."
-                            if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | wc -l) == 0 ];then
-                                exit 1
+                            if [[ "${inc_new_api}" == "true" ]] && [[ "${model}" == *"_qat"* ]]; then
+                                control_phrase="Save config file and weights of quantized model"
+                                if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | wc -l) == 0 ];then
+                                    exit 1
+                                fi
+                            else
+                                control_phrase="model which meet accuracy goal."
+                                if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | wc -l) == 0 ];then
+                                    exit 1
+                                fi
+                                if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | grep "Not found" | wc -l) == 1 ];then
+                                    exit 1
+                                fi
                             fi
-                            if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | grep "Not found" | wc -l) == 1 ];then
-                                exit 1
-                            fi
+                            
+                            
                         '''
                     }
                 }
@@ -1153,6 +1150,11 @@ node( sub_node_label ) {
                                  || (framework == "onnxrt" && onnx_perf_only_list.contains(model))) {
                                 mode_list = mode_list - 'accuracy'
                                 echo "mode list is ${mode_list}"
+                            }
+                            if ( framework=="tensorflow" && (model_src_dir=~'oob_models').find()){
+                                new_benchmark=false
+                                inc_new_api=false
+                                echo "set new_benchmark and inc_new_api as false for tensorflow oob models"
                             }
                             mode_list.each { mode ->
                                 runPerfTest(mode, precision)

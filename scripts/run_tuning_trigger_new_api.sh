@@ -44,13 +44,15 @@ do
             itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
         --is_gpu=*)
             is_gpu=`echo $i | sed "s/${PATTERN}//"`;;
+        --main_script=*)
+            main_script=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
 done
 
 main() {
-
+    echo -e "\n[VAL INFO] Run INC new API quantization..."
     echo -e "\n[VAL INFO] Setting environment..."
     source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
          --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} \
@@ -72,7 +74,10 @@ main() {
     get_input_model
 
     echo -e "\n[VAL INFO] Setting run tuning parameters..."
-    parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model} --output_model=${q_model}"
+    parameters="--dataset_location=${dataset_location} --input_model=${input_model} --output_model=${q_model}"
+    if [ ${framework} == "pytorch" ]; then
+        parameters="${parameters} --topology=${topology}"
+    fi
     if [ "${framework}" == "onnxrt" ]; then
         quant_format="QOperator"
         if [[ "${model}" == *"_qdq" ]]; then
@@ -83,10 +88,21 @@ main() {
         fi
         parameters="${parameters} --quant_format=${quant_format}"
     fi
-    echo ${parameters}
+    echo "bash run_tuning.sh ${parameters}"
 
     echo -e "\n[VAL INFO] [TODO]Update tuning config in main script..."
-    echo "Tuning strategy: ${strategy}"
+    update_conf_params=""
+    if [ "${strategy}" != "" ]; then
+        echo "Tuning strategy: ${strategy}"
+        update_conf_params="${update_conf_params} --strategy=${strategy}"
+    fi
+    if [ "${max_trials}" != "" ]; then
+        update_conf_params="${update_conf_params} --max_trials=${max_trials}"
+    fi
+    if [ "${update_conf_params}" != "" ]; then
+        echo "update_conf_params: $update_conf_params"
+        python ${WORKSPACE}/lpot-validation/scripts/update_new_api_config.py --main_script=${main_script} ${update_conf_params}
+    fi
 
     echo -e "\n[VAL INFO] Running tuning..."
     starttime=`date +'%Y-%m-%d %H:%M:%S'`

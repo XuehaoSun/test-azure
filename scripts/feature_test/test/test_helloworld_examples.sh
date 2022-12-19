@@ -19,7 +19,7 @@ function main {
     export PATH=${HOME}/miniconda3/bin/:$PATH
     cd ${WORKSPACE}/lpot-models/examples/helloworld || return
 
-    for i in `seq 8`
+    for i in `seq 7`
     do
         create_conda_env "tf_example${i}"
         lpot_install
@@ -30,8 +30,7 @@ function main {
 function tf_example1 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1 || return
     cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
-    sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
-    python test.py
+    python test.py --dataset_location=${dataset_location}
 }
 
 function tf_example2 {
@@ -49,18 +48,11 @@ function tf_example2 {
 
 function tf_example3 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example3 || return
+    cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
 
-    cp /tf_dataset/examples_helloworld/example3/inception_v1_2016_08_28.tar.gz .
-    tar -xvf inception_v1_2016_08_28.tar.gz
-    sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
-
-    # Set env variables to speedup test
-    export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
-    export KMP_BLOCKTIME=1
-    export KMP_SETTINGS=1
-    export TF_NUM_INTEROP_THREADS=1
-
-    python test.py
+    # force bf16 for mix precision test
+    export FORCE_BF16=1
+    python test.py --dataset_location=${dataset_location}
 }
 
 function tf_example4 {
@@ -74,66 +66,31 @@ function tf_example4 {
 
 function tf_example5 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example5 || return
+    cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
 
-    if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
-        cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
-    else
-        cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
-    fi
-    sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
-
-    python test.py --tune
-    python test.py --benchmark
+    python test.py --tune --dataset_location=${dataset_location}
+    python test.py --benchmark --dataset_location=${dataset_location}
 }
 
 function tf_example6 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example6 || return
+    cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
 
-    if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
-        cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
-    else
-        cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
-    fi
-    sed -i "/\/path\/to\/imagenet/s|root:.*|root: ${dataset_location}|g" conf.yaml
-
-    python test.py --tune
-    python test.py --benchmark
+    python test.py --tune --dataset_location=${dataset_location}
+    python test.py --benchmark --dataset_location=${dataset_location}
 }
 
 function tf_example7 {
     cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example7 || return
-    python test.py --tune
-    python test.py --benchmark
-}
+    cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
 
-function tf_example8 {
-    cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example8 || return
-    if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
-        cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
-    else
-        cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
-    fi
-    python test.py
-}
-
-function tf_example9 {
-    export FORCE_BF16=1
-    cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example9 || return
-    if [ -f ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb ]; then
-        cp ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1/mobilenet_v1_1.0_224_frozen.pb .
-    else
-        cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
-    fi
     python test.py
 }
 
 function create_conda_env {
     example_name=$1
-    if [[ "${example_name}" == "tf_example3" ]]; then
-      python_version="3.7"
-    else
-      python_version="${origin_python_version}"
-    fi
+
+    python_version="${origin_python_version}"
     conda_env_name=lpot-py${python_version}-helloworld
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
@@ -160,7 +117,6 @@ function create_conda_env {
         python -m pip install -r requirements.txt
         pip list
     fi
-    pip install protobuf==3.20.1
 }
 
 function lpot_install {

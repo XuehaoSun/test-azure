@@ -2,7 +2,6 @@
 
 set -eo pipefail
 PATTERN='[-a-zA-Z0-9_]*='
-output_path=${WORKSPACE}
 
 for i in "$@"
 do
@@ -48,7 +47,7 @@ done
 
 # Run Benchmark
 main() {
-
+    echo -e "\n[VAL INFO] Run INC new API benchmark..."
     echo -e "\n[VAL INFO] Setting environment..."
     source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
         --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} \
@@ -72,6 +71,7 @@ main() {
     get_topology
 
     echo -e "\n[VAL INFO] Getting input model..."
+    origin_model=${input_model}
     get_input_model
 
     echo -e "\n[VAL INFO] Setting run benchmark parameters..."
@@ -84,6 +84,9 @@ main() {
         if [ ${precision} == "int8" ]; then
             parameters="${parameters} --int8=true"
         fi
+    fi
+    if [ ${framework} == "tensorflow" ] && [ ${model} == "bert_base_mrpc" ]; then
+        parameters="${parameters} --init_checkpoint=${origin_model}"
     fi
     echo ${parameters}
 
@@ -100,6 +103,7 @@ main() {
 
 function run_accuracy {
     echo -e "\n[VAL INFO] Running accuracy..."
+    echo "bash run_benchmark.sh ${parameters}"
     bash run_benchmark.sh ${parameters}
 }
 
@@ -123,7 +127,7 @@ function run_benchmark {
     ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
     numactl --hardware
     ncores_per_instance=${ncores_per_socket}
-    iters=200
+    iters=500
 
     single_instance=("3dunet" "centernet_hg104" "GPT2" "dlrm" "dlrm_fx" "dlrm_ipex" "gpt_j_wikitext")
     if [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
@@ -153,6 +157,7 @@ function run_benchmark {
     parameters="${parameters} --iters=${iters}"
 
     echo -e "\n[VAL INFO] Running benchmark..."
+    echo "bash run_benchmark.sh ${parameters}"
     bash run_benchmark.sh ${parameters}
 }
 

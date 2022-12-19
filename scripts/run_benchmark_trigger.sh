@@ -27,8 +27,6 @@ do
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_mode=*)
             conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
-        --yaml=*)
-            yaml=`echo $i | sed "s/${PATTERN}//"`;;
         --profiling=*)
             profiling=`echo $i | sed "s/${PATTERN}//"`;;
         --os=*)
@@ -74,12 +72,6 @@ main() {
         echo "[ERROR] model_src_dir \"${model_src_dir}\" not exists."
         exit 1
     fi
-
-    echo -e "\nSet a modified yaml..."
-    echo "${yaml}"
-    cp "${yaml}" "benchmark.yaml"
-    yaml="benchmark.yaml"
-    echo "${yaml}"
 
     echo -e "\nGetting git information..."
     echo "$(git remote -v)"
@@ -177,7 +169,6 @@ main() {
 function run_accuracy {
     parameters="${parameters} --mode=accuracy --batch_size=${batch_size}"
 
-    # general yaml for new config format
     iters=-1
 
     if [ -f "run_benchmark.sh" ]; then
@@ -243,7 +234,12 @@ function run_benchmark {
         iters=50
     fi
 
-    parameters="${parameters} --mode=benchmark --batch_size=${batch_size} --iters=${iters}"
+    parameters="${parameters} --batch_size=${batch_size} --iters=${iters}"
+    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} == *"oob_models/quantization"* ]]; then
+        parameters="${parameters} --mode=performance"
+    else
+        parameters="${parameters} --mode=benchmark"
+    fi
 
     # Disable fp32 optimization for oob models on TF1.15UP1
     if [ "${topology}" == "RetinaNet50" ] || [ "${topology}" == "ssd_resnet50_v1_fpn_coco" ]; then
@@ -320,20 +316,6 @@ function run_benchmark {
         cp -r "${model_src_dir}/timeline_json/"* "${save_path}"
     fi
 
-}
-
-# update yaml file
-function update_yaml_config {
-    if [ ! -f ${yaml} ]; then
-        echo "Not found yaml config at \"${yaml}\" location."
-        exit 1
-    fi
-
-    update_yaml_params=" --batch-size ${batch_size} --iteration ${iters} --mode ${mode}"
-
-    if [ "${update_yaml_params}" != "" ]; then
-        python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} ${update_yaml_params}
-    fi
 }
 
 main

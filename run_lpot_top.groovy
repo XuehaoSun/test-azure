@@ -351,7 +351,7 @@ if ('python_version' in params && params.python_version != '') {
 }
 echo "Python version: ${python_version}"
 
-strategy = "basic"
+strategy = ""
 if ('strategy' in params && params.strategy != '') {
     strategy = params.strategy
 }

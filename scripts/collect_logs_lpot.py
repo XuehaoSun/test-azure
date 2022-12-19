@@ -105,9 +105,15 @@ def read_tuning_log(tuning_file):
 
 
 def parse_tuning_line(line):
-    tuning_strategy = re.search(r"Tuning strategy:\s+([0-9a-zA-Z_]{1,})", line)
-    if tuning_strategy and tuning_strategy.group(1):
-        result.tuning.strategy = tuning_strategy.group(1)
+    tuning_strategy = re.search(r"\'strategy\': \{", line)
+    if tuning_strategy:
+        result.tuning.strategy = "check_next_line"
+    if not tuning_strategy and result.tuning.strategy == "check_next_line":
+        tuning_strategy = re.search(r"\'name\': \'(\w+)\'", line)
+        if tuning_strategy and tuning_strategy.group(1):
+            result.tuning.strategy = tuning_strategy.group(1)
+        else:
+            result.tuning.strategy = ""
 
     baseline_acc = re.search(r"FP32 baseline is:\s+\[Accuracy:\s(\d+(\.\d+)?), Duration \(seconds\):\s*(\d+(\.\d+)?)\]", line)
     if baseline_acc and baseline_acc.group(1):

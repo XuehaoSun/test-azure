@@ -6,7 +6,7 @@ echo "summaryLog: ${summaryLog}"
 
 function main {
     CPU_NAME=$(cat "${WORKSPACE}/${feature_name}/cpu_name.log")
-    for i in `seq 8`
+    for i in `seq 7`
     do
         check_tf_example_status ${i}
     done
@@ -20,7 +20,7 @@ function check_tf_example_status {
         test_phrase="Inference is done."
     fi
 
-    if [ $(grep -c "${test_phrase}" ${WORKSPACE}/${feature_name}/tf_example${example_number}.log) == 1 ]; then
+    if [[ $(grep -c "${test_phrase}" ${WORKSPACE}/${feature_name}/tf_example${example_number}.log) == 1 ]]; then
         status="pass"
     else
         status="fail"
@@ -28,7 +28,6 @@ function check_tf_example_status {
 
     if [[ "${example_number}" == 5 ]]; then
         accuracy_count=$(grep -c 'Accuracy is [0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
-        #latency_count=$(grep -c 'Latency: [0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
         if [[ ${status} == "pass" ]] && [[ ${accuracy_count} == 1 ]]; then
             test_status="pass"
         else
@@ -39,8 +38,8 @@ function check_tf_example_status {
     fi
 
     if [[ "${example_number}" == 6 ]]; then
-        performance_result_count=$(grep -c 'performance mode benchmark result' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
-        if [[ ${status} == "pass" ]] && [[ ${performance_result_count} == 7 ]]; then  # Example 6 should execute 7 instance
+        performance_result_count=$(grep -c 'Throughput: ' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
+        if [[ ${status} == "pass" ]] && [[ ${performance_result_count} == 1 ]]; then
             test_status="pass"
         else
             test_status="fail"
