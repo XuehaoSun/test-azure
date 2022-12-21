@@ -254,11 +254,6 @@ main() {
         copy_model
     fi
 
-    if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
-        cp -r ${input_model} ${model_src_dir}/bert_base_mrpc
-        input_model=${model_src_dir}/bert_base_mrpc
-    fi
-
     echo "Checking topology..."
     echo "Framework: '${framework}'"
     echo "Model: '${model}'"

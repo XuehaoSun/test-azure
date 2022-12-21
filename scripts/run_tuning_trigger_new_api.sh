@@ -90,7 +90,7 @@ main() {
     fi
     echo "bash run_tuning.sh ${parameters}"
 
-    echo -e "\n[VAL INFO] [TODO]Update tuning config in main script..."
+    echo -e "\n[VAL INFO] Update tuning config in main script..."
     update_conf_params=""
     if [ "${strategy}" != "" ]; then
         echo "Tuning strategy: ${strategy}"
@@ -183,10 +183,6 @@ function get_input_model {
             fi
         fi
         copy_model
-    fi
-    if [ "${framework}" == "tensorflow" ] && [ "${model}" == "bert_base_mrpc" ]; then
-        cp -r ${input_model} ${model_src_dir}/bert_base_mrpc
-        input_model=${model_src_dir}/bert_base_mrpc
     fi
 }
 

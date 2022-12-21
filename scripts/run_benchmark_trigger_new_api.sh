@@ -150,7 +150,7 @@ function run_benchmark {
         iters=50
     fi
 
-    echo -e "\n[VAL INFO] [TODO]Update benchmark config in main script..."
+    echo -e "\n[VAL INFO] Update benchmark config in main script..."
     python ${WORKSPACE}/lpot-validation/scripts/update_new_api_config.py --main_script=${main_script} --iteration=${iters} --cores_per_instance=${ncores_per_instance} --num_of_instance=${num_of_instance}
 
     echo -e "\n[VAL INFO] Pass parameter iters for b_func models benchmark..."

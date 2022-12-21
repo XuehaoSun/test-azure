@@ -859,17 +859,17 @@ node( sub_node_label ) {
                 println("inc_new_api----->" + inc_new_api)
 
                 if ( !inc_new_api && !(framework=='pytorch' && (model_src_dir=~'oob_models').find()) ) {
-                    println("replace for old api examples...")
+                    println("check whether need to download old api examples...")
                     retry(3){
                         dir("${WORKSPACE}"){
                             sh """ #!/bin/bash -x
-                            git clone -b old_api_examples ${lpot_url} old-lpot-models
-                            cd old-lpot-models
-                            git branch 
-                            cd -
-                            rm -rf ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}
-                            mkdir -p ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}
-                            cp -r ${WORKSPACE}/old-lpot-models/examples/${framework}/${model_src_dir} ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/../
+                            if [ ! -d "${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}" ]; then
+                                git clone -b old_api_examples ${lpot_url} old-lpot-models
+                                cd old-lpot-models
+                                git branch 
+                                mkdir -p ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}
+                                cp -r ${WORKSPACE}/old-lpot-models/examples/${framework}/${model_src_dir} ${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}/../
+                            fi
                             """
                         }
                     }
@@ -923,6 +923,28 @@ node( sub_node_label ) {
                     // set timeout for PR test
                     timeout="timeout 5400"
                 }
+
+                // Create full model sre dir
+                if (framework=='pytorch' && (model_src_dir=~'oob_models').find()){
+                    model_src_dir="${WORKSPACE}/lpot-validation/examples/${framework}/${model_src_dir}"
+                }else{
+                    model_src_dir="${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}"
+                }
+
+                // Adjust parameters for specific models
+                if (framework=='tensorflow' && model == 'bert_base_mrpc'){
+                    sh """ #!/bin/bash -x
+                        cp -r ${input_model} ${model_src_dir}/bert_base_mrpc
+                    """
+                    input_model="${model_src_dir}/bert_base_mrpc"
+                }
+                if (framework=='tensorflow' && model == 'distilbert_base'){
+                    sh """ #!/bin/bash -x
+                        cp -r ${dataset_location} ${model_src_dir}/sst2_validation_dataset
+                    """
+                    dataset_location="${model_src_dir}/sst2_validation_dataset"
+                }
+
             }
 
             stage("Build Conda Env"){
@@ -945,10 +967,6 @@ node( sub_node_label ) {
                     }
                     label=model.split('_')
                     if(label[-1] == 'fx' && pytorch_version == '1.5.0+cpu'){
-                        pytorch_version = '1.8.0+cpu'
-                        conda_env_name="${framework}-${pytorch_version}-${python_version}"
-                    }
-                    if(model == "bert_base_MRPC_qat"){
                         pytorch_version = '1.8.0+cpu'
                         conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
@@ -1032,11 +1050,6 @@ node( sub_node_label ) {
                 if (device in nightly_cpu_list){
                     device = device.split("-")[0]
                 }
-                if (framework=='pytorch' && (model_src_dir=~'oob_models').find()){
-                    model_src_dir="${WORKSPACE}/lpot-validation/examples/${framework}/${model_src_dir}"
-                }else{
-                    model_src_dir="${WORKSPACE}/lpot-models/examples/${framework}/${model_src_dir}"
-                }
                 if (inc_new_api){
                     withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                         echo "Running ---- ${framework}, ${model}, inc_new_api ----Tuning"
@@ -1107,7 +1120,7 @@ node( sub_node_label ) {
                             "inc_new_api=${inc_new_api}"]) {
                         sh '''#!/bin/bash -x
                             if [[ "${inc_new_api}" == "true" ]] && [[ "${model}" == *"_qat"* ]]; then
-                                control_phrase="Save config file and weights of quantized model"
+                                control_phrase="Training finished!"
                                 if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | wc -l) == 0 ];then
                                     exit 1
                                 fi

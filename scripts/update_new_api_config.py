@@ -67,18 +67,18 @@ def parse_line(line: str, stack_dict: dict):
             stack_dict.setdefault("BenchmarkConfig", [])
             update_stack(line, stack_dict["BenchmarkConfig"])
             pre_iteration = re.search(r"iteration=(\d+)", line)
-            if pre_iteration:
+            if args.iteration and pre_iteration:
                 print("previous ", pre_iteration.group(), ", current iteration=", args.iteration)
                 line = re.sub(r"iteration=(\d+)", f"iteration={args.iteration}", line)
                 print("Updated line of iteration --> ", line)
             pre_cores_per_instance = re.search(r"cores_per_instance=(\d+)", line)
-            if pre_cores_per_instance:
+            if args.cores_per_instance and pre_cores_per_instance:
                 print("previous ", pre_cores_per_instance.group(),
                       ", current cores_per_instance=", args.cores_per_instance)
                 line = re.sub(r"cores_per_instance=(\d+)", f"cores_per_instance={args.cores_per_instance}", line)
                 print("Updated line of cores_per_instance --> ", line)
             pre_num_of_instance = re.search(r"num_of_instance=(\d+)", line)
-            if pre_num_of_instance:
+            if args.num_of_instance and pre_num_of_instance:
                 print("previous ", pre_num_of_instance.group(),
                       ", current num_of_instance=", args.num_of_instance)
                 line = re.sub(r"num_of_instance=(\d+)", f"num_of_instance={args.num_of_instance}", line)
@@ -89,12 +89,12 @@ def parse_line(line: str, stack_dict: dict):
             stack_dict.setdefault("TuningCriterion", [])
             update_stack(line, stack_dict["TuningCriterion"])
             pre_strategy = re.search(r"strategy=\"(\w+)\"", line)
-            if pre_strategy:
+            if args.strategy and pre_strategy:
                 print("strategy ", pre_strategy.group(), ", current strategy= ", args.strategy)
                 line = re.sub(r"strategy=\"\w+\"", f"strategy=\"{args.strategy}\"", line)
                 print("Updated line of strategy --> ", line)
             pre_max_trials = re.search(r"max_trials=(\d+)", line)
-            if pre_max_trials:
+            if args.max_trials and pre_max_trials:
                 print("previous ", pre_max_trials.group(), ", current max_trials=", args.max_trials)
                 line = re.sub(r"max_trials=(\d+)", f"max_trials={args.max_trials}", line)
                 print("Updated line of max_trials --> ", line)
