@@ -163,6 +163,8 @@ if [[ "${pytorch_version}" != "" ]]; then
             torchvision_version="stock-nightly";;
         nightly)
             torchvision_version="nightly";;
+        1.13.1*)
+            torchvision_version="0.14.1";;
         1.13.0*)
             torchvision_version="0.14.0";;
         1.12.1*)
