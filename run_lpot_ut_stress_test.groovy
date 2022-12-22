@@ -432,12 +432,14 @@ node(node_label){
                     if [ -f "${run_tfnewapi_scripts}" ]; then
                         echo "---------- Run TF newAPI -----------------"
                         cat ${run_tfnewapi_scripts}
+                        pip uninstall horovod -y
+                        pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
+                        pip uninstall tensorflow -y | tee -a ${ut_log_name}
                         pip install ${WORKSPACE}/tensorflow*.whl
                         if [ $? == 1 ]; then
                            exit 1
                         fi
                         echo "re-install horovod resolve the issue with fwk..."
-                        pip uninstall horovod -y
                         pip install --no-cache-dir horovod
                         for((j=0;$j<${test_trials};j=$(($j + 1))));
                         do
@@ -453,6 +455,7 @@ node(node_label){
                     if [ -f "${run_itex_scripts}" ]; then
                         echo "---------- Run ITEX -----------------"
                         cat ${run_itex_scripts}
+                        pip uninstall horovod -y
                         pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
                         pip uninstall tensorflow -y | tee -a ${ut_log_name}
                         pip install tensorflow
@@ -462,7 +465,6 @@ node(node_label){
                            exit 1
                         fi
                         echo "re-install horovod resolve the issue with fwk..."
-                        pip uninstall horovod -y
                         pip install --no-cache-dir horovod
                         for((j=0;$j<${test_trials};j=$(($j + 1))));
                         do

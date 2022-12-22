@@ -714,15 +714,15 @@ node(node_label){
                 
                             if [ -d "tfnewapi" ]; then
                                 echo "\n\nRun special UT with TFnewAPI...\n" | tee -a ${ut_log_name}
+                                pip uninstall horovod -y | tee -a ${ut_log_name}
                                 pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
                                 pip uninstall tensorflow -y | tee -a ${ut_log_name}
                                 pip install ${WORKSPACE}/tensorflow*.whl
                                 if [ $? == 1 ]; then
                                    exit 1
                                 fi
-                                echo "re-install horovod resolve the issue with fwk..."
-                                pip uninstall horovod -y
-                                pip install --no-cache-dir horovod
+                                echo "re-install horovod resolve the issue with fwk..." | tee -a ${ut_log_name}
+                                pip install --no-cache-dir horovod | tee -a ${ut_log_name}
                                 echo "-------------"
                                 pip list | tee -a ${ut_log_name}
                                 bash run_tfnewapi.sh 2>&1 | tee -a ${ut_log_name}
@@ -730,6 +730,7 @@ node(node_label){
                             
                             if [ -d "itex" ]; then
                                 echo "\n\nRun special UT with itex...\n" | tee -a ${ut_log_name}
+                                pip uninstall horovod -y | tee -a ${ut_log_name}
                                 pip uninstall intel-tensorflow -y | tee -a ${ut_log_name}
                                 pip uninstall tensorflow -y | tee -a ${ut_log_name}
                                 pip install tensorflow 
@@ -737,9 +738,8 @@ node(node_label){
                                 if [ $? == 1 ]; then
                                    exit 1
                                 fi
-                                echo "re-install horovod resolve the issue with fwk..."
-                                pip uninstall horovod -y
-                                pip install --no-cache-dir horovod
+                                echo "re-install horovod resolve the issue with fwk..." | tee -a ${ut_log_name}
+                                pip install --no-cache-dir horovod | tee -a ${ut_log_name}
                                 echo "-------------"
                                 pip list | tee -a ${ut_log_name}
                                 bash run_itex.sh 2>&1 | tee -a ${ut_log_name}
