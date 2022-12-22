@@ -75,6 +75,9 @@ main() {
 
     echo -e "\n[VAL INFO] Setting run tuning parameters..."
     parameters="--dataset_location=${dataset_location} --input_model=${input_model} --output_model=${q_model}"
+    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} == *"oob_models/quantization"* ]]; then
+        parameters="${parameters} --topology=${topology}"
+    fi
     if [ ${framework} == "pytorch" ]; then
         parameters="${parameters} --topology=${topology}"
     fi
