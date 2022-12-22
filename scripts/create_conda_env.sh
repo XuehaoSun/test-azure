@@ -328,6 +328,13 @@ else
     echo "Won't install MXNet!"
 fi
 
+if [ "${mxnet_version}" != '' ]; then
+    pip install numpy==1.23.5
+    echo "re-install pycocotools resolve the issue with numpy..."
+    pip uninstall pycocotools -y
+    pip install --no-cache-dir pycocotools
+fi
+
 # Install ONNX
 if [ "${onnxruntime_version}" != '' ]; then
     pip install onnx==${onnx_version}
