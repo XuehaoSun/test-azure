@@ -155,7 +155,7 @@ if ('PLATFORMS' in params && params.PLATFORMS != '') {
 }
 echo "PLATFORMS: ${PLATFORMS}"
 
-python_version = "3.7"
+python_version = "3.8"
 if ('python_version' in params && params.python_version != '') {
     python_version = params.python_version
 }
@@ -316,6 +316,24 @@ if ("feature_list" in params && params.feature_list != "") {
 }
 echo "feature_list: ${feature_list}"
 
+upload_nightly_binary=false
+if (params.upload_nightly_binary != null){
+    upload_nightly_binary=params.upload_nightly_binary
+}
+echo "upload_nightly_binary = ${upload_nightly_binary}"
+
+upstream_nightly_source=false
+if (params.upstream_nightly_source != null){
+    upstream_nightly_source=params.upstream_nightly_source
+}
+echo "upstream_nightly_source = ${upstream_nightly_source}"
+
+binary_mode = "full"
+if ('binary_mode' in params && params.binary_mode != '') {
+    binary_mode = params.binary_mode
+}
+echo "binary_mode: $binary_mode"
+
 /////////
 source_branch = ""
 target_branch = ""
@@ -372,6 +390,14 @@ if ('launcher_mode' in params && params.launcher_mode != '') {
     launcher_mode=params.launcher_mode
 }
 echo "launcher_mode: ${launcher_mode}"
+
+binary_build_job_dict = [:]
+binary_build_inc_dict = [:]
+test_install_backend = false
+if (params.test_install_backend != null) {
+    test_install_backend=params.test_install_backend
+}
+echo "test_install_backend is ${test_install_backend}"
 
 def parseStrToList(srtingElements, delimiter=',') {
     if (srtingElements == '') {
@@ -527,45 +553,48 @@ def download() {
     }
 }
 /// choose install from source or pypi ///
-def buildBinaryNLP() {
+def buildBinaryNLP(py_version) {
     List binaryBuildParamsNLP = [
-        string(name: "python_version", value: "${python_version}"),
-        string(name: "nlp_url", value: "${nlp_url}"),
-        string(name: "nlp_branch", value: "${nlp_branch}"),
-        string(name: "MR_source_branch", value: "${source_branch}"),
-        string(name: "MR_target_branch", value: "${target_branch}"),
-        string(name: "val_branch", value: "${val_branch}"),
-        string(name: "pypi_version", value: "${pypi_version}")
-    ]
+            string(name: "nlp_url", value: "${nlp_url}"),
+            string(name: "nlp_branch", value: "${nlp_branch}"),
+            string(name: "MR_source_branch", value: "${source_branch}"),
+            string(name: "MR_target_branch", value: "${target_branch}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "pypi_version", value: "${pypi_version}"),
+            string(name: "binary_mode", value: "${binary_mode}"),
+            string(name: "python_version", value: py_version)
+        ]
     if (conda_env_mode == "conda") {
         binaryBuildParamsNLP += string(name: "conda_env", value: "lpot_conda_build")
         binaryBuildParamsNLP += string(name: "binary_class", value: "conda")
     }
     downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
     binary_build_job_nlp = downstreamJob.getNumber()
-    echo "binary_build_job_nlp: ${binary_build_job_nlp}"
+    binary_build_job_dict[py_version] = binary_build_job_nlp
+    echo "binary_build_job_nlp for ${py_version}: ${binary_build_job_nlp}"
     echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
     if (downstreamJob.getResult() != "SUCCESS") {
         currentBuild.result = "FAILURE"
         failed_build_url = downstreamJob.absoluteUrl
         echo "failed_build_url: ${failed_build_url}"
         error("---- nlp wheel build got failed! ---- Details in ${failed_build_url}consoleText! ---- ")
-    }
+    } 
 }
 
-def buildBinary(){
+def buildBinary(py_version){
     List binaryBuildParams = [
             string(name: "inc_url", value: "${lpot_url}"),
             string(name: "inc_branch", value: "${lpot_branch}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "LINUX_BINARY_CLASSES", value: "wheel"),
-            string(name: "LINUX_PYTHON_VERSIONS", value: "${python_version}"),
             string(name: "WINDOWS_BINARY_CLASSES", value: ""),
             string(name: "WINDOWS_PYTHON_VERSIONS", value: ""),
+            string(name: "LINUX_PYTHON_VERSIONS", value: py_version)
     ]
     def downstreamJob = build job: "lpot-release-build", propagate: false, parameters: binaryBuildParams
-
     binary_build_job = downstreamJob.getNumber()
+    binary_build_inc_dict[py_version] = binary_build_job
+    echo "binary_build_job_inc for ${py_version}: ${binary_build_job}"
     if (downstreamJob.getResult() != "SUCCESS") {
         currentBuild.result = "FAILURE"
         failed_build_url = downstreamJob.absoluteUrl
@@ -635,12 +664,14 @@ def copyrightCheck() {
 }
 
 def featureTests() {
+    def binary_build_job_nlp_featuretest = binary_build_job_dict[python_version]
+    def binary_build_job_inc_featuretest = binary_build_inc_dict[python_version]
     List featureTestsParams = [
             string(name: "nlp_url", value: "${nlp_url}"),
             string(name: "nlp_branch", value: "${nlp_branch}"),
             string(name: "python_version", value: "${python_version}"),
-            string(name: "binary_build_job", value: "${binary_build_job}"),
-            string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
+            string(name: "binary_build_job", value: "${binary_build_job_inc_featuretest}"),
+            string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp_featuretest}"),
             string(name: "val_branch", value: "${val_branch}"),
             string(name: "feature_list", value: "${feature_list}")
     ]
@@ -666,21 +697,31 @@ def featureTests() {
     }
 }
 
-def unitTestBackend(unit_test_mode) {
+def unitTestBackend(unit_test_mode, ut_python) {
     def ut_jobs = [:]
+    def binary_build_ut = binary_build_job_dict[ut_python]
+    def binary_build_ut_inc = binary_build_inc_dict[ut_python]
+    if (RUN_COVERAGE && ut_python == python_version) {
+        run_coverage = true
+    } else {
+        run_coverage = false
+    }
     List UTBuildParams = [
         string(name: "nlp_url", value: "${nlp_url}"),
         string(name: "nlp_branch", value: "${nlp_commit}"),
         string(name: "PR_source_branch", value: "${source_branch}"),
         string(name: "PR_target_branch", value: "${target_branch}"),
-        string(name: "python_version", value: "${python_version}"),
         string(name: "val_branch", value: "${val_branch}"),
-        string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}"),
-        string(name: "binary_build_job", value: "${binary_build_job}"),
-        booleanParam(name: "run_coverage", value: RUN_COVERAGE),
-        string(name: "unit_test_mode", value: "${unit_test_mode}")
+        string(name: "unit_test_mode", value: "${unit_test_mode}"),
+        string(name: "binary_mode", value: "${binary_mode}"),
+        string(name: "binary_build_job", value: "${binary_build_ut_inc}"),
+        string(name: "binary_build_job_nlp", value: "${binary_build_ut}"),
+        string(name: "python_version", value: "${ut_python}"),
+        booleanParam(name: "run_coverage", value: run_coverage),
+        booleanParam(name: "test_install_backend", value: false)
     ]
-    ut_jobs[unit_test_mode] = {
+    
+    ut_jobs["${unit_test_mode}_${ut_python}"] = {
         downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
         catchError {
             copyArtifacts(
@@ -696,15 +737,13 @@ def unitTestBackend(unit_test_mode) {
             withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
                 sh '''#!/bin/bash
                 overviewLog="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_ut_${ut_mode},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
+                echo "engine_ut_${ut_mode}_${ut_python},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
                 '''
             }
             currentBuild.result = "FAILURE"
             error("---${unit_test_mode} test failed---")
         }
-        println(RUN_COVERAGE)
-        println(unit_test_mode)
-        if (RUN_COVERAGE && unit_test_mode == "pytest"){
+        if (run_coverage && unit_test_mode == "pytest"){
             overview = readFile file: "${overviewLog}"
             coverage_status_engine = readFile file: "unittest/coverage_status_engine.txt"
             writeFile file: "${overviewLog}", text: overview + coverage_status_engine + "\n"
@@ -714,13 +753,46 @@ def unitTestBackend(unit_test_mode) {
             }
         }
     }
+    if (test_install_backend && ut_python == python_version) {
+        UTBuildParams -= "test_install_backend"
+        UTBuildParams += booleanParam(name: "test_install_backend", value: true)
+        ut_jobs["${unit_test_mode}_${ut_python}_backend_only"] = {
+            downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
+            catchError {
+                copyArtifacts(
+                        projectName: "nlp-toolkit-backend-ut",
+                        selector: specific("${downstreamJob.getNumber()}"),
+                        filter: '*.log, *.txt, **/coverage_results_backend/**/*, **/coverage_results_base_backend/**/*',
+                        fingerprintArtifacts: true,
+                        target: "unittest")
+                archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+            }
+            if (downstreamJob.result != 'SUCCESS') {
+                def sub_job_url = downstreamJob.absoluteUrl
+                withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
+                    sh '''#!/bin/bash
+                    overviewLog="${WORKSPACE}/summary_overview.log"
+                    echo "engine_ut_${ut_mode}_backend_only_${ut_python},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
+                    '''
+                }
+                currentBuild.result = "FAILURE"
+                error("---${unit_test_mode} test failed---")
+            }
+        }
+    }
     return ut_jobs
 }
 
-def unitTestJobsOptimize() {
+def unitTestJobsOptimize(ut_python) {
     def ut_jobs = [:]
-    ut_jobs["main_ut"] = {
-        downstreamJob = build job: "nlp-toolkit-optimize-ut", propagate: false, parameters: UTBuildParams(tensorflow_version, pytorch_version, RUN_COVERAGE)
+    if (RUN_COVERAGE && ut_python == python_version) {
+        run_coverage = true
+    } else {
+        run_coverage = false
+    }
+    ut_jobs["main_ut_${ut_python}"] = {
+        echo "ut name is main_ut_${ut_python}"
+        downstreamJob = build job: "nlp-toolkit-optimize-ut", propagate: false, parameters: UTBuildParams(tensorflow_version, pytorch_version, ut_python, run_coverage)
         catchError {
             copyArtifacts(
                     projectName: "nlp-toolkit-optimize-ut",
@@ -728,7 +800,6 @@ def unitTestJobsOptimize() {
                     filter: '*.log, *.txt, **/coverage_results/**/*, **/coverage_results_base/**/*',
                     fingerprintArtifacts: true,
                     target: "unittest")
-
             archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
         }
         // Update timestamps of the test reports
@@ -739,7 +810,7 @@ def unitTestJobsOptimize() {
         if (downstreamJob.result != 'SUCCESS') {
             currentBuild.result = "FAILURE"
         }
-        if (RUN_COVERAGE) {
+        if (run_coverage) {
             overview = readFile file: "${overviewLog}"
             coverage_status = readFile file: "unittest/coverage_status.txt"
             writeFile file: "${overviewLog}", text: overview + coverage_status + "\n"
@@ -751,14 +822,14 @@ def unitTestJobsOptimize() {
     }
     // for extension framework versions
     def ut_extension_pts = parseStrToList(ut_extension_pytorch)
-    if (ut_extension_pts != '' ) {
+    if (ut_extension_pts != '' && ut_python == python_version) {
         ut_extension_pts.eachWithIndex{ ut_extension_pt, i ->
             def pt_version = pytorch_version
             if (ut_extension_pytorch != '' && i < ut_extension_pts.size()) {
                 pt_version = ut_extension_pts[i] 
             }
-            ut_jobs["${ut_extension_pt}_pt_${pt_version}_pt_extension_ut"] = {
-                downstreamJob = build job: "nlp-toolkit-optimize-ut", propagate: false, parameters: UTBuildParams(tensorflow_version, pt_version, false)
+            ut_jobs["${ut_extension_pt}_pt_${pt_version}_extension_${ut_python}"] = {
+                downstreamJob = build job: "nlp-toolkit-optimize-ut", propagate: false, parameters: UTBuildParams(tensorflow_version, pt_version, ut_python, false)
                 catchError {
                     copyArtifacts(
                             projectName: "nlp-toolkit-optimize-ut",
@@ -774,19 +845,23 @@ def unitTestJobsOptimize() {
                 }
             }
         }
-    }
+    }  
     return ut_jobs
 }
 
-def UTBuildParams(tf_version, pt_version, run_coverage) {
+def UTBuildParams(tf_version, pt_version, py_version, run_coverage) {
+    echo "build UT params, python version is ${py_version}"
+    def ut_binary_build_job = binary_build_job_dict[py_version]
+    def ut_binary_build_inc = binary_build_inc_dict[py_version]
+    echo "build UT params, binary job id is  ${ut_binary_build_job}"
     List ParamsPerJob = []
-    ParamsPerJob += string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}")
-    ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
+    ParamsPerJob += string(name: "binary_build_job_nlp", value: "${ut_binary_build_job}")
+    ParamsPerJob += string(name: "binary_build_job", value: "${ut_binary_build_inc}")
     ParamsPerJob += string(name: "nlp_url", value: "${nlp_url}")
     ParamsPerJob += string(name: "nlp_branch", value: "${nlp_commit}")
     ParamsPerJob += string(name: "MR_source_branch", value: "${source_branch}")
     ParamsPerJob += string(name: "MR_target_branch", value: "${target_branch}")
-    ParamsPerJob += string(name: "python_version", value: "${python_version}")
+    ParamsPerJob += string(name: "python_version", value: "${py_version}")
     ParamsPerJob += string(name: "tensorflow_version", value: "${tf_version}")
     ParamsPerJob += string(name: "pytorch_version", value: "${pt_version}")
     ParamsPerJob += string(name: "onnx_version", value: "${onnx_version}")
@@ -807,41 +882,49 @@ def collectUT_optimize_Log() {
         ut_pts = ut_pts.plus(ut_ext_pts)
         ut_tfs.unique()
         ut_pts.unique()
-        ut_tfs.each { tf_version ->
-            withEnv(["tf_version=${tf_version}"]) {
-                sh ''' #!/bin/bash
-                   overview_log="${WORKSPACE}/summary_overview.log"
-                   if [ $(ls -l | grep -c ${tf_version}) != 0 ]; then
-                     ut_log_name=ut_tf_${tf_version}_pt_${pytorch_version}.log
-                     [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_${tf_version}_pt_([0-9]+.){2}[0-9]+(.cpu)?.log" | head -1`
-                     pt_version=`echo -e "${ut_log_name}" | grep -Po "pt_([0-9]+.){2}[0-9]+(.cpu)?" | awk -F "_" '{print $2}'`
-                     if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
-                       ut_status='FAILURE'
-                     else
-                       ut_status='SUCCESS'
-                     fi
-                     echo "unit_test_with_TF${tf_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}.log" | tee -a ${overview_log}
-                   fi
-                '''
-            }
+        def ut_python_version = []
+        if (test_mode == "nightly") {
+            ut_python_version = ['3.7', '3.8', '3.9']
+        } else {
+            ut_python_version = [python_version]
         }
-        ut_pts.each { pt_version ->
-            withEnv(["pt_version=${pt_version}"]) {
-                sh ''' #!/bin/bash
-                   overview_log="${WORKSPACE}/summary_overview.log"
-                   if [ $(ls -l | grep -c ${pt_version}) != 0 ]; then
-                     pt_version_tmp=${pt_version%+*}
-                     ut_log_name=ut_tf_${tensorflow_version}_pt_${pt_version}.log
-                     [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_.*_pt_${pt_version_tmp}.*log" | head -1`
-                     tf_version=`echo -e "${ut_log_name}" | grep -Po "tf_.*_" | awk -F "_" '{print $2}'`
-                     if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
-                       ut_status='FAILURE'
-                     else
-                       ut_status='SUCCESS'
-                     fi
-                     echo "unit_test_with_PT${pt_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}.log" | tee -a ${overview_log}
-                   fi
-                '''
+        for (ut_python in ut_python_version) {
+            ut_tfs.each { tf_version ->
+                withEnv(["tf_version=${tf_version}", "python_version=${ut_python}"]) {
+                    sh ''' #!/bin/bash
+                       overview_log="${WORKSPACE}/summary_overview.log"
+                       if [ $(ls -l | grep -c ${tf_version}) != 0 ]; then
+                         ut_log_name=ut_tf_${tf_version}_pt_${pytorch_version}_${python_version}.log
+                         [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_${tf_version}_pt_([0-9]+.){2}[0-9]+(.cpu)?_${python_version}.log" | head -1`
+                         pt_version=`echo -e "${ut_log_name}" | grep -Po "pt_([0-9]+.){2}[0-9]+(.cpu)?" | awk -F "_" '{print $2}'`
+                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                           ut_status='FAILURE'
+                         else
+                           ut_status='SUCCESS'
+                         fi
+                         echo "unit_test_with_TF${tf_version}_${python_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}_${python_version}.log" | tee -a ${overview_log}
+                       fi
+                    '''
+                }
+            }
+            ut_pts.each { pt_version ->
+                withEnv(["pt_version=${pt_version}", "python_version=${ut_python}"]) {
+                    sh ''' #!/bin/bash
+                       overview_log="${WORKSPACE}/summary_overview.log"
+                       if [ $(ls -l | grep -c ${pt_version}) != 0 ]; then
+                         pt_version_tmp=${pt_version%+*}
+                         ut_log_name=ut_tf_${tensorflow_version}_pt_${pt_version}_${python_version}.log
+                         [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_.*_pt_${pt_version_tmp}.*log" | head -1`
+                         tf_version=`echo -e "${ut_log_name}" | grep -Po "tf_.*_" | awk -F "_" '{print $2}'`
+                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                           ut_status='FAILURE'
+                         else
+                           ut_status='SUCCESS'
+                         fi
+                         echo "unit_test_with_PT${pt_version}_${python_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}_${python_version}.log" | tee -a ${overview_log}
+                       fi
+                    '''
+                }
             }
         }
     }
@@ -849,32 +932,62 @@ def collectUT_optimize_Log() {
 
 def collectUT_backend_Log() {
     echo "------------  running collect UT Log of backend -------------"
-    sh ''' #!/bin/bash
-        overview_log="${WORKSPACE}/summary_overview.log"
-        ut_log_name=$WORKSPACE/unittest/unit_test_gtest.log
-        if [ -f ${ut_log_name} ];then
-            sed -i '/deep-engine_ut_gtest/d' ${overview_log}
-            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
-                ut_status='FAILURE'
-            else
-                ut_status='SUCCESS'
-            fi
-            echo "deep-engine_ut_gtest,${ut_status},${BUILD_URL}artifact/unittest/unit_test_gtest.log" | tee -a ${overview_log}
-        fi
-        ut_log_name=$WORKSPACE/unittest/unit_test_pytest.log
-        if [ -f ${ut_log_name} ];then
-            sed -i '/deep-engine_ut_pytest/d' ${overview_log}
-            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
-                ut_status='FAILURE'
-            else
-                ut_status='SUCCESS'
-            fi
-            echo "deep-engine_ut_pytest,${ut_status},${BUILD_URL}artifact/unittest/unit_test_pytest.log" | tee -a ${overview_log}
-        fi
-    '''
+    dir("$WORKSPACE/unittest") {
+        def ut_python_version = []
+        if (test_mode == "nightly") {
+            ut_python_version = ['3.7', '3.8', '3.9']
+        } else {
+            ut_python_version = [python_version]
+        }
+        for (ut_python in ut_python_version) {
+            withEnv(["python_version=${ut_python}"]){
+            sh ''' #!/bin/bash
+                overview_log="${WORKSPACE}/summary_overview.log"
+                ut_log_name=unit_test_gtest_${python_version}.log
+                if [ -f ${ut_log_name} ];then
+                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                        ut_status='FAILURE'
+                    else
+                        ut_status='SUCCESS'
+                    fi
+                    echo "engine_ut_gtest_${python_version},${ut_status},${BUILD_URL}artifact/unittest/unit_test_gtest_${python_version}.log" | tee -a ${overview_log}
+                fi
+                ut_log_name=unit_test_pytest_${python_version}.log
+                if [ -f ${ut_log_name} ];then
+                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                        ut_status='FAILURE'
+                    else
+                        ut_status='SUCCESS'
+                    fi
+                    echo "engine_ut_pytest_${python_version},${ut_status},${BUILD_URL}artifact/unittest/unit_test_pytest_${python_version}.log" | tee -a  ${overview_log}
+                fi
+                ut_log_name=unit_test_gtest_backend_only_${python_version}.log
+                if [ -f ${ut_log_name} ];then
+                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                        ut_status='FAILURE'
+                    else
+                        ut_status='SUCCESS'
+                    fi
+                    echo "engine_ut_gtest_backend_only_${python_version},${ut_status},${BUILD_URL}artifact/unittest/unit_test_gtest_backend_only_${python_version}.log" | tee -a  ${overview_log}
+                fi
+                ut_log_name=unit_test_pytest_backend_only_${python_version}.log
+                if [ -f ${ut_log_name} ];then
+                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                        ut_status='FAILURE'
+                    else
+                        ut_status='SUCCESS'
+                    fi
+                    echo "engine_ut_pytest_backend_only_${python_version},${ut_status},${BUILD_URL}artifact/unittest/unit_test_pytest_backend_only_${python_version}.log" | tee -a  ${overview_log}
+                fi
+            '''
+            }
+        }
+    }
 }
 
 def BuildParams(job_framework, model, cpu, os){
+    def binary_build_modeltest = binary_build_job_dict[python_version]
+    def binary_build_inc_modeltest = binary_build_inc_dict[python_version]
     framework_version = ''
     if (job_framework == 'pytorch'){
         framework_version = "${pytorch_version}"
@@ -905,8 +1018,8 @@ def BuildParams(job_framework, model, cpu, os){
     ParamsPerJob += string(name: "MR_target_branch", value: "${target_branch}")
     ParamsPerJob += string(name: "python_version", value: "${python_version}")
     ParamsPerJob += string(name: "test_mode", value: "${test_mode}")
-    ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_job}")
-    ParamsPerJob += string(name: "binary_build_job_nlp", value: "${binary_build_job_nlp}")
+    ParamsPerJob += string(name: "binary_build_job", value: "${binary_build_inc_modeltest}")
+    ParamsPerJob += string(name: "binary_build_job_nlp", value: "${binary_build_modeltest}")
     ParamsPerJob += string(name: "mode", value: "${pass_mode}")
     ParamsPerJob += booleanParam(name: "multi_instance", value: multi_instance)
     ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
@@ -924,6 +1037,7 @@ def BuildParams(job_framework, model, cpu, os){
     ParamsPerJob += string(name: "inferencer_config", value: "${inferencer_config}")
     ParamsPerJob += string(name: "launcher_mode", value: "${launcher_mode}")
     ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
+    ParamsPerJob += string(name: "binary_mode", value: "${binary_mode}")
 
     return ParamsPerJob
 }
@@ -979,9 +1093,10 @@ def model_test_optimize() {
                         def failed_build_url = downstreamJob.absoluteUrl
                         if (failed_build_result != 'SUCCESS') {
                             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                                if (test_mode != 'nightly') {
-                                    currentBuild.result = "FAILURE"
-                                }
+                                //if (test_mode != 'nightly') {
+                                //    currentBuild.result = "FAILURE"
+                                //}
+                                currentBuild.result = "FAILURE"
                                 sh " tail -n 50 ${workflow}/${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                                 failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
                                 error("---- ${workflow}_${cpu}_${system}_${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
@@ -1050,9 +1165,10 @@ def model_test_deploy() {
                         def failed_build_url = downstreamJob.absoluteUrl
                         if (failed_build_result != 'SUCCESS') {
                             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                                if (test_mode != 'nightly') {
-                                    currentBuild.result = "FAILURE"
-                                }
+                                //if (test_mode != 'nightly') {
+                                //    currentBuild.result = "FAILURE"
+                                //}
+                                currentBuild.result = "FAILURE"
                                 sh " tail -n 50 ${workflow}/${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                                 failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
                                 error("---- ${workflow}_${cpu}_${system}_${job_framework}_${job_model} got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
@@ -1328,6 +1444,47 @@ def sendReport() {
     }
 }
 
+def uploadNightlyBinary(py_version){
+    dir("$WORKSPACE") {
+        base_version=sh(
+                script: 'cd nlp-toolkit/intel_extension_for_transformers && grep \'__version__\' version.py | awk -F \'\\"\' \'{print $(NF-1)}\'',
+                returnStdout: true
+        ).trim()
+        date_info=sh(
+                script: 'date +%Y-%m-%d | tr -cd "[0-9]"',
+                returnStdout: true
+        ).trim()
+        pypi_version = base_version +'dev'+date_info
+        binary_build_nlp = binary_build_job_dict[py_version]
+        List binaryBuildParams = [
+            string(name: "nlp_url", value: "${nlp_url}"),
+            string(name: "val_branch", value: "${val_branch}"),
+            string(name: "nlp_branch", value: "${nlp_branch}"),
+            string(name: "pypi_version", value: "${pypi_version}"),
+            string(name: "binary_build_job_nlp", value: "${binary_build_nlp}"),
+            string(name: "binary_mode", value: "${binary_mode}"),
+            string(name: "python_version", value: "${py_version}")
+        ]
+        downstreamJob = build job: "nlp-nightly-binary-upload", propagate: false, parameters: binaryBuildParams
+        echo "downstreamJob.getResult(): ${downstreamJob.getResult()}"
+    }
+}
+
+def upstreanNightlySource(){
+    dir("$WORKSPACE") {
+        sh"""#!/bin/bash
+            cd nlp-toolkit
+            git checkout develop
+            git branch
+            git remote -v
+            git remote add upstream https://github.com/intel/intel-extension-for-transformers.git
+            git remote -v
+            git push upstream develop:main
+        """
+    }
+}
+
+
 ///// full process /////
 
 node( node_label ) {
@@ -1413,10 +1570,26 @@ node( node_label ) {
             if (!format_scan_only) {
                 def build_job_list = [:]
                 build_job_list["build INC"] = {
-                    buildBinary()
+                    def binary_python_version = []
+                    if (test_mode == "nightly") {
+                        binary_python_version = ['3.7', '3.8', '3.9']
+                    } else {
+                        binary_python_version = [python_version]
+                    }
+                    for (py_version in binary_python_version) {
+                        buildBinary(py_version)
+                    }
                 } 
                 build_job_list["build NLP"] = {
-                    buildBinaryNLP()
+                    def binary_python_version = []
+                    if (test_mode == "nightly") {
+                        binary_python_version = ['3.7', '3.8', '3.9']
+                    } else {
+                        binary_python_version = [python_version]
+                    }
+                    for (py_version in binary_python_version) {
+                        buildBinaryNLP(py_version)
+                    }
                 } 
                 parallel build_job_list
             } else {
@@ -1426,13 +1599,31 @@ node( node_label ) {
 
         def job_list = [:]
         if (RUN_UT_OPT) {
-            def ut_jobs = unitTestJobsOptimize()
-            job_list = job_list + ut_jobs
+            def ut_python_version = []
+            if (test_mode == "nightly") {
+                ut_python_version = ['3.7', '3.8', '3.9']
+            } else {
+                ut_python_version = [python_version]
+            }
+            echo "ut_python_version : ${ut_python_version}"
+            for (ut_python in ut_python_version) {
+                echo "ut_python: ${ut_python}"
+                def ut_jobs = unitTestJobsOptimize(ut_python)
+                job_list = job_list + ut_jobs
+            }
         }
         if (RUN_UT_BAK) {
-            def ut_jobs_pytest = unitTestBackend("pytest")
-            def ut_jobs_gtest = unitTestBackend("gtest")
-            job_list = job_list + ut_jobs_pytest + ut_jobs_gtest
+            def ut_python_version = []
+            if (test_mode == "nightly") {
+                ut_python_version = ['3.7', '3.8', '3.9']
+            } else {
+                ut_python_version = [python_version]
+            }
+            for (ut_python in ut_python_version) {
+                def ut_jobs_pytest = unitTestBackend("pytest", ut_python)
+                def ut_jobs_gtest = unitTestBackend("gtest", ut_python)
+                job_list = job_list + ut_jobs_pytest + ut_jobs_gtest
+            }
         }
         if (RUN_PYLINT) {
             job_list["Pylint Scan"] = {
@@ -1514,6 +1705,29 @@ node( node_label ) {
                 }
             }
         }
+        if (upload_nightly_binary){
+            stage("upload nightly binary"){
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    if (currentBuild.result != 'FAILURE' && currentBuild.result != 'ABORTED') {
+                        def python_versions = ["3.7", "3.8", "3.9"]
+                        for (py_version in python_versions) {
+                            uploadNightlyBinary(py_version)
+                        }
+                    }else{
+                        println('Nightly build not succeed, will not push binary.')
+                    }
+                }
+            }
+        }
+
+        if (upstream_nightly_source){
+            stage("upstream nightly source"){
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    upstreanNightlySource()
+                }
+            }
+        }
+
         try {
             stage("Generate report") {
                 generateReport()

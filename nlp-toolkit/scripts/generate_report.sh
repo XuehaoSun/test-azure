@@ -64,24 +64,53 @@ function createOverview {
       </tr>
       """ >> ${WORKSPACE}/report.html
     done  
+    gtests=$(grep 'engine_ut_gtest' ${overviewLog} | cut -d',' -f1 | awk '!a[$0]++')
+    for ut in ${gtests[@]}
+    do
+      ut_info_list=($(grep "${ut}" ${overviewLog} |sed 's/,/ /g'))
+      ut_name="${ut_info_list[0]}"
+      ut_status="${ut_info_list[1]}"
+      ut_link="${ut_info_list[2]}"
+      if [[ "${ut_status}" == *"FAIL"* ]];then
+        unit_test_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+      elif [[ "${ut_status}" == *"SUCC"* ]];then
+        unit_test_status="<td style=\"background-color:#90EE90\">Pass</td>"
+      else
+        unit_test_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+      fi
 
-    gtest=($(grep 'deep-engine_ut_gtest' ${overviewLog} |sed 's/,/ /g'))
-    if [[ "${gtest[1]}" == *"FAIL"* ]]; then
-        gtest_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${gtest[1]}" == *"SUCC"* ]]; then
-        gtest_status="<td style=\"background-color:#90EE90\">Pass</td>"
-    else
-        gtest_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
-    fi
+      echo """
+      <tr>
+      <td>${ut_name}</td>
+      <td style=\"text-align:left\"><a href=\"${ut_link}\">ut_link</a></td>
+      ${unit_test_status}
+      </tr>
+      """ >> ${WORKSPACE}/report.html
+    done 
 
-    pytest=($(grep 'deep-engine_ut_pytest' ${overviewLog} |sed 's/,/ /g'))
-    if [[ "${pytest[1]}" == *"FAIL"* ]]; then
-        pytest_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
-    elif [[ "${pytest[1]}" == *"SUCC"* ]]; then
-        pytest_status="<td style=\"background-color:#90EE90\">Pass</td>"
-    else
-        pytest_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
-    fi
+    pytests=$(grep 'engine_ut_pytest' ${overviewLog} | cut -d',' -f1 | awk '!a[$0]++')
+    for ut in ${pytests[@]}
+    do
+      ut_info_list=($(grep "${ut}" ${overviewLog} |sed 's/,/ /g'))
+      ut_name="${ut_info_list[0]}"
+      ut_status="${ut_info_list[1]}"
+      ut_link="${ut_info_list[2]}"
+      if [[ "${ut_status}" == *"FAIL"* ]];then
+        unit_test_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+      elif [[ "${ut_status}" == *"SUCC"* ]];then
+        unit_test_status="<td style=\"background-color:#90EE90\">Pass</td>"
+      else
+        unit_test_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+      fi
+
+      echo """
+      <tr>
+      <td>${ut_name}</td>
+      <td style=\"text-align:left\"><a href=\"${ut_link}\">ut_link</a></td>
+      ${unit_test_status}
+      </tr>
+      """ >> ${WORKSPACE}/report.html
+    done 
 
     cpplint_scan=($(grep 'nlp-format-scan-localtest,cpplint' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${cpplint_scan[2]}" == *"FAIL"* ]];then
@@ -131,18 +160,6 @@ function createOverview {
     cat >> ${WORKSPACE}/report.html <<  eof
 
         $(
-             if [ "${gtest[2]}" != "" ]; then
-                 echo "<tr><td>gtest</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${gtest[2]}\">ut_link</a></td>"
-                 echo "${gtest_status}</tr>"
-             fi
-
-             if [ "${pytest[2]}" != "" ]; then
-                 echo "<tr><td>pytest</td>"
-                 echo "<td style=\"text-align:left\"><a href=\"${pytest[2]}\">ut_link</a></td>"
-                 echo "${pytest_status}</tr>"
-             fi
-
              if [ "${cpplint_scan[3]}" != "" ]; then
                  echo "<tr><td>cpplint Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${cpplint_scan[0]}/${cpplint_scan[3]}\">${cpplint_scan[0]}#${cpplint_scan[3]}</a></td>"

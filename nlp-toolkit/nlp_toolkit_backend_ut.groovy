@@ -82,6 +82,18 @@ if ('torch_version' in params && params.torch_version != '') {
 }
 echo "torch version: ${torch_version}"
 
+binary_mode = "full"
+if ('binary_mode' in params && params.binary_mode != '') {
+    binary_mode = params.binary_mode
+}
+echo "binary_mode: $binary_mode"
+
+test_install_backend = false
+if (params.test_install_backend != null) {
+    test_install_backend=params.test_install_backend
+}
+echo "test_install_backend is ${test_install_backend}"
+
 def cleanup() {
     try {
         sh '''#!/bin/bash -x
@@ -191,12 +203,18 @@ def download() {
 
 def run_pytest_with_coverage_count(repo_name){
     if (repo_name == 'deep-engine'){
-        ut_log_name="${WORKSPACE}/unit_test_pytest.log"
+        ut_log_name="${WORKSPACE}/unit_test_pytest_${python_version}.log"
+        if (test_install_backend) {
+            ut_log_name="${WORKSPACE}/unit_test_pytest_backend_only_${python_version}.log"
+        }
         coverage_package='coverage_results_backend'
         coverage_summary_log='coverage_summary_deploy.log'
     }
     if (repo_name == 'deep-engine-base'){
-        ut_log_name="${WORKSPACE}/unit_test_pytest_base.log"
+        ut_log_name="${WORKSPACE}/unit_test_pytest_base_${python_version}.log"
+        if (test_install_backend) {
+            ut_log_name="${WORKSPACE}/unit_test_pytest_base_backend_only_${python_version}.log"
+        }
         coverage_package='coverage_results_base_backend'
         coverage_summary_log='coverage_summary_deploy_base.log'
     }
@@ -284,7 +302,8 @@ node(node_label){
                         string(name: "nlp_branch", value: "${nlp_branch}"),
                         string(name: "MR_source_branch", value: "${PR_source_branch}"),
                         string(name: "MR_target_branch", value: "${PR_target_branch}"),
-                        string(name: "val_branch", value: "${val_branch}")
+                        string(name: "val_branch", value: "${val_branch}"),
+                        string(name: "binary_mode", value: "${binary_mode}")
                 ]
                 downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
                 binary_build_job_nlp = downstreamJob.getNumber()
@@ -302,20 +321,32 @@ node(node_label){
         stage('Copy binary') {
             catchError {
                 copyArtifacts(
-                        projectName: 'lpot-release-build',
-                        selector: specific("${binary_build_job}"),
-                        filter: "linux_binaries/wheel/${python_version}/neural_compressor*.whl, linux_binaries/wheel/${python_version}/neural_compressor*.tar.gz, linux_binaries/wheel/${python_version}/neural-compressor*.tar.bz2",
+                    projectName: 'lpot-release-build',
+                    selector: specific("${binary_build_job}"),
+                    filter: "linux_binaries/wheel/${python_version}/neural_compressor*.whl, linux_binaries/wheel/${python_version}/neural_compressor*.tar.gz, linux_binaries/wheel/${python_version}/neural-compressor*.tar.bz2",
+                    fingerprintArtifacts: true,
+                    flatten: true,
+                    target: "${WORKSPACE}")
+            }
+            if (binary_mode == "backend" && test_install_backend) {
+                catchError {
+                    copyArtifacts(
+                        projectName: 'nlp-toolkit-release-wheel-build',
+                        selector: specific("${binary_build_job_nlp}"),
+                        filter: 'intel_extension_for_transformers_backends*.whl, intel_extension_for_transformers-*.tar.gz',
                         fingerprintArtifacts: true,
                         flatten: true,
                         target: "${WORKSPACE}")
-            }
-            catchError {
+                }
+            } else {
+                catchError {
                     copyArtifacts(
-                            projectName: 'nlp-toolkit-release-wheel-build',
-                            selector: specific("${binary_build_job_nlp}"),
-                            filter: 'intel_extension_for_transformers*.whl, nlp-toolkit-*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
-                            fingerprintArtifacts: true,
-                            target: "${WORKSPACE}")
+                        projectName: 'nlp-toolkit-release-wheel-build',
+                        selector: specific("${binary_build_job_nlp}"),
+                        filter: 'intel_extension_for_transformers-*.whl, intel_extension_for_transformers-*.tar.gz',
+                        fingerprintArtifacts: true,
+                        target: "${WORKSPACE}")
+                }
             }
         }
 
@@ -341,17 +372,22 @@ node(node_label){
                     ''')
                 }
                 retry(3) {
-                    sh(returnStatus: true, script: '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
-                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
-                        source activate ${conda_env}
-                        cd ${WORKSPACE}
-                        #pip install nlpaug
-                        pip install intel_extension_for_transformers*.whl 2>&1 | tee $WORKSPACE/binary_install.log
-                        pip install neural_compressor*.whl 2>&1 | tee -a $WORKSPACE/binary_install.log
-                        echo "pip list after install..."
-                        pip list
-                    ''')
+                    withEnv(["test_install_backend=${test_install_backend}"]){
+                        sh(returnStatus: true, script: '''#!/bin/bash
+                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                            source activate ${conda_env}
+                            cd ${WORKSPACE}
+                            if [[ ${test_install_backend} == "true" ]]; then
+                                pip install intel_extension_for_transformers_backend*.whl 2>&1 | tee $WORKSPACE/binary_install.log
+                            else
+                                pip install intel_extension_for_transformers-*.whl 2>&1 | tee $WORKSPACE/binary_install.log
+                            fi
+                            pip install neural_compressor*.whl 2>&1 | tee -a $WORKSPACE/binary_install.log
+                            echo "pip list after install..."
+                            pip list
+                        ''')
+                    }
                 }
 
                 if (unit_test_mode=='pytest'){
@@ -375,7 +411,7 @@ node(node_label){
         }
 
         stage('unit test'){
-            withEnv(["conda_env=${conda_env}"]) {
+            withEnv(["conda_env=${conda_env}", "python_version=${python_version}", "test_install_backend=${test_install_backend}"]) {
                 timeout(30){
                     if (unit_test_mode == 'gtest'){
                         echo "+---------------- gtest ----------------+"
@@ -389,8 +425,11 @@ node(node_label){
                         cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine
                         mkdir build && cd build && cmake .. -DNE_WITH_SPARSELIB=ON -DNE_WITH_TESTS=ON -DPYTHON_EXECUTABLE=$(which python) && make -j 2>&1 |
                             tee -a $WORKSPACE/gtest_cmake_build.log
-                        ut_log_name=$WORKSPACE/unit_test_gtest.log
-
+                        if [[ ${test_install_backend} == "true" ]]; then
+                            ut_log_name=$WORKSPACE/unit_test_gtest_backend_only_${python_version}.log
+                        else
+                            ut_log_name=$WORKSPACE/unit_test_gtest_${python_version}.log
+                        fi
                         ctest -V -L "engine_test" 2>&1 | tee ${ut_log_name}
                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
                             [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
@@ -407,7 +446,11 @@ node(node_label){
                         export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         source activate ${conda_env}
                         cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/build
-                        ut_log_name=$WORKSPACE/unit_test_gtest.log
+                        if [[ ${test_install_backend} == "true" ]]; then
+                            ut_log_name=$WORKSPACE/unit_test_gtest_backend_only_${python_version}.log
+                        else
+                            ut_log_name=$WORKSPACE/unit_test_gtest_${python_version}.log
+                        fi
                         echo " ----- SparseLib gtest log ------ " 2>&1 | tee -a ${ut_log_name}
                         
                         ctest -V -L "kernel_test" 2>&1 | tee -a ${ut_log_name}
@@ -511,29 +554,35 @@ node(node_label){
                                 }
                             }
 
-                        }else{
-                            echo "+---------------- pytest ----------------+"
-                            ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
-                                source activate ${conda_env}
-                                #pip install protobuf==3.20.1
-                                echo "Current conda ENV is ${conda_env}..."
+                        } else {
+                            withEnv(["test_install_backend=${test_install_backend}"]){
+                                echo "+---------------- pytest ----------------+"
+                                ut_status = sh(returnStatus: true, script: '''#!/bin/bash
+                                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                                    source activate ${conda_env}
+                                    #pip install protobuf==3.20.1
+                                    echo "Current conda ENV is ${conda_env}..."
 
-                                cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/pytest
-                                echo "==================run pytest=================="
-                                find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
-                                ut_log_name=$WORKSPACE/unit_test_pytest.log
-                                bash run.sh 2>&1 | tee ${ut_log_name}
-                                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
-                                    exit 1
-                                fi
-                                if [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
-                                    exit 1
-                                fi
-                            ''')
-                            if (ut_status != 0) {
-                                currentBuild.result = 'FAILURE'
-                                error("gtest failed!")
+                                    cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/pytest
+                                    echo "==================run pytest=================="
+                                    find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
+                                    if [[ ${test_install_backend} == "true" ]]; then
+                                        ut_log_name=$WORKSPACE/unit_test_pytest_backend_only_${python_version}.log
+                                    else
+                                        ut_log_name=$WORKSPACE/unit_test_pytest_${python_version}.log
+                                    fi
+                                    bash run.sh 2>&1 | tee ${ut_log_name}
+                                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ];then
+                                        exit 1
+                                    fi
+                                    if [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                                        exit 1
+                                    fi
+                                ''')
+                                if (ut_status != 0) {
+                                    currentBuild.result = 'FAILURE'
+                                    error("gtest failed!")
+                                }
                             }
                         }
                     }

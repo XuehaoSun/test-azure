@@ -55,7 +55,7 @@ if ('binary_build_job_nlp' in params && params.binary_build_job_nlp != ''){
 }
 echo "binary_build_job_nlp is ${binary_build_job_nlp}"
 
-python_version = "3.6"
+python_version = "3.8"
 if ('python_version' in params && params.python_version != '') {
     python_version = params.python_version
 }
@@ -106,6 +106,12 @@ if ('onnxruntime_version' in params && params.onnxruntime_version != '') {
     onnxruntime_version = params.onnxruntime_version
 }
 println("onnxruntime_version: " + onnxruntime_version)
+
+binary_mode = "full"
+if ('binary_mode' in params && params.binary_mode != '') {
+    binary_mode = params.binary_mode
+}
+echo "binary_mode: $binary_mode"
 
 lines_coverage_threshold = 80
 branches_coverage_threshold = 75
@@ -259,7 +265,8 @@ node(node_label){
                         string(name: "nlp_branch", value: "${nlp_branch}"),
                         string(name: "MR_source_branch", value: "${MR_source_branch}"),
                         string(name: "MR_target_branch", value: "${MR_target_branch}"),
-                        string(name: "val_branch", value: "${val_branch}")
+                        string(name: "val_branch", value: "${val_branch}"),
+                        string(name: "binary_mode", value: "${binary_mode}")
                 ]
                 downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
                 binary_build_job_nlp = downstreamJob.getNumber()
@@ -288,7 +295,7 @@ node(node_label){
                 copyArtifacts(
                         projectName: 'nlp-toolkit-release-wheel-build',
                         selector: specific("${binary_build_job_nlp}"),
-                        filter: 'intel_extension_for_transformers*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
+                        filter: 'intel_extension_for_transformers-*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
                         fingerprintArtifacts: true,
                         target: "${WORKSPACE}")
             }
@@ -328,7 +335,7 @@ node(node_label){
                         n=0
                         until [ "$n" -ge 5 ]
                         do
-                            pip install intel_extension_for_transformers*.whl && break
+                            pip install intel_extension_for_transformers-*.whl && break
                             n=$((n+1))
                             sleep 5
                         done
@@ -385,7 +392,7 @@ node(node_label){
                         export GLOG_minloglevel=2
                         lpot_path=$(python -c 'import intel_extension_for_transformers; import os; print(os.path.dirname(intel_extension_for_transformers.__file__))')
                         find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
-                        ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
+                        ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}_${python_version}.log
                         coverage erase
                         echo "cat run.sh..."
                         cat run.sh 
@@ -520,7 +527,7 @@ node(node_label){
                             export GLOG_minloglevel=2
                             lpot_path=$(python -c 'import intel_extension_for_transformers; import os; print(os.path.dirname(intel_extension_for_transformers.__file__))')
                             find . -name "test*.py" | sed 's,\\.\\/,coverage run --source='"${lpot_path}"' --append ,g' | sed 's/$/ --verbose/'> run.sh
-                            ut_log_name=${WORKSPACE}/unit_test_base.log
+                            ut_log_name=${WORKSPACE}/unit_test_base_${python_version}.log
                             coverage erase
                             echo "cat run.sh..."
                             cat run.sh 
@@ -589,7 +596,7 @@ node(node_label){
                             n=0
                             until [ "$n" -ge 5 ]
                             do
-                                pip install intel_extension_for_transformers*.whl && break
+                                pip install intel_extension_for_transformers-*.whl && break
                                 n=$((n+1))
                                 sleep 5
                             done
@@ -640,7 +647,7 @@ node(node_label){
                             # mute engine log
                             export GLOG_minloglevel=2
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
-                            ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}.log
+                            ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}_${python_version}.log
                             echo "cat run.sh..."
                             cat run.sh 
                             echo "-------------"

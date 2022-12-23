@@ -208,6 +208,18 @@ if ('perf_bs' in params && params.perf_bs != '') {
 }
 echo "Performance batch size: ${perf_bs}"
 
+binary_mode = "full"
+if ('binary_mode' in params && params.binary_mode != '') {
+    binary_mode = params.binary_mode
+}
+echo "binary_mode: $binary_mode"
+
+test_install_backend = false
+if (params.test_install_backend != null) {
+    test_install_backend=params.test_install_backend
+}
+echo "test_install_backend is ${test_install_backend}"
+
 sparse_model_list = ["distilbert_base_uncased_squad_sparse", "bert_mini_sparse"]
 not_support_inferencer_list = ["length_adaptive_dynamic", "vit_large", "vit_base"]
 mono_socket = params.mono_socket as Boolean
@@ -898,7 +910,8 @@ node( sub_node_label ) {
                             string(name: "nlp_branch", value: "${nlp_branch}"),
                             string(name: "MR_source_branch", value: "${MR_source_branch}"),
                             string(name: "MR_target_branch", value: "${MR_target_branch}"),
-                            string(name: "val_branch", value: "${val_branch}")
+                            string(name: "val_branch", value: "${val_branch}"),
+                            string(name: "binary_mode", value: "${binary_mode}")
                     ]
                     downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
                     binary_build_job_nlp = downstreamJob.getNumber()
@@ -923,13 +936,24 @@ node( sub_node_label ) {
                             flatten: true,
                             target: "${WORKSPACE}")
                 }
-                catchError {
-                    copyArtifacts(
+                if (binary_mode == "backend" && test_install_backend) {
+                    catchError {
+                        copyArtifacts(
                             projectName: 'nlp-toolkit-release-wheel-build',
                             selector: specific("${binary_build_job_nlp}"),
-                            filter: 'intel_extension_for_transformers*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
+                            filter: 'intel_extension_for_transformers_backends*.whl, intel_extension_for_transformers-*.tar.gz',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
+                    }
+                } else {
+                    catchError {
+                        copyArtifacts(
+                            projectName: 'nlp-toolkit-release-wheel-build',
+                            selector: specific("${binary_build_job_nlp}"),
+                            filter: 'intel_extension_for_transformers-*.whl, intel_extension_for_transformers-*.tar.gz',
+                            fingerprintArtifacts: true,
+                            target: "${WORKSPACE}")
+                    }
                 }
             }
 

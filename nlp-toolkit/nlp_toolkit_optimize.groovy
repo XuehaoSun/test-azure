@@ -188,6 +188,12 @@ if ('lpot_branch' in params && params.lpot_branch) {
     lpot_branch=params.lpot_branch
 }
 
+binary_mode = "full"
+if ('binary_mode' in params && params.binary_mode != '') {
+    binary_mode = params.binary_mode
+}
+echo "binary_mode: $binary_mode"
+
 lpot_url = "https://github.com/intel/neural-compressor.git"
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 
@@ -689,7 +695,8 @@ node( sub_node_label ) {
                             string(name: "nlp_branch", value: "${nlp_branch}"),
                             string(name: "MR_source_branch", value: "${MR_source_branch}"),
                             string(name: "MR_target_branch", value: "${MR_target_branch}"),
-                            string(name: "val_branch", value: "${val_branch}")
+                            string(name: "val_branch", value: "${val_branch}"),
+                            string(name: "binary_mode", value: "${binary_mode}")
                     ]
                     downstreamJob = build job: "nlp-toolkit-release-wheel-build", propagate: false, parameters: binaryBuildParamsNLP
                     binary_build_job_nlp = downstreamJob.getNumber()
@@ -717,7 +724,7 @@ node( sub_node_label ) {
                     copyArtifacts(
                             projectName: 'nlp-toolkit-release-wheel-build',
                             selector: specific("${binary_build_job_nlp}"),
-                            filter: 'intel_extension_for_transformers*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
+                            filter: 'intel_extension_for_transformers-*.whl, intel_extension_for_transformers*.tar.bz2, intel_extension_for_transformers-*.tar.gz',
                             fingerprintArtifacts: true,
                             target: "${WORKSPACE}")
                 }

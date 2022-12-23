@@ -56,6 +56,12 @@ if ('python_version' in params && params.python_version != ''){
 }
 echo "python_version is ${python_version}"
 
+binary_mode = "full"
+if ('binary_mode' in params && params.binary_mode != ''){
+    binary_mode = params.binary_mode
+}
+echo "binary_mode is ${binary_mode}"
+
 def cleanup() {
 
     try {
@@ -179,6 +185,14 @@ def do_binary_build() {
                 auditwheel repair dist/intel_extension_for_transformers*.whl
                 cp wheelhouse/intel_extension_for_transformers*.whl ${WORKSPACE}/
                 cp dist/intel_extension_for_transformers*.tar.gz ${WORKSPACE}/
+
+                if [[ ${binary_mode} == "backend" ]]; then
+                    rm -fr build
+                    python3 setup.py --backends sdist bdist_wheel
+                    pip install auditwheel==5.1.2
+                    auditwheel repair dist/intel_extension_for_transformers_backend*.whl
+                    cp wheelhouse/intel_extension_for_transformers_backend*.whl ${WORKSPACE}/
+                fi
             '''
         }
     } else if (binary_class == 'conda') {

@@ -60,7 +60,7 @@ function createOverview {
       """ >> ${WORKSPACE}/report.html
     done
 
-    gtest=($(grep 'deep-engine_ut_gtest' ${overviewLog} |sed 's/,/ /g'))
+    gtest=($(grep 'engine_ut_gtest' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${gtest[1]}" == *"FAIL"* ]]; then
         gtest_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${gtest[1]}" == *"SUCC"* ]]; then
@@ -69,7 +69,7 @@ function createOverview {
         gtest_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
-    pytest=($(grep 'deep-engine_ut_pytest' ${overviewLog} |sed 's/,/ /g'))
+    pytest=($(grep 'engine_ut_pytest' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${pytest[1]}" == *"FAIL"* ]]; then
         pytest_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${pytest[1]}" == *"SUCC"* ]]; then

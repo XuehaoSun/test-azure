@@ -55,7 +55,7 @@ function create_conda_env {
     # install inc
     pip install ${WORKSPACE}/neural_compressor*.whl
     # install nlp-toolkit
-    pip install ${WORKSPACE}/intel_extension_for_transformers*.whl
+    pip install ${WORKSPACE}/intel_extension_for_transformers-*.whl
     pip list
 
 }
