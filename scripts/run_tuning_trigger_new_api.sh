@@ -38,8 +38,6 @@ do
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
         --dtype=*)
             dtype=`echo $i | sed "s/${PATTERN}//"`;;
-        --backend=*)
-            backend=`echo $i | sed "s/${PATTERN}//"`;;
         --itex_mode=*)
             itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
         --is_gpu=*)
@@ -73,7 +71,7 @@ main() {
     echo -e "\n[VAL INFO] Getting input model..."
     get_input_model
 
-    echo -e "\n[VAL INFO] Setting run tuning parameters..."
+    echo -e "\n[VAL INFO] Setting run_tuning.sh cmd line..."
     parameters="--dataset_location=${dataset_location} --input_model=${input_model} --output_model=${q_model}"
     if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} == *"oob_models/quantization"* ]]; then
         parameters="${parameters} --topology=${topology}"
@@ -102,14 +100,32 @@ main() {
     if [ "${max_trials}" != "" ]; then
         update_conf_params="${update_conf_params} --max_trials=${max_trials}"
     fi
+
+    backend=""
+    if [ "$itex_mode" == "native" ]; then
+        backend="default"
+    elif [ "$itex_mode" == "onednn_graph" ]; then
+        backend="itex"
+    fi
+    if [ "${backend}" != "" ]; then
+        update_conf_params="${update_conf_params} --backend=${backend}"
+    fi
+
+    if [ "${is_gpu}" == "true" ]; then
+        update_conf_params="${update_conf_params} --device=gpu"
+    fi
+
     if [ "${update_conf_params}" != "" ]; then
         echo "update_conf_params: $update_conf_params"
         python ${WORKSPACE}/lpot-validation/scripts/update_new_api_config.py --main_script=${main_script} ${update_conf_params}
     fi
 
+    echo -e "\n[VAL INFO] Run tuning env list..."
+    env
+
     echo -e "\n[VAL INFO] Running tuning..."
     starttime=`date +'%Y-%m-%d %H:%M:%S'`
-    /usr/bin/time -v bash run_tuning.sh ${parameters}
+    bash run_tuning.sh ${parameters}
     endtime=`date +'%Y-%m-%d %H:%M:%S'`
     start_seconds=$(date --date="$starttime" +%s);
     end_seconds=$(date --date="$endtime" +%s);

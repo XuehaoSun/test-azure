@@ -40,8 +40,6 @@ do
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
         --dtype=*)
             dtype=`echo $i | sed "s/${PATTERN}//"`;;
-        --backend=*)
-            backend=`echo $i | sed "s/${PATTERN}//"`;;
         --itex_mode=*)
             itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
         --is_gpu=*)
@@ -267,7 +265,6 @@ main() {
     echo "Topology is '${topology}'"
 
     # run_tuning.sh
-    starttime=`date +'%Y-%m-%d %H:%M:%S'`
     parameters="--topology=${topology} --dataset_location=${dataset_location} --input_model=${input_model}"
     # pytorch need to use default output_model path
     if [ ${framework} != "pytorch" ]; then
@@ -318,17 +315,14 @@ main() {
     echo -e "\nPrint_updated_yaml... "
     cat ${yaml}
 
-    echo -e "\nRun_tuning parameters... "
-    echo ${parameters}
+    echo -e "\n[VAL INFO] Setting run_tuning.sh cmd line..."
+    echo "bash run_tuning.sh ${parameters}"
     echo "Total resident size (kbytes): $(cat /proc/meminfo |grep 'MemTotal' |sed 's/[^0-9]//g')"
 
     echo "run tuning env..."
     env
-    if [[ "${CPU_NAME}" == "clx8280-07"* ]] || [[ "${CPU_NAME}" == "clx8260-"* ]]; then
-        bash -x run_tuning.sh ${parameters}
-    else
-        /usr/bin/time -v bash run_tuning.sh ${parameters}
-    fi
+    starttime=`date +'%Y-%m-%d %H:%M:%S'`
+    bash run_tuning.sh ${parameters}
     endtime=`date +'%Y-%m-%d %H:%M:%S'`
     start_seconds=$(date --date="$starttime" +%s);
     end_seconds=$(date --date="$endtime" +%s);
@@ -465,6 +459,12 @@ function update_yaml_config {
         update_yaml_params="${update_yaml_params} --dtype=${dtype}"
     fi
 
+    backend=""
+    if [ "$itex_mode" == "native" ]; then
+        backend="tensorflow"
+    elif [ "$itex_mode" == "onednn_graph" ]; then
+        backend="tensorflow_itex"
+    fi
     if [ "${backend}" != "" ]; then
         update_yaml_params="${update_yaml_params} --backend=${backend}"
     fi

@@ -102,8 +102,9 @@ main() {
 }
 
 function run_accuracy {
-    echo -e "\n[VAL INFO] Running accuracy..."
+    echo -e "\n[VAL INFO] Run accuracy cmd..."
     echo "bash run_benchmark.sh ${parameters}"
+    echo -e "\n[VAL INFO] Running accuracy..."
     bash run_benchmark.sh ${parameters}
 }
 
@@ -156,8 +157,9 @@ function run_benchmark {
     echo -e "\n[VAL INFO] Pass parameter iters for b_func models benchmark..."
     parameters="${parameters} --iters=${iters}"
 
-    echo -e "\n[VAL INFO] Running benchmark..."
+    echo -e "\n[VAL INFO] Run benchmark cmd..."
     echo "bash run_benchmark.sh ${parameters}"
+    echo -e "\n[VAL INFO] Running benchmark..."
     bash run_benchmark.sh ${parameters}
 }
 

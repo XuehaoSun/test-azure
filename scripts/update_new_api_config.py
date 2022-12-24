@@ -19,23 +19,98 @@ def parse_args():
     parser.add_argument("--timeout", type=int, required=False, help="Tuning timeout.")
     parser.add_argument("--dtype", type=str, required=False, help="Quantize model precision type.")
     parser.add_argument("--backend", type=str, required=False, help="Framework backend.")
-    parser.add_argument("--is_gpu", type=str, required=False, help="Device setting.")
+    parser.add_argument("--device", type=str, required=False, help="Device setting.")
     return parser.parse_args()
 
 
 args = parse_args()
+stack_dict = {}
 
-def update_config():
-    stack_dict = {}
+
+def update_example_config():
     with open(args.main_script, "r") as f:
         a = f.readlines()
     with open(args.main_script, "w") as f:
         for line in a:
-            result = parse_line(line, stack_dict)
+            result = parse_line(line)
             f.write(result)
 
-    if (args.strategy and args.strategy != "basic") or (args.max_trials and args.max_trials != 100):
-        update_default_config()
+
+def parse_line(line: str):
+    if args.iteration or args.cores_per_instance or args.num_of_instance:
+        line = check_config(line, "BenchmarkConfig")
+    if args.strategy or args.max_trials:
+        line = check_config(line, "TuningCriterion")
+    if args.device or args.backend:
+        line = check_config(line, "PostTrainingQuantConfig")
+    return line
+
+
+CONFIG_DICT = {
+    "BenchmarkConfig": {
+        "iteration":
+            [f"{args.iteration}",
+             r"iteration=(\d+)",
+             f"iteration={args.iteration}"],
+        "cores_per_instance":
+            [f"{args.cores_per_instance}",
+             r"cores_per_instance=(\d+)",
+             f"cores_per_instance={args.cores_per_instance}"],
+        "num_of_instance":
+            [f"{args.num_of_instance}",
+             r"num_of_instance=(\d+)",
+             f"num_of_instance={args.num_of_instance}"]
+    },
+    "TuningCriterion": {
+        "strategy":
+            [f"{args.strategy}",
+             r"strategy=\"(\w+)\"",
+             f"strategy=\"{args.strategy}\""],
+        "max_trials":
+            [f"{args.max_trials}",
+             r"max_trials=(\d+)",
+             f"max_trials={args.max_trials}"]
+    },
+    "PostTrainingQuantConfig": {
+        "device":
+            [f"{args.device}",
+             r"device=\"(\w+)\"",
+             f"device=\"{args.device}\""],
+        "backend":
+            [f"{args.backend}",
+             r"backend=\"(\w+)\"",
+             f"backend=\"{args.backend}\""]
+    }
+
+}
+
+
+def check_config(line: str, config_name: str):
+    config_search_item = f"{config_name}" + r"\("
+    if re.search(config_search_item, line) or stack_dict.get(config_name):
+        stack_dict.setdefault(config_name, [])
+        update_stack(line, stack_dict[config_name])
+        for key, value in CONFIG_DICT[config_name].items():
+            line = check_param(line, value)
+    return line
+
+
+def check_param(line: str, value: list):
+    p_status = value[0]
+    p_search_item = value[1]
+    p_replace_item = value[2]
+    search_result = re.search(p_search_item, line)
+    if p_status and search_result:
+        print("previous ", search_result.group(), ", current ", p_replace_item)
+        line = re.sub(p_search_item, p_replace_item, line)
+        print("Updated line --> ", line)
+    return line
+
+
+def update_stack(line: str, stack: list):
+    for i in line:
+        stack.append("(") if i == "(" else 0
+        stack.pop() if i == ")" else 0
 
 
 def update_default_config():
@@ -47,66 +122,30 @@ def update_default_config():
         b = f.readlines()
     with open(config_path, "w") as f:
         for line in b:
-            if args.strategy and args.strategy != "basic" and re.search(r"strategy=\"basic\",", line):
-                line = re.sub(r"strategy=\"basic\",", f"strategy=\"{args.strategy}\",", line)
-                print("Update default strategy, current updated line is: ")
-                print(line)
-                print("------------------------------------------")
-            if args.max_trials and args.max_trials != 100 and re.search(r"max_trials=100,", line):
-                line = re.sub(r"max_trials=100,", f"max_trials={args.max_trials},", line)
-                print("Update default max_trials, current updated line is: ")
-                print(line)
-                print("------------------------------------------")
+            if args.strategy and args.strategy != "basic":
+                line = replace_default_config(line, r"strategy=\"basic\",", f"strategy=\"{args.strategy}\",")
+            if args.max_trials and args.max_trials != 100:
+                line = replace_default_config(line, r"max_trials=100,", f"max_trials={args.max_trials},")
+            if args.device and args.device != "cpu":
+                line = replace_default_config(line, r"device=\"cpu\",", f"device=\"{args.device}\",")
+            if args.backend and args.backend != "default":
+                line = replace_default_config(line, r"backend=\"default\",", f"backend=\"{args.backend}\",")
             f.write(line)
 
 
-def parse_line(line: str, stack_dict: dict):
-
-    if args.iteration or args.cores_per_instance or args.num_of_instance:
-        if re.search(r"BenchmarkConfig\(", line) or stack_dict.get("BenchmarkConfig"):
-            stack_dict.setdefault("BenchmarkConfig", [])
-            update_stack(line, stack_dict["BenchmarkConfig"])
-            pre_iteration = re.search(r"iteration=(\d+)", line)
-            if args.iteration and pre_iteration:
-                print("previous ", pre_iteration.group(), ", current iteration=", args.iteration)
-                line = re.sub(r"iteration=(\d+)", f"iteration={args.iteration}", line)
-                print("Updated line of iteration --> ", line)
-            pre_cores_per_instance = re.search(r"cores_per_instance=(\d+)", line)
-            if args.cores_per_instance and pre_cores_per_instance:
-                print("previous ", pre_cores_per_instance.group(),
-                      ", current cores_per_instance=", args.cores_per_instance)
-                line = re.sub(r"cores_per_instance=(\d+)", f"cores_per_instance={args.cores_per_instance}", line)
-                print("Updated line of cores_per_instance --> ", line)
-            pre_num_of_instance = re.search(r"num_of_instance=(\d+)", line)
-            if args.num_of_instance and pre_num_of_instance:
-                print("previous ", pre_num_of_instance.group(),
-                      ", current num_of_instance=", args.num_of_instance)
-                line = re.sub(r"num_of_instance=(\d+)", f"num_of_instance={args.num_of_instance}", line)
-                print("Updated line of num_of_instance --> ", line)
-
-    if args.strategy or args.max_trials:
-        if re.search(r"TuningCriterion\(", line) or stack_dict.get("TuningCriterion"):
-            stack_dict.setdefault("TuningCriterion", [])
-            update_stack(line, stack_dict["TuningCriterion"])
-            pre_strategy = re.search(r"strategy=\"(\w+)\"", line)
-            if args.strategy and pre_strategy:
-                print("strategy ", pre_strategy.group(), ", current strategy= ", args.strategy)
-                line = re.sub(r"strategy=\"\w+\"", f"strategy=\"{args.strategy}\"", line)
-                print("Updated line of strategy --> ", line)
-            pre_max_trials = re.search(r"max_trials=(\d+)", line)
-            if args.max_trials and pre_max_trials:
-                print("previous ", pre_max_trials.group(), ", current max_trials=", args.max_trials)
-                line = re.sub(r"max_trials=(\d+)", f"max_trials={args.max_trials}", line)
-                print("Updated line of max_trials --> ", line)
-
+def replace_default_config(line: str, s_pre: str, s_cur: str):
+    if re.search(s_pre, line):
+        line = re.sub(s_pre, s_cur, line)
+        print("Current updated line is: ")
+        print(line)
+        print("------------------------------------------")
     return line
 
 
-def update_stack(line: str, stack: list):
-    for i in line:
-        stack.append("(") if i == "(" else 0
-        stack.pop() if i == ")" else 0
-
-
 if __name__ == "__main__":
-    update_config()
+
+    if args.main_script:
+        update_example_config()
+    if (args.strategy and args.strategy != "basic") or (args.max_trials and args.max_trials != 100) \
+            or (args.device and args.device != "cpu") or (args.backend and args.backend != "default"):
+        update_default_config()

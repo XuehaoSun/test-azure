@@ -273,13 +273,6 @@ tf_new_api = ""
 is_gpu = ""
 inc_new_api=false
 
-backend=""
-if (itex_mode == "native"){
-    backend="tensorflow"
-}else if (itex_mode == "onednn_graph"){
-    backend="tensorflow_itex"
-}
-
 MAX_RERUNS = 3
 
 @NonCPS
@@ -1071,7 +1064,6 @@ node( sub_node_label ) {
                             --conda_env_mode=${conda_env_mode} \
                             --log_level=${log_level} \
                             --dtype=${dtype} \
-                            --backend=${backend} \
                             --itex_mode=${itex_mode} \
                             --is_gpu=${is_gpu} \
                             --main_script=${main_script} 2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
@@ -1103,7 +1095,6 @@ node( sub_node_label ) {
                             --conda_env_mode=${conda_env_mode} \
                             --log_level=${log_level} \
                             --dtype=${dtype} \
-                            --backend=${backend} \
                             --itex_mode=${itex_mode} \
                             --is_gpu=${is_gpu} \
                             2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
