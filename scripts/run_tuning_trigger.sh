@@ -81,7 +81,17 @@ main() {
             fi
             if [ "${framework}" == "pytorch" ]; then
               sed -i '/torch==/d;/torch$/d;/torchvision==/d;/torchvision$/d' requirements.txt
+              if [[ $(grep "torchaudio" requirements.txt | wc -l) != 0 ]]; then
+                pt_version=$(python -c "import torch; print(torch.__version__)")
+                torchaudio_version="0.$(echo $pt_version| cut -d'.' -f2).$(echo $pt_version| cut -d'.' -f3)"
+                pip install torchaudio=="$torchaudio_version" -f https://download.pytorch.org/whl/torch_stable.html
+                sed -i '/torchaudio/d' requirements.txt
+              fi
             fi
+
+            echo -e "\nList model requirements..."
+            cat requirements.txt || ture
+
             n=0
             until [ "$n" -ge 5 ]
             do
