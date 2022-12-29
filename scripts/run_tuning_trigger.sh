@@ -230,7 +230,7 @@ main() {
     fi
 
     q_model=${WORKSPACE}/${framework}-${model}-tune
-    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras" ]];  then
+    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras"* ]];  then
         q_model="${q_model}.pb"
     elif [ ${framework} == "mxnet" ]; then
         mkdir -p ${q_model}
