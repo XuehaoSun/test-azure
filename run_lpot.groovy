@@ -262,6 +262,16 @@ if ('dtype' in params && params.dtype != ''){
 }
 echo "dtype: ${dtype}"
 
+use_tune_acc=false
+if (params.use_tune_acc != null){
+    use_tune_acc = params.use_tune_acc
+}
+echo "use_tune_acc: ${use_tune_acc}"
+
+if (lpot_branch == '' && MR_source_branch != ''){
+    use_tune_acc = true
+}
+
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 upstreamBuild = ""
 upstreamJobName = ""
@@ -647,7 +657,7 @@ def collectLogs() {
         --job_url=\"${BUILD_URL}/consoleText\""
 
         println("--------mode--------->" + mode)
-        if (MR_source_branch != "" || mode == "throughput") {
+        if (use_tune_acc) {
             cmd += " --tune_acc"
         }
 
@@ -1131,9 +1141,10 @@ node( sub_node_label ) {
                 }
             }
             // Set Throughput mode for MR tests
-            if (lpot_branch == '' && MR_source_branch != '') {
+            if (use_tune_acc) {
                 mode_list = ["throughput"]
             }
+
             
             if (!tune_only) {
                 timeout(720) {

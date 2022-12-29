@@ -484,6 +484,12 @@ if ('log_level' in params && params.log_level != ''){
 }
 echo "log_level: ${log_level}"
 
+use_tune_acc=false
+if (params.use_tune_acc != null){
+    use_tune_acc = params.use_tune_acc
+}
+echo "use_tune_acc: ${use_tune_acc}"
+
 def updateGithubCommitStatus(String state, String description) {
     try {
         supportedStatuses = ["error", "failure", "pending", "success"]
@@ -641,6 +647,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, dev
     ParamsPerJob += string(name: "mode", value: "${pass_mode}")
     ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
     ParamsPerJob += booleanParam(name: "multi_instance", value: multi_instance)
+    ParamsPerJob += booleanParam(name: "use_tune_acc", value: use_tune_acc)
     ParamsPerJob += string(name: "tuning_timeout", value: "${tuning_timeout}")
     ParamsPerJob += string(name: "max_trials", value: "${max_trials}")
     ParamsPerJob += string(name: "accuracy_criterion", value: "${accuracy_criterion}")
