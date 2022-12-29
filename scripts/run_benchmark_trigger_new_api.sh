@@ -200,7 +200,7 @@ function get_topology {
 
 function get_input_model {
     q_model=${WORKSPACE}/${framework}-${model}-tune
-    if [ ${framework} == "tensorflow" ]; then
+    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} != *"keras"* ]];  then
         q_model="${q_model}.pb"
     elif [ ${framework} == "mxnet" ] && [[ ${model_src_dir} == *"object_detection"* ]]; then
         q_model="${q_model}/${model}"
