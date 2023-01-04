@@ -223,11 +223,6 @@ def run_pytest_with_coverage_count(repo_name){
         export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env}
         pip install coverage
-        ## workaround for transformer version
-        #pip install transformers
-        #pip install torch==${torch_version} -f https://download.pytorch.org/whl/torch_stable.html
-        #pip install nlpaug
-        #pip install datasets>=1.8.0
         
         cd ${WORKSPACE}/${repo_name}/intel_extension_for_transformers/backends/neural_engine/test/pytest
         
@@ -355,11 +350,15 @@ node(node_label){
                 conda_env="${conda_env}-${CPU_NAME}"
             }
             println("full conda_env_name = " + conda_env)
-            withEnv(["conda_env=${conda_env}", "tensorflow_version=${tensorflow_version}"]) {
+            withEnv(["conda_env=${conda_env}", "tensorflow_version=${tensorflow_version}", "CPU_NAME=${CPU_NAME}"]) {
                 retry(3){
                     sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
-                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                        if [[ ${CPU_NAME} != spr* ]]; then
+                            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                        else
+                            export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
+                        fi
                         if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
                            (conda remove --name ${conda_env} --all -y) || true
                         fi
@@ -372,10 +371,14 @@ node(node_label){
                     ''')
                 }
                 retry(3) {
-                    withEnv(["test_install_backend=${test_install_backend}"]){
+                    withEnv(["test_install_backend=${test_install_backend}", "CPU_NAME=${CPU_NAME}"]){
                         sh(returnStatus: true, script: '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH
-                            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                            if [[ ${CPU_NAME} != spr* ]]; then
+                                export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                            else
+                                export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
+                            fi
                             source activate ${conda_env}
                             cd ${WORKSPACE}
                             if [[ ${test_install_backend} == "true" ]]; then
@@ -395,7 +398,6 @@ node(node_label){
                         sh(returnStatus: true, script: '''#!/bin/bash
                             export PATH=${HOME}/miniconda3/bin/:$PATH
                             source activate ${conda_env}
-                            #pip install intel_tensorflow==${tensorflow_version}
                             cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/pytest
                             if [ -f "requirements.txt" ]; then
                                 pip install -r requirements.txt
@@ -411,13 +413,17 @@ node(node_label){
         }
 
         stage('unit test'){
-            withEnv(["conda_env=${conda_env}", "python_version=${python_version}", "test_install_backend=${test_install_backend}"]) {
+            withEnv(["conda_env=${conda_env}", "python_version=${python_version}", "test_install_backend=${test_install_backend}", "CPU_NAME=${CPU_NAME}"]) {
                 timeout(30){
                     if (unit_test_mode == 'gtest'){
                         echo "+---------------- gtest ----------------+"
                         def ut_status_engine = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
-                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                        if [[ ${CPU_NAME} != spr* ]]; then
+                            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                        else
+                            export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
+                        fi
                         source activate ${conda_env}
                         pip install cmake
                         cmake_path=$(which cmake)
@@ -443,7 +449,11 @@ node(node_label){
                         echo "+---------------- gtest for sparseLib ----------------+"
                         def ut_status_kernel = sh(returnStatus: true, script: '''#!/bin/bash
                         export PATH=${HOME}/miniconda3/bin/:$PATH
-                        export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                        if [[ ${CPU_NAME} != spr* ]]; then
+                            export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                        else
+                            export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
+                        fi
                         source activate ${conda_env}
                         cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/build
                         if [[ ${test_install_backend} == "true" ]]; then
@@ -560,7 +570,6 @@ node(node_label){
                                 ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                                     export PATH=${HOME}/miniconda3/bin/:$PATH
                                     source activate ${conda_env}
-                                    #pip install protobuf==3.20.1
                                     echo "Current conda ENV is ${conda_env}..."
 
                                     cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/pytest

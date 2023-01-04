@@ -224,7 +224,8 @@ def build_conda_env() {
                     --pytorch_version="${pytorch_version}" \
                     --mxnet_version="${mxnet_version}" \
                     --onnx_version="${onnx_version}" \
-                    --onnxruntime_version="${onnxruntime_version}"
+                    --onnxruntime_version="${onnxruntime_version}" \
+                    --install_ipex=true
             '''
         }
     }
@@ -339,20 +340,11 @@ node(node_label){
                             n=$((n+1))
                             sleep 5
                         done
-                        # re-install pycocotools resolve the issue with numpy
-                        echo "re-install pycocotools resolve the issue with numpy..."
-                        #pip uninstall pycocotools -y
-                        #pip install --no-cache-dir pycocotools
-                        #pip install onnxruntime-extensions
+
                         if [ ! -d ${WORKSPACE}/lpot-models ]; then
                             echo "\\"lpot-model\\" not found. Exiting..."
                             exit 1
                         fi
-                        #pip install nlpaug
-                        #pip install pytest
-                        #pip install datasets
-                        #pip install sacremoses
-                        pip install torchprofile
 
                         echo -e "\\nInstalling ut requirements..."
                         cd ${WORKSPACE}/lpot-models/tests
@@ -360,8 +352,7 @@ node(node_label){
                             sed -i '/^neural-compressor/d' requirements.txt
                             sed -i '/^intel_extension_for_transformers/d' requirements.txt
                             sed -i '/^intel-tensorflow/d' requirements.txt
-                            sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                            sed -i '/^torch/d' requirements.txt
+                            sed -i '/^intel_extension_for_pytorch/d' requirements.txt
                             sed -i '/^mxnet-mkl/d' requirements.txt
                             sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
                             n=0
@@ -480,17 +471,11 @@ node(node_label){
                             git submodule update --init --recursive
                             python setup.py install
                             pip list
-                            # re-install pycocotools resolve the issue with numpy
-                            echo "re-install pycocotools resolve the issue with numpy..."
-                            #pip uninstall pycocotools -y
-                            #pip install --no-cache-dir pycocotools
-                            #pip install onnxruntime-extensions
                             cd ${WORKSPACE}/lpot-models-base/tests
                             if [ -f "requirements.txt" ]; then
                                 sed -i '/^neural-compressor/d' requirements.txt
                                 sed -i '/^intel-tensorflow/d' requirements.txt
-                                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                                sed -i '/^torch/d' requirements.txt
+                                sed -i '/^intel-extension-for-pytorch/d' requirements.txt
                                 sed -i '/^mxnet-mkl/d' requirements.txt
                                 sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
                                 n=0
@@ -505,10 +490,6 @@ node(node_label){
                                 echo "Not found requirements.txt file."
                             fi
                             echo "install intel_extension_for_transformers"
-                            #pip install nlpaug
-                            #pip install pytest
-                            #pip install datasets
-                            pip install torchprofile
                             
                             export COVERAGE_RCFILE=${WORKSPACE}/lpot-validation/.coveragerc
                             cat ${COVERAGE_RCFILE}
@@ -600,10 +581,6 @@ node(node_label){
                                 n=$((n+1))
                                 sleep 5
                             done
-                            echo "re-install pycocotools resolve the issue with numpy..."
-                            #pip uninstall pycocotools -y
-                            #pip install --no-cache-dir pycocotools
-                            #pip install onnxruntime-extensions
                             if [ ! -d ${WORKSPACE}/lpot-models ]; then
                                 echo "\\"lpot-model\\" not found. Exiting..."
                                 exit 1
@@ -613,8 +590,7 @@ node(node_label){
                             if [ -f "requirements.txt" ]; then
                                 sed -i '/^neural-compressor/d' requirements.txt
                                 sed -i '/^intel-tensorflow/d' requirements.txt
-                                sed -i '/find-links https:\\/\\/download.pytorch.org\\/whl\\/torch_stable.html/d' requirements.txt
-                                sed -i '/^torch/d' requirements.txt
+                                sed -i '/^intel-extension-for-pytorch/d' requirements.txt
                                 sed -i '/^mxnet-mkl/d' requirements.txt
                                 sed -i '/^onnx>=/d;/^onnx==/d;/^onnxruntime>=/d;/^onnxruntime==/d' requirements.txt
                                 n=0
@@ -628,10 +604,6 @@ node(node_label){
                             else
                                 echo "Not found requirements.txt file."
                             fi
-                            #pip install nlpaug
-                            #pip install pytest
-                            #pip install datasets
-                            pip install torchprofile
                             
                             echo "Setting SigOpt strategy env variables"
                             export SIGOPT_API_TOKEN="${SIGOPT_TOKEN}"

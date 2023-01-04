@@ -554,6 +554,19 @@ def download() {
 }
 /// choose install from source or pypi ///
 def buildBinaryNLP(py_version) {
+    if (test_mode == "nightly") {
+        dir("$WORKSPACE") {
+            base_version=sh(
+                script: 'cd nlp-toolkit/intel_extension_for_transformers && grep \'__version__\' version.py | awk -F \'\\"\' \'{print $(NF-1)}\'',
+                returnStdout: true
+            ).trim()
+            date_info=sh(
+                script: 'date +%Y-%m-%d | tr -cd "[0-9]"',
+                returnStdout: true
+            ).trim()
+            pypi_version = base_version +'dev'+date_info
+        }
+    }   
     List binaryBuildParamsNLP = [
             string(name: "nlp_url", value: "${nlp_url}"),
             string(name: "nlp_branch", value: "${nlp_branch}"),
@@ -697,7 +710,7 @@ def featureTests() {
     }
 }
 
-def unitTestBackend(unit_test_mode, ut_python) {
+def unitTestBackend(unit_test_mode, ut_python, test_backend=false) {
     def ut_jobs = [:]
     def binary_build_ut = binary_build_job_dict[ut_python]
     def binary_build_ut_inc = binary_build_inc_dict[ut_python]
@@ -720,42 +733,46 @@ def unitTestBackend(unit_test_mode, ut_python) {
         booleanParam(name: "run_coverage", value: run_coverage),
         booleanParam(name: "test_install_backend", value: false)
     ]
-    
-    ut_jobs["${unit_test_mode}_${ut_python}"] = {
-        downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
-        catchError {
-            copyArtifacts(
-                    projectName: "nlp-toolkit-backend-ut",
-                    selector: specific("${downstreamJob.getNumber()}"),
-                    filter: '*.log, *.txt, **/coverage_results_backend/**/*, **/coverage_results_base_backend/**/*',
-                    fingerprintArtifacts: true,
-                    target: "unittest")
-            archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
-        }
-        if (downstreamJob.result != 'SUCCESS') {
-            def sub_job_url = downstreamJob.absoluteUrl
-            withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
-                sh '''#!/bin/bash
-                overviewLog="${WORKSPACE}/summary_overview.log"
-                echo "engine_ut_${ut_mode}_${ut_python},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
-                '''
+    if ( ! test_backend) {
+        echo "UT build params for all"
+        echo "${UTBuildParams}"
+        ut_jobs["${unit_test_mode}_${ut_python}"] = {
+            downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
+            catchError {
+                copyArtifacts(
+                        projectName: "nlp-toolkit-backend-ut",
+                        selector: specific("${downstreamJob.getNumber()}"),
+                        filter: '*.log, *.txt, **/coverage_results_backend/**/*, **/coverage_results_base_backend/**/*',
+                        fingerprintArtifacts: true,
+                        target: "unittest")
+                archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
             }
-            currentBuild.result = "FAILURE"
-            error("---${unit_test_mode} test failed---")
-        }
-        if (run_coverage && unit_test_mode == "pytest"){
-            overview = readFile file: "${overviewLog}"
-            coverage_status_engine = readFile file: "unittest/coverage_status_engine.txt"
-            writeFile file: "${overviewLog}", text: overview + coverage_status_engine + "\n"
-            // Coverage decrease is not allowed in MRs
-            if (test_mode == "pre-CI" && coverage_status_engine.split(",")[1] != "SUCCESS") {
+            if (downstreamJob.result != 'SUCCESS') {
+                def sub_job_url = downstreamJob.absoluteUrl
+                withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
+                    sh '''#!/bin/bash
+                    overviewLog="${WORKSPACE}/summary_overview.log"
+                    echo "engine_ut_${ut_mode}_${ut_python},FAILURE,${sub_job_url}" | tee -a ${overviewLog}
+                    '''
+                }
                 currentBuild.result = "FAILURE"
+                error("---${unit_test_mode} test failed---")
+            }
+            if (run_coverage && unit_test_mode == "pytest"){
+                overview = readFile file: "${overviewLog}"
+                coverage_status_engine = readFile file: "unittest/coverage_status_engine.txt"
+                writeFile file: "${overviewLog}", text: overview + coverage_status_engine + "\n"
+                // Coverage decrease is not allowed in MRs
+                if (test_mode == "pre-CI" && coverage_status_engine.split(",")[1] != "SUCCESS") {
+                    currentBuild.result = "FAILURE"
+                }
             }
         }
-    }
-    if (test_install_backend && ut_python == python_version) {
+    } else if (ut_python == python_version) {
         UTBuildParams -= "test_install_backend"
         UTBuildParams += booleanParam(name: "test_install_backend", value: true)
+        echo "UT build params for backend"
+        echo "${UTBuildParams}"
         ut_jobs["${unit_test_mode}_${ut_python}_backend_only"] = {
             downstreamJob = build job: "nlp-toolkit-backend-ut", propagate: false, parameters: UTBuildParams
             catchError {
@@ -890,39 +907,43 @@ def collectUT_optimize_Log() {
         }
         for (ut_python in ut_python_version) {
             ut_tfs.each { tf_version ->
-                withEnv(["tf_version=${tf_version}", "python_version=${ut_python}"]) {
+                withEnv(["tf_version=${tf_version}", "python_version=${ut_python}", "pytorch_version=${pytorch_version}"]) {
                     sh ''' #!/bin/bash
-                       overview_log="${WORKSPACE}/summary_overview.log"
-                       if [ $(ls -l | grep -c ${tf_version}) != 0 ]; then
-                         ut_log_name=ut_tf_${tf_version}_pt_${pytorch_version}_${python_version}.log
-                         [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_${tf_version}_pt_([0-9]+.){2}[0-9]+(.cpu)?_${python_version}.log" | head -1`
-                         pt_version=`echo -e "${ut_log_name}" | grep -Po "pt_([0-9]+.){2}[0-9]+(.cpu)?" | awk -F "_" '{print $2}'`
-                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
-                           ut_status='FAILURE'
-                         else
-                           ut_status='SUCCESS'
-                         fi
-                         echo "unit_test_with_TF${tf_version}_${python_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}_${python_version}.log" | tee -a ${overview_log}
-                       fi
+                        overview_log="${WORKSPACE}/summary_overview.log"
+                        if [ $(ls -l | grep -c ${tf_version}) != 0 ]; then
+                            ut_log_name=ut_tf_${tf_version}_pt_${pytorch_version}_${python_version}.log
+                            [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_${tf_version}_pt_([0-9]+.){2}[0-9]+(.cpu)?_${python_version}.log" | head -1`
+                            pt_version=`echo -e "${ut_log_name}" | grep -Po "pt_([0-9]+.){2}[0-9]+(.cpu)?" | awk -F "_" '{print $2}'`
+                            if [[ ${pt_version} == ${pytorch_version} ]]; then
+                               if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                                 ut_status='FAILURE'
+                               else
+                                 ut_status='SUCCESS'
+                               fi
+                               echo "unit_test_with_TF${tf_version}_${python_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}_${python_version}.log" | tee -a ${overview_log}
+                            fi
+                        fi
                     '''
                 }
             }
             ut_pts.each { pt_version ->
-                withEnv(["pt_version=${pt_version}", "python_version=${ut_python}"]) {
+                withEnv(["pt_version=${pt_version}", "python_version=${ut_python}", "tensorflow_version=${tensorflow_version}"]) {
                     sh ''' #!/bin/bash
-                       overview_log="${WORKSPACE}/summary_overview.log"
-                       if [ $(ls -l | grep -c ${pt_version}) != 0 ]; then
-                         pt_version_tmp=${pt_version%+*}
-                         ut_log_name=ut_tf_${tensorflow_version}_pt_${pt_version}_${python_version}.log
-                         [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_.*_pt_${pt_version_tmp}.*log" | head -1`
-                         tf_version=`echo -e "${ut_log_name}" | grep -Po "tf_.*_" | awk -F "_" '{print $2}'`
-                         if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
-                           ut_status='FAILURE'
-                         else
-                           ut_status='SUCCESS'
-                         fi
-                         echo "unit_test_with_PT${pt_version}_${python_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}_${python_version}.log" | tee -a ${overview_log}
-                       fi
+                        overview_log="${WORKSPACE}/summary_overview.log"
+                        if [ $(ls -l | grep -c ${pt_version}) != 0 ]; then
+                            pt_version_tmp=${pt_version%+*}
+                            ut_log_name=ut_tf_${tensorflow_version}_pt_${pt_version}_${python_version}.log
+                            [[ ! -f $ut_log_name ]] && ut_log_name=`ls -a | grep -E "ut_tf_.*_pt_${pt_version_tmp}.*log" | head -1`
+                            tf_version=`echo -e "${ut_log_name}" | grep -Po "tf_.*_" | awk -F "_" '{print $2}'`
+                            if [[ ${tf_version} == ${tensorflow_version} ]]; then
+                                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] || [ $(grep -c "OK" ${ut_log_name}) == 0 ] || [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] || [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ];then
+                                  ut_status='FAILURE'
+                                else
+                                  ut_status='SUCCESS'
+                                fi
+                                echo "unit_test_with_PT${pt_version}_${python_version},${ut_status},${BUILD_URL}artifact/unittest/ut_tf_${tf_version}_pt_${pt_version}_${python_version}.log" | tee -a ${overview_log}
+                            fi
+                        fi
                     '''
                 }
             }
@@ -1093,9 +1114,9 @@ def model_test_optimize() {
                         def failed_build_url = downstreamJob.absoluteUrl
                         if (failed_build_result != 'SUCCESS') {
                             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                                //if (test_mode != 'nightly') {
-                                //    currentBuild.result = "FAILURE"
-                                //}
+                                if (test_mode != 'nightly') {
+                                    currentBuild.result = "FAILURE"
+                                }
                                 currentBuild.result = "FAILURE"
                                 sh " tail -n 50 ${workflow}/${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                                 failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
@@ -1165,9 +1186,9 @@ def model_test_deploy() {
                         def failed_build_url = downstreamJob.absoluteUrl
                         if (failed_build_result != 'SUCCESS') {
                             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                                //if (test_mode != 'nightly') {
-                                //    currentBuild.result = "FAILURE"
-                                //}
+                                if (test_mode != 'nightly') {
+                                    currentBuild.result = "FAILURE"
+                                }
                                 currentBuild.result = "FAILURE"
                                 sh " tail -n 50 ${workflow}/${job_framework}/${job_model}/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                                 failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
@@ -1620,8 +1641,13 @@ node( node_label ) {
                 ut_python_version = [python_version]
             }
             for (ut_python in ut_python_version) {
-                def ut_jobs_pytest = unitTestBackend("pytest", ut_python)
-                def ut_jobs_gtest = unitTestBackend("gtest", ut_python)
+                def ut_jobs_pytest = unitTestBackend("pytest", ut_python, false)
+                def ut_jobs_gtest = unitTestBackend("gtest", ut_python, false)
+                job_list = job_list + ut_jobs_pytest + ut_jobs_gtest
+            }
+            if (test_install_backend) {
+                def ut_jobs_pytest = unitTestBackend("pytest", python_version, true)
+                def ut_jobs_gtest = unitTestBackend("gtest", python_version, true)
                 job_list = job_list + ut_jobs_pytest + ut_jobs_gtest
             }
         }

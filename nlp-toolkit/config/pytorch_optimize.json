@@ -880,5 +880,26 @@
         "config": "saved_results"
       }
     }
+  },
+  "t5_large_cnn_dynamic": {
+    "working_dir": "optimization/pytorch/huggingface/summarization/quantization",
+    "tune": {
+      "cmd": "bash run_tuning.sh",
+      "params": {
+        "topology": "t5_large_cnn_dynamic",
+        "output_model": "saved_results"
+      }
+    },
+    "benchmark": {
+      "cmd": "bash run_benchmark.sh",
+      "params": {
+        "topology": "t5_large_cnn_dynamic",
+        "mode": "accuracy",
+        "batch_size": "64",
+        "iters": "100",
+        "int8": "false",
+        "config": "saved_results"
+      }
+    }
   }
 }
