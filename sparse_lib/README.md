@@ -11,7 +11,7 @@ Options:
 | Option | Description |
 |--------|-------------|
 | `--ut`                            | Run UT (sparselib and engine)
-| `--ut=sparse_only`             | Run sparselib UT only
+| `--ut=sparse_only`                | Run sparselib UT only
 | `--benchmark`                     | Run sparselib benchmark
 | `--cpplint`                       | Run cpplint check
 | `--bandit`                        | Run bendit check
@@ -21,5 +21,7 @@ Options:
 | `--models=<models>`               | Run a specified list (comma separated) of models with neural engine
 | `--inferencer_config=<configs>`   | Specify a list (comma separated) of model running configs in the format of `<ncores_per_instance>:<bs>` 
 | `--refer_build=<jobID>`           | The job id of the build as a refered result (shown as "last" in the test report)
+| `--node=<node_label>`             | Specify computing node labels for tasks (except ut) to run; e.g. `ILIT&&non-perf-sdp`
+| `--node_ut=<node_label>`          | Specify computing node labels for ut task(s) to run; e.g. `ILIT&&non-perf-sdp`
 
 If no parameters are presented, the project parameters set in Jenkins will be used.

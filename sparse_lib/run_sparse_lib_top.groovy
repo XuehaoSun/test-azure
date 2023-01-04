@@ -193,6 +193,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
     inferencer_config = arg_map.inferencer_config ?: inferencer_config
     refer_build = arg_map.refer_build ?: refer_build
     sub_node_label = arg_map.node ?: sub_node_label
+    sub_node_ut = arg_map.node_ut ?: sub_node_ut
     echo """ PR comment args changes params:
         sparse_models=${sparse_models}
         RUN_UT=${RUN_UT}
@@ -205,6 +206,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
         inferencer_config=${inferencer_config}
         refer_build=${refer_build}
         sub_node_label=${sub_node_label}
+        sub_node_ut=${sub_node_ut}
     """
 }
 
