@@ -10,9 +10,11 @@ if [[ -z $CPU_NAME ]]; then
 fi
 test_status="check"
 
-autodistilled_result=$(grep "distilled model score is" ${WORKSPACE}/${feature_name}/tensorflow_autodistillation.log)
+
+autodistilled_result=$(grep -c "distilled model score is" ${WORKSPACE}/${feature_name}/tensorflow_autodistillation.log)
 accuracy=$(grep -c "metric (sst2) Accuracy:" ${WORKSPACE}/${feature_name}/tensorflow_autodistillation.log | tail -1)
 throughput=$(grep -c "Throughput: " ${WORKSPACE}/${feature_name}/tensorflow_autodistillation.log | tail -1)
+
 if [[ $autodistilled_result == 3 ]] && [[ "${accuracy}" == "2" ]] && [[ "${throughput}" = "2" ]]; then
     test_status="pass"
 else

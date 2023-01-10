@@ -22,7 +22,7 @@ if ('conda_env_mode' in params && params.conda_env_mode != '') {
 echo "conda_env_mode ${conda_env_mode}"
 
 // test framework
-framework = "nlp_excutor"
+framework = "engine"
 if ('framework' in params && params.framework != '') {
     framework = params.framework
 }
@@ -337,7 +337,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             echo "=======cache clean======="
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             echo "=======run benchmark======="
-            export PYTHONPATH=${WORKSPACE}/lpot-models:\$PYTHONPATH
+            export PYTHONPATH=${WORKSPACE}/nlp-models:\$PYTHONPATH
             export PATH=${HOME}/miniconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             export GLOG_minloglevel=2
@@ -449,8 +449,8 @@ def runLauncherTest(mode, precision, launcher_cmd, launcher_cmd_params) {
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             echo "final launcher benchmark cmd of precision ${precision} is ${launcher_cmd}"
-            cd ${WORKSPACE}/lpot-models/examples/
-            echo "working in ${WORKSPACE}/lpot-models/examples"
+            cd ${WORKSPACE}/nlp-models/examples/
+            echo "working in ${WORKSPACE}/nlp-models/examples"
             GLOG_minloglevel=2 python ${launcher_cmd} ${benchmark_cmd}
         '''
     }
@@ -781,7 +781,7 @@ def collectLauncherLogs(launchermode, precision) {
             set -x
             export PATH=${HOME}/miniconda3/bin/:$PATH
             source activate ${conda_env_name}
-            output_file=${WORKSPACE}/lpot-models/examples/out.csv
+            output_file=${WORKSPACE}/nlp-models/examples/out.csv
             echo "working in"
             pwd
             if [[ ! -f ${output_file} ]]; then
@@ -794,8 +794,8 @@ def collectLauncherLogs(launchermode, precision) {
                 echo "${framework},${mode},${model},${throughput},${precision},${logfile}" >> ${WORKSPACE}/launcher_summary.log
                 [[ -d ${WORKSPACE}/launcher_${precision}_${mode} ]] && rm -fr ${WORKSPACE}/launcher_${precision}_${mode}
                 mkdir -p ${WORKSPACE}/launcher_${precision}_${mode}
-                mv ${WORKSPACE}/lpot-models/examples/*.log ${WORKSPACE}/launcher_${precision}_${mode}/
-                mv ${WORKSPACE}/lpot-models/examples/out.csv ${WORKSPACE}/out_${precision}_${mode}.csv
+                mv ${WORKSPACE}/nlp-models/examples/*.log ${WORKSPACE}/launcher_${precision}_${mode}/
+                mv ${WORKSPACE}/nlp-models/examples/out.csv ${WORKSPACE}/out_${precision}_${mode}.csv
             fi
         '''
     }
@@ -803,7 +803,7 @@ def collectLauncherLogs(launchermode, precision) {
 def syncConfigFile(){
     sh '''#!/bin/bash
         set -x
-        inc_config_path="${WORKSPACE}/lpot-models/examples/.config"
+        inc_config_path="${WORKSPACE}/nlp-models/examples/.config"
         ls $inc_config_path
         if [ -d "${inc_config_path}" ]; then
             rm -fr ${WORKSPACE}/lpot-validation/config/
@@ -851,7 +851,7 @@ node( sub_node_label ) {
                                 browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                                 doGenerateSubmoduleConfigurations: false,
                                 extensions                       : [
-                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "nlp-models"],
                                         [$class: 'CloneOption', timeout: 5],
                                         [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                                 ],
@@ -869,7 +869,7 @@ node( sub_node_label ) {
                                 browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                                 doGenerateSubmoduleConfigurations: false,
                                 extensions                       : [
-                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "nlp-models"],
                                         [$class: 'CloneOption', timeout: 5]
                                 ],
                                 submoduleCfg                     : [],
@@ -987,9 +987,9 @@ node( sub_node_label ) {
             stage("Get model params") {
                 try {
                     // get params for tuning and benchmark
-                    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/${framework}_deploy.json"))."${model}"
+                    def modelConf =  jsonParse(readFile("$WORKSPACE/nlp-models/examples/.config/${framework}_deploy.json"))."${model}"
                     working_dir = modelConf."working_dir"
-                    working_dir_fullpath = "${WORKSPACE}/lpot-models/examples/${working_dir}"
+                    working_dir_fullpath = "${WORKSPACE}/nlp-models/examples/${working_dir}"
                     data_dir_local = modelConf."data_dir"
                     data_dir = "${dataset_prefix}/${data_dir_local}"
                     prepare_cmd = modelConf."prepare"."cmd"
@@ -1055,7 +1055,7 @@ node( sub_node_label ) {
                         
                         mode_list.each { mode ->
                             runPerfTest(mode, "fp32", benchmark_cmd)
-                            if (framework == "nlp_excutor") {
+                            if (framework == "engine") {
                                 if ( mode == "throughput" && launcher_mode != "") {
                                     stage("Launcher Benchmark"){
                                         println("==========run launcher benchmark========")
@@ -1067,7 +1067,7 @@ node( sub_node_label ) {
                                 }
                             }
                         }
-                        if (framework == "nlp_excutor") {
+                        if (framework == "engine") {
                             stage("Inferencer Benchmark"){
                                 println("==========run inferencer benchmark========")
                                 inferencer_config.split(',').each { each_ben_conf ->
@@ -1103,7 +1103,7 @@ node( sub_node_label ) {
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "int8", benchmark_cmd)
-                            if (framework == "nlp_excutor") {
+                            if (framework == "engine") {
                                 if ( mode == "throughput" && launcher_mode != "") {
                                     stage("Launcher Benchmark"){
                                         println("==========run launcher benchmark========")
@@ -1116,7 +1116,7 @@ node( sub_node_label ) {
                             }
                         }
                     }
-                    if (framework == "nlp_excutor") {
+                    if (framework == "engine") {
                         stage("Inferencer Benchmark"){
                             println("==========run inferencer benchmark========")
                             inferencer_config.split(',').each { each_ben_conf ->
@@ -1151,7 +1151,7 @@ node( sub_node_label ) {
                         }
                         mode_list.each { mode ->
                             runPerfTest(mode, "bf16", benchmark_cmd)
-                            if (framework == "nlp_excutor") {
+                            if (framework == "engine") {
                                 if ( mode == "throughput" && launcher_mode != "") {
                                     stage("Launcher Benchmark"){
                                         println("==========run launcher benchmark========")
@@ -1163,7 +1163,7 @@ node( sub_node_label ) {
                                 }
                             }
                         }
-                        if (framework == "nlp_excutor") {
+                        if (framework == "engine") {
                             stage("Inferencer Benchmark"){
                                 println("==========run inferencer benchmark========")
                                 inferencer_config.split(',').each { each_ben_conf ->

@@ -105,7 +105,7 @@ echo "sparse_ut_only is ${sparse_ut_only}"
 
 sparse_model_job = params.sparse_model_job ?: "nlp_toolkit_deploy_validation_localtest"
 echo "sparse_model_job is ${sparse_model_job}"
-sparse_model_framework = params.sparse_model_framework ?: "nlp_excutor"
+sparse_model_framework = params.sparse_model_framework ?: "engine"
 echo "sparse_model_framework is ${sparse_model_framework}"
 sparse_models = params.sparse_models ?: ""
 echo "sparse_models is ${sparse_models}"
@@ -115,7 +115,7 @@ build_job_nlp = params.build_job_nlp
 build_job_lpot = params.build_job_lpot
 
 
-// ncores_per_instance:bs for nlp_excutor inference
+// ncores_per_instance:bs for engine inference
 inferencer_config = params.inferencer_config ?: "4:8,7:8,24:1"
 echo "inferencer_config: ${inferencer_config}"
 

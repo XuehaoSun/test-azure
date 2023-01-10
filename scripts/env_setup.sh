@@ -139,7 +139,7 @@ function set_environment {
             set_ONNXRT_env;;
         baremetal)
             set_ENGINE_env;;
-        nlp_excutor)
+        engine)
             set_ENGINE_env;;
         ipex)
             set_PT_env;;

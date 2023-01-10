@@ -485,7 +485,7 @@ cat >> ${WORKSPACE}/report.html << eof
         </tr>
 eof
 
-    framework='nlp_excutor'
+    framework='engine'
     models=$(cat ${launcherSummaryLog} |grep "${framework}," |cut -d',' -f3 |awk '!a[$0]++')
     for model in ${models[@]}
     do 

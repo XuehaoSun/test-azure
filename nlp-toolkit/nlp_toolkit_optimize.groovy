@@ -316,7 +316,7 @@ def create_conda_env(tensorflow_version, pytorch_version, onnxruntime_version, i
 }
 
 def runPerfTest(mode, precision) {
-    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/${framework}_optimize.json"))."${model}"
+    def modelConf =  jsonParse(readFile("$WORKSPACE/nlp-models/examples/.config/${framework}_optimize.json"))."${model}"
     def benchmark_cmd = modelConf."benchmark"."cmd"
     def benchmark_params = modelConf."benchmark"."params"
     def batch_size = 0

@@ -3,8 +3,8 @@
 //  (1) optimize(pytorch/tensorflow/onnx): 
 //     (a) pytorch: 
 //        cleanup -> build binary -> env setup -> quantize -> savemodel(torch) -> benchmark(torch)
-//  (2) deploy(nlp_excutor/ipex):
-//     (a) nlp_excutor: 
+//  (2) deploy(engine/ipex):
+//     (a) engine: 
 //        cleanup -> build binary -> env setup -> prepare dataset -> prepare model(to onnx) -> onnx_to_ir -> benchmark -> inference 
 // 2. unit test
 //    target: optimize(include preprocess)/ backend
@@ -68,7 +68,7 @@ if ('optimize_frameworks' in params && params.optimize_frameworks != '') {
 }
 echo "optimize frameworks: ${optimize_frameworks}"
 
-// deploy backends nlp_excutor / ipex
+// deploy backends engine / ipex
 deploy_backends = ""
 if ('deploy_backends' in params && params.deploy_backends != '') {
     deploy_backends = params.deploy_backends
@@ -116,12 +116,12 @@ if ('pytorch_models' in params && params.pytorch_models != '') {
 }
 echo "pytorch_models: ${pytorch_models}"
 
-// setting nlp_excutor models for deploy
-nlp_excutor_models = ''
-if ('nlp_excutor_models' in params && params.nlp_excutor_models != '') {
-    nlp_excutor_models=params.nlp_excutor_models
+// setting engine models for deploy
+engine_models = ''
+if ('engine_models' in params && params.engine_models != '') {
+    engine_models=params.engine_models
 }
-echo "nlp_excutor_models: ${nlp_excutor_models}"
+echo "engine_models: ${engine_models}"
 
 ipex_models = ""
 if ('ipex_models' in params && params.ipex_models != '') {
@@ -134,7 +134,7 @@ if ('tensorflow_models' in params && params.tensorflow_models != '') {
     tensorflow_models=params.tensorflow_models
 }
 echo "tensorflow_models: ${tensorflow_models}"
-// ncores_per_instance:bs for nlp_excutor inference
+// ncores_per_instance:bs for engine inference
 inferencer_config = "4:64,4:128,28:1"
 if ('inferencer_config' in params && params.inferencer_config != '') {
     inferencer_config=params.inferencer_config
@@ -1012,7 +1012,7 @@ def BuildParams(job_framework, model, cpu, os){
     framework_version = ''
     if (job_framework == 'pytorch'){
         framework_version = "${pytorch_version}"
-    } else if (job_framework == "nlp_excutor"){
+    } else if (job_framework == "engine"){
         framework_version = "na"
     } else if (job_framework == "tensorflow"){
         framework_version = "${tensorflow_version}"
@@ -1149,8 +1149,8 @@ def model_test_deploy() {
             job_frameworks.each { job_framework ->
                 // Get models list
                 def job_models = []
-                if (job_framework == 'nlp_excutor') {
-                    job_models = parseStrToList(nlp_excutor_models)
+                if (job_framework == 'engine') {
+                    job_models = parseStrToList(engine_models)
                 } else if (job_framework == 'ipex') {
                     job_models = parseStrToList(ipex_models)
                 }
@@ -1269,8 +1269,8 @@ def collect_deploy_Log() {
             job_frameworks.each { job_framework ->
                 // Get models list
                 def job_models = []
-                if (job_framework == 'nlp_excutor') {
-                    job_models = parseStrToList(nlp_excutor_models)
+                if (job_framework == 'engine') {
+                    job_models = parseStrToList(engine_models)
                 } else if (job_framework == 'ipex') {
                     job_models = parseStrToList(ipex_models)
                 }
