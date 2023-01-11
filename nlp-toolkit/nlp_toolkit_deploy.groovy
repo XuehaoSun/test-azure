@@ -469,6 +469,11 @@ def prepare_models(local_precision, prepare_cmd) {
                 v = "${v}/${local_precision}"
             }
         }
+        if (k == "cache_dir") {
+            if ("${CPU_NAME}" == "icx8380") {
+                v = "/home/sdp/.cache/huggingface"
+            }
+        }
         local_prepare_cmd += " --${k}=${v}" 
     }
     echo "prepare model cmd is ${local_prepare_cmd}"
