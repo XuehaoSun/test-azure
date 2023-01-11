@@ -40,7 +40,8 @@ if [[ ${model} = "dlrm"* ]] && [[ "${pytorch_version}" != "" ]]; then
     export https_proxy=http://proxy-prc.intel.com:913
     export http_proxy=http://proxy-prc.intel.com:913
 else
-    export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
 fi
 
 # add channels

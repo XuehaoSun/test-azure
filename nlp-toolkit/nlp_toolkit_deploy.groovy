@@ -338,7 +338,8 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             echo "=======run benchmark======="
             export PYTHONPATH=${WORKSPACE}/nlp-models:\$PYTHONPATH
-            export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             export GLOG_minloglevel=2
             source activate ${conda_env_name}
@@ -445,7 +446,8 @@ def runLauncherTest(mode, precision, launcher_cmd, launcher_cmd_params) {
             echo "=======cache clean======="
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             echo "=======launcher benchmark======="
-            export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             echo "final launcher benchmark cmd of precision ${precision} is ${launcher_cmd}"
@@ -483,7 +485,8 @@ def prepare_models(local_precision, prepare_cmd) {
     withEnv(["framework=${framework}","model=${model}","timeout=${timeout}","os=${os}","cpu=${cpu}","working_dir=${working_dir_fullpath}","prepare_cmd=${local_prepare_cmd}","conda_env_name=${conda_env_name}"]) {
         sh '''#!/bin/bash -x
             echo "Running ---- ${framework}, ${model}----Tuning"
-            export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]]; then
@@ -562,7 +565,8 @@ def run_inferencer(ncores_per_instance, bs, precision) {
         "mono_socket_opt=${mono_socket_opt}",
     ]){
         sh'''#!/bin/bash -x
-        export PATH=${HOME}/miniconda3/bin/:$PATH
+        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
         export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
         source activate ${conda_env_name}
         echo "Running ----${model}, ${ir_path}, ${ncores_per_instance},${bs},${precision} ----Inferencer Benchmark"
@@ -597,10 +601,8 @@ def getReferenceData() {
             withEnv(["conda_env_name=${conda_env_name}"]) {
                 sh"""#!/bin/bash
                     set -x
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-                        export PATH=${HOME}/anaconda3/bin/:$PATH
-                    fi
+                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                     source activate ${conda_env_name}
 
                     python ${WORKSPACE}/lpot-validation/scripts/parse_summary.py \
@@ -630,7 +632,8 @@ def findPerfDrops(result_json, os="", platform="", precision="", mode="") {
     
     def drops = sh(returnStdout: true, script: """#!/bin/bash
         set -x
-        export PATH=${HOME}/miniconda3/bin/:$PATH
+        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
         if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
             export PATH=${HOME}/anaconda3/bin/:$PATH
         fi
@@ -684,7 +687,8 @@ def checkReferenceData() {
 
                 sh """#!/bin/bash
                     set -x
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                     if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
                         export PATH=${HOME}/anaconda3/bin/:$PATH
                     fi
@@ -758,7 +762,8 @@ def collectLogs() {
         withEnv(["conda_env_name=${conda_env_name}"]) {
             sh """#!/bin/bash
                 set -x
-                export PATH=${HOME}/miniconda3/bin/:$PATH
+                [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                 if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
                     export PATH=${HOME}/anaconda3/bin/:$PATH
                 fi
@@ -779,7 +784,8 @@ def collectLauncherLogs(launchermode, precision) {
     withEnv(["conda_env_name=${conda_env_name}", "logs_prefix_url=${logs_prefix_url}", "framework=${framework}", "model=${model}", "precision=${precision}", "mode=${launchermode}"]) {
         sh '''#!/bin/bash
             set -x
-            export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
             source activate ${conda_env_name}
             output_file=${WORKSPACE}/nlp-models/examples/out.csv
             echo "working in"
@@ -1009,7 +1015,8 @@ node( sub_node_label ) {
                 // although no need quantiza, still need to install requirement.txt
                 withEnv(["working_dir=${working_dir_fullpath}","conda_env_name=${conda_env_name}"]) {
                     sh '''#!/bin/bash -x
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                     export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
                     source activate ${conda_env_name}
                     cd ${working_dir}
@@ -1046,7 +1053,8 @@ node( sub_node_label ) {
                             cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/fp32-model.onnx --output_dir=./sparse_fp32_ir"
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                                [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
@@ -1095,7 +1103,8 @@ node( sub_node_label ) {
                             cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/int8-model.onnx --output_dir=./sparse_int8_ir"
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                                [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATHxport PATH=${HOME}/miniconda3/bin/:$PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
@@ -1143,7 +1152,8 @@ node( sub_node_label ) {
                             cmd = "python export_transpose_ir.py --input_model=./model_and_tokenizer/bf16-model.onnx --output_dir=./sparse_bf16_ir"
                             sh """#!/bin/bash
                                 cd ${working_dir_fullpath}
-                                export PATH=${HOME}/miniconda3/bin/:$PATH
+                                [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                                [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                                 source activate ${conda_env_name}
                                 echo "cmd is ${cmd}"
                                 ${cmd}
