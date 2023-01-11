@@ -122,7 +122,8 @@ function set_ONNXRT_env {
 }
 
 function set_ENGINE_env {
-    export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
     echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
 }
