@@ -337,11 +337,11 @@ def get_model_name(framework: str, model: str, model_src_dir: str, precision: st
     )
     if model_src_dir.endswith("keras"):
         return int8_model
-    if framework == "tensorflow":
+    if framework == "tensorflow" and "keras" not in model_src_dir:
         return f"{int8_model}.pb"
     elif framework == "onnxrt":
         return f"{int8_model}.onnx"
-
+   
     return int8_model
     
 
