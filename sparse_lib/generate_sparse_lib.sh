@@ -15,7 +15,8 @@ function main {
     echo "script_dir: ${script_dir}"
 
     conda_env_name="sparse_lib"
-    export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
     if [[ ! $(conda info -e | grep ${conda_env_name}) ]]; then
         conda create -n ${conda_env_name} python=3.8 -y
     fi

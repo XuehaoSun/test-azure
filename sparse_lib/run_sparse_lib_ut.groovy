@@ -221,7 +221,8 @@ node(node_label){
             withEnv(["conda_env=${conda_env}", "tensorflow_version=${tensorflow_version}"]) {
                 retry(3){
                     sh(returnStatus: true, script: '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         if [ $(conda info -e | grep ${conda_env} | wc -l) != 0 ]; then
                            (conda remove --name ${conda_env} --all -y) || true
@@ -236,7 +237,8 @@ node(node_label){
                 }
                 retry(3) {
                     sh(returnStatus: true, script: '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         source activate ${conda_env}
                         cd ${WORKSPACE}
@@ -255,7 +257,8 @@ node(node_label){
                 timeout(30){
                     echo "+---------------- gtest for sparseLib ----------------+"
                     ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                     export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                     source activate ${conda_env}
                     cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/gtest/kernels

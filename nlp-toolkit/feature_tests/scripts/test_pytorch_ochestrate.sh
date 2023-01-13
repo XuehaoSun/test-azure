@@ -15,7 +15,8 @@ done
 
 
 function main {
-    export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
 
     create_conda_env
     lpot_install

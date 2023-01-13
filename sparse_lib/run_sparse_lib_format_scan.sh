@@ -31,7 +31,8 @@ do
 done
 
 main() {
-    export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
     source activate sparse-lib-format_scan-${python_version}-${CPU_NAME} 
     pip -V
     python -V

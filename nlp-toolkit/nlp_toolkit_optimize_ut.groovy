@@ -313,7 +313,8 @@ node(node_label){
                     withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                         echo "+---------------- unit test For TF ${tensorflow_version} and PT ${pytorch_version}----------------+"
                         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env}
                         # pip config set global.index-url https://pypi.douban.com/simple/
                         echo "Checking lpot..."
@@ -414,7 +415,8 @@ node(node_label){
                     println("Getting coverage on branch \"" + branch + "\"")
                     // Get coverage summary
                     sh '''#!/bin/bash
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env}
                     python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
                         --cov-xml=${WORKSPACE}/coverage_results/coverage.xml \
@@ -452,7 +454,8 @@ node(node_label){
                         println("Getting base coverage on branch \"" + MR_target_branch + "\"")
                         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                             sh '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                             source activate ${conda_env}
                             pip uninstall neural_compressor -y
                             pip uninstall intel_extension_for_transformers -y
@@ -555,7 +558,8 @@ node(node_label){
                     timeout(80) {
                         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                             source activate ${conda_env}
                             echo "Checking neural_compressor..."
                             python -V

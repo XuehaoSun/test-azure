@@ -42,7 +42,8 @@ function create_conda_env {
     if [ -f "${HOME}/miniconda3/etc/profile.d/conda.sh" ]; then
         . "${HOME}/miniconda3/etc/profile.d/conda.sh"
     else
-        export PATH="${HOME}/miniconda3/bin:$PATH"
+        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
     fi
     conda remove --all -y -n ${conda_env_name}
     conda create python=${python_version} -y -n ${conda_env_name}

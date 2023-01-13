@@ -220,7 +220,8 @@ def run_pytest_with_coverage_count(repo_name){
     }
     withEnv(["torch_version=${torch_version}", "repo_name=${repo_name}","ut_log_name=${ut_log_name}", "coverage_package=${coverage_package}", "coverage_summary_log=${coverage_summary_log}", "conda_env=${conda_env}", "CPU_NAME=${CPU_NAME}"]){
         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-        export PATH=${HOME}/miniconda3/bin/:$PATH
+        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env}
         pip install coverage
         
@@ -353,7 +354,8 @@ node(node_label){
             withEnv(["conda_env=${conda_env}", "tensorflow_version=${tensorflow_version}", "CPU_NAME=${CPU_NAME}"]) {
                 retry(3){
                     sh(returnStatus: true, script: '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         if [[ ${CPU_NAME} != spr* ]]; then
                             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         else
@@ -373,7 +375,8 @@ node(node_label){
                 retry(3) {
                     withEnv(["test_install_backend=${test_install_backend}", "CPU_NAME=${CPU_NAME}"]){
                         sh(returnStatus: true, script: '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                             if [[ ${CPU_NAME} != spr* ]]; then
                                 export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                             else
@@ -396,7 +399,8 @@ node(node_label){
                 if (unit_test_mode=='pytest'){
                     retry(3){
                         sh(returnStatus: true, script: '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                             source activate ${conda_env}
                             cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/pytest
                             if [ -f "requirements.txt" ]; then
@@ -418,7 +422,8 @@ node(node_label){
                     if (unit_test_mode == 'gtest'){
                         echo "+---------------- gtest ----------------+"
                         def ut_status_engine = sh(returnStatus: true, script: '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         if [[ ${CPU_NAME} != spr* ]]; then
                             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         else
@@ -448,7 +453,8 @@ node(node_label){
                         
                         echo "+---------------- gtest for sparseLib ----------------+"
                         def ut_status_kernel = sh(returnStatus: true, script: '''#!/bin/bash
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         if [[ ${CPU_NAME} != spr* ]]; then
                             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                         else
@@ -487,7 +493,8 @@ node(node_label){
                             echo "+---------------- pytest coverage status check ----------------+"
                             // Get coverage summary
                             sh '''#!/bin/bash
-                            export PATH=${HOME}/miniconda3/bin/:$PATH
+                            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                             source activate ${conda_env}
                             echo "Current conda ENV is ${conda_env}..."
                             python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
@@ -524,7 +531,8 @@ node(node_label){
                             }else{
                                 echo "+---------------- PR pytest coverage basic ----------------+"
                                 sh '''#!/bin/bash
-                                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                                     source activate ${conda_env}
                                     pip install cmake
                                     cmake_path=$(which cmake)
@@ -568,7 +576,8 @@ node(node_label){
                             withEnv(["test_install_backend=${test_install_backend}"]){
                                 echo "+---------------- pytest ----------------+"
                                 ut_status = sh(returnStatus: true, script: '''#!/bin/bash
-                                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                                     source activate ${conda_env}
                                     echo "Current conda ENV is ${conda_env}..."
 

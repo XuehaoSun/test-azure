@@ -3,7 +3,8 @@
 output_log_dir=$1
 
 conda_env_name="sparse_lib"
-export PATH=${HOME}/miniconda3/bin/:$PATH
+[[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+[[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
 conda activate $conda_env_name || source activate $conda_env_name
 conda install -c conda-forge gxx gcc cmake -y
 

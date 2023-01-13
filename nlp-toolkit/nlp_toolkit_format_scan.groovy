@@ -89,7 +89,8 @@ def create_conda_env() {
             retry(5) {
                 sh '''#!/bin/bash
                     set -xe
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
+                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                     conda_env_name=nlp-toolkit-format_scan-${python_version}
                     if [[ -n ${CPU_NAME} ]]; then
                         conda_env_name="${conda_env_name}-${CPU_NAME}"

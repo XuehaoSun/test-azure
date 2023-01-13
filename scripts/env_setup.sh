@@ -35,7 +35,8 @@ function set_TF_env {
     export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
     export TF_MKL_OPTIMIZE_PRIMITIVE_MEMUSE=false
 
-    export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
     echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
 
@@ -88,7 +89,8 @@ function set_MXNet_env {
     export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
     export OMP_NUM_THREADS=28
 
-    export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
     echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
 }
@@ -96,11 +98,12 @@ function set_MXNet_env {
 function set_PT_env {
     export OMP_NUM_THREADS=28
     if [[ "${model}" = "dlrm"* ]]; then
-      export PATH=${HOME}/anaconda3/bin/:$PATH
-      export https_proxy=http://proxy-prc.intel.com:913
-      export http_proxy=http://proxy-prc.intel.com:913
+        export PATH=${HOME}/anaconda3/bin/:$PATH
+        export https_proxy=http://proxy-prc.intel.com:913
+        export http_proxy=http://proxy-prc.intel.com:913
     else
-      export PATH=${HOME}/miniconda3/bin/:$PATH
+        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
     fi
 
     echo "Activating ${conda_env_name} env"
@@ -113,7 +116,8 @@ function set_PT_env {
 function set_ONNXRT_env {
     export KMP_AFFINITY=granularity=fine,noduplicates,compact,1,0
     export OMP_NUM_THREADS=28
-    export PATH=${HOME}/miniconda3/bin/:$PATH
+    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
     echo "Activating ${conda_env_name} env"
     source activate ${conda_env_name}
     if [ "${conda_env_mode}" == "conda" ];then

@@ -358,7 +358,8 @@ def runPerfTest(mode, precision) {
             sudo bash ${WORKSPACE}/lpot-validation/scripts/cache_clean.sh
             
             echo "=======run benchmark======="
-            export PATH=${HOME}/miniconda3/bin/:$PATH
+            [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+            [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
             source activate ${conda_env_name}
             cd ${working_dir}
             echo "working in ${working_dir}"
@@ -445,10 +446,8 @@ def getReferenceData() {
             withEnv(["conda_env_name=${conda_env_name}"]) {
                 sh"""#!/bin/bash
                     set -x
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-                        export PATH=${HOME}/anaconda3/bin/:$PATH
-                    fi
+                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env_name}
 
                     python ${WORKSPACE}/lpot-validation/scripts/parse_summary.py \
@@ -478,10 +477,8 @@ def findPerfDrops(result_json, os="", platform="", precision="", mode="") {
     
     def drops = sh(returnStdout: true, script: """#!/bin/bash
         set -x
-        export PATH=${HOME}/miniconda3/bin/:$PATH
-        if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-            export PATH=${HOME}/anaconda3/bin/:$PATH
-        fi
+        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
         source activate ${conda_env_name}
         ${cmd}
         """)
@@ -532,10 +529,8 @@ def checkReferenceData() {
 
                 sh """#!/bin/bash
                     set -x
-                    export PATH=${HOME}/miniconda3/bin/:$PATH
-                    if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-                        export PATH=${HOME}/anaconda3/bin/:$PATH
-                    fi
+                    [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                    [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                     source activate ${conda_env_name}
                     pip list
                     ${cmd}
@@ -606,10 +601,8 @@ def collectLogs() {
         withEnv(["conda_env_name=${conda_env_name}"]) {
             sh """#!/bin/bash
                 set -x
-                export PATH=${HOME}/miniconda3/bin/:$PATH
-                if [[ ${framework} = 'pytorch' ]] && [[ ${model} = "dlrm"* ]]; then
-                    export PATH=${HOME}/anaconda3/bin/:$PATH
-                fi
+                [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                 source activate ${conda_env_name}
                 pip list
                 ${cmd}
@@ -772,7 +765,7 @@ node( sub_node_label ) {
                 }
                 try {
                     // get params for tuning
-                    def modelConf =  jsonParse(readFile("$WORKSPACE/lpot-validation/config/${framework}_optimize.json"))."${model}"
+                    def modelConf =  jsonParse(readFile("$WORKSPACE/nlp-models/examples/.config/${framework}_optimize.json"))."${model}"
 
                     working_dir = modelConf."working_dir"
                     working_dir_fullpath = "${WORKSPACE}/nlp-models/examples/${working_dir}"
@@ -800,7 +793,8 @@ node( sub_node_label ) {
                         "WORKSPACE=${WORKSPACE}"]) {
                     sh '''#!/bin/bash -x
                         echo "Running ---- ${framework}, ${model}----Tuning"
-                        export PATH=${HOME}/miniconda3/bin/:$PATH
+                        [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
+                        [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         source activate ${conda_env_name}
                         cd ${working_dir}
                         echo "Working in ${working_dir}"
