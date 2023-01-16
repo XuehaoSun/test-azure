@@ -1,7 +1,7 @@
 setlocal enabledelayedexpansion
 cd C:\\Users\\sdp\\Jenkins\\workspace\\sparse-lib-windows\\a\\intel_extension_for_transformers\\backends\\neural_engine
 mkdir build && cd build
-cmake .. -DNE_WITH_SPARSELIB_ONLY=ON -DNE_WITH_SPARSELIB_BENCHMARK=ON -DNE_WITH_TESTS=ON -DNE_WITH_ONEDNN_GRAPH=OFF -DNE_WITH_SPARSELIB=ON >> cmake_log 2>&1
+cmake .. -DNE_WITH_SPARSELIB_ONLY=ON -DNE_WITH_SPARSELIB_BENCHMARK=ON -DNE_WITH_TESTS=ON -DNE_WITH_ONEDNN_GRAPH=OFF -DNE_WITH_SPARSELIB=ON -DNE_DYNAMIC_LINK=ON >> cmake_log 2>&1
 call:check_stage "incomplete" cmake_log 22
 if %check_stage_tmp% equ 0 (
 cmake --build . -j >> build_log 2>&1
