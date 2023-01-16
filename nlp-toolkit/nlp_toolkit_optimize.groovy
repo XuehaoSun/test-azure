@@ -337,6 +337,11 @@ def runPerfTest(mode, precision) {
                 v = "benchmark"
             }
         }
+        if (k == "cache_dir") {
+            if ("${USER_NAME}" == "sdp" || "${USER_NAME}" == "SDP") {
+                v = "${HOME}/.cache/huggingface"
+            }
+        }
         benchmark_cmd += " --${k}=${v}"
     }
     echo "Final cmd is ${benchmark_cmd}"
@@ -774,6 +779,11 @@ node( sub_node_label ) {
                     def tune_params = modelConf."tune"."params"
 
                     tune_params.each{ k, v ->
+                        if (k == "cache_dir") {
+                            if ("${USER_NAME}" == "sdp" || "${USER_NAME}" == "SDP") {
+                                v = "${HOME}/.cache/huggingface"
+                            }
+                        }
                         tune_cmd += " --${k}=${v}"
                     }
                     echo "Final cmd is ${tune_cmd}"
