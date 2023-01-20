@@ -19,7 +19,7 @@ function main {
     create_conda_env
     lpot_install
 
-    # Run Pytorch Prune test
+    # Run Pytorch Prune test 
     cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/pruning/magnitude/eager
     if [ -f "requirements.txt" ]; then
       pip install --no-cache-dir -r requirements.txt
@@ -27,17 +27,17 @@ function main {
     fi
     pip install protobuf==3.20.1
     pip list
-    python main.py /tf_dataset/pytorch/ImageNet/raw --topology resnet18 --prune --config conf.yaml --pretrained --output-model model_final.pth --batch-size 256 --keep-batch-size --lr 0.001 --iteration 30 --epochs 3 2>&1 | tee ${WORKSPACE}/pytorch_prune_resnet.log
+    python main.py /tf_dataset/pytorch/ImageNet/raw --topology resnet18 --prune --pretrained --pruning_type magnitude --initial_sparsity 0.0 --target_sparsity 0.40 --start_epoch 0 --end_epoch 2 --output-model model_final.pth --batch-size 256 --keep-batch-size --lr 0.001 --iteration 30 --epochs 3 2>&1 | tee ${WORKSPACE}/pytorch_prune_resnet.log
 
 }
 
 function create_conda_env {
     if [[ -z ${pytorch_version} ]]; then
-        pytorch_version="1.9.0+cpu"  # Set pytorch 1.5.0+cpu as default
+        pytorch_version="1.13.0+cpu"  # Set pytorch 1.5.0+cpu as default
     fi
 
     if [[ -z ${torchvision_version} ]]; then
-        torchvision_version="0.10.0+cpu"  # Set torchvision 0.6.0+cpu as default
+        torchvision_version="0.14.0+cpu"  # Set torchvision 0.6.0+cpu as default
     fi
 
     conda_env_name=pytorch_prune_resnet-py${python_version}

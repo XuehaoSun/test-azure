@@ -7,7 +7,7 @@ echo "summaryLog: ${summaryLog}"
 CPU_NAME=$(cat "${WORKSPACE}/${feature_name}/cpu_name.log")
 test_status="check"
 
-quantized_result=$(grep -c "Evaluated model score is" ${WORKSPACE}/${feature_name}/pytorch_distillation_for_quantizaton.log)
+quantized_result=$(grep -c "eval_metric:" ${WORKSPACE}/${feature_name}/pytorch_distillation_for_quantizaton.log)
 
 if [[ "${quantized_result}" == "1" ]]; then
     test_status="pass"

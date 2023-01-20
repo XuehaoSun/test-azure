@@ -61,14 +61,14 @@ class eval_classifier_optimized_graph:
                 graph_optimizer = Graph_Optimization()
             if self.args.precision:
                 graph_optimizer.precisions = str(self.args.precision)
-            graph_optimizer.model = common.Model(self.args.input_graph)
+            graph_optimizer.model = '/tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb'
             q_model = graph_optimizer()
             q_model.save(self.args.output_graph)
 
         if self.args.benchmark:
             from neural_compressor.experimental import Benchmark, common
             evaluator = Benchmark(self.args.config)
-            evaluator.model = common.Model(self.args.input_graph)
+            evaluator.model = '/tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb'
             evaluator(self.args.mode)
 
 if __name__ == "__main__":

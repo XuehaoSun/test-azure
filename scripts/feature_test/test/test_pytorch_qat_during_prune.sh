@@ -19,6 +19,16 @@ function main {
     create_conda_env
     lpot_install
 
+    # old api example repo
+    cd ${WORKSPACE}
+    if [ ! -d "${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager" ]; then
+        git clone -b old_api_examples ${lpot_url} old-lpot-models
+        cd old-lpot-models
+        git branch 
+        mkdir -p ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager
+        cp -r ${WORKSPACE}/old-lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager/. ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager
+    fi
+
     # Run Pytorch Prune test
     cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager
 
@@ -35,15 +45,15 @@ function main {
 
 function create_conda_env {
     if [[ -z ${pytorch_version} ]]; then
-        pytorch_version="1.9.0+cpu"  # Set pytorch 1.8.0+cpu as default
+        pytorch_version="1.13.0+cpu"  # Set pytorch 1.8.0+cpu as default
     fi
 
     if [[ -z ${torchvision_version} ]]; then
-        torchvision_version="0.10.0+cpu"  # Set torchvision 0.9.0+cpu as default
+        torchvision_version="0.14.0+cpu"  # Set torchvision 0.9.0+cpu as default
     fi
 
     if [[ -z ${python_version} ]]; then
-        python_version=3.7  # Set python 3.7 as default
+        python_version=3.8  # Set python 3.7 as default
     fi
 
     conda_env_name=pytorch_qat_during_prune-py${python_version}

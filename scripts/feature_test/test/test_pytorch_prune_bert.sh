@@ -19,6 +19,16 @@ function main {
     create_conda_env
     lpot_install
 
+    # old api example repo
+    cd ${WORKSPACE}
+    if [ ! -d "${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager" ]; then
+        git clone -b old_api_examples ${lpot_url} old-lpot-models
+        cd old-lpot-models
+        git branch 
+        mkdir -p ${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager
+        cp -r ${WORKSPACE}/old-lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager/. ${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager
+    fi
+
     # Run Pytorch Prune test
     cd ${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager
     n=0

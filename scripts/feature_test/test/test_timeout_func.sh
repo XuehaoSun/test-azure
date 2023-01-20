@@ -26,8 +26,18 @@ function main {
       export PATH="${HOME}/miniconda3/bin:$PATH"
   fi
   # pip config set global.index-url https://pypi.douban.com/simple/
-  create_conda_env 2.7.0
+  create_conda_env 2.11.0
   lpot_install
+
+  # old api example repo
+  cd ${WORKSPACE}
+  if [ ! -d "${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq" ]; then
+      git clone -b old_api_examples ${lpot_url} old-lpot-models
+      cd old-lpot-models
+      git branch 
+      mkdir -p ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq
+      cp -r ${WORKSPACE}/old-lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq/. ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq
+    fi
 
   # 2. prepare
   cd ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq || return

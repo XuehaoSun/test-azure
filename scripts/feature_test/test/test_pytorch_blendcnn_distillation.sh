@@ -36,8 +36,8 @@ function create_conda_env {
     pip install -U pip
 
     # pip install -r requirements.txt
-    pip install fire tqdm tensorflow==2.6.0
-    pip install torch==1.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+    pip install fire tqdm tensorflow==2.11.0
+    pip install torch==1.13.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
     pip install protobuf==3.20.1
 
     # install inc
