@@ -995,11 +995,6 @@ node( sub_node_label ) {
                         python_version=3.7
                         conda_env_name="${framework}-${tensorflow_version}-${python_version}"
                     }
-                    if(model == 'yolo_v3'){
-                        tensorflow_version = '1.15UP3'
-                        python_version=3.7
-                        conda_env_name="${framework}-${tensorflow_version}-${python_version}"
-                    }
                 }
 
                 if (new_conda_env){
