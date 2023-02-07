@@ -160,7 +160,7 @@ function set_environment {
         until [ "$n" -ge 5 ]
         do
             [[ $(echo ${WORKSPACE} | grep "304") ]] && [[ -d "/home/linuxbrew/.linuxbrew/bin" ]] && export PATH="/home/linuxbrew/.linuxbrew/bin:"$PATH
-            pip install nlpaug
+            pip install pycocotools
             pip install intel_extension_for_transformers*.whl && break
 
             n=$((n+1))
