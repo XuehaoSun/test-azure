@@ -12,7 +12,7 @@ class ResultCollector(JsonSerializer):
 
     def read_perf(self, perf_log_path: str):
         with open(perf_log_path, newline="") as summary_file:
-            header = summary_file.readline().lower().strip().split(";")
+            header = summary_file.readline().strip().split(";")
             reader = csv.DictReader(summary_file, fieldnames=header, delimiter=";")
             for row in reader:
                 new_config = True
@@ -67,17 +67,16 @@ class ResultCollector(JsonSerializer):
 
     def parse_perf_result(self, raw_data):
         result = Result()
-        result.os = raw_data.get("os")
-        result.platform = raw_data.get("platform")
-        result.framework = raw_data.get("framework")
-        result.version = raw_data.get("version")
-        result.platform = raw_data.get("platform")
-        result.model = raw_data.get("model")
+        result.os = raw_data.get("OS")
+        result.platform = raw_data.get("Platform")
+        result.framework = raw_data.get("Framework")
+        result.version = raw_data.get("Version")
+        result.model = raw_data.get("Model")
 
-        precision = raw_data.get("precision").lower()
-        mode = raw_data.get("type").lower()
-        value = raw_data.get("value")
-        url = raw_data.get("url")
+        precision = raw_data.get("Precision").lower()
+        mode = raw_data.get("Type").lower()
+        value = raw_data.get("Value")
+        url = raw_data.get("Url")
 
         return result, mode, precision, value, url
 
