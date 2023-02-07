@@ -1145,7 +1145,7 @@ node( sub_node_label ) {
                 timeout(720) {
                     stage("Performance") {
                         println("==========run benchmark========")
-                        tf_perf_only_list = ['style_transfer', 'yolo_v3',
+                        tf_perf_only_list = ['style_transfer',
                                              'vgg16_keras', 'vgg16_keras_h5',
                                              'vgg19_keras', 'vgg19_keras_h5',
                                              'resnet50_keras', 'resnet50_keras_h5',
