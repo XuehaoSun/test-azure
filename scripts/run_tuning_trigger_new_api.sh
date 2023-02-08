@@ -245,23 +245,6 @@ function install_model_deps {
         exit 1
     fi
 
-    # specific ENV setting for some models
-    if [[ "${model_src_dir}" == *"text-classification/quantization/ptq_static/eager" ]] || [[ "${model_src_dir}" == *"language-modeling/quantization/ptq_static/eager" ]]; then
-        echo -e "\n[VAL INFO] Installing pytorch-huggingface requirements..."
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-            python -m pip install -r ${WORKSPACE}/lpot-validation/requirement_pytorch_huggingface.txt && break
-            n=$((n+1))
-            sleep 5
-        done
-        pip list
-        setup_install_pypi_source
-        cd ../../../../common
-        python setup.py install
-        cd -
-    fi
-
     if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
         # Install mlperf_loadgen
         pip install absl-py
@@ -310,10 +293,7 @@ function install_model_deps {
             bash prepare_loadgen.sh "$(pwd)"
         fi
     fi
-    # temperate limit datasets version to 2.2.2(hugginface models will be removed soon)
-    if [[ "${framework}" == "pytorch" ]] && [[ "${model_src_dir}" == *"nlp/huggingface_models"* ]]; then
-        pip install datasets==2.2.2
-    fi
+
     # re-install pycocotools resolve the issue with numpy
     echo "re-install pycocotools resolve the issue with numpy..."
     pip uninstall pycocotools -y

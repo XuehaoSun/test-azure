@@ -173,10 +173,7 @@ main() {
             bash prepare_loadgen.sh "$(pwd)"
         fi
     fi
-    # temperate limit datasets version to 2.2.2(hugginface models will be removed soon)
-    if [[ "${framework}" == "pytorch" ]] && [[ "${model_src_dir}" == *"nlp/huggingface_models"* ]]; then
-        pip install datasets==2.2.2
-    fi
+
     # re-install pycocotools resolve the issue with numpy
     echo "re-install pycocotools resolve the issue with numpy..."
     pip uninstall pycocotools -y
