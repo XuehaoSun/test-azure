@@ -2203,3 +2203,14 @@ MLefficiency
 cff
 kawapanion
 mlefficiency
+diffusers
+dm
+lambdalabs
+pokemon
+sd
+sysresearch
+AutoModelForSequenceClassification
+SapphireRapids
+SetFit
+scalable
+AGNews
