@@ -819,7 +819,7 @@ node( sub_node_label ) {
                         tf_new_api="false"
                     }
                 }
-                if (itex_version == "nightly" && framework == "tensorflow"){
+                if (itex_version == "nightly" && (framework == "tensorflow" || framework == "keras")){
                     copyArtifacts(
                             projectName: 'ITEX-binary-build',
                             selector: specific("${itex_binary_build_job}"),
@@ -1013,6 +1013,11 @@ node( sub_node_label ) {
                             _itex_ver=itex_version
                             framework_version="$tensorflow_version-itex-$itex_version"
                         }
+                    }else if(framework=='keras'){
+                        framework_version=tensorflow_version
+                        _tf_ver=tensorflow_version
+                        _itex_ver=itex_version
+                        itex_mode="onednn_graph"
                     }else if(framework=='pytorch'){
                         framework_version=pytorch_version
                         _pt_ver=pytorch_version

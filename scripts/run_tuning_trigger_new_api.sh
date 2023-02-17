@@ -57,6 +57,11 @@ main() {
          --itex_mode=${itex_mode} --install_inc="true"
     set_environment
 
+    # set gcc for ace machine
+    if [ -f /opt/rh/devtoolset-9/enable ]; then
+        source /opt/rh/devtoolset-9/enable
+    fi
+
     echo -e "\n[VAL INFO] Installing model requirements..."
     install_model_deps
 

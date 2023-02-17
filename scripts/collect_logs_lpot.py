@@ -277,6 +277,7 @@ def get_framework_version(framework: str) -> None:
     print(f"Checking {framework} version...")
     fw_modules = {
         "tensorflow": "tensorflow",
+        "keras": "tensorflow",
         "onnxrt": "onnxruntime",
         "mxnet": "mxnet",
         "pytorch": "torch"

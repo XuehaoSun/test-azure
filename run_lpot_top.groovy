@@ -84,6 +84,13 @@ if ('tensorflow_oob_models' in params && params.tensorflow_oob_models != '') {
 }
 echo "tensorflow_oob_models: ${tensorflow_oob_models}"
 
+// setting keras_models
+keras_models = ""
+if ('keras_models' in params && params.keras_models != '') {
+    keras_models = params.keras_models
+}
+echo "keras_models: ${keras_models}"
+
 // setting mxnet_version
 mxnet_version = '1.7.0'
 if ('mxnet_version' in params && params.mxnet_version != '') {
@@ -253,6 +260,13 @@ if ('tensorflow_oob_models_windows' in params && params.tensorflow_oob_models_wi
 }
 echo "tensorflow_oob_models_windows: ${tensorflow_oob_models_windows}"
 
+// setting keras_models_windows
+keras_models_windows = ""
+if ('keras_models_windows' in params && params.keras_models_windows != '') {
+    keras_models_windows = params.keras_models_windows
+}
+echo "keras_models_windows: ${keras_models_windows}"
+
 // setting mxnet_models_windows
 mxnet_models_windows = ""
 if ('mxnet_models_windows' in params && params.mxnet_models_windows != '') {
@@ -406,7 +420,7 @@ if ('tf_binary_build_job' in params && params.tf_binary_build_job != ''){
 }
 echo "tf_binary_build_job: ${tf_binary_build_job}"
 
-itex_binary_build_job = ""
+itex_binary_build_job = "lastSuccessfulBuild"
 if ('itex_binary_build_job' in params && params.itex_binary_build_job != ''){
     itex_binary_build_job=params.itex_binary_build_job
 }
@@ -712,7 +726,13 @@ def getPerfJobs() {
                     if (system == "windows") {
                         job_models = parseStrToList(onnxrt_models_windows)
                     }
+                }else if (job_framework == "keras"){
+                    job_models = parseStrToList(keras_models)
+                    if (system == "windows") {
+                        job_models = parseStrToList(keras_models_windows)
+                    }
                 }
+
                 if (PR_source_branch != '' && system == "linux"){
                     add_models_list = collectModelList(job_framework)
                     job_models = job_models.plus(add_models_list)
@@ -917,6 +937,11 @@ def collectLog() {
                     job_models = parseStrToList(onnxrt_models)
                     if (system == "windows") {
                         job_models = parseStrToList(onnxrt_models_windows)
+                    }
+                }else if (job_framework == "keras"){
+                    job_models = parseStrToList(keras_models)
+                    if (system == "windows") {
+                        job_models = parseStrToList(keras_models_windows)
                     }
                 }
 

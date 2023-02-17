@@ -54,6 +54,11 @@ main() {
         --itex_mode=${itex_mode}
     set_environment
 
+    # set gcc for ace machine
+    if [ -f /opt/rh/devtoolset-9/enable ]; then
+        source /opt/rh/devtoolset-9/enable
+    fi
+
     if [ -d ${model_src_dir} ]; then
         cd ${model_src_dir}
         echo -e "\n[VAL INFO] Working in $(pwd)..."

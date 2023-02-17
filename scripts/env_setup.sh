@@ -136,6 +136,8 @@ function set_environment {
     case "${framework}" in
         tensorflow)
             set_TF_env;;
+        keras)
+            set_TF_env;;
         mxnet)
             set_MXNet_env;;
         pytorch)
