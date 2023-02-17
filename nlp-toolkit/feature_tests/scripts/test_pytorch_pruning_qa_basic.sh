@@ -22,7 +22,7 @@ function main {
     lpot_install
 
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/optimization/pytorch/huggingface/textual_inversion
+    cd ${WORKSPACE}/lpot-models/examples/optimization/pytorch/huggingface/question-answering/pruning/basic_magnitude
     n=0
     until [ "$n" -ge 5 ]
     do
@@ -30,26 +30,10 @@ function main {
         n=$((n+1))
         sleep 5
     done
-    pip install --upgrade diffusers transformers scipy
     pip list
-    export MODEL_NAME="CompVis/stable-diffusion-v1-4"
-    export DATA_DIR="./dicoo"
-
-    # add use_bf16
-    python textual_inversion_ipex.py \
-      --pretrained_model_name_or_path=$MODEL_NAME \
-      --train_data_dir=$DATA_DIR \
-      --learnable_property="object" \
-      --placeholder_token="<dicoo>" --initializer_token="toy" \
-      --resolution=512 \
-      --train_batch_size=1 \
-      --gradient_accumulation_steps=4 \
-      --use_bf16 \
-      --max_train_steps=10 \
-      --learning_rate=5.0e-04 --scale_lr \
-      --lr_scheduler="constant" \
-      --lr_warmup_steps=0 \
-      --output_dir="dicoo_model"  2>&1 | tee ${WORKSPACE}/textual_inversion.log
+    python run_qa.py --model_name_or_path distilbert-base-uncased-distilled-squad \
+        --dataset_name squad --target_sparsity_ratio 0.1 --prune --do_eval --do_train \
+        --per_device_eval_batch_size 16 --output_dir ./tmp/squad_output 2>&1 | tee ${WORKSPACE}/pytorch_pruning_qa_basic.log
 
 }
 
@@ -59,7 +43,7 @@ function create_conda_env {
         python_version=3.7  # Set python 3.7 as default
     fi
 
-    conda_env_name=pytorch_distillation_py${python_version}
+    conda_env_name=pytorch_pruning_py${python_version}
 
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then

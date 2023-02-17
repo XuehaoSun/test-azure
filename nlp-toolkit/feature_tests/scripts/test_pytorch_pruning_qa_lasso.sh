@@ -22,34 +22,20 @@ function main {
     lpot_install
 
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/optimization/pytorch/huggingface/textual_inversion
+    cd ${WORKSPACE}/lpot-models/examples/optimization/pytorch/huggingface/question-answering/pruning/group_lasso
     n=0
     until [ "$n" -ge 5 ]
     do
-        python -m pip install -r requirements.txt && break
+        pip3 install -r requirements.txt --ignore-installed PyYAML && break
         n=$((n+1))
         sleep 5
     done
-    pip install --upgrade diffusers transformers scipy
     pip list
-    export MODEL_NAME="CompVis/stable-diffusion-v1-4"
-    export DATA_DIR="./dicoo"
-
-    # add use_bf16
-    python textual_inversion_ipex.py \
-      --pretrained_model_name_or_path=$MODEL_NAME \
-      --train_data_dir=$DATA_DIR \
-      --learnable_property="object" \
-      --placeholder_token="<dicoo>" --initializer_token="toy" \
-      --resolution=512 \
-      --train_batch_size=1 \
-      --gradient_accumulation_steps=4 \
-      --use_bf16 \
-      --max_train_steps=10 \
-      --learning_rate=5.0e-04 --scale_lr \
-      --lr_scheduler="constant" \
-      --lr_warmup_steps=0 \
-      --output_dir="dicoo_model"  2>&1 | tee ${WORKSPACE}/textual_inversion.log
+    git clone https://github.com/NVIDIA/apex
+    cd apex
+    pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+    wget https://api.ngc.nvidia.com/v2/models/nvidia/bert_pyt_ckpt_large_pretraining_amp_lamb/versions/20.03.0/files/bert_large_pretrained_amp.pt
+    source scripts/run_squad_sparse.sh bert_large_pretrained_amp.pt 2.0 16 5e-5 tf32 /tf_dataset2/models/deep-engine/bert_large saved_result prune_bert.yaml
 
 }
 
@@ -59,7 +45,7 @@ function create_conda_env {
         python_version=3.7  # Set python 3.7 as default
     fi
 
-    conda_env_name=pytorch_distillation_py${python_version}
+    conda_env_name=pytorch_pruning_py${python_version}
 
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
@@ -81,7 +67,7 @@ function create_conda_env {
         echo "\"lpot-model\" not found. Exiting..."
         exit 1
     fi
-    pip install protobuf==3.20.1
+    pip install torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
     cd ${WORKSPACE}/lpot-models || return
 }
 
