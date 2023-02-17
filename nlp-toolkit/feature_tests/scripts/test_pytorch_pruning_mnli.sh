@@ -31,7 +31,7 @@ function main {
         sleep 5
     done
     pip list
-    python run_glue.py --task_name mnli --model_name_or_path yoshitomo-matsubara/bert-base-uncased-mnli --per_device_train_batch_size 64 --per_device_eval_batch_size 64 --max_train_samples 1024 --max_eval_samples 1024 --do_train --do_eval --pad_to_max_length --num_train_epochs 3 --output_dir saved_results 2>&1 | tee ${WORKSPACE}/pytorch_pruning_mnli.log
+    python run_glue.py --task_name mnli --model_name_or_path yoshitomo-matsubara/bert-base-uncased-mnli --per_device_train_batch_size 64 --per_device_eval_batch_size 64 --max_train_samples 1024 --max_eval_samples 1024 --do_train --do_eval --pad_to_max_length --num_train_epochs 5 --output_dir saved_results 2>&1 | tee ${WORKSPACE}/pytorch_pruning_mnli.log
 
 }
 

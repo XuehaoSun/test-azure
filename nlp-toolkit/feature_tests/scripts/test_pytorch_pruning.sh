@@ -32,9 +32,9 @@ function main {
     done
     pip list
     python run_glue.py --model_name_or_path distilbert-base-uncased-finetuned-sst-2-english \
-        --task_name sst2 --target_sparsity_ratio 0.1 --prune --do_eval --do_train \
+        --task_name sst2 --target_sparsity_ratio 0.7 --prune --do_eval --do_train \
         --per_device_eval_batch_size 16 --output_dir ./saved_pruning \
-        --overwrite_cache --max_train_samples 100 --max_eval_samples 50 --max_predict_samples 50 \
+        --overwrite_cache \
         --overwrite_output_dir 2>&1 | tee ${WORKSPACE}/pytorch_pruning.log
 
 }

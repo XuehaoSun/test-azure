@@ -32,7 +32,7 @@ function main {
     done
     pip list
     python run_qa.py --model_name_or_path distilbert-base-uncased-distilled-squad \
-        --dataset_name squad --target_sparsity_ratio 0.1 --prune --do_eval --do_train \
+        --dataset_name squad --target_sparsity_ratio 0.7 --prune --do_eval --do_train \
         --per_device_eval_batch_size 16 --output_dir ./tmp/squad_output 2>&1 | tee ${WORKSPACE}/pytorch_pruning_qa_basic.log
 
 }

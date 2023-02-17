@@ -21,7 +21,7 @@ function main {
     python run_glue.py \
         --model_name_or_path distilbert-base-uncased-finetuned-sst-2-english \
         --task_name sst2 \
-        --target_sparsity_ratio 0.1 \
+        --target_sparsity_ratio 0.7 \
         --prune \
         --do_train \
         --do_eval \
