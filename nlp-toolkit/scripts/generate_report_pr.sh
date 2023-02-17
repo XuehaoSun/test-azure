@@ -776,7 +776,7 @@ local workflow=$1
             if (new_result ~/[1-9]/ && previous_result ~/[1-9]/) {
                 if(metric == "acc") {
                     target = new_result - previous_result;
-                    if(target >= -0.0001 && target <= 0.0001) {
+                    if(target >= -0.001 && target <= 0.001) {
                         status_png = "background-color:#90EE90";
                     } else {
                         status_png = "background-color:#FFD2D2";
