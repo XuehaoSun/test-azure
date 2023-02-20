@@ -308,6 +308,19 @@ if [[ "${install_ipex}" == "true" ]]; then
                     ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.0%2Bcpu/intel_extension_for_pytorch-1.13.0-cp310-cp310-manylinux2014_x86_64.whl";;
             esac
             [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.13.0 -f https://software.intel.com/ipex-whl-stable";;    
+        1.13.1*)
+            case "${python_version}" in
+                3.7)
+                    ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.100%2Bcpu/intel_extension_for_pytorch-1.13.100-cp37-cp37m-manylinux2014_x86_64.whl";;
+                3.8)
+                    ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.100%2Bcpu/intel_extension_for_pytorch-1.13.100-cp38-cp38-manylinux2014_x86_64.whl";;
+                3.9)
+                    ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.100%2Bcpu/intel_extension_for_pytorch-1.13.100-cp39-cp39-manylinux2014_x86_64.whl";;
+                3.10)
+                    ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.100%2Bcpu/intel_extension_for_pytorch-1.13.100-cp310-cp310-manylinux2014_x86_64.whl";;
+            esac
+            [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.13.100 -f https://software.intel.com/ipex-whl-stable";;    
+        
         "nightly")
             case "${python_version}" in
                  3.8)
