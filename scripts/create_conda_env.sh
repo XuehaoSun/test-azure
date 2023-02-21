@@ -55,19 +55,42 @@ function update_conda_env {
     if [ $(conda info -e | grep ${conda_env_name} | wc -l) != 0 ]; then
         (conda remove --name ${conda_env_name} --all -y) || true
     fi
-    conda_dir=$(dirname $(dirname $(which conda)))
-    if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
-        rm -rf ${conda_dir}/envs/${conda_env_name}
+    if [ -d ${HOME}/miniconda3/envs/${conda_env_name} ]; then
+        rm -rf ${HOME}/miniconda3/envs/${conda_env_name}
     fi
     offending_pkg_dir=("libgcc-ng-9.3.0-h5101ec6_17" "libffi-3.3-he6710b0_2")
     for pkg in ${offending_pkg_dir[@]}
     do 
-        [[ -d ${conda_dir}/pkgs/${pkg} && $(ls ${conda_dir}/pkgs/${pkg} | wc -l) != 0 ]] && rm -fr ${conda_dir}/pkgs/${pkg}
+        [[ -d ${HOME}/miniconda3/pkgs/${pkg} && $(ls ${HOME}/miniconda3/pkgs/${pkg} | wc -l) != 0 ]] && rm -fr ${HOME}/miniconda3/pkgs/${pkg}
     done
     conda config --add channels conda-forge
     conda config --add channels defaults
-    conda create python=${python_version} -y -n ${conda_env_name}
 
+    conda_temp_name="py${python_version}-template"
+    conda_temp_gz="$conda_temp_name.tar.gz"
+    conda_temp_path="/tf_dataset2/conda_template/$conda_temp_gz"
+
+    function version_ge() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"; }
+    conda_version=$(conda -V | cut -d" " -f2)
+    version_limit=4.14.0
+    conda_flag=flase
+    if version_ge $conda_version $version_limit; then
+        conda_flag=true
+    fi
+
+    if [ -f ${conda_temp_path} ] && [ ${HOME} = "/home/tensorflow" ] && [ "${conda_flag}" = "true" ]; then
+        cd ${HOME}/miniconda3/envs
+        cp $conda_temp_path .
+    fi
+
+    if [ -f ${HOME}/miniconda3/envs/$conda_temp_gz ] && [ "${conda_flag}" = "true" ]; then
+        echo "Use local cached conda template..."
+        cd ${HOME}/miniconda3/envs
+        rm -rf $conda_temp_name && tar -zxf $conda_temp_gz
+        conda rename -n ${conda_temp_name} ${conda_env_name}
+    else
+        conda create python=${python_version} -y -n ${conda_env_name}
+    fi
     source activate ${conda_env_name}
 
     # Upgrade pip
