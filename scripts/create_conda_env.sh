@@ -69,6 +69,7 @@ function update_conda_env {
     conda_temp_name="py${python_version}-template"
     conda_temp_gz="$conda_temp_name.tar.gz"
     conda_temp_path="/tf_dataset2/conda_template/$conda_temp_gz"
+    tmp_path=template_$(date +%s)
 
     function version_ge() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"; }
     conda_version=$(conda -V | cut -d" " -f2)
@@ -86,8 +87,9 @@ function update_conda_env {
     if [ -f ${HOME}/miniconda3/envs/$conda_temp_gz ] && [ "${conda_flag}" = "true" ]; then
         echo "Use local cached conda template..."
         cd ${HOME}/miniconda3/envs
-        rm -rf $conda_temp_name && tar -zxf $conda_temp_gz
-        conda rename -n ${conda_temp_name} ${conda_env_name}
+        mkdir $tmp_path && tar -zxf $conda_temp_gz -C $tmp_path
+        mv $tmp_path/$conda_temp_name ./$tmp_path-$conda_temp_name && rm -rf $tmp_path
+        conda rename -n $tmp_path-$conda_temp_name ${conda_env_name}
     else
         conda create python=${python_version} -y -n ${conda_env_name}
     fi
