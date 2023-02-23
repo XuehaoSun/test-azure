@@ -23,29 +23,18 @@ echo -e ${precision}
 echo -e ${post_op}
 echo -e ${dim_list}
 conda activate ${conda_env_name} || source activate ${conda_env_name}
-if [[ ${precision} == "bf16" ]] && [[ ${op} == "sparse_matmul" ]]; then
-    [[ -d ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build ]] && rm -fr ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build
+
+if [[ ! -d ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build ]]; then
     cd ${WORKSPACE}/lpot-models
     git submodule update --init --recursive
     cd intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark
     mkdir build
     cd build
-    cmake .. -DSPARSE_LIB_USE_AMX=True
+    cmake .. 
     make -j
 else
-    if [[ ! -d ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build ]]; then
-        cd ${WORKSPACE}/lpot-models
-        git submodule update --init --recursive
-        cd intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark
-        mkdir build
-        cd build
-        cmake .. 
-        make -j
-    else
-        cd ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build
-    fi
+    cd ${WORKSPACE}/lpot-models/intel_extension_for_transformers/backends/neural_engine/test/kernels/benchmark/build
 fi
-
 
 function get_best_result {
     local cmd=$1

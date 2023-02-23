@@ -147,7 +147,7 @@ node( sub_node_label ) {
     } finally {
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "*.log, benchmark_log/*", excludes: null
+            archiveArtifacts artifacts: "*.log, benchmark_log/**/*", excludes: null
             fingerprint: true
         }
     }  
