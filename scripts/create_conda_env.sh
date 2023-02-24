@@ -89,7 +89,7 @@ function update_conda_env {
         cd ${HOME}/miniconda3/envs
         mkdir $tmp_path && tar -zxf $conda_temp_gz -C $tmp_path
         mv $tmp_path/$conda_temp_name ./$tmp_path-$conda_temp_name && rm -rf $tmp_path
-        conda activate || true
+        source activate || true
         conda rename -n $tmp_path-$conda_temp_name ${conda_env_name}
     else
         conda create python=${python_version} -y -n ${conda_env_name}
