@@ -31,15 +31,7 @@ function main {
 
     # Run Pytorch Prune test
     cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager
-
-    # Update prune_conf.yaml
-    sed -i "/\/path\/to\/imagenet\/train/s|root:.*|root: \/tf_dataset\/pytorch\/ImageNet\/raw\/train|g" prune_conf.yaml
-    sed -i "/\/path\/to\/imagenet\/val/s|root:.*|root: \/tf_dataset\/pytorch\/ImageNet\/raw\/val|g" prune_conf.yaml
-
-    # Update qat_conf.yaml
-    sed -i "/\/path\/to\/imagenet\/train/s|root:.*|root: \/tf_dataset\/pytorch\/ImageNet\/raw\/train|g" qat_conf.yaml
-
-    python main.py -t -a resnet50 --pretrained /tf_dataset/pytorch/ImageNet/raw/ 2>&1 | tee ${WORKSPACE}/pytorch_qat_during_prune.log
+    python -u main.py /tf_dataset/pytorch/ImageNet/raw/ --arch resnet50  --prune   --quantize    --pretrained   --pruning_type magnitude   --initial_sparsity 0.0   --target_sparsity 0.40   --start_epoch 0   --end_epoch 4   --epochs 5   --output-model saved_results   --batch-size 12   --keep-batch-size --lr 0.001 2>&1 | tee ${WORKSPACE}/pytorch_qat_during_prune.log
 
 }
 
