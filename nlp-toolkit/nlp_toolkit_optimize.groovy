@@ -342,6 +342,9 @@ def runPerfTest(mode, precision) {
                 v = "${HOME}/.cache/huggingface"
             }
         }
+        if (k == "dataset_location") {
+            v = "${working_dir_fullpath}/data"
+        }
         benchmark_cmd += " --${k}=${v}"
     }
     echo "Final cmd is ${benchmark_cmd}"
@@ -783,6 +786,14 @@ node( sub_node_label ) {
                             if ("${USER_NAME}" == "sdp" || "${USER_NAME}" == "SDP") {
                                 v = "${HOME}/.cache/huggingface"
                             }
+                        }
+                        if (k == "dataset_location") {
+                            withEnv(["data_path=${v}", "working_dir_fullpath=${working_dir_fullpath}"]){
+                                sh '''#!/bin/bash -x
+                                    cp -r ${data_path} ${working_dir_fullpath}/data
+                                '''
+                            }
+                            v = "${working_dir_fullpath}/data"
                         }
                         tune_cmd += " --${k}=${v}"
                     }
