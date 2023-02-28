@@ -23,6 +23,12 @@ do
             install_inc=`echo $i | sed "s/${PATTERN}//"`;;
         --install_nlp_toolkit=*)
             install_nlp_toolkit=`echo $i | sed "s/${PATTERN}//"`;;
+        --compatibility_test=*)
+            compatibility_test=`echo $i | sed "s/${PATTERN}//"`;;
+        --inc_version=*)
+            inc_version=`echo $i | sed "s/${PATTERN}//"`;;
+        --itrex_version=*)
+            itrex_version=`echo $i | sed "s/${PATTERN}//"`;;    
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -161,16 +167,21 @@ function set_environment {
 
     if [[ "$install_nlp_toolkit" == "true" ]]; then
         echo "Install nlp-toolkit binary..."
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-            [[ $(echo ${WORKSPACE} | grep "304") ]] && [[ -d "/home/linuxbrew/.linuxbrew/bin" ]] && export PATH="/home/linuxbrew/.linuxbrew/bin:"$PATH
-            pip install pycocotools
-            pip install intel_extension_for_transformers*.whl && break
+        if [[ "${compatibility_test}" == "true" ]] && [[ -n "${itrex_version}" ]]; then
+            echo "install old version ${itrex_version} of itrex"
+            pip install intel-extension-for-transformers==${itrex_version}
+        else
+            n=0
+            until [ "$n" -ge 5 ]
+            do
+                [[ $(echo ${WORKSPACE} | grep "304") ]] && [[ -d "/home/linuxbrew/.linuxbrew/bin" ]] && export PATH="/home/linuxbrew/.linuxbrew/bin:"$PATH
+                pip install pycocotools
+                pip install intel_extension_for_transformers*.whl && break
 
-            n=$((n+1))
-            sleep 5
-        done
+                n=$((n+1))
+                sleep 5
+            done
+        fi
     fi
 
     if [[ "$install_inc" == "true" ]]; then
@@ -198,7 +209,12 @@ function set_environment {
                 python setup.py install && break
                 cd -
             else
-                pip install neural_compressor*.whl && break
+                if [[ "${compatibility_test}" == "true" ]] && [[ -n "${inc_version}" ]]; then
+                    echo "install old version ${inc_version} of inc"
+                    pip install neural-compressor==${inc_version} && break
+                else
+                    pip install neural_compressor*.whl && break
+                fi
             fi
             n=$((n+1))
             sleep 5

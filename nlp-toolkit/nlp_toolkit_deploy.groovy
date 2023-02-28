@@ -42,6 +42,24 @@ if ('onnx_version' in params && params.onnx_version != '') {
 }
 echo "onnx_version: ${onnx_version}"
 
+inc_version = '2.0'
+if ('inc_version' in params && params.inc_version != '') {
+    inc_version = params.inc_version
+}
+echo "inc_version: ${inc_version}"
+
+itrex_version = '1.0b0'
+if ('itrex_version' in params && params.itrex_version != '') {
+    itrex_version = params.itrex_version
+}
+echo "itrex_version: ${itrex_version}"
+
+compatibility_test = false
+if (params.compatibility_test != null) {
+    compatibility_test=params.compatibility_test
+}
+echo "compatibility_test = ${compatibility_test}"
+
 // model
 model = 'resnet50'
 if ('model' in params && params.model != '') {
@@ -290,10 +308,14 @@ def create_conda_env(install_ipex){
                 echo "cmd is ${cmd}"
                 ${cmd}
             """
-            withEnv(["framework=${framework}","conda_env_name=${conda_env_name}","model=${model}","conda_env_mode=${conda_env_mode}","log_level=${log_level}","install_nlp_toolkit=${install_nlp_toolkit}"]) {
+            withEnv(["framework=${framework}","conda_env_name=${conda_env_name}","model=${model}","conda_env_mode=${conda_env_mode}","log_level=${log_level}","install_nlp_toolkit=${install_nlp_toolkit}", "compatibility_test=${compatibility_test}", "inc_version=${inc_version}", "itrex_version=${itrex_version}"]) {
                 sh '''#!/bin/bash
                     echo -e "\nSetting environment..."
-                    source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit} --install_inc="true"
+                    if [[ ${compatibility_test} == "true" ]]; then
+                        source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit} --install_inc="true"  --compatibility_test=${compatibility_test} --inc_version=${inc_version} --itrex_version=${itrex_version} 
+                    else
+                        source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} --install_nlp_toolkit=${install_nlp_toolkit} --install_inc="true"
+                    fi
                     set_environment
                 '''
             }
@@ -350,7 +372,7 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                 export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
                 gcc -v
             fi
-            if [[ "${model}" == "vit_large" ]] || [[ "${model}" == "vit_base" ]]; then
+            if [[ "${model}" == "vit_large*" ]] || [[ "${model}" == "vit_base*" ]]; then
                 cp -r ${data_path} ${working_dir}/data
             fi
             echo "final benchmark cmd of precision ${precision} is ${benchmark_cmd}"
@@ -485,7 +507,7 @@ def prepare_models(local_precision, prepare_cmd) {
     if (cpu in nightly_cpu_list){
         cpu = cpu.split("-")[0]
     }
-    if (model == "vit_large" || model == "vit_base") {
+    if (model == "vit_large*" || model == "vit_base*") {
         withEnv(["data_dir=${data_dir}"]) {
             sh '''#!/bin/bash -x
                 cp -r ${data_dir} /home/tensorflow/.cache/nlp_toolkit/vit
@@ -994,7 +1016,12 @@ node( sub_node_label ) {
             stage("Get model params") {
                 try {
                     // get params for tuning and benchmark
-                    def modelConf =  jsonParse(readFile("$WORKSPACE/nlp-models/examples/.config/${framework}_deploy.json"))."${model}"
+                    if (compatibility_test) {
+                        model_name = model.split("-itrex")[0]
+                    } else {
+                        model_name "${model}"
+                    }
+                    def modelConf =  jsonParse(readFile("$WORKSPACE/nlp-models/examples/.config/${framework}_deploy.json"))."${model_name}"
                     working_dir = modelConf."working_dir"
                     working_dir_fullpath = "${WORKSPACE}/nlp-models/examples/${working_dir}"
                     data_dir_local = modelConf."data_dir"

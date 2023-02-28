@@ -109,6 +109,48 @@ if ('tensorflow_version' in params && params.tensorflow_version != '') {
 }
 echo "tensorflow_version: ${tensorflow_version}"
 
+inc_version = '2.0'
+if ('inc_version' in params && params.inc_version != '') {
+    inc_version = params.inc_version
+}
+echo "inc_version: ${inc_version}"
+
+itrex_version = '1.0b0'
+if ('itrex_version' in params && params.itrex_version != '') {
+    itrex_version = params.itrex_version
+}
+echo "itrex_version: ${itrex_version}"
+
+compatibility_test = false
+if (params.compatibility_test != null) {
+    compatibility_test=params.compatibility_test
+}
+echo "compatibility_test = ${compatibility_test}"
+
+pytorch_compatibility_model = "gpt_neo_clm_dynamic,distilbert_base_squad_static,bert_base_mrpc_qat,distillbert_base_SST-2_static,pegasus_samsum_dynamic,sd_pokemon_diffusers_static,bert_large_squad_ipex"
+if ('pytorch_compatibility_model' in params && params.pytorch_compatibility_model != '') {
+    pytorch_compatibility_model = params.pytorch_compatibility_model
+}
+echo "pytorch_compatibility_model: ${pytorch_compatibility_model}"
+
+engine_compatibility_model = "vit_base,length_adaptive_dynamic,bert_base_mrpc,bert_large_squad,distilbert_base_uncased_emotion,bert_base_cased_mrpc,minilm_l6_h384_uncased_sst2,bert_mini_mrpc,bert_mini_sparse"
+if ('engine_compatibility_model' in params && params.engine_compatibility_model != '') {
+    engine_compatibility_model = params.engine_compatibility_model
+}
+echo "engine_compatibility_model: ${engine_compatibility_model}"
+
+tensorflow_compatibility_model = "bert_base_mrpc_static,bert_base_ner,distilbert_mlm,distilgpt2_clm"
+if ('tensorflow_compatibility_model' in params && params.tensorflow_compatibility_model != '') {
+    tensorflow_compatibility_model = params.tensorflow_compatibility_model
+}
+echo "tensorflow_compatibility_model: ${tensorflow_compatibility_model}"
+
+ipex_compatibility_model = "bert_large_squad_ipex,distilbert_base_squad_sparse_ipex"
+if ('ipex_compatibility_model' in params && params.ipex_compatibility_model != '') {
+    ipex_compatibility_model = params.ipex_compatibility_model
+}
+echo "ipex_compatibility_model: ${ipex_compatibility_model}"
+
 // setting pytorch models for optimize
 pytorch_models = ""
 if ('pytorch_models' in params && params.pytorch_models != '') {
@@ -1006,7 +1048,7 @@ def collectUT_backend_Log() {
     }
 }
 
-def BuildParams(job_framework, model, cpu, os){
+def BuildParams(job_framework, model, cpu, os, is_compatibility_test=false){
     def binary_build_modeltest = binary_build_job_dict[python_version]
     def binary_build_inc_modeltest = binary_build_inc_dict[python_version]
     framework_version = ''
@@ -1059,11 +1101,13 @@ def BuildParams(job_framework, model, cpu, os){
     ParamsPerJob += string(name: "launcher_mode", value: "${launcher_mode}")
     ParamsPerJob += string(name: "perf_bs", value: "${perf_bs}")
     ParamsPerJob += string(name: "binary_mode", value: "${binary_mode}")
-
+    ParamsPerJob += string(name: "compatibility_test", value: "${is_compatibility_test}") 
+    ParamsPerJob += string(name: "inc_version", value: "${inc_version}")
+    ParamsPerJob += string(name: "itrex_version", value: "${itrex_version}")
     return ParamsPerJob
 }
 
-def model_test_optimize() {
+def model_test_optimize(is_compatibility_test=false) {
     def workflow="optimize"
     def jobs = [:]
     PLATFORMS.split(";").each { systemConfig ->
@@ -1079,16 +1123,26 @@ def model_test_optimize() {
                 def job_models = []
                 if (job_framework == 'pytorch') {
                     job_models = parseStrToList(pytorch_models)
+                    if (is_compatibility_test) {
+                        job_models = parseStrToList(pytorch_compatibility_model)
+                    }
                 } else if (job_framework == 'tensorflow') {
                     job_models = parseStrToList(tensorflow_models)
+                    if (is_compatibility_test) {
+                        job_models = parseStrToList(tensorflow_compatibility_model)
+                    }
                 }
                 echo "${job_models}"
                 echo "framwork-----> ${job_framework}"
                 job_models.each { job_model ->
+                    if (is_compatibility_test) {
+                        job_model = "${job_model}-itrex${itrex_version}-inc${inc_version}"
+                        println("model name is ${job_model}")
+                    }
                     jobs["${workflow}_${job_model}_${job_framework}_${system}_${cpu}"] = {
                         // execute build
                         println("${workflow}, ${cpu}, ${system}, ${job_framework}, ${job_model}")
-                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, cpu, system)
+                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, cpu, system, is_compatibility_test)
                         catchError {
                             copyArtifacts(
                                     projectName: sub_jenkins_job,
@@ -1135,7 +1189,7 @@ def model_test_optimize() {
     return jobs
 }
 
-def model_test_deploy() {
+def model_test_deploy(is_compatibility_test=false) {
     def workflow="deploy"
     def jobs = [:]
     PLATFORMS.split(";").each { systemConfig ->
@@ -1151,16 +1205,26 @@ def model_test_deploy() {
                 def job_models = []
                 if (job_framework == 'engine') {
                     job_models = parseStrToList(engine_models)
+                    if (is_compatibility_test) {
+                        job_models = parseStrToList(engine_compatibility_model)
+                    }
                 } else if (job_framework == 'ipex') {
                     job_models = parseStrToList(ipex_models)
+                    if (is_compatibility_test) {
+                        job_models = parseStrToList(ipex_compatibility_model)
+                    }
                 }
                 echo "${job_models}"
                 echo "framwork-----> ${job_framework}"
                 job_models.each { job_model ->
+                    if (is_compatibility_test) {
+                        job_model = "${job_model}-itrex${itrex_version}-inc${inc_version}"
+                        println("model name is ${job_model}")
+                    }
                     jobs["${workflow}_${job_model}_${job_framework}_${system}_${cpu}"] = {
                         // execute build
                         println("${workflow}, ${cpu}, ${system}, ${job_framework}, ${job_model}")
-                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, cpu, system)
+                        downstreamJob = build job: sub_jenkins_job, propagate: false, parameters: BuildParams(job_framework, job_model, cpu, system, is_compatibility_test)
                         catchError {
                             copyArtifacts(
                                     projectName: sub_jenkins_job,
@@ -1207,7 +1271,7 @@ def model_test_deploy() {
     return jobs
 }
 
-def collect_optimize_Log() {
+def collect_optimize_Log(is_compatibility_test=false) {
     echo "------------  running collect Log for optimize -------------"
     echo "---------------------------------------------------------"
     def workflow = "optimize"
@@ -1224,12 +1288,22 @@ def collect_optimize_Log() {
                 def job_models = []
                 if (job_framework == 'pytorch') {
                     job_models = parseStrToList(pytorch_models)
+                    if (is_compatibility_test) {
+                        job_models = parseStrToList(pytorch_compatibility_model)
+                    }
                 } else if (job_framework == 'tensorflow') {
                     job_models = parseStrToList(tensorflow_models)
+                    if (is_compatibility_test) {
+                        job_models = parseStrToList(tensorflow_compatibility_model)
+                    }
                 }
                 echo "${job_models}"
                 echo "framwork-----> ${job_framework}"
                 job_models.each { job_model ->
+                    if (is_compatibility_test) {
+                        job_model = "${job_model}-itrex${itrex_version}-inc${inc_version}"
+                        println("model name is ${job_model}")
+                    }
                     echo "-------- ${cpu} - ${system} - ${job_framework} - ${job_model} --------"
                      // Generate tuning info log
                     sh """#!/bin/bash -x
@@ -1256,7 +1330,7 @@ def collect_optimize_Log() {
     stash allowEmpty: true, includes: "*.log, *.json", name: "logfile"  
 }
 
-def collect_deploy_Log() {
+def collect_deploy_Log(is_compatibility_test=false) {
     echo "------------  running collect Log for deploy -------------"
     echo "---------------------------------------------------------"
     def workflow = "deploy"
@@ -1271,12 +1345,22 @@ def collect_deploy_Log() {
                 def job_models = []
                 if (job_framework == 'engine') {
                     job_models = parseStrToList(engine_models)
+                    if (is_compatibility_test) {
+                        job_models = parseStrToList(engine_compatibility_model)
+                    }
                 } else if (job_framework == 'ipex') {
                     job_models = parseStrToList(ipex_models)
+                    if (is_compatibility_test) {
+                        job_models = parseStrToList(ipex_compatibility_model)
+                    }
                 }
                 echo "${job_models}"
                 echo "framwork-----> ${job_framework}"
                 job_models.each { job_model ->
+                    if (is_compatibility_test) {
+                        job_model = "${job_model}-itrex${itrex_version}-inc${inc_version}"
+                        println("model name is ${job_model}")
+                    }
                     echo "-------- ${cpu} - ${system} - ${job_framework} - ${job_model} --------"
                      // Generate tuning info log
                     sh """#!/bin/bash -x
@@ -1680,11 +1764,20 @@ node( node_label ) {
         if ( "optimize" in workflows_list && optimize_frameworks != "") {
             def perf_jobs = model_test_optimize()
             job_list = job_list + perf_jobs
+            if (compatibility_test) {
+                def compatible_test = model_test_optimize(compatibility_test)
+                job_list = job_list + compatible_test
+            }
         }
         if ( "deploy" in workflows_list && deploy_backends != "") {
             def perf_jobs = model_test_deploy()
             job_list = job_list + perf_jobs
+            if (compatibility_test) {
+                def compatible_test = model_test_deploy(compatibility_test)
+                job_list = job_list + compatible_test
+            }
         }
+        
         if (FEATURE_TESTS && feature_list != '') {
             job_list["Feature tests"] = {
                 featureTests()
@@ -1713,9 +1806,15 @@ node( node_label ) {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 if ( "optimize" in workflows_list && optimize_frameworks != "") {
                     collect_optimize_Log()
+                    if (compatibility_test) {
+                        collect_optimize_Log(compatibility_test)
+                    }
                 }
                 if ( "deploy" in workflows_list && deploy_backends != "") {
                     collect_deploy_Log()
+                    if (compatibility_test) {
+                        collect_deploy_Log(compatibility_test)
+                    }
                 }
                 if (RUN_UT_BAK) {
                     collectUT_backend_Log()
