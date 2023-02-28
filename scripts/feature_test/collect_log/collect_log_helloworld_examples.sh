@@ -20,21 +20,24 @@ function check_tf_example_status {
         test_phrase="Inference is done."
     fi
 
+    if [[ ${example_number} == 4 ]]; then
+        test_phrase="Found a quantized model which meet accuracy goal."
+    fi
+
     if [[ $(grep -c "${test_phrase}" ${WORKSPACE}/${feature_name}/tf_example${example_number}.log) == 1 ]]; then
         status="pass"
     else
         status="fail"
     fi
+    test_status=${status}
 
     if [[ "${example_number}" == 5 ]]; then
-        accuracy_count=$(grep -c 'Accuracy is [0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
+        accuracy_count=$(grep -c 'Throughput sum: [0-9]*\.[0-9]* images/sec' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
         if [[ ${status} == "pass" ]] && [[ ${accuracy_count} == 1 ]]; then
             test_status="pass"
         else
             test_status="fail"
         fi
-    else
-        test_status=${status}
     fi
 
     if [[ "${example_number}" == 6 ]]; then
@@ -44,8 +47,6 @@ function check_tf_example_status {
         else
             test_status="fail"
         fi
-    else
-        test_status=${status}
     fi
 
     echo "${CPU_NAME};Helloworld_tf_example${example_number};${test_status};${BUILD_URL}artifact/${feature_name}/tf_example${example_number}.log" | tee -a ${summaryLog}

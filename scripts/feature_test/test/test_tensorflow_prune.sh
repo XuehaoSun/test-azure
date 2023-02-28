@@ -20,16 +20,6 @@ function main {
     create_conda_env
     lpot_install
 
-    # old api example repo
-    cd ${WORKSPACE}
-    if [ ! -d "${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/resnet_v2/pruning/magnitude" ]; then
-        git clone -b old_api_examples ${lpot_url} old-lpot-models
-        cd old-lpot-models
-        git branch 
-        mkdir -p ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/resnet_v2/pruning/magnitude
-        cp -r ${WORKSPACE}/old-lpot-models/examples/tensorflow/image_recognition/resnet_v2/pruning/magnitude/. ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/resnet_v2/pruning/magnitude
-    fi
-
     # Run TensorFlow Pruning test
     cd ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/resnet_v2/pruning/magnitude
     pip install intel-tensorflow==2.11.0
@@ -37,10 +27,9 @@ function main {
     echo "re-install pycocotools resolve the issue with numpy..."
     pip uninstall pycocotools -y
     pip install --no-cache-dir pycocotools
-    pip install protobuf==3.20.1
     pip list
     cp -r /tf_dataset2/models/tensorflow/resnet_v2/baseline_model .
-    python main.py   2>&1 | tee ${WORKSPACE}/tensorflow_prune.log
+    python main.py --output_model=pruned_model.pb --prune  2>&1 | tee ${WORKSPACE}/tensorflow_prune.log
 
 }
 
