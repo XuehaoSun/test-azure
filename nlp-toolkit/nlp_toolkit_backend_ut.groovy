@@ -426,6 +426,10 @@ node(node_label){
                         [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         if [[ ${CPU_NAME} != spr* ]]; then
                             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                            if [[ $(echo ${WORKSPACE} | grep "304") ]]; then
+                                export CC=/usr/local/gcc-9.4/bin/gcc
+                                export CXX=/usr/local/gcc-9.4/bin/g++
+                            fi
                         else
                             export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
                         fi
@@ -457,6 +461,10 @@ node(node_label){
                         [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         if [[ ${CPU_NAME} != spr* ]]; then
                             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
+                            if [[ $(echo ${WORKSPACE} | grep "304") ]]; then
+                                export CC=/usr/local/gcc-9.4/bin/gcc
+                                export CXX=/usr/local/gcc-9.4/bin/g++
+                            fi
                         else
                             export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH
                         fi

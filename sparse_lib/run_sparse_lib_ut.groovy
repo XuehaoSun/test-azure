@@ -259,6 +259,10 @@ node(node_label){
                     ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                     [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                     [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                    if [[ $(echo ${WORKSPACE} | grep "304") ]]; then
+                        export CC=/usr/local/gcc-9.4/bin/gcc
+                        export CXX=/usr/local/gcc-9.4/bin/g++
+                    fi
                     export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env}/lib/:$LD_LIBRARY_PATH
                     source activate ${conda_env}
                     cd ${WORKSPACE}/deep-engine/intel_extension_for_transformers/backends/neural_engine/test/gtest/kernels
