@@ -507,7 +507,7 @@ def prepare_models(local_precision, prepare_cmd) {
     if (cpu in nightly_cpu_list){
         cpu = cpu.split("-")[0]
     }
-    if (model == "vit_large"* || model == "vit_base"*) {
+    if (model == "vit_large*" || model == "vit_base*") {
         withEnv(["data_dir=${data_dir}"]) {
             sh '''#!/bin/bash -x
                 cp -r ${data_dir} /home/tensorflow/.cache/nlp_toolkit/vit
