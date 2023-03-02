@@ -404,6 +404,35 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
             --itex_mode=${itex_mode} \
             --main_script=${main_script} 2>&1 | tee ${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
         """
+
+        // Check benchmark status
+        dir("${WORKSPACE}"){
+            withEnv([
+                    "framework=${framework}",
+                    "output_path=${output_path}",
+                    "model=${model}",
+                    "precision=${precision}",
+                    "mode=${mode}",
+                    "os=${os}",
+                    "device=${device}",
+                    "multi_instance=${multi_instance}"]) {
+                sh '''#!/bin/bash -x
+                    benchmark_log=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
+                    control_phrase="Throughput: "
+                    real_instance_num=$(grep "${control_phrase}" ${benchmark_log} | wc -l)
+                    num_of_instance=1
+                    if [[ "${multi_instance}" == "true" ]]; then
+                        ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
+                        ncores_per_instance=4
+                        num_of_instance=$((ncores_per_socket/ncores_per_instance))
+                    fi
+                    if [[ ${real_instance_num} != ${num_of_instance} ]];then
+                        echo "Error: benchmark crashed with some instance!!!"
+                        exit 1
+                    fi
+                '''
+            }
+        }
     }else if (new_benchmark == true) {
         echo "Running ---- ${framework},${model},${precision},${mode},new_benchmark ---- Benchmarking"
         def cmd = "python ${WORKSPACE}/lpot-validation/scripts/run_new_benchmark_trigger.py \
