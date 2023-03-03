@@ -16,6 +16,7 @@
 import groovy.json.*
 import hudson.model.*
 import jenkins.model.*
+import groovy.io.FileType
 
 credential = 'c09d6555-5e41-4b99-bf90-50f518319b49'
 sys_val_credentialsId = "dcf0dff2-03fb-45b0-9e64-5b4db466bee5"
@@ -33,7 +34,7 @@ echo "python_version: ${python_version}"
 
 // setting node_label
 node_label = params.node_label ?: "lpot"
-sub_node_label = params.sub_node_label ?: "lpot"
+sub_node_label = params.sub_node_label ?: "spr,clx,icx"
 sub_node_ut = params.sub_node_ut ?: sub_node_label
 echo "Running on node ${node_label}; sub-job node ${sub_node_label}; ut node ${sub_node_ut}"
 
@@ -95,7 +96,6 @@ build_job_lpot = params.build_job_lpot
 // ncores_per_instance:bs for engine inference
 inferencer_config = params.inferencer_config ?: "4:8,7:8,24:1"
 echo "inferencer_config: ${inferencer_config}"
-
 
 /////////
 MR_source_branch = ""
@@ -430,7 +430,7 @@ def windowsJobBackend(){
     return windows_job
 }
 
-def unitTestBackend() {
+def unitTestBackend(device) {
     def ut_jobs = [:]
     def unit_test_mode = "gtest" 
     List UTBuildParams = [
@@ -441,7 +441,7 @@ def unitTestBackend() {
         string(name: "python_version", value: "${python_version}"),
         string(name: "val_branch", value: "${val_branch}"),
         string(name: "unit_test_mode", value: "${unit_test_mode}"),
-        string(name: "node_label", value: "${sub_node_ut}")
+        string(name: "node_label", value: "${device}")
     ]
     if (sparse_ut_only) {
         sub_job_name = "sparse-lib-ut"
@@ -449,7 +449,7 @@ def unitTestBackend() {
         sub_job_name = "nlp-toolkit-backend-ut"
     }
     println("ut params buildup")
-    ut_jobs[unit_test_mode] = {
+    ut_jobs["${unit_test_mode}_${device}"] = {
         println("building sparse lib UT")
         def downstreamJob = build job: sub_job_name, propagate: false, parameters: UTBuildParams
         catchError {
@@ -458,8 +458,8 @@ def unitTestBackend() {
                     selector: specific("${downstreamJob.getNumber()}"),
                     filter: '*.log, *.txt',
                     fingerprintArtifacts: true,
-                    target: "unittest")
-            archiveArtifacts artifacts: "unittest/**", allowEmptyArchive: true
+                    target: "unittest/${device}")
+            archiveArtifacts artifacts: "unittest/${device}/**", allowEmptyArchive: true
         }
         if (downstreamJob.result != 'SUCCESS') {
             println("got sparse lib UT failed")
@@ -467,7 +467,7 @@ def unitTestBackend() {
             withEnv(["sub_job_url=${sub_job_url}", "ut_mode=${unit_test_mode}"]){
                 sh '''#!/bin/bash
                 overview_log="${WORKSPACE}/summary_overview.log"
-                echo "deep-engine_ut_${ut_mode},FAILURE,${sub_job_url}" | tee -a ${overview_log}
+                echo "deep-engine_ut_${ut_mode}_${device},FAILURE,${sub_job_url}" | tee -a ${overview_log}
                 '''
             }
             currentBuild.result = "FAILURE"
@@ -492,31 +492,34 @@ def collectWINUT_backend_Log(){
     '''
 }
 
-def collectUT_backend_Log() {
-    echo "------------  running collect UT Log of backend -------------"
-    sh ''' #!/bin/bash
-        overview_log="${WORKSPACE}/summary_overview.log"
-        ut_log_name=$WORKSPACE/unittest/unit_test_gtest.log
-        if [ -f ${ut_log_name} ];then
-            sed -i '/deep-engine_ut_gtest/d' ${overview_log}
-            if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
-                [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
-                [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ] ||
-                [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] ||
-                [ $(grep -c "==ERROR:" ${ut_log_name}) != 0 ]; then
-                ut_status='FAILURE'
-            else
-                ut_status='SUCCESS'
+def collectUT_backend_Log(device) {
+    withEnv(["device=${device}"]) {
+        echo "------------  running collect UT Log of backend -------------"
+        sh ''' #!/bin/bash
+            overview_log="${WORKSPACE}/summary_overview.log"
+            ut_log_name=$WORKSPACE/unittest/${device}/unit_test_gtest.log
+            if [ -f ${ut_log_name} ];then
+                sed -i '/deep-engine_ut_gtest/d' ${overview_log}
+                if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
+                    [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
+                    [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ] ||
+                    [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] ||
+                    [ $(grep -c "==ERROR:" ${ut_log_name}) != 0 ]; then
+                    ut_status='FAILURE'
+                else
+                    ut_status='SUCCESS'
+                fi
+                echo "deep-engine_ut_gtest_${device},${ut_status},${BUILD_URL}artifact/unittest/${device}/unit_test_gtest.log" | tee -a ${overview_log}
             fi
-            echo "deep-engine_ut_gtest,${ut_status},${BUILD_URL}artifact/unittest/unit_test_gtest.log" | tee -a ${overview_log}
-        fi
-    '''
+        '''
+    }
+    
 }
-def sparse_benchmark_jobs() {
+def sparse_benchmark_jobs(device) {
     def jobs = [:]
 
     List benchmark_job_prarms = []
-    benchmark_job_prarms += string(name: "sub_node_label", value: "${sub_node_label}")
+    benchmark_job_prarms += string(name: "sub_node_label", value: "${device}")
     benchmark_job_prarms += string(name: "nlp_url", value: "${nlp_url}")
     benchmark_job_prarms += string(name: "nlp_branch", value: "${nlp_commit}")
     benchmark_job_prarms += string(name: "MR_source_branch", value: "${MR_source_branch}")
@@ -525,7 +528,7 @@ def sparse_benchmark_jobs() {
     benchmark_job_prarms += string(name: "test_mode", value: "${test_mode}")
     benchmark_job_prarms += string(name: "val_branch", value: "${val_branch}")
 
-    jobs["sparse lib benchmark"] = {
+    jobs["sparse lib benchmark on ${device}"] = {
         println("adding sparse lib test")
         def downstreamJob = build job: "local_sparse_lib_test", propagate: false, parameters: benchmark_job_prarms
         catchError {
@@ -533,10 +536,10 @@ def sparse_benchmark_jobs() {
                     projectName: "local_sparse_lib_test",
                     selector: specific("${downstreamJob.getNumber()}"),
                     fingerprintArtifacts: true,
-                    target: "sparse_test",
+                    target: "sparse_test/${device}",
                     optional: true)
             // Archive in Jenkins
-            archiveArtifacts artifacts: "sparse_test/**", allowEmptyArchive: true
+            archiveArtifacts artifacts: "sparse_test/${device}/**", allowEmptyArchive: true
         }
         def failed_build_result = downstreamJob.result
         def failed_build_url = downstreamJob.absoluteUrl
@@ -545,7 +548,7 @@ def sparse_benchmark_jobs() {
                 if (test_mode != 'nightly') {
                     currentBuild.result = "FAILURE"
                 }
-                sh " tail -n 50 sparse_test/**/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
+                sh " tail -n 50 sparse_test/${device}/**/*.log > ${WORKSPACE}/details.failed.build 2>&1 "
                 failed_build_detail = readFile file: "${WORKSPACE}/details.failed.build"
                 error("---- sparse lib test got failed! ---- Details in ${failed_build_url}consoleText! ---- \n ${failed_build_detail}")
             }
@@ -618,7 +621,7 @@ def generateReport() {
             Jenkins_job_status = "CHECK"
         }
         println("summary_dir = ${summary_dir}")
-        println("summary_dir_last = ${summary_dir_last}")
+        //println("summary_dir_last = ${summary_dir_last}")
         
         withEnv([
             "report_title=${test_mode} test",
@@ -626,7 +629,7 @@ def generateReport() {
             "qtools_branch=${nlp_branch}",
             "qtools_commit=${nlp_commit}",
             "summary_dir=${summary_dir}",
-            "summary_dir_last=${summary_dir_last}",
+            "device_list=${sub_node_label}",
             "overview_log=${overview_log}",
             "Jenkins_job_status=${Jenkins_job_status}",
             "ghprbActualCommit=${ghprbActualCommit}",
@@ -637,7 +640,10 @@ def generateReport() {
         ]) {
             sh '''
                 chmod 775 ./lpot-validation/sparse_lib/generate_sparse_lib.sh
-                bash -x ./lpot-validation/sparse_lib/generate_sparse_lib.sh
+                devices=$(echo $device_list | tr ',' ' ')
+                for device in ${devices[@]}; do
+                    bash -x ./lpot-validation/sparse_lib/generate_sparse_lib.sh --device=${device}
+                done
             '''
         }
     }
@@ -656,6 +662,15 @@ def sendReport() {
                 recipient_list = params.recipient_list
             }
         }
+
+        if (fileExists("report_icx.html")) {
+            def text_comment = readFile file: "report_icx.html"
+            writeFile file: "report.html", text: text_comment 
+        } else if (fileExists("report_spr.html")){
+            def text_comment = readFile file: "report_spr.html"
+            writeFile file: "report.html", text: text_comment 
+        }
+
         emailext subject: "${email_subject}",
                 to: "${recipient_list}",
                 replyTo: "${recipient_list}",
@@ -694,8 +709,8 @@ node( node_label ) {
         }
         overview_log = "${WORKSPACE}/summary_overview.log"
         writeFile file: overview_log, text: "Jenkins Job, Build Status, Build ID\n"
-        summary_dir = "${WORKSPACE}/sparse_test/benchmark_log/cur"
-        summary_dir_last = "${WORKSPACE}/sparse_test/benchmark_log/ref"
+        summary_dir = "${WORKSPACE}/sparse_test"
+        //summary_dir_last = "${WORKSPACE}/sparse_test/benchmark_log/ref"
 
         // Setup logs path
         download()
@@ -726,9 +741,11 @@ node( node_label ) {
         println("start assigning tests jobs")
         def job_list = [:]
         if (RUN_UT) {
-            println("Add unittest to job...")
-            def ut_jobs_gtest = unitTestBackend()
-            job_list = job_list + ut_jobs_gtest
+            sub_node_label.split(",").each { device ->
+                println("Add unittest on ${device} to job...")
+                def ut_jobs_gtest = unitTestBackend(device)
+                job_list = job_list + ut_jobs_gtest
+            }   
         }
         if (RUN_WINDOWS){
             println("Add windows to jod...")
@@ -760,8 +777,11 @@ node( node_label ) {
         
         if (RUN_BENCHMARK) {
             println("Add benchmark to job...")
-            def benchmark_jobs = sparse_benchmark_jobs()
-            job_list = job_list + benchmark_jobs
+            sub_node_label.split(",").each { device ->
+                println("running on ${device}")
+                def benchmark_jobs = sparse_benchmark_jobs(device)
+                job_list = job_list + benchmark_jobs
+            }
         }
 
         //if (test_mode == "pre-CI" || pipeline_failFast) {
@@ -788,7 +808,11 @@ node( node_label ) {
         stage("Collect Logs") {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 if (RUN_UT) {
-                    collectUT_backend_Log()
+                    sub_node_label.split(",").each { device ->
+                        println("collecting UT log on ${device}")
+                        collectUT_backend_Log(device)
+                    }
+                    
                 }
                 if(RUN_WINDOWS){
                     collectWINUT_backend_Log()

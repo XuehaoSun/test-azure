@@ -1,4 +1,15 @@
 #!/bin/bash
+PATTERN='[-a-zA-Z0-9_]*='
+
+for i in "$@"
+do
+    case $i in
+        --device=*)
+            device=`echo $i | sed "s/${PATTERN}//"`;;
+        *)
+            echo "Parameter $i not recognized."; exit 1;;
+    esac
+done
 
 function main {
     script_dir=$(dirname "${BASH_SOURCE[0]}")
@@ -7,6 +18,7 @@ function main {
     echo "summary_dir_ref: ${summary_dir_last}"
     echo "overview_log: ${overview_log}"
     echo "script_dir: ${script_dir}"
+    echo "device: ${device}"
 
     conda_env_name="sparse_lib"
     [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
@@ -21,14 +33,15 @@ function main {
 
     generate_html_head
     generate_html_overview
-    for caselog in $(find $summary_dir/*_summary.log); do
+    
+    for caselog in $(find $summary_dir/${device}/benchmark_log/cur/*_summary.log); do
+        summary_dir_last="$summary_dir/${device}/benchmark_log/ref"
         local name=$(basename $caselog | sed 's/_summary.log//')
-        echo "<h2>$name <a href=\"${name}_summary.xlsx\" style=\"font-size: initial\">${name}_summary.xlsx</a> </h2>" >>${WORKSPACE}/report.html
+        echo "<h2>$name <a href=\"${name}_summary.xlsx\" style=\"font-size: initial\">${name}_summary.xlsx</a> </h2>" >>${WORKSPACE}/report_${device}.html
         python "$script_dir/generate_sparse_lib.py" $caselog ${summary_dir_last}/$(basename $caselog) \
-            >>${WORKSPACE}/report.html \
+            >>${WORKSPACE}/report_${device}.html \
             2>>${WORKSPACE}/perf_regression.log
     done
-
     generate_html_footer
 }
 
@@ -44,8 +57,8 @@ function createOverview {
             <th>Job</th>
             <th>Status</th>
         </tr>
-    """ >>${WORKSPACE}/report.html
-    gtest=($(grep 'deep-engine_ut_gtest' ${overview_log} | sed 's/,/ /g'))
+    """ >>${WORKSPACE}/report_${device}.html
+    gtest=($(grep 'deep-engine_ut_gtest_${device}' ${overview_log} | sed 's/,/ /g'))
     if [[ "${gtest[1]}" == *"FAIL"* ]]; then
         gtest_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
     elif [[ "${gtest[1]}" == *"SUCC"* ]]; then
@@ -101,7 +114,7 @@ function createOverview {
     else
         copyright_check_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
-    cat >>${WORKSPACE}/report.html <<eof
+    cat >>${WORKSPACE}/report_${device}.html <<eof
         $(
         if [ "${gtest[2]}" != "" ]; then
             echo "<tr><td>sparse_lib gtest</td>"
@@ -161,7 +174,7 @@ function generate_html_overview {
         pr_comment_opt="<div class='job-params'><pre>PR comment options=${job_params}</pre></div>"
     fi
 
-    cat >>${WORKSPACE}/report.html <<eof
+    cat >>${WORKSPACE}/report_${device}.html <<eof
 
 <body>
     <div id="main">
@@ -191,7 +204,7 @@ function generate_html_head {
     if [[ -n $ghprbPullId ]]; then pr_title=" PR-$ghprbPullId"; fi
     local title_html="${report_title} ${JOB_NAME}-${BUILD_NUMBER}${pr_title}"
 
-    cat >${WORKSPACE}/report.html <<eof
+    cat >${WORKSPACE}/report_${device}.html <<eof
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html lang="en">
@@ -301,11 +314,11 @@ eof
 
 function generate_html_footer {
     if [[ -s ${WORKSPACE}/perf_regression.log ]]; then
-        echo "<h2>Regression Details</h2><div class='regression-deatils-wrapper'><pre>" >>${WORKSPACE}/report.html
-        cat ${WORKSPACE}/perf_regression.log >>${WORKSPACE}/report.html
-        echo "</pre></div>" >>${WORKSPACE}/report.html
+        echo "<h2>Regression Details</h2><div class='regression-deatils-wrapper'><pre>" >>${WORKSPACE}/report_${device}.html
+        cat ${WORKSPACE}/perf_regression.log >>${WORKSPACE}/report_${device}.html
+        echo "</pre></div>" >>${WORKSPACE}/report_${device}.html
     fi
-    cat >>${WORKSPACE}/report.html <<eof
+    cat >>${WORKSPACE}/report_${device}.html <<eof
     </div>
 </body>
 </html>
