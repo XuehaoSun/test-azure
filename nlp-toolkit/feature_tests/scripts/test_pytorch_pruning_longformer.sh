@@ -22,7 +22,7 @@ function main {
     lpot_install
 
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/optimization/pytorch/huggingface/pytorch_pruner
+    cd ${WORKSPACE}/lpot-models/examples/optimization/pytorch/huggingface/question-answering/pruning/longformer_triviaqa/
     n=0
     until [ "$n" -ge 5 ]
     do
@@ -30,38 +30,43 @@ function main {
         n=$((n+1))
         sleep 5
     done
+    pip install nltk
     pip list
-    # training dense model
-    echo "train dense bert mini model"
-    python ./run_glue_no_trainer.py \
-    --model_name_or_path "prajjwal1/bert-mini" \
-    --pruning_config "./bert_mini_mrpc_4x1.yaml" \
-    --task_name "mrpc" \
-    --per_device_train_batch_size "8" \
-    --per_device_eval_batch_size "16" \
-    --num_warmup_steps "10" \
-    --learning_rate "5e-5" \
-    --num_train_epochs 5 \
-    --output_dir "./output_bert-mini" 2>&1 | tee ${WORKSPACE}/pytorch_sparse.log
-
-    cp ./output_bert-mini/epoch4/config.json ./output_bert-mini/
-    cp ./output_bert-mini/epoch4/pytorch_model.bin ./output_bert-mini/
-    ## pruning
-    echo "sparse pruner"
-    python ./run_glue_no_trainer.py \
-        --model_name_or_path "./output_bert-mini" \
-        --pruning_config "./bert_mini_mrpc_4x1.yaml" \
-        --task_name "mrpc" \
-        --per_device_train_batch_size "16" \
-        --per_device_eval_batch_size "16" \
-        --num_warmup_steps "1000" \
+    #bash ./scripts/download_data_and_convert.sh
+    train_file=/tf_dataset2/models/nlp_toolkit/longformer/squad-wikipedia-train-4096.json
+    validation_file=/tf_dataset2/models/nlp_toolkit/longformer/squad-wikipedia-dev-4096.json
+    teacher_model=/tf_dataset2/models/nlp_toolkit/longformer/longformer-base-4096
+    cp -r $train_file ./
+    cp -r $validation_file ./
+    cp -r $teacher_model ./
+    python run_qa_no_trainer.py \
+        --model_name_or_path "./longformer-base-4096" \
+        --do_train \
+        --do_eval \
+        --train_file "./squad-wikipedia-train-4096.json" \
+        --validation_file "./squad-wikipedia-dev-4096.json" \
+        --cache_dir ./tmp_cached \
+        --max_seq_length 4096 \
+        --doc_stride -1 \
+        --per_device_train_batch_size 1 \
+        --gradient_accumulation_steps 8 \
+        --per_device_eval_batch_size 1 \
+        --num_warmup_steps 10 \
         --do_prune \
-        --cooldown_epochs 5 \
-        --learning_rate "4.5e-4" \
-        --num_train_epochs 10 \
-        --weight_decay  "1e-7" \
-        --output_dir "pruned_squad_bert-mini" \
-        --distill_loss_weight "4.5" 2>&1 | tee -a ${WORKSPACE}/pytorch_sparse.log
+        --target_sparsity 0.8 \
+        --pruning_scope "global" \
+        --pruning_pattern "4x1" \
+        --pruning_frequency 1000 \
+        --cooldown_epochs 1 \
+        --learning_rate 1e-4 \
+        --num_train_epochs 3 \
+        --weight_decay  0.01 \
+        --output_dir longformer-base-4096-pruned-global-sparse80 \
+        --teacher_model_name_or_path $teacher_model \
+        --distill_loss_weight 3 \
+        --max_train_samples 128 \
+        --max_eval_samples 128 \
+        --max_predict_samples 128  2>&1 | tee ${WORKSPACE}/pytorch_pruning_longformer.log
 
 }
 
@@ -71,7 +76,7 @@ function create_conda_env {
         python_version=3.7  # Set python 3.7 as default
     fi
 
-    conda_env_name=pytorch_pruning_py${python_version}
+    conda_env_name=pytorch_distillation_py${python_version}
 
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
@@ -114,6 +119,3 @@ function lpot_install {
 }
 
 main
-
-
-

@@ -10,11 +10,11 @@ if [[ -z $CPU_NAME ]]; then
 fi
 test_status="check"
 
-pruned_result=$(grep -c "accuracy" ${WORKSPACE}/${feature_name}/pytorch_sparse.log)
-if [[ "${pruned_result}" == "15" ]]; then
+pruned_result=$(grep -c "exact_match" ${WORKSPACE}/${feature_name}/pytorch_pruning_longformer.log)
+if [[ "${pruned_result}" == "4" ]]; then
     test_status="pass"
 else
     test_status="fail"
 fi
 
-echo "${CPU_NAME};PytorchSparse;${test_status};${BUILD_URL}artifact/${feature_name}" | tee -a ${summaryLog}
+echo "${CPU_NAME};PytorchPruningLongformer;${test_status};${BUILD_URL}artifact/${feature_name}" | tee -a ${summaryLog}

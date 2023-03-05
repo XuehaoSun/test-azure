@@ -22,7 +22,7 @@ function main {
     lpot_install
 
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/optimization/pytorch/huggingface/text-classification/orchestrate_optimizations
+    cd ${WORKSPACE}/lpot-models/examples/optimization/pytorch/huggingface/pytorch_pruner
     n=0
     until [ "$n" -ge 5 ]
     do
@@ -31,12 +31,9 @@ function main {
         sleep 5
     done
     pip list
-    python run_glue.py --model_name_or_path Intel/distilbert-base-uncased-sparse-90-unstructured-pruneofa \
-        --teacher_model_name_or_path distilbert-base-uncased-finetuned-sst-2-english \
-        --task_name sst2 --orchestrate_optimizations \
-        --do_eval --do_train --per_device_eval_batch_size 64 \
-        --overwrite_cache \
-        --output_dir ./saved_ochestrate_opt --overwrite_output_dir 2>&1 | tee ${WORKSPACE}/pytorch_ochestrate_optimizations.log
+    # training dense model
+    echo "train dense bert mini model"
+    bash ./scripts/bertmini_mrpc_2in4.sh 2>&1 | tee ${WORKSPACE}/pytorch_pruner_mrpc.log
 
 }
 
@@ -46,7 +43,7 @@ function create_conda_env {
         python_version=3.7  # Set python 3.7 as default
     fi
 
-    conda_env_name=pytorch_ochestrate_py${python_version}
+    conda_env_name=pytorch_pruning_py${python_version}
 
     conda_dir=$(dirname $(dirname $(which conda)))
     if [ -d ${conda_dir}/envs/${conda_env_name} ]; then
@@ -68,7 +65,7 @@ function create_conda_env {
         echo "\"lpot-model\" not found. Exiting..."
         exit 1
     fi
-
+    pip install protobuf==3.20.1
     cd ${WORKSPACE}/lpot-models || return
 }
 

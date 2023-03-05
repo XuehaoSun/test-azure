@@ -21,6 +21,10 @@ echo "nlp_url is ${nlp_url}"
 
 lpot_url = "https://github.com/intel/neural-compressor.git"
 lpot_branch = "master"
+if ('lpot_branch' in params && params.lpot_branch != ''){
+    lpot_branch = params.lpot_branch
+}
+echo "lpot_branch is ${lpot_branch}"
 
 requirement_list="ruamel.yaml==0.17.4"
 if ('requirement_list' in params && params.requirement_list != ''){
@@ -144,8 +148,8 @@ node( sub_node_label ){
         if ("${binary_build_job}" == "") {
             stage('Build binary') {
                 List binaryBuildParams = [
-                        string(name: "inc_url", value: "${nlp_url}"),
-                        string(name: "inc_branch", value: "${nlp_branch}"),
+                        string(name: "inc_url", value: "${lpot_url}"),
+                        string(name: "inc_branch", value: "${lpot_branch}"),
                         string(name: "val_branch", value: "${val_branch}"),
                         string(name: "LINUX_BINARY_CLASSES", value: "wheel"),
                         string(name: "LINUX_PYTHON_VERSIONS", value: "${python_version}"),
