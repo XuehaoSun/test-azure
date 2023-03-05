@@ -406,17 +406,18 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
         """
 
         // Check benchmark status
-        dir("${WORKSPACE}"){
-            withEnv([
-                    "framework=${framework}",
-                    "output_path=${output_path}",
-                    "model=${model}",
-                    "precision=${precision}",
-                    "mode=${mode}",
-                    "os=${os}",
-                    "device=${device}",
-                    "multi_instance=${multi_instance}"]) {
-                sh '''#!/bin/bash -x
+        if (mode=="throughput"){
+            dir("${WORKSPACE}"){
+                withEnv([
+                        "framework=${framework}",
+                        "output_path=${output_path}",
+                        "model=${model}",
+                        "precision=${precision}",
+                        "mode=${mode}",
+                        "os=${os}",
+                        "device=${device}",
+                        "multi_instance=${multi_instance}"]) {
+                    sh '''#!/bin/bash -x
                     benchmark_log=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
                     control_phrase="Throughput: "
                     real_instance_num=$(grep "${control_phrase}" ${benchmark_log} | wc -l)
@@ -431,8 +432,10 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                         exit 1
                     fi
                 '''
+                }
             }
         }
+
     }else if (new_benchmark == true) {
         echo "Running ---- ${framework},${model},${precision},${mode},new_benchmark ---- Benchmarking"
         def cmd = "python ${WORKSPACE}/lpot-validation/scripts/run_new_benchmark_trigger.py \
