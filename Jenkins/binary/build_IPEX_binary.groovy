@@ -12,13 +12,13 @@ if ('conda_env' in params && params.conda_env != '') {
 }
 echo "Running ut on ${conda_env}"
 
-pyt_url="https://github.com/intel-innersource/frameworks.ai.pytorch.private-cpu.git"
+pyt_url="https://github.com/pytorch/pytorch.git"
 if ('pyt_url' in params && params.pyt_url != ''){
     pyt_url = params.pyt_url
 }
 echo "pyt_url is ${pyt_url}"
 
-ipex_url="https://github.com/intel-innersource/frameworks.ai.pytorch.ipex-cpu.git"
+ipex_url="https://github.com/intel/intel-extension-for-pytorch.git"
 if ('ipex_url' in params && params.ipex_url != ''){
     ipex_url = params.ipex_url
 }
@@ -97,7 +97,7 @@ def download() {
                     browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "private-pyt"],
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "pytorch"],
                             [$class: 'CloneOption', timeout: 60]
                     ],
                     submoduleCfg                     : [],
@@ -113,7 +113,7 @@ def download() {
                     browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "private-ipex"],
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "ipex"],
                             [$class: 'CloneOption', timeout: 60]
                     ],
                     submoduleCfg                     : [],
@@ -129,7 +129,7 @@ def download() {
                     browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                     doGenerateSubmoduleConfigurations: false,
                     extensions                       : [
-                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "private-torchvision"],
+                            [$class: 'RelativeTargetDirectory', relativeTargetDir: "torchvision"],
                             [$class: 'CloneOption', timeout: 60]
                     ],
                     submoduleCfg                     : [],
@@ -179,54 +179,38 @@ def do_binary_build() {
                 conda install numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses psutil
                 export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
                 export work_space=/home/sdp  
-                ls # check directory
-                cd private-pyt
-                git checkout dev
+
+                cd pytorch
                 git submodule sync
                 git submodule update --init --recursive
-                echo "Build pypi binary..."
-                ls # check directory
-                # cd WORKSPACE/pytorch
+                echo "Build pytorch binary..."
                 python setup.py bdist_wheel
+                echo "Done with pytorch build..."
                 pip install dist/torch*.whl
+                echo "Installed pytorch binary..."
                 cp dist/torch*.whl ${WORKSPACE}/
                 
-                echo "Convert binary to manylinux..."
-                #pip install auditwheel
-                # ls # check directory
-                #ls dist # check dist directory
-                #auditwheel repair dist/torch*.whl
-                #cp wheelhouse/torch*.whl ${WORKSPACE}/
-                
-                ls # check directory
-                cd ../private-ipex
-                git checkout cpu-device
+
+                cd ../ipex
                 git submodule sync
                 git submodule update --init --recursive
+                echo "Build ipex binary..."
                 python setup.py bdist_wheel
+                echo "Done with ipex build..."
                 pip install dist/intel_extension_for_pytorch*.whl
+                echo "Installed ipex binary..."
                 cp dist/intel_extension_for_pytorch*.whl ${WORKSPACE}/
 
-                echo "Convert binary to manylinux..."
-                #pip install auditwheel
-                #ls dist # check dist directory
-                #auditwheel repair dist/intel_extension_for_pytorch*.whl
-                #cp wheelhouse/intel_extension_for_pytorch*.whl ${WORKSPACE}/
 
-                ls # check directory
-                cd ../private-torchvision
-                git checkout main
+                cd ../torchvision
                 git submodule sync
                 git submodule update --init --recursive
+                echo "Build torchvision binary..."
                 python setup.py bdist_wheel
+                echo "Done with torchvision build..."
                 pip install dist/torchvision*.whl
+                echo "Installed torchvision binary..."
                 cp dist/torchvision*.whl ${WORKSPACE}/
-
-                echo "Convert binary to manylinux..."
-                #pip install auditwheel
-                #ls dist # check dist directory
-                #auditwheel repair dist/torchvision*.whl
-                #cp wheelhouse/torchvision*.whl ${WORKSPACE}/
                 
                 pip list
             '''
