@@ -1019,7 +1019,7 @@ node( sub_node_label ) {
                     if (compatibility_test) {
                         model_name = model.split("-itrex")[0]
                     } else {
-                        model_name "${model}"
+                        model_name = "${model}"
                     }
                     def modelConf =  jsonParse(readFile("$WORKSPACE/nlp-models/examples/.config/${framework}_deploy.json"))."${model_name}"
                     working_dir = modelConf."working_dir"
