@@ -341,7 +341,7 @@ def runPerfTest(mode, precision) {
     if (compatibility_test) {
         model_name = model.split("-itrex")[0]
     } else {
-        model_name "${model}"
+        model_name = "${model}"
     }
     def modelConf =  jsonParse(readFile("$WORKSPACE/nlp-models/examples/.config/${framework}_optimize.json"))."${model_name}"
     def benchmark_cmd = modelConf."benchmark"."cmd"
