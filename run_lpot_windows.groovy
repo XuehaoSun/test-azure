@@ -190,6 +190,7 @@ if ('env_type' in params && params.env_type != ''){
 echo "env_type: ${env_type}"
 
 torchvision_versions = [
+
         "1.12.1": "0.13.1",
         "1.12.0": "0.13.0",
         "1.11.0": "0.12.0",
@@ -258,6 +259,7 @@ echo "Multi instance: ${multi_instance}"
 upstreamBuild = ""
 upstreamJobName = ""
 upstreamUrl = ""
+inc_new_api = false
 
 @NonCPS
 def getUpstreamInfo() {
@@ -433,19 +435,9 @@ def create_conda_env() {
                 CALL pip install ruamel.yaml==0.17.4 wheel
 
                 IF "%framework%" == "tensorflow" (
-                    IF "%framework_version%" == "1.15UP1" (
-                        IF "%python_version%" == "3.6" (
-                                CALL pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp36-cp36m-manylinux2010_x86_64.whl
-                        ) ELSE IF "%python_version%" == "3.7" (
-                                CALL pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp37-cp37m-manylinux2010_x86_64.whl
-                        ) ELSE IF "%python_version%" == "3.5" (
-                                CALL pip install https://storage.googleapis.com/intel-optimized-tensorflow/intel_tensorflow-1.15.0up1-cp35-cp35m-manylinux2010_x86_64.whl
-                        ) ELSE echo "!!! TF 1.15UP1 do not support %python_version:"=%"
-                    ) ELSE (
-                        CALL pip install intel-%framework:"=%==%framework_version:"=%
-                    )
+                    CALL pip install %framework:"=%==%framework_version:"=%
                 ) ELSE IF "%framework%" == "pytorch" (
-                        CALL pip install torch==%framework_version% torchvision==%torchvision_version% -f https://download.pytorch.org/whl/torch_stable.html
+                    CALL pip install torch==%framework_version% torchvision==%torchvision_version% -f https://download.pytorch.org/whl/torch_stable.html
                 ) ELSE IF "%framework%" == "mxnet" (
                     IF "%framework_version%" == "1.6.0" (
                         CALL pip install %framework:"=%-mkl==%framework_version%
@@ -673,7 +665,7 @@ node( sub_node_label ) {
                 println("Reading config from " + configPath)
                 def modelConf =  jsonParse(readFile(configPath))
                 println(modelConf."${framework}"."${model}")
-                
+
                 model_src_dir = modelConf."${framework}"."${model}"."model_src_dir"
                 println("model_src_dir = " + model_src_dir)
                 
@@ -689,31 +681,54 @@ node( sub_node_label ) {
                 new_benchmark = modelConf."${framework}"."${model}"."new_benchmark"
                 println("new_benchmark = " + new_benchmark)
 
+                main_script = modelConf."${framework}"."${model}"."main_script"
+                println("main_script = " + main_script)
+
                 if (perf_bs == "default") {
                     perf_bs = modelConf."${framework}"."${model}"."batch_size"
                     println("batch_size = " + batch_size)
                 }
 
+                if (yaml == null && main_script != null){
+                    inc_new_api = true
+                }
+
+                model_src_dir_path = model_src_dir.replace("/", "\\")
+
+                if (!inc_new_api){
+                    println("check whether need to download old api examples...")
+                    retry(3){
+                        dir("${WORKSPACE}"){
+                            bat """
+                                git clone -b old_api_examples ${lpot_url} old-lpot-models
+                                cd old-lpot-models
+                                git branch 
+                                md ${WORKSPACE}\\lpot-models\\examples\\${framework}\\${model_src_dir_path}
+                                xcopy ${WORKSPACE}\\old-lpot-models\\examples\\${framework}\\${model_src_dir_path}\\. ${WORKSPACE}\\lpot-models\\examples\\${framework}\\${model_src_dir_path}
+                            """
+                        }
+                    }
+                }
 
                 //mr test will cover different strategies, the other test mode will use the passed strategy
                 if ( MR_source_branch != '' ){
                     if (framework == "tensorflow"){
                         strategy = "basic"
                         if (model_src_dir == "image_recognition"){
-                            dataset_location = "C:/Users/Public/Downloads/dataset/TF_mini_imagenet"
+                            dataset_location = "C:/Users/Public/dataset/TF_mini_imagenet"
                             println("MR test tensorflow model_src_dir is image_recognition.")
-                            println("So set dataset_location to C:/Users/Public/Downloads/dataset/TF_mini_imagenet")
+                            println("So set dataset_location to C:/Users/Public/dataset/TF_mini_imagenet")
                         }
                         if (model_src_dir == "object_detection" && model == "ssd_resnet50_v1"){
                             // Set mini-coco FOR obj mr test, set absolute baseline replace relative one to reach the acc goal
-                            dataset_location = " C:/Users/Public/Downloads/dataset/tensorflow/mini-coco-500.record"
+                            dataset_location = " C:/Users/Public/dataset/tensorflow/mini-coco-500.record"
                             withEnv(["model_src_dir=${model_src_dir}"]) {
                                 bat (
-                                        script:"""
-                                            SET yaml_config="%WORKSPACE:"=%\\lpot-models\\examples\\%framework:"=%\\%model_src_dir:"=%\\ssd_resnet50_v1.yaml"
-                                            powershell -command "Get-content %yaml_config% | Foreach-Object {\$_ -replace 'relative:\\s*.*\$', 'absolute: 0.01'} | Set-Content %yaml_config%
-                                        """,
-                                        returnStdout: true
+                                    script:"""
+                                        SET yaml_config="%WORKSPACE:"=%\\lpot-models\\examples\\%framework:"=%\\%model_src_dir:"=%\\ssd_resnet50_v1.yaml"
+                                        powershell -command "Get-content %yaml_config% | Foreach-Object {\$_ -replace 'relative:\\s*.*\$', 'absolute: 0.01'} | Set-Content %yaml_config%
+                                    """,
+                                    returnStdout: true
                                 ).trim()
                             }
                         }
@@ -729,43 +744,88 @@ node( sub_node_label ) {
                 if ( MR_source_branch != '' ){
                     tuninig_timeout="5400"
                 }
-                timeout(time: tuning_timeout, unit: "SECONDS") {
-                    model_src_dir = normalizePath("${WORKSPACE}\\lpot-models\\examples\\${framework}\\${model_src_dir}")
-                    dataset_location = normalizePath("${DATASET_DIR}\\${dataset_location}")
-                    input_model = normalizePath("${DATASET_DIR}\\${input_model}")
-                    withCredentials([string(credentialsId: 'sigopt_api_token_suyue', variable: 'SIGOPT_TOKEN')]) {
-                        withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
-                            bat """
-                                echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
-                                CALL quser
-                                echo "-------quser-------"
-                                
-                                SET env_name=%framework%-%framework_version%-%python_version%
+                model_src_dir = normalizePath("${WORKSPACE}\\lpot-models\\examples\\${framework}\\${model_src_dir}")
+                model_src_dir = model_src_dir.replace("/", "\\")
+                dataset_location = normalizePath("${DATASET_DIR}\\${dataset_location}")
+                dataset_location = dataset_location.replace("/", "\\")
+                input_model = normalizePath("${DATASET_DIR}\\${input_model}")
+                input_model = input_model.replace("/", "\\")
+                output_model = normalizePath("${WORKSPACE}\\intel-lpot-validation")
+                output_model = output_model.replace("/", "\\")
+                if (inc_new_api){
+                    timeout(time: tuning_timeout, unit: "SECONDS") {
+                        withCredentials([string(credentialsId: 'sigopt_api_token_suyue', variable: 'SIGOPT_TOKEN')]) {
+                            withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
+                                bat """
+                                    echo "Running ---- ${framework}, ${model}, inc_new_api ----Tuning"
+                                    CALL quser
+                                    echo "-------quser-------"
 
-                                IF "${env_type}" == "conda" (
-                                    CALL conda activate %env_name%
-                                ) else (
-                                    CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
-                                )
-                                IF %ERRORLEVEL% NEQ 0 (
-                                    echo "Could not activate environment."
-                                    exit 1
-                                )
+                                    SET env_name=%framework%-%framework_version%-%python_version%
 
-                                CALL ${WORKSPACE}%\\lpot-validation\\scripts\\env_setup.bat ${framework} ${model}
+                                    IF "${env_type}" == "conda" (
+                                        CALL conda activate %env_name%
+                                    ) else (
+                                        CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
+                                    )
+                                    IF %ERRORLEVEL% NEQ 0 (
+                                        echo "Could not activate environment."
+                                        exit 1
+                                    )
 
-                                CALL python ${WORKSPACE}%\\lpot-validation\\scripts\\run_tuning_trigger.py ^
-                                --framework=${framework} ^
-                                --model=${model} ^
-                                --model_src_dir=${model_src_dir} ^
-                                --dataset_location=${dataset_location} ^
-                                --input_model=${input_model} ^
-                                --yaml=${yaml} ^
-                                --strategy=${strategy} ^
-                                --strategy_token=${SIGOPT_TOKEN} ^
-                                --max_trials=${max_trials} ^
-                                --cpu=${cpu}
-                            """
+                                    CALL ${WORKSPACE}%\\lpot-validation\\scripts\\env_setup.bat ${framework} ${model}
+
+                                    CALL python ${WORKSPACE}%\\lpot-validation\\scripts\\run_tuning_trigger_new_api_win.py ^
+                                        --framework=${framework} ^
+                                        --model=${model} ^
+                                        --model_src_dir=${model_src_dir} ^
+                                        --dataset_location=${dataset_location} ^
+                                        --input_model=${input_model} ^
+                                        --strategy=${strategy} ^
+                                        --strategy_token=${SIGOPT_TOKEN} ^
+                                        --max_trials=${max_trials} ^
+                                        --cpu=${cpu} ^
+                                        --main_script=${main_script}
+                                    """
+                            }
+                        }
+                    }
+                } else {
+                    timeout(time: tuning_timeout, unit: "SECONDS") {
+                        withCredentials([string(credentialsId: 'sigopt_api_token_suyue', variable: 'SIGOPT_TOKEN')]) {
+                            withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
+                                bat """
+                                    echo "Running ---- ${framework}, ${model}, ${strategy} ----Tuning"
+                                    CALL quser
+                                    echo "-------quser-------"
+                                    
+                                    SET env_name=%framework%-%framework_version%-%python_version%
+
+                                    IF "${env_type}" == "conda" (
+                                        CALL conda activate %env_name%
+                                    ) else (
+                                        CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
+                                    )
+                                    IF %ERRORLEVEL% NEQ 0 (
+                                        echo "Could not activate environment."
+                                        exit 1
+                                    )
+
+                                    CALL ${WORKSPACE}%\\lpot-validation\\scripts\\env_setup.bat ${framework} ${model}
+
+                                    CALL python ${WORKSPACE}%\\lpot-validation\\scripts\\run_tuning_trigger.py ^
+                                    --framework=${framework} ^
+                                    --model=${model} ^
+                                    --model_src_dir=${model_src_dir} ^
+                                    --dataset_location=${dataset_location} ^
+                                    --input_model=${input_model} ^
+                                    --yaml=${yaml} ^
+                                    --strategy=${strategy} ^
+                                    --strategy_token=${SIGOPT_TOKEN} ^
+                                    --max_trials=${max_trials} ^
+                                    --cpu=${cpu}
+                                """
+                            }
                         }
                     }
                 }
@@ -798,61 +858,122 @@ node( sub_node_label ) {
 
                 if (!tune_only && model != "helloworld_keras") {
                     println("========== Benchmark ========")
-                    timeout(360) {
-                        withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
-                            precision_list.each { precision ->
-                            echo "Precision: ${precision}"
-                                mode_list.each { mode ->
-                                    echo "Mode: ${mode}"
-                                    bat """
-                                        echo "Running ---- ${framework}, ${model}, ${precision}, ${mode} ---- Benchmarking"
-                                        
-                                        echo "-------quser-------"
-                                        CALL quser
-                                        echo "-------quser-------"
-                                        
-                                        SET env_name=%framework%-%framework_version%-%python_version%
+                    input_model_benchmark = normalizePath("${WORKSPACE}\\intel-lpot-validation")
+                    input_model_benchmark = input_model.replace("/", "\\")
+                    if (inc_new_api){
+                        println("=====NEW API===== Benchmark =====")
+                        timeout(360) {
+                            withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
+                                precision_list.each { precision ->
+                                echo "Precision: ${precision}"
+                                    mode_list.each { mode ->
+                                        echo "Mode: ${mode}"
+                                        bat """
+                                            echo "Running ---- ${framework}, ${model}, ${precision}, ${mode} ---- New API Benchmarking"
+                                            
+                                            echo "-------quser-------"
+                                            CALL quser
+                                            echo "-------quser-------"
+                                            
+                                            SET env_name=%framework%-%framework_version%-%python_version%
 
-                                        IF "${env_type}" == "conda" (
-                                            CALL conda activate %env_name%
-                                        ) else (
-                                            CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
-                                        )
-                                        IF %ERRORLEVEL% NEQ 0 (
-                                            echo "Could not activate environment."
-                                            exit 1
-                                        )
+                                            IF "${env_type}" == "conda" (
+                                                CALL conda activate %env_name%
+                                            ) else (
+                                                CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
+                                            )
+                                            IF %ERRORLEVEL% NEQ 0 (
+                                                echo "Could not activate environment."
+                                                exit 1
+                                            )
+                                            SET TF_ENABLE_ONEDNN_OPTS=1
+                                            SET TF_ENABLE_MKL_NATIVE_FORMAT=1
 
-                                        SET cmd=python ${WORKSPACE}%\\lpot-validation\\scripts\\run_benchmark_trigger.py ^
-                                            --framework=${framework} ^
-                                            --model=${model} ^
-                                            --model_src_dir=${model_src_dir} ^
-                                            --dataset_location=${dataset_location} ^
-                                            --input_model=${input_model} ^
-                                            --precision=${precision} ^
-                                            --mode=${mode} ^
-                                            --batch_size=${perf_bs} ^
-                                            --yaml=${yaml} ^
-                                            --cpu=${cpu} ^
-                                            --new_benchmark=${new_benchmark} ^
-                                        
-                                        IF "${multi_instance}" == "true" (
-                                            SET cmd=%cmd% --multi_instance
-                                        )
+                                            SET cmd=python ${WORKSPACE}%\\lpot-validation\\scripts\\run_benchmark_trigger_new_api_win.py ^
+                                                --framework=${framework} ^
+                                                --model=${model} ^
+                                                --model_src_dir=${model_src_dir} ^
+                                                --dataset_location=${dataset_location} ^
+                                                --input_model=${input_model_benchmark} ^
+                                                --precision=${precision} ^
+                                                --mode=${mode} ^
+                                                --batch_size=${perf_bs} ^
+                                                --cpu=${cpu} ^
+                                                --main_script=${main_script} ^
+                                            
+                                            IF "${multi_instance}" == "true" (
+                                                SET cmd=%cmd% --multi_instance
+                                            )
 
-                                        CALL %cmd%
+                                            CALL %cmd%
 
-                                        IF %ERRORLEVEL% NEQ 0 (
-                                            echo "Error while executing benchmark."
-                                            exit 1
-                                        )
-                                    """
+                                            IF %ERRORLEVEL% NEQ 0 (
+                                                echo "Error while executing benchmark."
+                                                exit 1
+                                            )
+                                        """
+                                    }
                                 }
                             }
                         }
+                    } else {
+                        timeout(360) {
+                            withEnv(["framework=${framework}","framework_version=${framework_version}","python_version=${python_version}"]) {
+                                precision_list.each { precision ->
+                                    echo "Precision: ${precision}"
+                                    mode_list.each { mode ->
+                                        echo "Mode: ${mode}"
+                                        bat """
+                                            echo "Running ---- ${framework}, ${model}, ${precision}, ${mode} ---- Benchmarking"
+                                            
+                                            echo "-------quser-------"
+                                            CALL quser
+                                            echo "-------quser-------"
+                                            
+                                            SET env_name=%framework%-%framework_version%-%python_version%
+
+                                            IF "${env_type}" == "conda" (
+                                                CALL conda activate %env_name%
+                                            ) else (
+                                                CALL ${WORKSPACE}\\%env_name%\\Scripts\\activate
+                                            )
+                                            IF %ERRORLEVEL% NEQ 0 (
+                                                echo "Could not activate environment."
+                                                exit 1
+                                            )
+
+                                            SET cmd=python ${WORKSPACE}%\\lpot-validation\\scripts\\run_benchmark_trigger.py ^
+                                                --framework=${framework} ^
+                                                --model=${model} ^
+                                                --model_src_dir=${model_src_dir} ^
+                                                --dataset_location=${dataset_location} ^
+                                                --input_model=${input_model} ^
+                                                --precision=${precision} ^
+                                                --mode=${mode} ^
+                                                --batch_size=${perf_bs} ^
+                                                --yaml=${yaml} ^
+                                                --cpu=${cpu} ^
+                                                --new_benchmark=${new_benchmark} ^
+                                            
+                                            IF "${multi_instance}" == "true" (
+                                                SET cmd=%cmd% --multi_instance
+                                            )
+
+                                            CALL %cmd%
+
+                                            IF %ERRORLEVEL% NEQ 0 (
+                                                echo "Error while executing benchmark."
+                                                exit 1
+                                            )
+                                        """
+                                    }
+                                }
+                            }   
+                        }   
                     }
                 }
-            }
+            }                      
+            
         } catch(e) {
             currentBuild.result = "FAILURE"
             throw e
@@ -871,3 +992,5 @@ node( sub_node_label ) {
     }
     
 }
+
+
