@@ -15,4 +15,4 @@ elif [[ "${pruned_model_score}" == "0" ]]; then
     test_status="fail"
 fi
 
-echo "${CPU_NAME};PytorchPruneResnet;${test_status};${BUILD_URL}artifact/${feature_name}" | tee -a ${summaryLog}
+echo "${CPU_NAME};PytorchPruneResnet;${test_status};${BUILD_URL}artifact/${feature_name}/pytorch_prune_resnet.log" | tee -a ${summaryLog}

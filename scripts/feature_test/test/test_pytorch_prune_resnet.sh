@@ -1,7 +1,5 @@
 #!/bin/bash -x
 
-set -eo pipefail
-
 PATTERN='[-a-zA-Z0-9_]*='
 for i in "$@"
 do
