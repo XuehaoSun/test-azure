@@ -226,7 +226,7 @@ function install_model_deps {
                 sed -i '/mxnet==/d;/mxnet$/d;/mxnet-mkl==/d;/mxnet-mkl$/d' requirements.txt
             fi
             if [ "${framework}" == "pytorch" ]; then
-                sed -i '/torch==/d;/torch$/d;/torchvision==/d;/torchvision$/d' requirements.txt
+                sed -i '/torch==/d;/torchvision==/d;/torchvision$/d' requirements.txt
                 if [[ $(grep "torchaudio" requirements.txt | wc -l) != 0 ]]; then
                     pt_version=$(python -c "import torch; print(torch.__version__)")
                     torchaudio_version="0.$(echo $pt_version| cut -d'.' -f2).$(echo $pt_version| cut -d'.' -f3)"
