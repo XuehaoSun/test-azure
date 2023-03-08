@@ -87,6 +87,15 @@ function createOverview {
         cpplint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
 
+    format_scan=($(grep 'nlp-format-scan-localtest,format' ${overviewLog} |sed 's/,/ /g'))
+    if [[ "${format_scan[2]}" == *"FAIL"* ]];then
+        format_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${format_scan[2]}" == *"SUCC"* ]];then
+        format_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        format_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
+
     pylint_scan=($(grep 'nlp-format-scan-localtest,pylint' ${overviewLog} |sed 's/,/ /g'))
     if [[ "${pylint_scan[2]}" == *"FAIL"* ]];then
         pylint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
@@ -166,6 +175,12 @@ function createOverview {
                  echo "<tr><td>cpplint Scan</td>"
                  echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${cpplint_scan[0]}/${cpplint_scan[3]}\">${cpplint_scan[0]}#${cpplint_scan[3]}</a></td>"
                  echo "${cpplint_scan_status}</tr>"
+             fi
+
+             if [ "${format_scan[3]}" != "" ]; then
+                 echo "<tr><td>clang-format Scan</td>"
+                 echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${format_scan[0]}/${format_scan[3]}\">${format_scan[0]}#${format_scan[3]}</a></td>"
+                 echo "${format_scan_status}</tr>"
              fi
 
              if [ "${pylint_scan[3]}" != "" ]; then

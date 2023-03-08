@@ -73,6 +73,9 @@ echo "RUN BENCHMARK = ${RUN_BENCHMARK}"
 RUN_CPPLINT = params.RUN_CPPLINT != null ? params.RUN_CPPLINT : false
 echo "RUN_CPPLINT = ${RUN_CPPLINT}"
 
+RUN_CLANGFORMAT = params.RUN_CLANGFORMAT != null ? params.RUN_CLANGFORMAT : false
+echo "RUN_CLANGFORMAT = ${RUN_CLANGFORMAT}"
+
 RUN_BANDIT = params.RUN_BANDIT != null ? params.RUN_BANDIT : false
 echo "RUN_BANDIT = ${RUN_BANDIT}"
 
@@ -756,6 +759,12 @@ node( node_label ) {
             println("Add cpplint scan to job...")
             job_list["cpplint Scan"] = {
                 codeScan("cpplint")
+            }
+        }
+        if (RUN_CLANGFORMAT) {
+            println("Add clangformat scan to job...")
+            job_list["clangformat Scan"] = {
+                codeScan("clangformat")
             }
         }
         if (RUN_SPELLCHECK) {

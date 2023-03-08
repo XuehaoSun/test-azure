@@ -289,6 +289,13 @@ if ('RUN_CPPLINT' in params && params.RUN_CPPLINT) {
 }
 echo "RUN_CPPLINT = ${RUN_CPPLINT}"
 
+RUN_CLANGFORMAT = false
+if ('RUN_CLANGFORMAT' in params && params.RUN_CLANGFORMAT) {
+    echo "RUN_CLANGFORMAT is true"
+    RUN_CLANGFORMAT=params.RUN_CLANGFORMAT
+}
+echo "RUN_CLANGFORMAT = ${RUN_CLANGFORMAT}"
+
 RUN_BANDIT = false
 if ('RUN_BANDIT' in params && params.RUN_BANDIT) {
     echo "RUN_BANDIT is true"
@@ -1744,6 +1751,12 @@ node( node_label ) {
             println("Add cpplint scan to job...")
             job_list["cpplint Scan"] = {
                 codeScan("cpplint")
+            }
+        }
+        if (RUN_CLANGFORMATA) {
+            println("Add clangformat scan to job...")
+            job_list["clangFormat Scan"] = {
+                codeScan("clangformat")
             }
         }
         if (RUN_BANDIT) {

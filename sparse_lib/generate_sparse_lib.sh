@@ -82,6 +82,14 @@ function createOverview {
     else
         cpplint_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
+    clangformat_scan=($(grep 'sparse-lib-format-scan,clangformat' ${overview_log} | sed 's/,/ /g'))
+    if [[ "${clangformat_scan[2]}" == *"FAIL"* ]]; then
+        clangformat_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${clangformat_scan[2]}" == *"SUCC"* ]]; then
+        clangformat_scan_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        clangformat_scan_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
     pylint_scan=($(grep 'sparse-lib-format-scan,pylint' ${overview_log} | sed 's/,/ /g'))
     if [[ "${pylint_scan[2]}" == *"FAIL"* ]]; then
         pylint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
@@ -130,6 +138,11 @@ function createOverview {
             echo "<tr><td>cpplint Scan</td>"
             echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${cpplint_scan[0]}/${cpplint_scan[3]}\">${cpplint_scan[0]}#${cpplint_scan[3]}</a></td>"
             echo "${cpplint_scan_status}</tr>"
+        fi
+        if [ "${clangformat_scan[3]}" != "" ]; then
+            echo "<tr><td>clangformat Scan</td>"
+            echo "<td style=\"text-align:left\"><a href=\"${jenkins_job_url}${clangformat_scan[0]}/${clangformat_scan[3]}\">${clangformat_scan[0]}#${clangformat_scan[3]}</a></td>"
+            echo "${clangformat_scan_status}</tr>"
         fi
         if [ "${pylint_scan[3]}" != "" ]; then
             echo "<tr><td>PyLint Scan</td>"

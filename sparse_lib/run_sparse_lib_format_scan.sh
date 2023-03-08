@@ -66,6 +66,7 @@ main() {
         "pyspelling") run_pyspelling;;
         "cloc") run_cloc;;
         "pydocstyle") run_pydocstyle;;
+        "clangformat") run_clangformat;;
         *)
             echo "Scan tool ${SCAN_TOOL} not supported."; exit 1;;
     esac
@@ -100,6 +101,20 @@ run_bandit() {
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "Bandit exited with non-zero exit code."; exit 1
+    fi
+    exit 0
+}
+
+run_clangformat() {
+    pip install clang-format
+    log_path=${WORKSPACE}/kernels_clangformat.log
+    cd ${REPO_DIR}/intel_extension_for_transformers/backends/neural_engine/kernels
+    clang-format --style=file -i include/**/*.hpp
+    clang-format --style=file -i src/**/*.hpp
+    clang-format --style=file -i src/**/*.cpp
+    git diff ./ 2>&1| tee -a ${log_path}
+    if [[ ! -f ${log_path} ]] || [[ $(grep -c "diff" ${log_path}) != 0 ]]; then
+        exit 1
     fi
     exit 0
 }
