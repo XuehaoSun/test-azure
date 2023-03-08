@@ -74,6 +74,14 @@ function createOverview {
     else
         win_gtest_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
     fi
+    gpu_test=($(grep 'sparselib_gpu_test' ${overview_log} | sed 's/,/ /g'))
+    if [[ "${gpu_test[1]}" == *"FAIL"* ]]; then
+        gpu_test_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
+    elif [[ "${gpu_test[1]}" == *"SUCC"* ]]; then
+        gpu_test_status="<td style=\"background-color:#90EE90\">Pass</td>"
+    else
+        gpu_test_status="<td style=\"background-color:#f2ea0a\">Verify</td>"
+    fi
     cpplint_scan=($(grep 'sparse-lib-format-scan,cpplint' ${overview_log} | sed 's/,/ /g'))
     if [[ "${cpplint_scan[2]}" == *"FAIL"* ]]; then
         cpplint_scan_status="<td style=\"background-color:#FFD2D2\">Fail</td>"
@@ -133,6 +141,11 @@ function createOverview {
             echo "<tr><td>sparse_lib windows gtest</td>"
             echo "<td style=\"text-align:left\"><a href=\"${win_gtest[2]}\">ut_link</a></td>"
             echo "${win_gtest_status}</tr>"
+        fi
+        if [ "${gpu_test[2]}" != "" ]; then
+            echo "<tr><td>sparselib_ gpu test</td>"
+            echo "<td style=\"text-align:left\"><a href=\"${gpu_test[2]}\">ut_link</a></td>"
+            echo "${gpu_test_status}</tr>"
         fi
         if [ "${cpplint_scan[3]}" != "" ]; then
             echo "<tr><td>cpplint Scan</td>"

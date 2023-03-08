@@ -21,6 +21,7 @@ echo "python_version: ${python_version}"
 nlp_url = params.nlp_url ?: "https://github.com/intel-innersource/frameworks.ai.nlp-toolkit.intel-nlp-toolkit.git"
 echo "nlp_url is ${nlp_url}"
 
+
 nlp_branch = ''
 MR_source_branch = ''
 MR_target_branch = ''
@@ -64,6 +65,9 @@ def cleanup() {
         cat /sys/devices/system/cpu/intel_pstate/no_turbo
         lscpu
         cat /proc/sys/kernel/numa_balancing
+        export GIT_SSL_NO_VERIFY=1
+        git config --global http.sslverify false
+        clinfo
         '''
     } catch(e) {
         echo "==============================================="
@@ -98,7 +102,7 @@ node( sub_node_label ) {
                                 browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                                 doGenerateSubmoduleConfigurations: false,
                                 extensions                       : [
-                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "nlp"],
                                         [$class: 'CloneOption', timeout: 5],
                                         [$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: 'DEFAULT', mergeTarget: "${MR_target_branch}"]]
                                 ],
@@ -116,7 +120,7 @@ node( sub_node_label ) {
                                 browser                          : [$class: 'AssemblaWeb', repoUrl: ''],
                                 doGenerateSubmoduleConfigurations: false,
                                 extensions                       : [
-                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "lpot-models"],
+                                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "nlp"],
                                         [$class: 'CloneOption', timeout: 5]
                                 ],
                                 submoduleCfg                     : [],
@@ -128,15 +132,33 @@ node( sub_node_label ) {
                     }
                 }
             }
-            stage("benchmarking") {
-                output_log_dir="${WORKSPACE}/benchmark_log"
-                sh """#!/bin/bash -x
+            stage("gpu test") {
+                output_log_dir="$WORKSPACE/gpu_test.log"
+                sh '''#!/bin/bash -x
+                    export PATH=${HOME}/miniconda3/bin/:$PATH
                     conda_env_name="sparse_lib"
-                    if [[ ! \$(conda info -e | grep \$conda_env_name) ]]; then
-                        conda create -n \$conda_env_name python=3.8 -y
+                    if [[ ! $(conda info -e | grep $conda_env_name) ]]; then
+                        conda create -n $conda_env_name python=3.8 -y
                     fi
-                    bash -x ${WORKSPACE}/lpot-validation/sparse_lib/run_ci_trigger.sh ${output_log_dir}
-                """
+                    conda activate ${conda_env_name} || source activate ${conda_env_name}
+                    conda install autoconf
+                    cd ${WORKSPACE}/nlp
+                    git submodule update --init --recursive
+                    cd ${WORKSPACE}/nlp/intel_extension_for_transformers/backends/neural_engine
+                    mkdir build && cd build && cmake .. -DNE_WITH_SPARSELIB_GPU=ON -DNE_WITH_SPARSELIB=ON -DNE_WITH_SPARSELIB_ONLY=ON -DNE_WITH_TESTS=ON -DPYTHON_EXECUTABLE=$(which python) && make -j 2>&1 |
+                            tee  $WORKSPACE/cmake_build.log
+                    ut_log_name=$WORKSPACE/gpu_test.log
+                    cd bin/
+                    ./test_gpu_matmul 2>&1 | tee ${ut_log_name}
+                    #./test_example 2>&1 | tee -a ${ut_log_name}
+                    if [ $(grep -c "FAILED" ${ut_log_name}) != 0 ] ||
+                        [ $(grep -c "PASSED" ${ut_log_name}) == 0 ] ||
+                        [ $(grep -c "Segmentation fault" ${ut_log_name}) != 0 ] ||
+                        [ $(grep -c "core dumped" ${ut_log_name}) != 0 ] ||
+                        [ $(grep -c "==ERROR:" ${ut_log_name}) != 0 ]; then
+                        exit 1
+                    fi
+                '''
             }
         } catch(e) {
             currentBuild.result = "FAILURE"
@@ -148,7 +170,7 @@ node( sub_node_label ) {
     } finally {
         // save log files
         stage("Archive Artifacts") {
-            archiveArtifacts artifacts: "*.log, benchmark_log/**/*", excludes: null
+            archiveArtifacts artifacts: "*.log", excludes: null
             fingerprint: true
         }
     }  

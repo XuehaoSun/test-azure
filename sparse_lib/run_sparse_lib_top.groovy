@@ -42,6 +42,12 @@ echo "Running on node ${node_label}; sub-job node ${sub_node_label}; ut node ${s
 windows_node = "icx-windows"
 echo "windows_node is ${windows_node}"
 
+
+// run GPU test
+is_gpu = params.is_gpu ?: false 
+echo "run gpu ${is_gpu}"
+
+
 //other settings
 nlp_url = params.nlp_url ?: "https://github.com/intel-innersource/frameworks.ai.nlp-toolkit.intel-nlp-toolkit.git"
 echo "nlp_url is ${nlp_url}"
@@ -166,6 +172,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
     inferencer_config = arg_map.inferencer_config ?: inferencer_config
     sub_node_label = arg_map.node ?: sub_node_label
     sub_node_ut = arg_map.node_ut ?: sub_node_ut
+    is_gpu = arg_map.gpu ?: is_gpu as Boolean
     echo """ PR comment args changes params:
         RUN_UT=${RUN_UT}
         sparse_ut_only=${sparse_ut_only}
@@ -177,6 +184,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
         inferencer_config=${inferencer_config}
         sub_node_label=${sub_node_label}
         sub_node_ut=${sub_node_ut}
+        run_gpu=${is_gpu}
     """
 }
 
@@ -518,6 +526,59 @@ def collectUT_backend_Log(device) {
     }
     
 }
+
+def collectGPU_Log(){
+    echo "------------  running collect GPU Test Log  -------------"
+    sh ''' #!/bin/bash
+        overview_log="${WORKSPACE}/summary_overview.log"
+        gpu_log_name=$WORKSPACE/gputest/gpu_test.log
+        if [ -f ${gpu_log_name} ];then
+            if [ $(grep -c "FAILED" ${gpu_log_name}) != 0 ] ||
+                [ $(grep -c "PASSED" ${gpu_log_name}) == 0 ] ||
+                [ $(grep -c "Segmentation fault" ${gpu_log_name}) != 0 ] ||
+                [ $(grep -c "core dumped" ${gpu_log_name}) != 0 ] ||
+                [ $(grep -c "==ERROR:" ${gpu_log_name}) != 0 ]; then
+                gputest_status='FAILURE'
+            else
+                gputest_status='SUCCESS'
+            fi
+        fi
+        echo "sparselib_gpu_test,${gputest_status},${BUILD_URL}artifact/gputest/gpu_test.log" | tee -a ${overview_log}
+        
+    '''
+}
+
+def runGPUTest() {
+    List GPUParams = [
+        string(name: "nlp_url", value: "${nlp_url}"),
+        string(name: "nlp_branch", value: "${nlp_commit}"),
+        string(name: "MR_source_branch", value: "${MR_source_branch}"),
+        string(name: "MR_target_branch", value: "${MR_target_branch}"),
+        string(name: "sub_node_label", value: "${sub_node_label}"),
+        string(name: "python_version",value:"${python_version}"),
+        string(name: "val_branch", value: "${val_branch}"),
+    ]
+    sub_job_name = "sparse-lib-gpu"
+   
+    println("building GPU test")
+    def downstreamJob = build job: sub_job_name, propagate: false, parameters: GPUParams
+    catchError {
+        copyArtifacts(
+                projectName: sub_job_name,
+                selector: specific("${downstreamJob.getNumber()}"),
+                filter: '*log',
+                fingerprintArtifacts: true,
+                target: "gputest")
+        archiveArtifacts artifacts: "gputest/**", allowEmptyArchive: true
+    }
+    def failed_build_url = downstreamJob.absoluteUrl
+    if (downstreamJob.result != 'SUCCESS') {
+        println("got sparse libgpu UT failed")
+        currentBuild.result = "FAILURE"
+        error("---GPU gtest test failed--- Details in ${failed_build_url}consoleText! ---- \n ${win_ut_failed_detail}")
+    }      
+}
+
 def sparse_benchmark_jobs(device) {
     def jobs = [:]
 
@@ -793,6 +854,13 @@ node( node_label ) {
             }
         }
 
+        if (is_gpu) {
+            println("running on gpu")
+            job_list["GPU Test"] = {
+                runGPUTest()
+            }
+        }
+
         //if (test_mode == "pre-CI" || pipeline_failFast) {
         //    echo "enable failFast"
         //    job_list.failFast = true
@@ -825,6 +893,9 @@ node( node_label ) {
                 }
                 if(RUN_WINDOWS){
                     collectWINUT_backend_Log()
+                }
+                if (is_gpu) {
+                    collectGPU_Log()
                 }
             }
         }

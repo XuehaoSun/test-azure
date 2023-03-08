@@ -17,6 +17,7 @@ Options:
 | `--bandit`                        | Run bendit check
 | `--spell`                         | Run speel check
 | `--copyright`                     | Run copyright check
+| `--gpu`                           | Run test on GPU
 | `--models`                        | Run all neural engine models containing sparselib kernels 
 | `--models=<models>`               | Run a specified list (comma separated) of models with neural engine
 | `--inferencer_config=<configs>`   | Specify a list (comma separated) of model running configs in the format of `<ncores_per_instance>:<bs>` 
