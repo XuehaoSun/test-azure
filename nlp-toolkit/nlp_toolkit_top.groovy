@@ -1753,7 +1753,7 @@ node( node_label ) {
                 codeScan("cpplint")
             }
         }
-        if (RUN_CLANGFORMATA) {
+        if (RUN_CLANGFORMAT) {
             println("Add clangformat scan to job...")
             job_list["clangFormat Scan"] = {
                 codeScan("clangformat")
