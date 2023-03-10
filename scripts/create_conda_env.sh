@@ -81,7 +81,9 @@ function update_conda_env {
 
     if [ -f ${conda_temp_path} ] && [ ${HOME} = "/home/tensorflow" ] && [ "${conda_flag}" = "true" ]; then
         cd ${HOME}/miniconda3/envs
-        cp $conda_temp_path .
+        if [[ $(diff $conda_temp_path $conda_temp_gz) ]]; then
+            cp $conda_temp_path .
+        fi
     fi
 
     if [ -f ${HOME}/miniconda3/envs/$conda_temp_gz ] && [ "${conda_flag}" = "true" ]; then
