@@ -1153,8 +1153,9 @@ node( sub_node_label ) {
                             "inc_new_api=${inc_new_api}"]) {
                         sh '''#!/bin/bash -x
                             if [[ "${inc_new_api}" == "true" ]] && [[ "${model}" == *"_qat"* ]]; then
-                                control_phrase="Training finished!"
-                                if [ $(grep "${control_phrase}" ${framework}-${model}-${os}-${device}-tune.log | wc -l) == 0 ];then
+                                control_phrase_1="Save config file and weights of quantized model"
+                                control_phrase_2="Save quantized model to saved_model"
+                                if [[ $(grep "${control_phrase_1}" ${framework}-${model}-${os}-${device}-tune.log | wc -l) == 0 ]] && [[ $(grep "${control_phrase_2}" ${framework}-${model}-${os}-${device}-tune.log | wc -l) == 0 ]];then
                                     exit 1
                                 fi
                             else
