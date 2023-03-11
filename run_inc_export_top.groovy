@@ -154,58 +154,61 @@ def download() {
 
 def export_test() {
     def jobs = [:]
-    if( frameworks=="TF2ONNX") {
-        export_jobs = TF2ONNX_models.split(',')
-    }else{
-        export_jobs = PT2ONNX_models.split(',')
-    }
-    
     def system = "linux"
-    export_jobs.each { export_job ->
 
-        jobs["${export_job}"] = {
+    def job_frameworks = frameworks.split(',')
+    job_frameworks.each { job_framework ->
+        if( job_framework=="TF2ONNX") {
+            export_jobs = TF2ONNX_models.split(',')
+        }else{
+            export_jobs = PT2ONNX_models.split(',')
+        }
+        export_jobs.each { export_job ->
 
-            echo "---test --- model export --- ${export_job} --- ${system}"
-            def String subnode_label = sub_node_label + " && " + system;
+            jobs["${export_job}"] = {
 
-            def List jobParams = [
-                    string(name: "python_version", value: "${python_version}"),
-                    string(name: "sub_node_label", value: "${subnode_label}"),
-                    string(name: "binary_build_job", value: "${binary_build_job}"),
-                    string(name: "frameworks", value: "${frameworks}"),
-                    string(name: "tensorflow_version", value: "${tensorflow_version}"),
-                    string(name: "pytorch_version", value: "${pytorch_version}"),
-                    string(name: "onnx_version", value: "${onnx_version}"),
-                    string(name: "onnxruntime_version", value: "${onnxruntime_version}"),
-                    string(name: "model_name", value: "${export_job}"),
-                    string(name: "val_branch", value: "${val_branch}"),
-                    string(name: "inc_url", value: "${inc_url}"),
-                    string(name: "inc_branch", value: "${inc_branch}"),
-                    booleanParam(name: "export_only", value: export_only)
-            ]
+                echo "---test --- model export --- ${export_job} --- ${system}"
+                def String subnode_label = sub_node_label + " && " + system;
 
-            def downstreamJob
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                downstreamJob = build job: "inc-model-export-test", propagate: false, parameters: jobParams
+                def List jobParams = [
+                        string(name: "python_version", value: "${python_version}"),
+                        string(name: "sub_node_label", value: "${subnode_label}"),
+                        string(name: "binary_build_job", value: "${binary_build_job}"),
+                        string(name: "frameworks", value: "${job_framework}"),
+                        string(name: "tensorflow_version", value: "${tensorflow_version}"),
+                        string(name: "pytorch_version", value: "${pytorch_version}"),
+                        string(name: "onnx_version", value: "${onnx_version}"),
+                        string(name: "onnxruntime_version", value: "${onnxruntime_version}"),
+                        string(name: "model_name", value: "${export_job}"),
+                        string(name: "val_branch", value: "${val_branch}"),
+                        string(name: "inc_url", value: "${inc_url}"),
+                        string(name: "inc_branch", value: "${inc_branch}"),
+                        booleanParam(name: "export_only", value: export_only)
+                ]
 
-                catchError {
-                    copyArtifacts(
-                            projectName: "inc-model-export-test",
-                            selector: specific("${downstreamJob.getNumber()}"),
-                            filter: '*.log',
-                            fingerprintArtifacts: true,
-                            target: "${export_job}")
+                def downstreamJob
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    downstreamJob = build job: "inc-model-export-test", propagate: false, parameters: jobParams
 
-                    // Archive in Jenkins
-                    archiveArtifacts artifacts: "${export_job}/**"
-                }
+                    catchError {
+                        copyArtifacts(
+                                projectName: "inc-model-export-test",
+                                selector: specific("${downstreamJob.getNumber()}"),
+                                filter: '*.log',
+                                fingerprintArtifacts: true,
+                                target: "${export_job}")
 
-                def failed_build_result = downstreamJob.result
-                def failed_build_url = downstreamJob.absoluteUrl
+                        // Archive in Jenkins
+                        archiveArtifacts artifacts: "${export_job}/**"
+                    }
 
-                if (downstreamJob && failed_build_result != 'SUCCESS') {
-                    currentBuild.result = "FAILURE"
-                    throw new Exception("Downstream Job failed.")
+                    def failed_build_result = downstreamJob.result
+                    def failed_build_url = downstreamJob.absoluteUrl
+
+                    if (downstreamJob && failed_build_result != 'SUCCESS') {
+                        currentBuild.result = "FAILURE"
+                        throw new Exception("Downstream Job failed.")
+                    }
                 }
             }
         }

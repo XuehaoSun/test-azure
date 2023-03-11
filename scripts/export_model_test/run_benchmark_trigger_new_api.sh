@@ -26,12 +26,8 @@ do
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_mode=*)
             conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
-        --profiling=*)
-            profiling=`echo $i | sed "s/${PATTERN}//"`;;
-        --os=*)
-            os=`echo $i | sed "s/${PATTERN}//"`;;
-        --device=*)
-            device=`echo $i | sed "s/${PATTERN}//"`;;
+        --tokenizer=*)
+            tokenizer=`echo $i | sed "s/${PATTERN}//"`;;
         --multi_instance=*)
             multi_instance=`echo $i | sed "s/${PATTERN}//"`;;
         --log_level=*)
@@ -87,7 +83,11 @@ main() {
     if [ ${framework} == "tensorflow" ] && [ ${model} == "bert_base_mrpc" ]; then
         parameters="${parameters} --init_checkpoint=${origin_model}"
     fi
-    echo ${parameters}
+
+    # for PT2ONNX onnx benchmark
+    if [ ${framework} == "onnxrt" ] && [ ${tokenizer} != "" ]; then
+        parameters="${parameters} --tokenizer=${tokenizer}"
+    fi
 
     echo -e "\n[VAL INFO] Start run function..."
     case ${mode} in
