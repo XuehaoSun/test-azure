@@ -196,10 +196,10 @@ def export_test() {
                                 selector: specific("${downstreamJob.getNumber()}"),
                                 filter: '*.log',
                                 fingerprintArtifacts: true,
-                                target: "${export_job}")
+                                target: "${job_framework}/${export_job}")
 
                         // Archive in Jenkins
-                        archiveArtifacts artifacts: "${export_job}/**"
+                        archiveArtifacts artifacts: "${job_framework}/${export_job}/**"
                     }
 
                     def failed_build_result = downstreamJob.result
@@ -294,19 +294,27 @@ node( node_label ){
     } finally {
         stage("result check"){
             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                export_jobs.each { model_name ->
-                    echo "-------- ${model_name} --------"
-                        dir(WORKSPACE) {
-                            withEnv([
-                                "model_name=${model_name}",
-                                "model_export_summary_log=${SUMMARYLOG}"
-                            ]) {
-                                sh '''
-                                    chmod 775 ./lpot-validation/scripts/export_model_test/collect_log_model_export.sh
-                                    ./lpot-validation/scripts/export_model_test/collect_log_model_export.sh
-                                '''
-                            }
+                def job_frameworks = frameworks.split(',')
+                job_frameworks.each { job_framework ->
+                    def job_models = ""
+                    if (job_framework == "TF2ONNX") {
+                        job_models = TF2ONNX_models.split(',')
+                    } else {
+                        job_models = PT2ONNX_models.split(',')
+                    }
+                    job_models.each { job_model ->
+                        echo "-------- ${job_model} --------"
+                        dir(WORKSPACE){
+                            sh """
+                                if [[ -f ${WORKSPACE}/${job_framework}/${job_model}/summary.log ]]; then
+                                    cat ${WORKSPACE}/${job_framework}/${job_model}/summary.log >> ${WORKSPACE}/summary_all.log 
+                                else
+                                    echo "linux;Unknown;${job_framework};N/A;INT8;${job_model};Source;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary_all.log 
+                                    echo "linux;Unknown;${job_framework};N/A;FP32;${job_model};Source;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary_all.log 
+                                fi
+                            """
                         }
+                    }
                 }
             }
         }
