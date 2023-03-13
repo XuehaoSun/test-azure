@@ -1191,7 +1191,7 @@ node( sub_node_label ) {
                                 mode_list = mode_list - 'accuracy'
                                 echo "mode list is ${mode_list}"
                             }
-                            if ( framework=="tensorflow" && (model_src_dir=~'oob_models').find()){
+                            if ( framework=="tensorflow" && ((model_src_dir=~'oob_models').find() || model=="style_transfer")){
                                 new_benchmark=false
                                 inc_new_api=false
                                 echo "set new_benchmark and inc_new_api as false for tensorflow oob models"
