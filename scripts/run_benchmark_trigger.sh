@@ -235,7 +235,7 @@ function run_benchmark {
     fi
 
     parameters="${parameters} --batch_size=${batch_size} --iters=${iters}"
-    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} == *"oob_models/quantization"* ]]; then
+    if [ ${framework} == "tensorflow" ] && [[ ${model_src_dir} == *"oob_models/quantization"* ]] || [ ${model} == "style_transfer" ]; then
         parameters="${parameters} --mode=performance"
     else
         parameters="${parameters} --mode=benchmark"

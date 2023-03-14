@@ -26,12 +26,6 @@ do
             conda_env_name=`echo $i | sed "s/${PATTERN}//"`;;
         --conda_env_mode=*)
             conda_env_mode=`echo $i | sed "s/${PATTERN}//"`;;
-        --profiling=*)
-            profiling=`echo $i | sed "s/${PATTERN}//"`;;
-        --os=*)
-            os=`echo $i | sed "s/${PATTERN}//"`;;
-        --device=*)
-            device=`echo $i | sed "s/${PATTERN}//"`;;
         --multi_instance=*)
             multi_instance=`echo $i | sed "s/${PATTERN}//"`;;
         --log_level=*)
@@ -93,7 +87,6 @@ main() {
     if [ ${framework} == "tensorflow" ] && [ ${model} == "bert_base_mrpc" ]; then
         parameters="${parameters} --init_checkpoint=${origin_model}"
     fi
-    echo ${parameters}
 
     echo -e "\n[VAL INFO] Start run function..."
     case ${mode} in
@@ -157,6 +150,8 @@ function run_benchmark {
     fi
 
     echo -e "\n[VAL INFO] Update benchmark config in main script..."
+    export NUM_OF_INSTANCE=${num_of_instance}
+    export CORES_PER_INSTANCE=${ncores_per_instance}
     python ${WORKSPACE}/lpot-validation/scripts/update_new_api_config.py --main_script=${main_script} --iteration=${iters} --cores_per_instance=${ncores_per_instance} --num_of_instance=${num_of_instance}
 
     echo -e "\n[VAL INFO] Pass parameter iters for b_func models benchmark..."

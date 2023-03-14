@@ -398,8 +398,6 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
             --multi_instance=${multi_instance} \
             --conda_env_name=${conda_env_name} \
             --conda_env_mode=${conda_env_mode} \
-            --os=${os} \
-            --device=${device} \
             --log_level=${log_level} \
             --itex_mode=${itex_mode} \
             --main_script=${main_script} 2>&1 | tee ${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
@@ -1193,7 +1191,7 @@ node( sub_node_label ) {
                                 mode_list = mode_list - 'accuracy'
                                 echo "mode list is ${mode_list}"
                             }
-                            if ( framework=="tensorflow" && (model_src_dir=~'oob_models').find()){
+                            if ( framework=="tensorflow" && ((model_src_dir=~'oob_models').find() || model=="style_transfer")){
                                 new_benchmark=false
                                 inc_new_api=false
                                 echo "set new_benchmark and inc_new_api as false for tensorflow oob models"

@@ -240,8 +240,36 @@ def benchmark(bench_info){
             --batch_size=${bench_info.batch_size} \
             --multi_instance=true \
             --conda_env_name=${conda_env_name} \
-            --main_script=${bench_info.main_script} 2>&1 | tee ${framework}-${model_name}-${precision}-${save_mode}.log
+            --tokenizer="${bench_info.tokenizer}" \
+            --main_script=${bench_info.main_script} \
+            2>&1 | tee ${framework}-${model_name}-${precision}-${save_mode}.log
         """
+    if (save_mode=="throughput"){
+        dir("${WORKSPACE}"){
+            withEnv([
+                    "framework=${framework}",
+                    "model_name=${model_name}",
+                    "precision=${precision}",
+                    "save_mode=${save_mode}",
+                    "multi_instance=true"]) {
+                sh '''#!/bin/bash -x
+                    benchmark_log=${framework}-${model_name}-${precision}-${save_mode}.log
+                    control_phrase="Throughput: "
+                    real_instance_num=$(grep "${control_phrase}" ${benchmark_log} | wc -l)
+                    num_of_instance=1
+                    if [[ "${multi_instance}" == "true" ]]; then
+                        ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cut -d: -f2 | xargs echo -n)}
+                        ncores_per_instance=4
+                        num_of_instance=$((ncores_per_socket/ncores_per_instance))
+                    fi
+                    if [[ ${real_instance_num} != ${num_of_instance} ]];then
+                        echo "Error: benchmark crashed with some instance!!!"
+                        exit 1
+                    fi
+                '''
+            }
+        }
+    }
 }
 
 def log_collect(){
@@ -339,8 +367,11 @@ node( sub_node_label ){
                 def _pt_ver="${pytorch_version}"
                 def _ort_ver="${onnxruntime_version}"
                 def _onnx_ver="${onnx_version}"
-
-                conda_env_name="inc-export-test-tf${_tf_ver}-pt${_pt_ver}-ort${_ort_ver}"
+                def device='unknown'
+                if (env.CPU_NAME != null){
+                    device = env.CPU_NAME
+                }
+                conda_env_name="inc-export-test-tf${_tf_ver}-pt${_pt_ver}-ort${_ort_ver}-${device}"
                 create_conda_env(_tf_ver,_pt_ver,_ort_ver,_onnx_ver)
             }else{
                 println("Test need a special local conda env, DO NOT create again!!!")
@@ -377,8 +408,9 @@ node( sub_node_label ){
                                    "benchmark_mode": mode,
                                    "model_src_dir": fp32_model_info.model_src_dir,
                                    "batch_size": (mode=="performance") ? "1":"${fp32_model_info.batch_size}",
-                                   "main_script": fp32_model_info.main_script,
-                                   "dataset_location": fp32_model_info[( fwk=="Source" )?"source_model_dataset":"target_model_dataset"]])
+                                   "main_script": (fwk=="Target")&&(frameworks=='PT2ONNX')? "onnx_evaluation.py":fp32_model_info.main_script,
+                                   "dataset_location": fp32_model_info[( fwk=="Source" )?"source_model_dataset":"target_model_dataset"],
+                                   "tokenizer": (fwk=="Target")&&(frameworks=='PT2ONNX')? fp32_model_info.input_model: ""])
                     }
                 }
             }
