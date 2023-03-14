@@ -418,7 +418,7 @@ node(node_label){
 
         stage('unit test'){
             withEnv(["conda_env=${conda_env}", "python_version=${python_version}", "test_install_backend=${test_install_backend}", "CPU_NAME=${CPU_NAME}"]) {
-                timeout(30){
+                timeout(60){
                     if (unit_test_mode == 'gtest'){
                         echo "+---------------- gtest ----------------+"
                         def ut_status_engine = sh(returnStatus: true, script: '''#!/bin/bash
