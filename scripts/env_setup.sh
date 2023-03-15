@@ -19,6 +19,8 @@ do
             log_level=`echo $i | sed "s/${PATTERN}//"`;;
         --itex_mode=*)
             itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
+        --is_gpu=*)
+            is_gpu=`echo $i | sed "s/${PATTERN}//"`;;
         --install_inc=*)
             install_inc=`echo $i | sed "s/${PATTERN}//"`;;
         --install_nlp_toolkit=*)
@@ -28,7 +30,7 @@ do
         --inc_version=*)
             inc_version=`echo $i | sed "s/${PATTERN}//"`;;
         --itrex_version=*)
-            itrex_version=`echo $i | sed "s/${PATTERN}//"`;;    
+            itrex_version=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -50,6 +52,14 @@ function set_TF_env {
     if [[ "${itex_mode}" == "native" ]]; then
         echo "export ITEX_ONEDNN_GRAPH=0 ..."
         export ITEX_ONEDNN_GRAPH=0
+    elif [[ "${itex_mode}" == "onednn_graph" ]]; then
+        echo "export ITEX_ONEDNN_GRAPH=1 ..."
+        export ITEX_ONEDNN_GRAPH=1
+    fi
+
+    if [[ "${is_gpu}" == "true" ]]; then
+        echo "export ONEDNN_VERBOSE=1 ..."
+        export ONEDNN_VERBOSE=1
         compiler_path=${HOME}/intel/oneapi/compiler/latest/env/vars.sh
         if [ -f "${compiler_path}" ]; then
             source ${compiler_path}
@@ -62,9 +72,6 @@ function set_TF_env {
         if [ -f "${mkl_path}" ]; then
             source ${mkl_path}
         fi
-    elif [[ "${itex_mode}" == "onednn_graph" ]]; then
-        echo "export ITEX_ONEDNN_GRAPH=1 ..."
-        export ITEX_ONEDNN_GRAPH=1
     fi
 
     tf_version=$(python -c "import tensorflow as tf; print(tf.__version__)")

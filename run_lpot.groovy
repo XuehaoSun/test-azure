@@ -400,6 +400,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
             --conda_env_mode=${conda_env_mode} \
             --log_level=${log_level} \
             --itex_mode=${itex_mode} \
+            --is_gpu=${is_gpu} \
             --main_script=${main_script} 2>&1 | tee ${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
         """
 
