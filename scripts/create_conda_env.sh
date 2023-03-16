@@ -347,13 +347,12 @@ if [[ "${install_ipex}" == "true" ]]; then
                 3.10)
                     ipex_whl="https://github.com/intel/intel-extension-for-pytorch/releases/download/v1.13.100%2Bcpu/intel_extension_for_pytorch-1.13.100-cp310-cp310-manylinux2014_x86_64.whl";;
             esac
-            [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.13.100 -f https://software.intel.com/ipex-whl-stable";;    
-        
+            [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}" || install_params="torch_ipex==1.13.100 -f https://software.intel.com/ipex-whl-stable";;
         "nightly")
             case "${python_version}" in
                  3.8)
-                    ipex_whl="intel_extension_for_pytorch*.whl";;
-             esac
+                    ipex_whl=${WORKSPACE}/"intel_extension_for_pytorch*.whl";;
+            esac
             [[ ! -z "${ipex_whl}" ]] && install_params="${ipex_whl}"
     esac
     if [[ ! -z ${install_params} ]]; then

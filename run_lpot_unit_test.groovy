@@ -121,8 +121,8 @@ if ('pyt_binary_build_job' in params && params.pyt_binary_build_job != ''){
 }
 echo "pyt_binary_build_job: ${pyt_binary_build_job}"
 
-lines_coverage_threshold = 80
-branches_coverage_threshold = 75
+lines_coverage_threshold = 85
+branches_coverage_threshold = 80
 
 
 def cleanup() {
@@ -400,6 +400,7 @@ def run_coverage_test(is_base=false, MR_branch=""){
                     echo "re-install horovod resolve the issue with fwk..."
                     pip uninstall horovod -y
                     pip install --no-cache-dir horovod
+                    pip install protobuf==3.20.3
                     echo "-------------"
                     pip list | tee -a ${ut_log_name}
                     ${numa_prefix} bash run_itex.sh 2>&1 | tee -a ${ut_log_name}
@@ -414,7 +415,7 @@ def run_coverage_test(is_base=false, MR_branch=""){
                 ''')
                 if (ut_status != 0) {
                     currentBuild.result = 'FAILURE'
-                    error("Unit test failed!")
+                    println("Unit test failed!")
                 }
             }
         }  
@@ -576,11 +577,9 @@ node(node_label){
                     if (MR_source_branch == "") {
                         try {
                             if (lines_coverage < lines_coverage_threshold) {
-                                println("Lines coverage below threshold!")
                                 error("Lines coverage below threshold!")
                             }
                             if (branches_coverage < branches_coverage_threshold) {
-                                println("Branches coverage below threshold!")
                                 error("Branches coverage below threshold!")
                             }
                             echo "Writing SUCCESS to file: ${WORKSPACE}/coverage_status.txt"
@@ -751,7 +750,7 @@ node(node_label){
                         }
                         if (ut_status != 0) {
                             currentBuild.result = 'FAILURE'
-                            error("Unit test extension failed!")
+                            println("Unit test extension failed!")
                         }
                     }
                 }

@@ -34,6 +34,8 @@ do
              itex_mode=`echo $i | sed "s/${PATTERN}//"`;;
         --main_script=*)
              main_script=`echo $i | sed "s/${PATTERN}//"`;;
+        --is_gpu=*)
+             is_gpu=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -45,7 +47,7 @@ main() {
     echo -e "\n[VAL INFO] Setting environment..."
     source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
         --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} \
-        --itex_mode=${itex_mode}
+        --itex_mode=${itex_mode} --is_gpu=${is_gpu}
     set_environment
 
     # set gcc for ace machine
@@ -127,11 +129,6 @@ function run_benchmark {
     numactl --hardware
     ncores_per_instance=${ncores_per_socket}
     iters=500
-
-    single_instance=("3dunet" "centernet_hg104" "GPT2" "dlrm" "dlrm_fx" "dlrm_ipex" "gpt_j_wikitext")
-    if [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
-        multi_instance="false"
-    fi
 
     if [ "${multi_instance}" == "true" ]; then
         ncores_per_instance=4

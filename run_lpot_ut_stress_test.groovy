@@ -376,18 +376,18 @@ node(node_label){
             run_ut_scripts = "${WORKSPACE}/lpot-models/test/run.sh"
             run_tfnewapi_scripts = "${WORKSPACE}/lpot-models/test/run_tfnewapi.sh"
             run_itex_scripts = "${WORKSPACE}/lpot-models/test/run_itex.sh"
+            writeFile file: run_tfnewapi_scripts, text: ""
+            writeFile file: run_itex_scripts, text: ""
+            writeFile file: run_ut_scripts, text: ""
 
             ut_cases.each{ ut_case ->
                 if ((ut_case=~"tfnewapi").find()) {
-                    writeFile file: run_tfnewapi_scripts, text: ""
                     run_ut_context = readFile file: run_tfnewapi_scripts
                     writeFile file: run_tfnewapi_scripts, text: run_ut_context + "python " + ut_case + "\n"
                 }else if ((ut_case=~"itex").find()){
-                    writeFile file: run_itex_scripts, text: ""
                     run_ut_context = readFile file: run_itex_scripts
                     writeFile file: run_itex_scripts, text: run_ut_context + "python " + ut_case + "\n"
                 }else{
-                    writeFile file: run_ut_scripts, text: ""
                     run_ut_context = readFile file: run_ut_scripts
                     writeFile file: run_ut_scripts, text: run_ut_context + "python " + ut_case + "\n"
                 }
@@ -506,12 +506,40 @@ node(node_label){
                             cat ${run_ut_scripts}
                             bash ${run_ut_scripts} 
                         fi
+                        
                         if [ -f "${run_tfnewapi_scripts}" ]; then
+                            echo "---------- Run TF newAPI -----------------"
                             sed -i 's,python ,coverage run --source='"${lpot_path}"' --append ,g' ${run_tfnewapi_scripts}
                             cat ${run_tfnewapi_scripts}
+                            pip uninstall horovod -y
+                            pip uninstall intel-tensorflow -y
+                            pip uninstall tensorflow -y
                             pip install ${WORKSPACE}/tensorflow*.whl
-                            bash ${run_tfnewapi_scripts}
+                            if [ $? == 1 ]; then
+                               exit 1
+                            fi
+                            echo "re-install horovod resolve the issue with fwk..."
+                            pip install --no-cache-dir horovod
+                            bash ${run_tfnewapi_scripts}  
                         fi
+                    
+                        if [ -f "${run_itex_scripts}" ]; then
+                            echo "---------- Run ITEX -----------------"
+                            sed -i 's,python ,coverage run --source='"${lpot_path}"' --append ,g' ${run_itex_scripts}
+                            cat ${run_itex_scripts}
+                            pip uninstall horovod -y
+                            pip uninstall intel-tensorflow -y
+                            pip uninstall tensorflow -y
+                            pip install tensorflow
+                            pip install intel-extension-for-tensorflow[cpu]
+                            if [ $? == 1 ]; then
+                               exit 1
+                            fi
+                            echo "re-install horovod resolve the issue with fwk..."
+                            pip install --no-cache-dir horovod
+                            bash ${run_itex_scripts}
+                        fi
+                        
                         coverage report -m
                         coverage html -d ${WORKSPACE}/coverage_results/htmlcov
                         coverage xml -o ${WORKSPACE}/coverage_results/coverage.xml

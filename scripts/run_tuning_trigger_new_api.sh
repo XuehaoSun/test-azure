@@ -54,7 +54,7 @@ main() {
     echo -e "\n[VAL INFO] Setting environment..."
     source ${WORKSPACE}/lpot-validation/scripts/env_setup.sh --framework=${framework} --model=${model} \
          --conda_env_name=${conda_env_name} --conda_env_mode=${conda_env_mode} --log_level=${log_level} \
-         --itex_mode=${itex_mode} --install_inc="true"
+         --itex_mode=${itex_mode} --install_inc="true" --is_gpu=${is_gpu}
     set_environment
 
     # set gcc for ace machine
