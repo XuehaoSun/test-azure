@@ -475,7 +475,8 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --conda_env_name=${conda_env_name} \
                     --conda_env_mode=${conda_env_mode} \
                     --log_level=${log_level} \
-                    --itex_mode=${itex_mode}
+                    --itex_mode=${itex_mode}\
+                    --is_gpu=${is_gpu}
                 set_environment
                 echo "=================================="
 
