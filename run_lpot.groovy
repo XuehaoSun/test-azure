@@ -374,6 +374,8 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     }else{
         batch_size = default_batch_size
     }
+    def single_instance_model_list = ["3dunet", "centernet_hg104", "GPT2", "dlrm", "dlrm_fx", "dlrm_ipex", "gpt_j_wikitext"]
+    multi_instance = (single_instance_model_list.contains(model))? false: multi_instance
 
     if (inc_new_api == true){
         echo "Running ---- ${framework},${model},${precision},${mode},inc_new_api ---- Benchmarking"
@@ -418,7 +420,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                         "multi_instance=${multi_instance}"]) {
                     sh '''#!/bin/bash -x
                     benchmark_log=${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
-                    control_phrase="Throughput: "
+                    control_phrase="[T,t]hroughput: "
                     real_instance_num=$(grep "${control_phrase}" ${benchmark_log} | wc -l)
                     num_of_instance=1
                     if [[ "${multi_instance}" == "true" ]]; then
@@ -1179,7 +1181,7 @@ node( sub_node_label ) {
             
             if (!tune_only) {
                 timeout(720) {
-                    stage("Performance") {
+                    stage("Benchmark") {
                         println("==========run benchmark========")
                         tf_perf_only_list = ['style_transfer']
                         onnx_perf_only_list = ['unet']

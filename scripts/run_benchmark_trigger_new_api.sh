@@ -130,11 +130,6 @@ function run_benchmark {
     ncores_per_instance=${ncores_per_socket}
     iters=500
 
-    single_instance=("3dunet" "centernet_hg104" "GPT2" "dlrm" "dlrm_fx" "dlrm_ipex" "gpt_j_wikitext")
-    if [[ " ${single_instance[@]} " =~ " ${model} " ]]; then
-        multi_instance="false"
-    fi
-
     if [ "${multi_instance}" == "true" ]; then
         ncores_per_instance=4
     fi

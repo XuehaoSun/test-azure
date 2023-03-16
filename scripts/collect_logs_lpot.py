@@ -222,11 +222,11 @@ def parse_perf_line(mode: str, line: str) -> dict:
     if batch_size and batch_size.group(1):
         perf_data.update({"batch_size": int(batch_size.group(1))})
 
-    throughput = re.search(r"Throughput:\s+(\d+(\.\d+)?)", line)
+    throughput = re.search(r"[T,t]hroughput:\s+(\d+(\.\d+)?)", line)
     if throughput and throughput.group(1):
         perf_data.update({"throughput": float(throughput.group(1))})
 
-    latency = re.search(r"Latency:\s+(\d+(\.\d+)?)", line)
+    latency = re.search(r"[L,l]atency:\s+(\d+(\.\d+)?)", line)
     if latency and latency.group(1):
         perf_data.update({"latency": float(latency.group(1))})
 
