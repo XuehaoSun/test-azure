@@ -151,7 +151,7 @@ def run_benchmark(input_model, topology):
         )
 
     cmd = get_executable("benchmark")
-    if args.framework == "pytorch":
+    if args.framework == "pytorch" and args.model == "distilbert_base_MRPC":
         cmd = ["python", "-u", "run_glue_tune.py"]
     if args.framework == "tensorflow" and "oob_models" in args.model_src_dir:
         cmd = ["python", "tf_benchmark.py"]
@@ -215,8 +215,6 @@ def get_windows_parameters(framework: str, input_model: str, model: str, topolog
                 "--arch", f"{topology}",
                 "--batch-size", f"{batch_size}",
                 "--tuned_checkpoint", "saved_results",
-                "--iter", f"{iters}",
-                "--performance",
             ]
         }
     }
@@ -229,8 +227,10 @@ def get_windows_parameters(framework: str, input_model: str, model: str, topolog
     if framework == "pytorch":
         if precision == "int8":
             parameters.append("--int8")
+        if mode == "accuracy":
+            parameters.append("--accuracy")
         else:
-            parameters.append("--benchmark")
+            parameters.append("--performance")
             if model in ["resnet18_fx", "resnet50"]:
                 parameters.extend(["--iter", f"{iters}"])
         if model in ["resnet18_fx", "resnet50"]:
