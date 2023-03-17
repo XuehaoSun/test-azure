@@ -221,7 +221,7 @@ def get_windows_parameters(framework: str, model: str, topology: str, q_model: s
                 "--arch", f"{topology}",
                 "--batch-size", "30",
                 "--tune",
-                "--tuned_checkpoint", f"{q_model}",
+                "--tuned_checkpoint", f"saved_results",
                 f"{dataset_location}"
             ],
             "resnet18_ipex": [
@@ -229,7 +229,7 @@ def get_windows_parameters(framework: str, model: str, topology: str, q_model: s
                 "--arch", f"{topology}",
                 "--batch-size", "30",
                 "--ipex",
-                "--tuned_checkpoint", f"{q_model}",
+                "--tuned_checkpoint", f"saved_results",
                 f"{dataset_location}"
             ],
             "efficientnet_b0_fx": [
@@ -237,7 +237,7 @@ def get_windows_parameters(framework: str, model: str, topology: str, q_model: s
                 "--arch", f"{topology}",
                 "--batch-size", "30",
                 "--tune",
-                "--tuned_checkpoint", f"{q_model}",
+                "--tuned_checkpoint", f"saved_results",
                 f"{dataset_location}"
             ]
         }
