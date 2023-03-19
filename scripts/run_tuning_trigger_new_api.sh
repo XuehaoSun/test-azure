@@ -251,24 +251,28 @@ function install_model_deps {
     fi
 
     if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == *"3dunet"* ]]; then
-        # Install mlperf_loadgen
-        pip install absl-py
-        if [[ ${model} == '3dunet' ]] && [[ ${python_version} != "3.10" ]]; then
-            mlperf_loadgen_whl=/tf_dataset/pytorch/mlperf_3dunet/mlperf_loadgen-0.5a0-cp${python_version//./}-*.whl
-            pip install ${mlperf_loadgen_whl}
-        elif [[ ${model} == '3dunet' ]] && [[ ${python_version} == "3.10" ]]; then
-            git clone https://github.com/mlcommons/inference.git --recursive
-            cd inference/loadgen
-            python setup.py install
-            cd -
-        fi
 
         # Install nnUnet
-        cd nnUnet
-        pip install -r requirements.txt
-        setup_install_pypi_source
+        git clone https://github.com/MIC-DKFZ/nnUNet.git --recursive
+        cd nnUNet/
+        git checkout b38c69b345b2f60cd0d053039669e8f988b0c0af
         python setup.py install
         cd ..
+
+        # Install mlperf_loadgen
+        mlperf_loadgen_whl="/tf_dataset/pytorch/mlperf_3dunet/mlperf_loadgen-0.5a0-cp${python_version//./}-*.whl"
+        if [[ -f ${mlperf_loadgen_whl} ]]; then
+            pip install ${mlperf_loadgen_whl}
+        else
+            git clone https://github.com/mlcommons/inference.git --recursive
+            cd inference
+            git checkout b7e8f0da170a421161410d18e5d2a05d75d6bccf
+            cd loadgen
+            pip install absl-py
+            python setup.py install
+            cd ../..
+        fi
+
         # Workaround for problem with passing dataset location
         mkdir ${model_src_dir}/build
         for dirname in `ls ${dataset_location}`
@@ -284,10 +288,27 @@ function install_model_deps {
         export nnUNet_preprocessed=${dataset_location}
         export RESULTS_FOLDER=${model_src_dir}/build/result
     fi
+
     if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "maskrcnn"* ]]; then
         echo "Checking gcc version:"
         gcc -v
         bash install.sh
+    fi
+
+    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "resnest50"* ]]; then
+        git clone https://github.com/zhanghang1989/ResNeSt.git
+        cd ResNeSt
+        git checkout 1dfb3e8867e2ece1c28a65c9db1cded2818a2031
+        python setup.py install
+        cd ..
+    fi
+
+    if [[ "${framework}" == "pytorch" ]] && [[ "${model}" == "se_resnext50_32x4d"* ]]; then
+        git clone https://github.com/Cadene/pretrained-models.pytorch.git
+        cd pretrained-models.pytorch
+        git checkout 8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0
+        python setup.py install
+        cd ..
     fi
 
     if [[ -f "prepare_loadgen.sh" ]]; then
