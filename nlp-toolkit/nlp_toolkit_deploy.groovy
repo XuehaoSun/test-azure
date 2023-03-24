@@ -347,6 +347,9 @@ def runPerfTest(mode, precision, benchmark_cmd, output_path="${WORKSPACE}") {
                 v = "${working_dir_fullpath}/${v}/${precision}-model.onnx"
             } 
         }
+        if (k == "ir_path") {
+            v = "${working_dir_fullpath}/${precision}_ir"
+        }
         if (k == "batch_size" && batch_size != 0){
             v = batch_size
         }
@@ -499,6 +502,14 @@ def prepare_models(local_precision, prepare_cmd) {
         if (k == "input_model") {
             if ("${USER_NAME}" == "sdp" || "${USER_NAME}" == "SDP") {
                 v = hf_model_name
+            }
+            if (model == "stable_diffusion") {
+                withEnv(["model_path=${v}", "working_dir_fullpath=${working_dir_fullpath}"]) {
+                    sh '''#!/bin/bash -x
+                    cp -r "${model_path}" "${working_dir_fullpath}/"
+                    '''
+                }
+                v = "${working_dir_fullpath}/stable-diffusion"
             }
         }
         local_prepare_cmd += " --${k}=${v}" 
