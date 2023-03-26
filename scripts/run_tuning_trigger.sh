@@ -83,7 +83,14 @@ main() {
               sed -i '/torch==/d;/torch$/d;/torchvision==/d;/torchvision$/d' requirements.txt
               if [[ $(grep "torchaudio" requirements.txt | wc -l) != 0 ]]; then
                 pt_version=$(python -c "import torch; print(torch.__version__)")
-                torchaudio_version="0.$(echo $pt_version| cut -d'.' -f2).$(echo $pt_version| cut -d'.' -f3)"
+                if [[ $(echo $pt_version| cut -d'.' -f1) == 1 ]]; then
+                    torchaudio_version="0.$(echo $pt_version| cut -d'.' -f2).$(echo $pt_version| cut -d'.' -f3)"
+                elif [[ "${pt_version}" = "2.0"* ]]; then
+                    torchaudio_version='2.0.1'
+                else
+                    torchaudio_version=$pt_version
+                fi
+
                 pip install torchaudio=="$torchaudio_version" -f https://download.pytorch.org/whl/torch_stable.html
                 sed -i '/torchaudio/d' requirements.txt
               fi
