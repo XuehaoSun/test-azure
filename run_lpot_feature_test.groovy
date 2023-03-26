@@ -182,6 +182,9 @@ node( sub_node_label ){
                 for (param in featureConf) {
                     args += "--${param.key}=${param.value}"
                 }
+                sh """#!/bin/bash
+                    echo ${CPU_NAME} > ${WORKSPACE}/cpu_name.log
+                """
                 withEnv([
                         "feature_name=${feature_name}",
                         "python_version=${python_version}",
@@ -194,9 +197,6 @@ node( sub_node_label ){
                         ./lpot-validation/scripts/feature_test/test/test_${feature_name}.sh --python_version=${python_version} ${args}
                     '''
                 }
-                sh """#!/bin/bash
-                    echo ${CPU_NAME} > ${WORKSPACE}/cpu_name.log
-                """
             }
         }
 

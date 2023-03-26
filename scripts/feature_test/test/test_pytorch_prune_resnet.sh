@@ -18,15 +18,19 @@ function main {
     lpot_install
 
     # Run Pytorch Prune test 
-    cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/pruning/magnitude/eager
+    cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/ResNet50/pruning/eager
     if [ -f "requirements.txt" ]; then
       pip install cmake
       pip install --no-cache-dir -r requirements.txt
       echo "pip list after install requirements..."
     fi
-    pip install protobuf==3.20.1
     pip list
-    python main.py /tf_dataset/pytorch/ImageNet/raw --topology resnet18 --prune --pretrained --pruning_type magnitude --initial_sparsity 0.0 --target_sparsity 0.40 --start_epoch 0 --end_epoch 2 --output-model model_final.pth --batch-size 256 --keep-batch-size --lr 0.001 --iteration 30 --epochs 3 2>&1 | tee ${WORKSPACE}/pytorch_prune_resnet.log
+    sed -i "s|/path/to/your/dataset/|/tf_dataset/pytorch/ImageNet/raw|g" run_resnet50_prune.sh
+    sed -i "s|epochs.*\\\|epochs 6 \\\|g" run_resnet50_prune.sh
+    sed -i "s|.\/path\/to\/your\/models\/|.\/output|g" run_resnet50_prune.sh
+    echo "cat run_resnet50_prune.sh..." 2>&1 | tee ${WORKSPACE}/pytorch_prune_resnet.log
+    cat run_resnet50_prune.sh 2>&1 | tee -a ${WORKSPACE}/pytorch_prune_resnet.log
+    bash run_resnet50_prune.sh 2>&1 | tee -a ${WORKSPACE}/pytorch_prune_resnet.log
 
 }
 

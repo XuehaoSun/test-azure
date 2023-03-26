@@ -30,9 +30,16 @@ function main {
     done
 
     pip list
+    pt_version=$(python -c "import torch; print(torch.__version__)")
+    if [[ $(echo $pt_version| cut -d'.' -f1) == 2 ]]; then
+        cmd_prefix="torchrun --nnodes 1 --nproc_per_node 8 "
+    else
+        cmd_prefix="python -m torch.distributed.launch --nproc_per_node 8 --nnodes 1 --node_rank 0 "
+    fi
+
     #stage 1
     [[ ! -d ${WORKSPACE}/stage1_output ]] && mkdir -p ${WORKSPACE}/stage1_output_ddp
-    python -m torch.distributed.launch --nproc_per_node 8 --nnodes 1 --node_rank 0 \
+      ${cmd_prefix} \
       run_qa_no_trainer_pruneOFA.py --dataset_name squad \
       --model_name_or_path Intel/bert-base-uncased-sparse-90-unstructured-pruneofa \
       --teacher_model_name_or_path csarron/bert-base-uncased-squad-v1 \
@@ -43,7 +50,7 @@ function main {
       --max_predict_samples 50 2>&1 | tee ${WORKSPACE}/pytorch_prune_OFA_DDP_stage1.log
     #stage 2
     [[ ! -d ${WORKSPACE}/stage2_output ]] && mkdir -p ${WORKSPACE}/stage2_output_ddp
-    python -m torch.distributed.launch --nproc_per_node=8 --nnodes=1 --node_rank=0  \
+      ${cmd_prefix} \
       run_qa_no_trainer_pruneOFA.py --dataset_name squad \
       --model_name_or_path Intel/bert-base-uncased-sparse-90-unstructured-pruneofa  \
       --teacher_model_name_or_path csarron/bert-base-uncased-squad-v1  \
@@ -59,7 +66,7 @@ function main {
 function create_conda_env {
 
     if [[ -z ${python_version} ]]; then
-        python_version=3.7  # Set python 3.7 as default
+        python_version=3.8  # Set python 3.7 as default
     fi
 
     conda_env_name=pytorch_prune_OFA_DDP-py${python_version}
@@ -77,7 +84,6 @@ function create_conda_env {
         n=$((n+1))
         sleep 5
     done
-    pip install protobuf==3.20.1
     pip list
 
     if [ ! -d ${WORKSPACE}/lpot-models ]; then

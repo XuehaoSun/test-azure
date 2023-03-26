@@ -9,14 +9,11 @@ timeout_log="${WORKSPACE}/${feature_name}/test_timeout_.log"
 
 # fetch valie
 test_status="check"
-exit_label=$(grep -c 'Specified timeout or max trials is reached' ${timeout_log})
-
-best_acc_lpot=$(grep "Best tune result is:" ${timeout_log} |tail -1 |sed 's/.*Accuracy://;s/,.*//;s/ //g')
+exit_label=$(grep -c '\[ERROR\] Specified timeout or max trials is reached! Not found any quantized model which meet accuracy goal.' ${timeout_log})
 
 # get result
-if [ ${exit_label} -eq 1 ] && [ "${best_acc_lpot}" ];then
+if [ ${exit_label} -eq 1 ];then
     test_status="pass"
 fi
-
 
 echo "${CPU_NAME};timeout_function_test;${test_status};${BUILD_URL}artifact/${feature_name}" | tee -a ${summaryLog}
