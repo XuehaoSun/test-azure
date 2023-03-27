@@ -7,5 +7,8 @@
     },
     "pytorch_blendcnn_distillation": {
         "dataset_location": "/tf_dataset2/datasets/blendcnn-distilling"
+    },
+    "timeout_func": {
+        "dataset_location": "/tf_dataset/dataset/TF_mini_imagenet"
     }
 }

@@ -10,6 +10,8 @@ PATTERN='[-a-zA-Z0-9_]*='
 for i in "$@"
 do
     case $i in
+        --dataset_location=*)
+            dataset_location=`echo $i | sed "s/${PATTERN}//"`;;
         --python_version=*)
             python_version=`echo $i | sed "s/${PATTERN}//"`;;
         *)
@@ -29,38 +31,18 @@ function main {
   create_conda_env 2.11.0
   lpot_install
 
-  # old api example repo
-  cd ${WORKSPACE}
-  if [ ! -d "${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq" ]; then
-      git clone -b old_api_examples ${lpot_url} old-lpot-models
-      cd old-lpot-models
-      git branch 
-      mkdir -p ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq
-      cp -r ${WORKSPACE}/old-lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq/. ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq
-    fi
-
-  # 2. prepare
-  cd ${WORKSPACE}/lpot-models/examples/tensorflow/image_recognition/tensorflow_models/quantization/ptq || return
-  input_model="/tf_dataset/pre-trained-models/resnet50v1_5/fp32/resnet50_v1.pb"
-  quantized_model="./models/quantized_resnet50_v1.pb"
-  yaml="resnet50_v1_5.yaml"
-  dataset="/tf_dataset/dataset/TF_Imagenet_Mini_val"
-
   # 5. test for timeout function
   test_timeout 2>&1 | tee ${WORKSPACE}/test_timeout_.log
 }
 
 function test_timeout {
-    # update yaml
-    sed -i "s+root:.*+root: ${dataset}+g" ${yaml}
-    python ${WORKSPACE}/lpot-validation/scripts/update_yaml_config.py --yaml=${yaml} --timeout=300
-    echo "yaml after update timeout $1 ...."
-    cat ${yaml}
-    # run
-    bash run_tuning.sh --input_model=${input_model} --output_model=${quantized_model} --config=${yaml}
-    if [ -f ${quantized_model} ];then
-       bash run_benchmark.sh --config=${yaml} --mode=accuracy --input_model=${quantized_model}
-    fi
+    cd ${WORKSPACE}/lpot-models/examples/helloworld/tf_example1
+    cp /tf_dataset/examples_helloworld/example1/mobilenet_v1_1.0_224_frozen.pb .
+    sed -i 's|import PostTrainingQuantConfig|import PostTrainingQuantConfig, TuningCriterion, AccuracyCriterion|g' test.py
+    sed -i 's|PostTrainingQuantConfig(|PostTrainingQuantConfig(tuning_criterion=TuningCriterion(timeout=30), accuracy_criterion=AccuracyCriterion(tolerable_loss=0.00001), |g' test.py
+    echo "cat test.py ... "
+    cat test.py
+    python test.py --dataset_location=${dataset_location}
 }
 
 function create_conda_env {
@@ -76,7 +58,6 @@ function create_conda_env {
   conda info -e
   pip install intel-tensorflow==${tensorflow_version}
   pip install ruamel.yaml==0.17.4
-  pip install protobuf==3.20.1
   pip list
 
   if [ ! -d ${WORKSPACE}/lpot-models ]; then

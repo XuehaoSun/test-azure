@@ -19,19 +19,9 @@ function main {
     create_conda_env
     lpot_install
 
-    # old api example repo
-    cd ${WORKSPACE}
-    if [ ! -d "${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager" ]; then
-        git clone -b old_api_examples ${lpot_url} old-lpot-models
-        cd old-lpot-models
-        git branch 
-        mkdir -p ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager
-        cp -r ${WORKSPACE}/old-lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager/. ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager
-    fi
-
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/eager
-    python -u main.py /tf_dataset/pytorch/ImageNet/raw/ --arch resnet50  --prune   --quantize    --pretrained   --pruning_type magnitude   --initial_sparsity 0.0   --target_sparsity 0.40   --start_epoch 0   --end_epoch 4   --epochs 5   --output-model saved_results   --batch-size 12   --keep-batch-size --lr 0.001 2>&1 | tee ${WORKSPACE}/pytorch_qat_during_prune.log
+    cd ${WORKSPACE}/lpot-models/examples/pytorch/image_recognition/torchvision_models/optimization_pipeline/qat_during_prune/fx
+    python -u main.py /tf_dataset/pytorch/ImageNet/raw/  --arch resnet50  --prune  --quantize  --pretrained  --pruning_type magnitude  --initial_sparsity 0.0   --target_sparsity 0.40   --start_epoch 0   --end_epoch 4   --epochs 5   --output-model saved_results --batch-size 256  --keep-batch-size --lr 0.001 2>&1 | tee ${WORKSPACE}/pytorch_qat_during_prune.log
 
 }
 
@@ -67,7 +57,6 @@ function create_conda_env {
     pip install pytorch-ignite
     pip install torch==${pytorch_version} -f https://download.pytorch.org/whl/torch_stable.html
     pip install torchvision==${torchvision_version} -f https://download.pytorch.org/whl/torch_stable.html
-    pip install protobuf==3.20.1
     
     if [ ! -d ${WORKSPACE}/lpot-models ]; then
         echo "\"lpot-model\" not found. Exiting..."

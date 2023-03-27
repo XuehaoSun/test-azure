@@ -7,7 +7,7 @@ echo "summaryLog: ${summaryLog}"
 CPU_NAME=$(cat "${WORKSPACE}/${feature_name}/cpu_name.log")
 test_status="check"
 
-pruned_model_score=$(grep -c "Training finished!" ${WORKSPACE}/${feature_name}/pytorch_prune_resnet.log)
+pruned_model_score=$(grep -c "Best metric:" ${WORKSPACE}/${feature_name}/pytorch_prune_resnet.log)
 
 if [[ "${pruned_model_score}" == "1" ]]; then
     test_status="pass"

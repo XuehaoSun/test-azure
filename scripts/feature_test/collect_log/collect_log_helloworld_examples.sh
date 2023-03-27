@@ -32,7 +32,7 @@ function check_tf_example_status {
     test_status=${status}
 
     if [[ "${example_number}" == 5 ]]; then
-        accuracy_count=$(grep -c 'Throughput sum: [0-9]*\.[0-9]* images/sec' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
+        accuracy_count=$(grep -c 'Throughput sum \[samples/second\].*[0-9]*\.[0-9]*' ${WORKSPACE}/${feature_name}/tf_example${example_number}.log)
         if [[ ${status} == "pass" ]] && [[ ${accuracy_count} == 1 ]]; then
             test_status="pass"
         else

@@ -19,18 +19,9 @@ function main {
     create_conda_env
     lpot_install
 
-    # old api example repo
-    cd ${WORKSPACE}
-    if [ ! -d "${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager" ]; then
-        git clone -b old_api_examples ${lpot_url} old-lpot-models
-        cd old-lpot-models
-        git branch 
-        mkdir -p ${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager
-        cp -r ${WORKSPACE}/old-lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager/. ${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager
-    fi
-
     # Run Pytorch Prune test
-    cd ${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/magnitude/eager
+    cd ${WORKSPACE}/lpot-models/examples/pytorch/nlp/huggingface_models/text-classification/pruning/eager
+
     n=0
     until [ "$n" -ge 5 ]
     do
@@ -39,7 +30,16 @@ function main {
         sleep 5
     done
     pip list
-    bash run_pruning.sh --topology=distilbert_SST-2 --data_dir=/tf_dataset/pytorch/glue_data --output_model=./model_prune --config=./conf.yaml   2>&1 | tee ${WORKSPACE}/pytorch_prune_bert.log
+
+    cd scripts
+    sed -i "s|path/to/distilbert-base-uncased-mrpc/dense_finetuned_model|/tf_dataset2/models/huggingface/distilbert-base-uncased-MRPC|g" distilbert_mrpc_4x1.sh
+    sed -i "s|python .* \\\|python ../run_glue_no_trainer.py \\\|g" distilbert_mrpc_4x1.sh
+    sed -i "s|num_train_epochs.*\\\|num_train_epochs 8 \\\|g" distilbert_mrpc_4x1.sh
+    sed -i "s|cooldown_epochs.*\\\|cooldown_epochs 4 \\\|g" distilbert_mrpc_4x1.sh
+    echo "cat distilbert_mrpc_4x1.sh..."
+    cat distilbert_mrpc_4x1.sh
+
+    bash distilbert_mrpc_4x1.sh 2>&1 | tee ${WORKSPACE}/pytorch_prune_bert.log
 
 }
 
@@ -71,7 +71,6 @@ function create_conda_env {
         echo "\"lpot-model\" not found. Exiting..."
         exit 1
     fi
-    pip install protobuf==3.20.1
     cd ${WORKSPACE}/lpot-models || return
 }
 
