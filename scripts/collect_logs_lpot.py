@@ -65,6 +65,8 @@ def get_config_tree(log_files):
         params = os.path.basename(log_file).replace(f"{args.framework}-{args.model}-", "").split("-")
         precision = params[0]
         mode = params[1]
+        if mode not in ("benchmark","throughput","performance","accuracy","benchmark_only"):
+            mode = params[3]
         if precision not in configs.keys():
             configs.update({precision: []})
         if mode not in configs.get(precision):
@@ -179,6 +181,12 @@ def read_perf_logs(precision, mode):
     )
     log_files = glob.glob(logs_pattern)
     if len(log_files) == 0:
+        logs_pattern = os.path.join(
+        args.logs_dir,
+        f"{args.framework}-{args.model}-{precision}-{os_name}-{device_name}-{mode}*",
+    )
+    log_files = glob.glob(logs_pattern)
+    if len(log_files) == 0:
         result.benchmarks.append(Measurement({
             "mode": mode,
             "precision": precision,
@@ -211,6 +219,8 @@ def read_perf_logs(precision, mode):
         throughput = [item.get("throughput", 0) for item in partials if "throughput" in item]
         if len(throughput) == len(partials):
             measurement.value = round(sum(throughput), 4)
+    if mode == "benchmark_only" and "benchmark_only" in partials[0].keys():
+        measurement.value = partials[0].get("benchmark_only")
     if mode == "accuracy" and "accuracy" in partials[0].keys():
         measurement.value = partials[0].get("accuracy")
     
@@ -218,7 +228,7 @@ def read_perf_logs(precision, mode):
 
 def parse_perf_line(mode: str, line: str) -> dict:
     perf_data = {}
-    batch_size = re.search(r"Batch size = ([0-9]+)", line)
+    batch_size = re.search(r"Batch size\s?[=,:] ([0-9]+)", line)
     if batch_size and batch_size.group(1):
         perf_data.update({"batch_size": int(batch_size.group(1))})
 
@@ -239,6 +249,9 @@ def parse_perf_line(mode: str, line: str) -> dict:
         if accuracy and accuracy.group(1):
             perf_data.update({"accuracy": float(accuracy.group(1))})
             break
+    benchmark = re.search(r".*Throughput sum .* (\d+(\.\d+)?)", line)
+    if benchmark and benchmark.group(1):
+        perf_data.update({"benchmark_only": float(benchmark.group(1))})
 
     return perf_data
 
@@ -269,7 +282,7 @@ def summarize_values(key: str, value: list):
         return round(sum(value)/len(value), 4)
     if key == "throughput":
         return round(sum(value), 4)
-    if key in ["accuracy", "batch_size"]:
+    if key in ["accuracy", "batch_size", "benchmark_only"]:
         return value[0]
 
 

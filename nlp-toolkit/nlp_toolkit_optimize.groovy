@@ -74,7 +74,7 @@ if ('precision' in params && params.precision != '') {
 precision_list = parseStrToList(precision)
 echo "Precision: ${precision}"
 
-mode = 'accuracy,throughput'
+mode = 'accuracy,throughput,benchmark_only'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
@@ -343,6 +343,14 @@ def runPerfTest(mode, precision) {
     } else {
         model_name = "${model}"
     }
+    if (framework != "pytorch" && mode == "benchmark_only") {
+        println("Only PyTorch support benchmark API")
+        return
+    }
+    if (mode == "benchmark_only" && model == "bert_base_SST-2_static_no_trainer") {
+        println("Only Trainer support benchmark API")
+        return
+    }
     def modelConf =  jsonParse(readFile("$WORKSPACE/nlp-models/examples/.config/${framework}_optimize.json"))."${model_name}"
     def benchmark_cmd = modelConf."benchmark"."cmd"
     def benchmark_params = modelConf."benchmark"."params"
@@ -360,7 +368,9 @@ def runPerfTest(mode, precision) {
         if (k == "mode"){
             if (mode == "accuracy"){
                 v = "accuracy"
-            }else{
+            } else if (mode == "benchmark_only"){
+                v = "benchmark_only"
+            } else{
                 v = "benchmark"
             }
         }
@@ -401,8 +411,8 @@ def runPerfTest(mode, precision) {
             logFile="${WORKSPACE}/${framework}-${model}-${precision}-${mode}-${os}-${cpu}"
             #echo ${benchmark_cmd} > ${logFile}_cmd.txt
             
-            if [[ ${mode} == "accuracy" ]]; then
-                echo "------------ACCURACY BENCHMARK---------"
+            if [[ ${mode} == "accuracy" ]] || [[ ${mode} == "benchmark_only" ]]; then
+                echo "------------${mode} BENCHMARK---------"
                 ${benchmark_cmd} 2>&1 | tee ${logFile}.log 
                 status=$?
                 if [ ${status} != 0 ]; then

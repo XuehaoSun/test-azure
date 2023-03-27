@@ -55,8 +55,12 @@ class Measurement(JsonSerializer):
     @property
     def simple_mode(self) -> str:
         """Get simplified mode name."""
-        if self.mode.lower() in ["throughput", "latency"]:
+        if self.mode.lower() in ["throughput", "performance"]:
             return "Performance"
+        elif self.mode.lower() == "latency":
+            return "Latency"
+        elif self.mode.lower() in ["benchmark_only", "benchmark"]:
+            return "Benchmark"
         return "Accuracy"
 
 class Result(JsonSerializer):

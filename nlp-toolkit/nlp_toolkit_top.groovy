@@ -203,7 +203,7 @@ if ('python_version' in params && params.python_version != '') {
 }
 echo "Python version: ${python_version}"
 
-mode  = 'accuracy,throughput'
+mode  = 'accuracy,throughput,benchmark_only'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }

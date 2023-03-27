@@ -717,22 +717,27 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th rowspan="2">VS</th>
                 <th rowspan="2">Tuning<br>Time(s)</th>
                 <th rowspan="2">Tuning<br>Count</th>
-                <th colspan="4">INT8/BF16</th>
-                <th colspan="4">FP32</th>
-                <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
+                <th colspan="6">INT8/BF16</th>
+                <th colspan="6">FP32</th>
+                <th colspan="3" class="col-cell col-cell1 col-cellh">Ratio</th>
           </tr>
           <tr>
                 <th>bs</th>
                 <th>imgs/s</th>
                 <th>bs</th>
+                <th>imgs/s</th>
+                <th>bs</th>
                 <th>top1</th>
 
+                <th>bs</th>
+                <th>imgs/s</th>
                 <th>bs</th>
                 <th>imgs/s</th>
                 <th>bs</th>
                 <th>top1</th>
 
                 <th class="col-cell col-cell1">Throughput<br><font size="2px">INT8/FP32>=2</font></th>
+                <th class="col-cell col-cell1">Benchmark<br><font size="2px">INT8/FP32>=2</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
           </tr>
 eof
@@ -788,7 +793,8 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th colspan="4">INT8</th>
                 <th colspan="4">FP32</th>
                 <th colspan="4">BF16</th>
-                <th colspan="2" class="col-cell col-cell1 col-cellh">Ratio</th>
+                <th colspan="4">DynamicINT8</th>
+                <th colspan="6" class="col-cell col-cell1 col-cellh">Ratio</th>
           </tr>
           <tr>
                 <th>bs</th>
@@ -806,8 +812,17 @@ cat >> ${WORKSPACE}/report.html << eof
                 <th>bs</th>
                 <th>top1</th>
 
+                <th>bs</th>
+                <th>imgs/s</th>
+                <th>bs</th>
+                <th>top1</th>
+
                 <th class="col-cell col-cell1">Throughput<br><font size="2px">INT8/FP32>=2</font></th>
                 <th class="col-cell col-cell1">Accuracy<br><font size="2px">(INT8-FP32)/FP32>=-0.01</font></th>
+                <th class="col-cell col-cell1">Throughput<br><font size="2px">BF16/FP32>=2</font></th>
+                <th class="col-cell col-cell1">Accuracy<br><font size="2px">(BF16-FP32)/FP32>=-0.01</font></th>
+                <th class="col-cell col-cell1">Throughput<br><font size="2px">DynamicINT8/FP32>=2</font></th>
+                <th class="col-cell col-cell1">Accuracy<br><font size="2px">(DynamicINT8-FP32)/FP32>=-0.01</font></th>
           </tr>
 eof
 
@@ -856,6 +871,8 @@ function generate_inference {
             fp32_acc_bs = "nan";
             fp32_acc_value = "nan";
             fp32_acc_url = "nan";
+            fp32_benchmark_value = "nan";
+            fp32_benchmark_url = "nan";
 
             int8_perf_bs = "nan";
             int8_perf_value = "nan";
@@ -863,6 +880,8 @@ function generate_inference {
             int8_acc_bs = "nan";
             int8_acc_value = "nan";
             int8_acc_url = "nan";
+            int8_benchmark_value = "nan";
+            int8_benchmark_url = "nan";
 
             bf16_perf_bs = "nan";
             bf16_perf_value = "nan";
@@ -870,6 +889,17 @@ function generate_inference {
             bf16_acc_bs = "nan";
             bf16_acc_value = "nan";
             bf16_acc_url = "nan";
+            bf16_benchmark_value = "nan";
+            bf16_benchmark_url = "nan";
+
+            dint8_perf_bs = "nan";
+            dint8_perf_value = "nan";
+            dint8_perf_url = "nan";
+            dint8_acc_bs = "nan";
+            dint8_acc_value = "nan";
+            dint8_acc_url = "nan";
+            dint8_benchmark_value = "nan";
+            dint8_benchmark_url = "nan";
         }{
             if($1 == os && $2 == platform && $3 == workflow && $4 == framework && $5 == fw_version && $7 == model) {
                 // FP32
@@ -885,6 +915,12 @@ function generate_inference {
                         fp32_acc_bs = $10;
                         fp32_acc_value = $11;
                         fp32_acc_url = $12;
+                    }
+                    // Benchmark
+                    if($9 == "Benchmark") {
+                        fp32_bench_bs = $10;
+                        fp32_bench_value = $11;
+                        fp32_bench_url = $12;
                     }
                 }
 
@@ -902,6 +938,12 @@ function generate_inference {
                         int8_acc_value = $11;
                         int8_acc_url = $12;
                     }
+                    // Benchmark
+                    if($9 == "Benchmark") {
+                        int8_bench_bs = $10;
+                        int8_bench_value = $11;
+                        int8_bench_url = $12;
+                    }
                 }
                 if($6 == "BF16") {
                     // Performance
@@ -916,13 +958,40 @@ function generate_inference {
                         bf16_acc_value = $11;
                         bf16_acc_url = $12;
                     }
+                    // Benchmark
+                    if($9 == "Benchmark") {
+                        bf16_bench_bs = $10;
+                        bf16_bench_value = $11;
+                        bf16_bench_url = $12;
+                    }
+                }
+                if($6 == "DYNAMIC_INT8") {
+                    // Performance
+                    if($9 == "Performance") {
+                        dint8_perf_bs = $10;
+                        dint8_perf_value = $11;
+                        dint8_perf_url = $12;
+                    }
+                    // Accuracy
+                    if($9 == "Accuracy") {
+                        dint8_acc_bs = $10;
+                        dint8_acc_value = $11;
+                        dint8_acc_url = $12;
+                    }
+                    // Benchmark
+                    if($9 == "Benchmark") {
+                        dint8_bench_bs = $10;
+                        dint8_bench_value = $11;
+                        dint8_bench_url = $12;
+                    }
                 }
             }
         }END {
-            printf("%s;%s;%s;%s;", int8_perf_bs,int8_perf_value,int8_acc_bs,int8_acc_value);
-            printf("%s;%s;%s;%s;", fp32_perf_bs,fp32_perf_value,fp32_acc_bs,fp32_acc_value);
-            printf("%s;%s;%s;%s;", int8_perf_url,int8_acc_url,fp32_perf_url,fp32_acc_url);
-            printf("%s;%s;%s;%s;%s;%s;", bf16_perf_bs,bf16_perf_value,bf16_perf_url,bf16_acc_bs,bf16_acc_value,bf16_acc_url);
+            printf("%s;%s;%s;%s;%s;%s;", int8_perf_bs,int8_perf_value,int8_bench_bs,int8_bench_value,int8_acc_bs,int8_acc_value);
+            printf("%s;%s;%s;%s;%s;%s;", fp32_perf_bs,fp32_perf_value,fp32_bench_bs,fp32_bench_value,fp32_acc_bs,fp32_acc_value);
+            printf("%s;%s;%s;%s;%s;%s;", int8_perf_url,int8_bench_url,int8_acc_url,fp32_perf_url,fp32_bench_url,fp32_acc_url);
+            printf("%s;%s;%s;%s;%s;%s;%s;%s;%s;", bf16_perf_bs,bf16_perf_value,bf16_perf_url,bf16_acc_bs,bf16_acc_value,bf16_acc_url,bf16_bench_bs,bf16_bench_value,bf16_bench_url);
+            printf("%s;%s;%s;%s;%s;%s;%s;%s;%s;", dint8_perf_bs,dint8_perf_value,dint8_perf_url,dint8_acc_bs,dint8_acc_value,dint8_acc_url,dint8_bench_bs,dint8_bench_value,dint8_bench_url);
         }
     ' $1
 }
@@ -947,7 +1016,7 @@ function generate_tuning_core {
 
         function show_new_last(batch, link, value, metric) {
             if(value ~/[1-9]/) {
-                if (metric == "perf") {
+                if (metric == "perf" || metric == "bench") {
                     printf("<td>%s</td> <td><a href=%s>%.2f</a></td>\n",batch,link,value);
                 } else {
                     if (value <= 1){
@@ -977,7 +1046,7 @@ function generate_tuning_core {
                     }else{
                        printf("<td rowspan=3>%.2f%</td>", target*100);
                     }
-                } else if(metric == "perf") {
+                } else if(metric == "perf" || metric == "bench") {
                     target = int8_result / fp32_result;
                     if(target >= 2) {
                        printf("<td rowspan=3 style=\"background-color:#90EE90\">%.2f</td>", target);
@@ -1047,45 +1116,79 @@ function generate_tuning_core {
             // INT8 Performance results
             int8_perf_batch=current_value[1]
             int8_perf_value=current_value[2]
-            int8_perf_url=current_value[9]
+            int8_perf_url=current_value[13]
             show_new_last(int8_perf_batch, int8_perf_url, int8_perf_value, "perf");
-
+            if (workflow == "optimize") {
+                // INT8 Bench results
+                int8_bench_batch=current_value[3]
+                int8_bench_value=current_value[4]
+                int8_bench_url=current_value[14]
+                show_new_last(int8_bench_batch, int8_bench_url, int8_bench_value, "bench");
+            }
             // INT8 Accuracy results
-            int8_acc_batch=current_value[3]
-            int8_acc_value=current_value[4]
-            int8_acc_url=current_value[10]
+            int8_acc_batch=current_value[5]
+            int8_acc_value=current_value[6]
+            int8_acc_url=current_value[15]
             show_new_last(int8_acc_batch, int8_acc_url, int8_acc_value, "acc");
 
             // FP32 Performance results
-            fp32_perf_batch=current_value[5]
-            fp32_perf_value=current_value[6]
-            fp32_perf_url=current_value[11]
+            fp32_perf_batch=current_value[7]
+            fp32_perf_value=current_value[8]
+            fp32_perf_url=current_value[16]
             show_new_last(fp32_perf_batch, fp32_perf_url, fp32_perf_value, "perf");
-
+            if (workflow == "optimize") {
+                // FP32 Bench results
+                fp32_bench_batch=current_value[9]
+                fp32_bench_value=current_value[10]
+                fp32_bench_url=current_value[17]
+                show_new_last(fp32_bench_batch, fp32_bench_url, fp32_bench_value, "bench");
+            }
             // FP32 Accuracy results
-            fp32_acc_batch=current_value[7]
-            fp32_acc_value=current_value[8]
-            fp32_acc_url=current_value[12]
+            fp32_acc_batch=current_value[11]
+            fp32_acc_value=current_value[12]
+            fp32_acc_url=current_value[18]
             show_new_last(fp32_acc_batch, fp32_acc_url, fp32_acc_value, "acc");
 
             // BF16 Performance results
             if (workflow == "deploy") {
-                bf16_perf_batch=current_value[13]
-                bf16_perf_value=current_value[14]
-                bf16_perf_url=current_value[15]
+                bf16_perf_batch=current_value[19]
+                bf16_perf_value=current_value[20]
+                bf16_perf_url=current_value[21]
                 show_new_last(bf16_perf_batch, bf16_perf_url, bf16_perf_value, "perf");
-    
+
                 // BF16 Accuracy results
-                bf16_acc_batch=current_value[16]
-                bf16_acc_value=current_value[17]
-                bf16_acc_url=current_value[18]
+                bf16_acc_batch=current_value[22]
+                bf16_acc_value=current_value[23]
+                bf16_acc_url=current_value[24]
                 show_new_last(bf16_acc_batch, bf16_acc_url, bf16_acc_value, "acc");
+
+                dint8_perf_batch=current_value[28]
+                dint8_perf_value=current_value[29]
+                dint8_perf_url=current_value[30]
+                show_new_last(dint8_perf_batch, dint8_perf_url, dint8_perf_value, "perf");
+
+                // Dynamic INT8 Accuracy results
+                dint8_acc_batch=current_value[31]
+                dint8_acc_value=current_value[32]
+                dint8_acc_url=current_value[33]
+                show_new_last(dint8_acc_batch, dint8_acc_url, dint8_acc_value, "acc");
             }
             
 
             // Compare Current
             compare_current(int8_perf_value, fp32_perf_value, "perf");
+            if (workflow == "optimize") {
+                compare_current(int8_bench_value, fp32_bench_value, "bench")
+            }
             compare_current(int8_acc_value, fp32_acc_value, "acc");
+
+            if (workflow == "deploy") {
+                compare_current(bf16_perf_value, fp32_perf_value, "perf");
+                compare_current(bf16_acc_value, fp32_acc_value, "acc");
+
+                compare_current(dint8_perf_value, fp32_perf_value, "perf");
+                compare_current(dint8_acc_value, fp32_acc_value, "acc");
+            }
 
             // Last values
             split(last_values,last_value,";");
@@ -1096,39 +1199,63 @@ function generate_tuning_core {
             // Show last INT8 Performance results
             last_int8_perf_batch=last_value[1]
             last_int8_perf_value=last_value[2]
-            last_int8_perf_url=last_value[9]
+            last_int8_perf_url=last_value[13]
             show_new_last(last_int8_perf_batch, last_int8_perf_url, last_int8_perf_value, "perf");
-
+            if (workflow == "optimize") {
+                // INT8 Bench results
+                last_int8_bench_batch=last_value[3]
+                last_int8_bench_value=last_value[4]
+                last_int8_bench_url=last_value[14]
+                show_new_last(last_int8_bench_batch, last_int8_bench_url, last_int8_bench_value, "bench");
+            }
             // Show last INT8 Accuracy results
-            last_int8_acc_batch=last_value[3]
-            last_int8_acc_value=last_value[4]
-            last_int8_acc_url=last_value[10]
+            last_int8_acc_batch=last_value[5]
+            last_int8_acc_value=last_value[6]
+            last_int8_acc_url=last_value[15]
             show_new_last(last_int8_acc_batch, last_int8_acc_url, last_int8_acc_value, "acc");
 
             // Show last FP32 Performance results
-            last_fp32_perf_batch=last_value[5]
-            last_fp32_perf_value=last_value[6]
-            last_fp32_perf_url=last_value[11]
+            last_fp32_perf_batch=last_value[7]
+            last_fp32_perf_value=last_value[8]
+            last_fp32_perf_url=last_value[16]
             show_new_last(last_fp32_perf_batch, last_fp32_perf_url, last_fp32_perf_value, "perf");
-
+            if (workflow == "optimize") {
+                // FP32 Bench results
+                last_fp32_bench_batch=last_value[9]
+                last_fp32_bench_value=last_value[10]
+                last_fp32_bench_url=last_value[17]
+                show_new_last(last_fp32_bench_batch, last_fp32_bench_url, last_fp32_bench_value, "bench");
+            }
             // Show last FP32 Accuracy results
-            last_fp32_acc_batch=last_value[7]
-            last_fp32_acc_value=last_value[8]
-            last_fp32_acc_url=last_value[12]
+            last_fp32_acc_batch=last_value[11]
+            last_fp32_acc_value=last_value[12]
+            last_fp32_acc_url=last_value[18]
             show_new_last(last_fp32_acc_batch, last_fp32_acc_url, last_fp32_acc_value, "acc");
 
             if (workflow == "deploy") {
                 // Show last BF16 Performance results
-                last_bf16_perf_batch=last_value[13]
-                last_bf16_perf_value=last_value[14]
-                last_bf16_perf_url=last_value[15]
+                last_bf16_perf_batch=last_value[19]
+                last_bf16_perf_value=last_value[20]
+                last_bf16_perf_url=last_value[21]
                 show_new_last(last_bf16_perf_batch, last_bf16_perf_url, last_bf16_perf_value, "perf");
 
                 // Show last BF16 Accuracy results
-                last_bf16_acc_batch=last_value[16]
-                last_bf16_acc_value=last_value[17]
-                last_bf16_acc_url=last_value[18]
+                last_bf16_acc_batch=last_value[22]
+                last_bf16_acc_value=last_value[23]
+                last_bf16_acc_url=last_value[24]
                 show_new_last(last_bf16_acc_batch, last_bf16_acc_url, last_bf16_acc_value, "acc");
+
+                // Show last dynamic int8 Performance results
+                last_dint8_perf_batch=last_value[19]
+                last_dint8_perf_value=last_value[20]
+                last_dint8_perf_url=last_value[21]
+                show_new_last(last_dint8_perf_batch, last_dint8_perf_url, last_dint8_perf_value, "perf");
+
+                // Show last dynamic int8 Accuracy results
+                last_dint8_acc_batch=last_value[22]
+                last_dint8_acc_value=last_value[23]
+                last_dint8_acc_url=last_value[24]
+                show_new_last(last_dint8_acc_batch, last_dint8_acc_url, last_dint8_acc_value, "acc");
             }
 
             // current vs last
@@ -1136,21 +1263,33 @@ function generate_tuning_core {
 
             // Compare INT8 Performance results
             compare_result(int8_perf_value, last_int8_perf_value,"perf");
-            
+            if (workflow == "optimize") {
+                compare_result(int8_bench_value, last_int8_bench_value,"bench");
+            }
             // Compare INT8 Accuracy results
             compare_result(int8_acc_value, last_int8_acc_value, "acc");
 
             // Compare FP32 Performance results
             compare_result(fp32_perf_value, last_fp32_perf_value, "perf");
-
+            if (workflow == "optimize") {
+                compare_result(fp32_bench_value, last_fp32_bench_value, "bench")
+            }
             // Compare FP32 Performance results
             compare_result(fp32_acc_value, last_fp32_acc_value, "acc");
 
-            // Compare BF16 Performance results
-            compare_result(bf16_perf_value, last_bf16_perf_value, "perf");
+            if (workflow == "deploy") {
+                // Compare BF16 Performance results
+                compare_result(bf16_perf_value, last_bf16_perf_value, "perf")
+                // Compare BF16 Performance results
+                compare_result(bf16_acc_value, last_bf16_acc_value, "acc");
 
-            // Compare BF16 Performance results
-            compare_result(bf16_acc_value, last_bf16_acc_value, "acc");
+                // Compare dynamic int8 Performance results
+                compare_result(dint8_perf_value, last_dint8_perf_value, "perf")
+                // Compare dynamic int8 Performance results
+                compare_result(dint8_acc_value, last_dint8_acc_value, "acc");
+            }
+
+            
             
             printf("</tr>\n");
         }

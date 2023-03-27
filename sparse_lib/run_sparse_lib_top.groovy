@@ -733,6 +733,9 @@ def sendReport() {
         } else if (fileExists("report_spr.html")){
             def text_comment = readFile file: "report_spr.html"
             writeFile file: "report.html", text: text_comment 
+        } else if (fileExists("report_gpu.html")){
+            def text_comment = readFile file: "report_gpu.html"
+            writeFile file: "report.html", text: text_comment 
         }
 
         emailext subject: "${email_subject}",
