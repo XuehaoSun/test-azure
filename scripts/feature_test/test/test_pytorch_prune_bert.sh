@@ -34,7 +34,8 @@ function main {
     cd scripts
     sed -i "s|path/to/distilbert-base-uncased-mrpc/dense_finetuned_model|/tf_dataset2/models/huggingface/distilbert-base-uncased-MRPC|g" distilbert_mrpc_4x1.sh
     sed -i "s|python .* \\\|python ../run_glue_no_trainer.py \\\|g" distilbert_mrpc_4x1.sh
-    sed -i "s|num_train_epochs.*\\\|num_train_epochs 6 \\\|g" distilbert_mrpc_4x1.sh
+    sed -i "s|num_train_epochs.*\\\|num_train_epochs 8 \\\|g" distilbert_mrpc_4x1.sh
+    sed -i "s|cooldown_epochs.*\\\|cooldown_epochs 4 \\\|g" distilbert_mrpc_4x1.sh
     echo "cat distilbert_mrpc_4x1.sh..."
     cat distilbert_mrpc_4x1.sh
 
