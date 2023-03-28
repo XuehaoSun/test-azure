@@ -232,7 +232,7 @@ function install_model_deps {
                     if [[ $(echo $pt_version| cut -d'.' -f1) == 1 ]]; then
                         torchaudio_version="0.$(echo $pt_version| cut -d'.' -f2).$(echo $pt_version| cut -d'.' -f3)"
                     elif [[ "${pt_version}" = "2.0"* ]]; then
-                        torchaudio_version='2.0.1'
+                        torchaudio_version='2.0.1+cpu'
                     else
                         torchaudio_version=$pt_version
                     fi
