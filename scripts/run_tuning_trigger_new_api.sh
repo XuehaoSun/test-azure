@@ -193,7 +193,7 @@ function get_topology {
 
 function get_input_model {
     echo -e "\n[VAL INFO] [Walk around]Copy model from remote storage..."
-    if [ "${framework}" == "onnxrt" ]; then
+    if [ "${framework}" == "onnxrt" ] && [[ "${model}" != *"gpt-j-6B"* ]]; then
         if [[ "${model_src_dir}" == *"nlp"* ]]; then
             bert_dirname=$(dirname ${input_model})
             if [[ -d "${bert_dirname}/uncased_L-12_H-768_A-12" ]]; then
