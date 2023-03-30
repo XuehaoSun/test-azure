@@ -405,6 +405,7 @@ def runPerfTest(mode, precision) {
             echo "=======run benchmark======="
             [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+            export TRANSFORMERS_OFFLINE=1
             source activate ${conda_env_name}
             cd ${working_dir}
             echo "working in ${working_dir}"
@@ -858,6 +859,7 @@ node( sub_node_label ) {
                         echo "Running ---- ${framework}, ${model}----Tuning"
                         [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                         [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                        export TRANSFORMERS_OFFLINE=1
                         source activate ${conda_env_name}
                         cd ${working_dir}
                         echo "Working in ${working_dir}"

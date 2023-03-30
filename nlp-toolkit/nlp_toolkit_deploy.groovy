@@ -374,6 +374,7 @@ def runPerfTest(mode, local_precision, benchmark_cmd, output_path="${WORKSPACE}"
             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             export GLOG_minloglevel=2
+            export TRANSFORMERS_OFFLINE=1
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]];then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
@@ -503,6 +504,7 @@ def prepare_models(local_precision, prepare_cmd) {
             [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
+            export TRANSFORMERS_OFFLINE=1
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]]; then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH

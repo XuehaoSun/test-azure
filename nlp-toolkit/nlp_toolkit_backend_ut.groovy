@@ -503,6 +503,8 @@ node(node_label){
                             sh '''#!/bin/bash
                             [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                            export GLOG_minloglevel=2
+                            export TRANSFORMERS_OFFLINE=1
                             source activate ${conda_env}
                             echo "Current conda ENV is ${conda_env}..."
                             python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
@@ -541,6 +543,8 @@ node(node_label){
                                 sh '''#!/bin/bash
                                     [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                                     [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                                    export GLOG_minloglevel=2
+                                    export TRANSFORMERS_OFFLINE=1
                                     source activate ${conda_env}
                                     pip install cmake
                                     cmake_path=$(which cmake)
@@ -586,6 +590,8 @@ node(node_label){
                                 ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                                     [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                                     [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                                    export GLOG_minloglevel=2
+                                    export TRANSFORMERS_OFFLINE=1
                                     source activate ${conda_env}
                                     echo "Current conda ENV is ${conda_env}..."
 

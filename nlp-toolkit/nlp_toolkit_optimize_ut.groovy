@@ -315,6 +315,8 @@ node(node_label){
                         ut_status = sh(returnStatus: true, script: '''#!/bin/bash
                         [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                         [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                        export GLOG_minloglevel=2
+                        export TRANSFORMERS_OFFLINE=1
                         source activate ${conda_env}
                         # pip config set global.index-url https://pypi.douban.com/simple/
                         echo "Checking lpot..."
@@ -456,6 +458,8 @@ node(node_label){
                             sh '''#!/bin/bash
                             [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
+                            export GLOG_minloglevel=2
+                            export TRANSFORMERS_OFFLINE=1
                             source activate ${conda_env}
                             pip uninstall neural_compressor -y
                             pip uninstall intel_extension_for_transformers -y
@@ -622,6 +626,7 @@ node(node_label){
                             fi
                             # mute engine log
                             export GLOG_minloglevel=2
+                            export TRANSFORMERS_OFFLINE=1
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                             ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}_${python_version}.log
                             echo "cat run.sh..."
