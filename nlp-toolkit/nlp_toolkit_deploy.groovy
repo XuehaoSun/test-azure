@@ -354,14 +354,16 @@ def runPerfTest(mode, local_precision, benchmark_cmd, output_path="${WORKSPACE}"
             }
         }
         if (k == "ir_path") {
-            v = "${working_dir_fullpath}/${precision}_ir"
+            v = "${working_dir_fullpath}/${local_precision}_ir"
         }
         if (k == "batch_size" && batch_size != 0){
             v = batch_size
         }
        local_benchmark_cmd += " --${k}=${v}" 
     }
-    local_benchmark_cmd += " --output=${output_path}   --log_name=${framework}-${model}-${local_precision}-${os}-${cpu}"
+    if (model != "gpt-j-6b" && model != "stable_diffusion") {
+        local_benchmark_cmd += " --output=${output_path}   --log_name=${framework}-${model}-${local_precision}-${os}-${cpu}"
+    }
     echo "benchmark cmd is ${local_benchmark_cmd}"
     withEnv(["framework=${framework}","model=${model}","precision=${local_precision}","os=${os}","cpu=${cpu}","working_dir=${working_dir_fullpath}","data_path=${data_dir}","benchmark_cmd=${local_benchmark_cmd}", "conda_env_name=${conda_env_name}", "output_path=${output_path}", "multi_instance=${multi_instance}","mode=${mode}"]) {
         sh '''#!/bin/bash -x
@@ -382,6 +384,15 @@ def runPerfTest(mode, local_precision, benchmark_cmd, output_path="${WORKSPACE}"
                 export CC=/opt/rh/gcc-toolset-11/root/usr/bin/gcc
                 export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
                 gcc -v
+            fi
+            if [[ ${model} == "gpt-j-6b" ]]; then
+                export KMP_BLOCKTIME=1
+                export KMP_SETTINGS=1
+                export KMP_AFFINITY=granularity=fine,compact,1,0
+                # IOMP
+                #export LD_PRELOAD=${LD_PRELOAD}:${CONDA_PREFIX}/lib/libiomp5.so
+                # Tcmalloc is a recommended malloc implementation that emphasizes fragmentation avoidance and scalable concurrency support.
+                #export LD_PRELOAD=${LD_PRELOAD}:${CONDA_PREFIX}/lib/libtcmalloc.so
             fi
             echo "final benchmark cmd of precision ${precision} is ${benchmark_cmd}"
             cd ${working_dir}
@@ -461,10 +472,25 @@ def prepare_models(local_precision, prepare_cmd) {
         if (k == "precision") {
             v = local_precision
         }
+        if (k == "dtype") {
+            v = local_precision
+        }
+        if (k == "pt_file") {
+            if (local_precision == "int8") {
+                v = "/tf_dataset2/models/nlp_toolkit/gpt-j/best_model_bk.pt"
+            } else {
+                v = "${v}_${local_precision}"
+            }
+        }
         if (k == "output_dir") {
             v = "${working_dir_fullpath}/${v}"
             if (framework == "ipex") {
                 v = "${v}/${local_precision}"
+            }
+        }
+        if (k == "output_model") {
+            if (model == "gpt-j-6b") {
+                v = "${working_dir_fullpath}/${local_precision}_ir"
             }
         }
         if (k == "cache_dir") {
@@ -513,6 +539,10 @@ def prepare_models(local_precision, prepare_cmd) {
                 export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
                 gcc -v
             fi
+            if [[ ${model} == "gpt-j-6b" ]]; then
+                conda install mkl mkl-include -y
+                conda install gperftools jemalloc==5.2.1 -c conda-forge -y
+            fi
             cd ${working_dir}
             echo "Working in ${working_dir}"
             echo -e "\nInstalling model requirements..."
@@ -533,7 +563,7 @@ def prepare_models(local_precision, prepare_cmd) {
         '''
     }
     // Check tuning status
-    if (local_precision == "int8") {
+    if (local_precision == "int8" && model != "gpt-j-6b") {
         dir("${WORKSPACE}"){
             withEnv([
                     "framework=${framework}",
