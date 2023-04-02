@@ -227,7 +227,7 @@ def do_binary_build() {
                     pip install -r requirements.txt
                 fi
                 python3 setup.py sdist bdist_wheel
-                pip install auditwheel
+                pip install auditwheel==5.1.2
                 auditwheel repair dist/intel_extension_for_transformers*.whl
                 cp wheelhouse/intel_extension_for_transformers*.whl ${WORKSPACE}/
                 cp dist/intel_extension_for_transformers*.tar.gz ${WORKSPACE}/
