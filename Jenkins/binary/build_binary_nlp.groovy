@@ -240,7 +240,7 @@ def do_binary_build() {
                 conda install patchelf conda-build conda-verify -y
                 conda config --add channels conda-forge
                 conda config --add channels fastai
-                conda build conda_meta/meta.yaml --python=${conda_py} -c intel --no-test
+                conda build conda_meta/meta.yaml --python=${conda_py} -c intel
                 cp ${HOME}/miniconda3/envs/${conda_env}/conda-bld/linux-64/intel_extension_for_transformers*.tar.bz2 ${WORKSPACE}/
             '''
         }
