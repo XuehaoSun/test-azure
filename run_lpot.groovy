@@ -374,7 +374,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     }else{
         batch_size = default_batch_size
     }
-    def single_instance_model_list = ["3dunet", "centernet_hg104", "GPT2", "dlrm", "dlrm_fx", "dlrm_ipex", "gpt_j_wikitext", "faster_rcnn", "fcn_qdq", "faster_rcnn_qdq", "mask_rcnn", "mask_rcnn_qdq"]
+    def single_instance_model_list = ["bloom-560m_sq", "bloom-176b_sq", "opt-125m_sq", "opt-30b_sq", "opt-6.7b_sq", "3dunet", "centernet_hg104", "GPT2", "dlrm", "dlrm_fx", "dlrm_ipex", "gpt_j_wikitext", "faster_rcnn", "fcn_qdq", "faster_rcnn_qdq", "mask_rcnn", "mask_rcnn_qdq"]
     multi_instance = (single_instance_model_list.contains(model))? false: multi_instance
 
     if (inc_new_api == true){
