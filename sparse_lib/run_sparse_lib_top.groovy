@@ -39,8 +39,8 @@ sub_node_ut = params.sub_node_ut ?: sub_node_label
 echo "Running on node ${node_label}; sub-job node ${sub_node_label}; ut node ${sub_node_ut}"
 
 // setting windows node_label
-windows_node = "icx-windows"
-echo "windows_node is ${windows_node}"
+sub_node_windows = "icx-windows"
+echo "sub_node_windows is ${sub_node_windows}"
 
 
 // run GPU test
@@ -172,6 +172,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
     inferencer_config = arg_map.inferencer_config ?: inferencer_config
     sub_node_label = arg_map.node ?: sub_node_label
     sub_node_ut = arg_map.node_ut ?: sub_node_ut
+    sub_node_windows = arg_map.node_windows ?: sub_node_windows
     is_gpu = arg_map.gpu ?: is_gpu as Boolean
     echo """ PR comment args changes params:
         RUN_UT=${RUN_UT}
@@ -184,6 +185,7 @@ if (params.GITHUB_PR_COMMENT_BODY_MATCH) {
         inferencer_config=${inferencer_config}
         sub_node_label=${sub_node_label}
         sub_node_ut=${sub_node_ut}
+        sub_node_windows=${sub_node_windows}
         run_gpu=${is_gpu}
     """
 }
@@ -413,7 +415,7 @@ def windowsJobBackend(){
         string(name: "PR_source_branch", value: "${MR_source_branch}"),
         string(name: "PR_target_branch", value: "${MR_target_branch}"),
         string(name: "unit_test_mode", value: "${unit_test_mode}"),
-        string(name: "node_label", value: "${windows_node}"),
+        string(name: "node_label", value: "${sub_node_windows}"),
         string(name: "lpot_url",value:"${lpot_url}"),
         string(name: "val_branch", value: "${val_branch}"),
     ]

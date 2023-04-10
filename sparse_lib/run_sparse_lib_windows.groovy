@@ -1,9 +1,6 @@
 credential = "c09d6555-5e41-4b99-bf90-50f518319b49"
 
-node_label = "icx-windows"
-// if ('node_label' in params && params.node_label != '') {
-//     node_label = params.node_label
-// }
+node_label = params.node_label ?: "icx-windows"
 echo "Running on node ${node_label}"
 
 nlp_url = "https://github.com/intel-innersource/frameworks.ai.nlp-toolkit.intel-nlp-toolkit.git" 
@@ -38,14 +35,14 @@ echo "lpot_url is ${lpot_url}"
 
 def cleanup() {
     try {
-        bat '''
+        bat """
         echo bat_clean
-        cd C:\\Users\\sdp\\Jenkins\\workspace\\sparse-lib-windows
+        cd ${WORKSPACE}
         echo Y|rmdir /s a\
         echo Y|rmdir /s lpot-validation\
         git config --global user.email "sys_lpot_val@intel.com"
         git config --global user.name "sys-lpot-val"
-        '''
+        """
     } catch(e) {
         echo "==============================================="
         echo "ERROR: Exception caught in cleanup()           "
@@ -97,15 +94,15 @@ def download() {
         }
     }
     retry(5){
-        bat '''
-            if not exist C:\\Users\\sdp\\Jenkins\\workspace\\sparse-lib-windows\\a (
+        bat """
+            if not exist ${WORKSPACE}\\a (
                 echo windows_nlp_dir not found. Exiting..."
                 exit 1
             ) else (
-            cd C:\\Users\\sdp\\Jenkins\\workspace\\sparse-lib-windows\\a
+            cd ${WORKSPACE}\\a
             git submodule update --init --recursive
             )
-        '''
+        """
     }
 
 }
@@ -128,8 +125,8 @@ node(node_label){
         stage('unit test'){
             retry(5){
                  ut_status = bat(returnStatus: true, script:"""
-                CALL C:\\Users\\sdp\\Jenkins\\workspace\\sparse-lib-windows\\lpot-validation\\sparse_lib\\run_sparse_lib_windows_ut.bat 
-                if exist C:\\Users\\sdp\\Jenkins\\workspace\\sparse-lib-windows\\a\\win_error_log (
+                CALL ${WORKSPACE}\\lpot-validation\\sparse_lib\\run_sparse_lib_windows_ut.bat 
+                if exist ${WORKSPACE}\\a\\win_error_log (
                 exit 1
                 ) else (
                 exit 0
