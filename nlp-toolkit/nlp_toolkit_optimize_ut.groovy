@@ -113,6 +113,12 @@ if ('binary_mode' in params && params.binary_mode != '') {
 }
 echo "binary_mode: $binary_mode"
 
+set_HF_offline = false
+if (params.set_HF_offline != null) {
+    set_HF_offline=params.set_HF_offline
+}
+echo "HF_offline is ${set_HF_offline}"
+
 lines_coverage_threshold = 80
 branches_coverage_threshold = 75
 
@@ -316,7 +322,9 @@ node(node_label){
                         [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                         [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                         export GLOG_minloglevel=2
-                        export TRANSFORMERS_OFFLINE=1
+                        if [[ ${set_HF_offline} != "false" ]]; then
+                            export TRANSFORMERS_OFFLINE=1
+                        fi
                         source activate ${conda_env}
                         # pip config set global.index-url https://pypi.douban.com/simple/
                         echo "Checking lpot..."
@@ -459,7 +467,9 @@ node(node_label){
                             [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                             export GLOG_minloglevel=2
-                            export TRANSFORMERS_OFFLINE=1
+                            if [[ ${set_HF_offline} != "false" ]]; then
+                                export TRANSFORMERS_OFFLINE=1
+                            fi
                             source activate ${conda_env}
                             pip uninstall neural_compressor -y
                             pip uninstall intel_extension_for_transformers -y
@@ -558,7 +568,7 @@ node(node_label){
         }else {
             stage("unit test") {
                 echo "+---------------- unit test For TF ${tensorflow_version} PT ${pytorch_version} ----------------+"
-                withEnv(["ext_version=${tensorflow_version}_${pytorch_version}"]){
+                withEnv(["ext_version=${tensorflow_version}_${pytorch_version}", "set_HF_offline=${set_HF_offline}"]){
                     timeout(80) {
                         withCredentials([string(credentialsId: '2f98cfad-c470-4c49-a85a-43c236507236', variable: 'SIGOPT_TOKEN')]) {
                             ut_status = sh(returnStatus: true, script: '''#!/bin/bash
@@ -626,7 +636,9 @@ node(node_label){
                             fi
                             # mute engine log
                             export GLOG_minloglevel=2
-                            export TRANSFORMERS_OFFLINE=1
+                            if [[ ${set_HF_offline} != "false" ]]; then
+                                export TRANSFORMERS_OFFLINE=1
+                            fi
                             find . -name "test*.py" | sed 's,\\.\\/,python ,g' | sed 's/$/ --verbose/'  > run.sh
                             ut_log_name=${WORKSPACE}/ut_tf_${tensorflow_version}_pt_${pytorch_version}_${python_version}.log
                             echo "cat run.sh..."

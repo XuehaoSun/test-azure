@@ -94,6 +94,12 @@ if (params.test_install_backend != null) {
 }
 echo "test_install_backend is ${test_install_backend}"
 
+set_HF_offline = false
+if (params.set_HF_offline != null) {
+    set_HF_offline=params.set_HF_offline
+}
+echo "HF_offline is ${set_HF_offline}"
+
 def cleanup() {
     try {
         sh '''#!/bin/bash -x
@@ -417,7 +423,7 @@ node(node_label){
         }
 
         stage('unit test'){
-            withEnv(["conda_env=${conda_env}", "python_version=${python_version}", "test_install_backend=${test_install_backend}", "CPU_NAME=${CPU_NAME}"]) {
+            withEnv(["conda_env=${conda_env}", "python_version=${python_version}", "test_install_backend=${test_install_backend}", "CPU_NAME=${CPU_NAME}", "set_HF_offline=${set_HF_offline}"]) {
                 timeout(60){
                     if (unit_test_mode == 'gtest'){
                         echo "+---------------- gtest ----------------+"
@@ -504,7 +510,9 @@ node(node_label){
                             [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                             export GLOG_minloglevel=2
-                            export TRANSFORMERS_OFFLINE=1
+                            if [[ ${set_HF_offline} != "false" ]]; then
+                                export TRANSFORMERS_OFFLINE=1
+                            fi
                             source activate ${conda_env}
                             echo "Current conda ENV is ${conda_env}..."
                             python ${WORKSPACE}/lpot-validation/scripts/get_coverage_summary.py \
@@ -544,7 +552,9 @@ node(node_label){
                                     [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                                     [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                                     export GLOG_minloglevel=2
-                                    export TRANSFORMERS_OFFLINE=1
+                                    if [[ ${set_HF_offline} != "false" ]]; then
+                                        export TRANSFORMERS_OFFLINE=1
+                                    fi
                                     source activate ${conda_env}
                                     pip install cmake
                                     cmake_path=$(which cmake)
@@ -591,7 +601,9 @@ node(node_label){
                                     [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                                     [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
                                     export GLOG_minloglevel=2
-                                    export TRANSFORMERS_OFFLINE=1
+                                    if [[ ${set_HF_offline} != "false" ]]; then
+                                        export TRANSFORMERS_OFFLINE=1
+                                    fi
                                     source activate ${conda_env}
                                     echo "Current conda ENV is ${conda_env}..."
 

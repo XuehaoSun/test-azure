@@ -238,6 +238,12 @@ if (params.test_install_backend != null) {
 }
 echo "test_install_backend is ${test_install_backend}"
 
+set_HF_offline = false
+if (params.set_HF_offline != null) {
+    set_HF_offline=params.set_HF_offline
+}
+echo "HF_offline is ${set_HF_offline}"
+
 sparse_model_list = ["distilbert_base_uncased_squad_sparse", "bert_mini_sparse"]
 not_support_inferencer_list = ["length_adaptive_dynamic", "vit_large", "vit_base"]
 mono_socket = params.mono_socket as Boolean
@@ -365,7 +371,7 @@ def runPerfTest(mode, local_precision, benchmark_cmd, output_path="${WORKSPACE}"
         local_benchmark_cmd += " --output=${output_path}   --log_name=${framework}-${model}-${local_precision}-${os}-${cpu}"
     }
     echo "benchmark cmd is ${local_benchmark_cmd}"
-    withEnv(["framework=${framework}","model=${model}","precision=${local_precision}","os=${os}","cpu=${cpu}","working_dir=${working_dir_fullpath}","data_path=${data_dir}","benchmark_cmd=${local_benchmark_cmd}", "conda_env_name=${conda_env_name}", "output_path=${output_path}", "multi_instance=${multi_instance}","mode=${mode}"]) {
+    withEnv(["framework=${framework}","model=${model}","precision=${local_precision}","os=${os}","cpu=${cpu}","working_dir=${working_dir_fullpath}","data_path=${data_dir}","benchmark_cmd=${local_benchmark_cmd}", "conda_env_name=${conda_env_name}", "output_path=${output_path}", "multi_instance=${multi_instance}","mode=${mode}", "set_HF_offline=${set_HF_offline}"]) {
         sh '''#!/bin/bash -x
             echo "Running ---- ${framework}, ${model},${precision} ---- Benchmarking"
             echo "=======cache clean======="
@@ -376,7 +382,9 @@ def runPerfTest(mode, local_precision, benchmark_cmd, output_path="${WORKSPACE}"
             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
             export GLOG_minloglevel=2
-            export TRANSFORMERS_OFFLINE=1
+            if [[ ${set_HF_offline} != "false" ]]; then
+                export TRANSFORMERS_OFFLINE=1
+            fi
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]];then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
@@ -500,16 +508,27 @@ def prepare_models(local_precision, prepare_cmd) {
         }
         if (k == "input_model") {
             if ("${USER_NAME}" == "sdp" || "${USER_NAME}" == "SDP") {
-                v = hf_model_name
-            }
-            if (model == "stable_diffusion") {
-                withEnv(["model_path=${v}", "working_dir_fullpath=${working_dir_fullpath}"]) {
-                    sh '''#!/bin/bash -x
-                    cp -r "${model_path}" "${working_dir_fullpath}/"
-                    '''
+                if (model == "stable_diffusion") {
+                    withEnv(["model_path=${v}", "working_dir_fullpath=${working_dir_fullpath}"]) {
+                        sh '''#!/bin/bash -x
+                        cp -r "${model_path}" "${working_dir_fullpath}/"
+                        '''
+                    }   
+                    v = "${working_dir_fullpath}/stable-diffusion"
+                } else {
+                    v = hf_model_name
                 }
-                v = "${working_dir_fullpath}/stable-diffusion"
+            } else {
+                if (model == "stable_diffusion") {
+                    withEnv(["model_path=${v}", "working_dir_fullpath=${working_dir_fullpath}"]) {
+                        sh '''#!/bin/bash -x
+                        cp -r "${model_path}" "${working_dir_fullpath}/"
+                        '''
+                    }   
+                    v = "${working_dir_fullpath}/stable-diffusion"
+                }
             }
+            
         }
         local_prepare_cmd += " --${k}=${v}" 
     }
@@ -524,13 +543,15 @@ def prepare_models(local_precision, prepare_cmd) {
             '''
         }    
     }
-    withEnv(["framework=${framework}","model=${model}","timeout=${timeout}","os=${os}","cpu=${cpu}","working_dir=${working_dir_fullpath}","prepare_cmd=${local_prepare_cmd}","conda_env_name=${conda_env_name}"]) {
+    withEnv(["framework=${framework}","model=${model}","timeout=${timeout}","os=${os}","cpu=${cpu}","working_dir=${working_dir_fullpath}","prepare_cmd=${local_prepare_cmd}","conda_env_name=${conda_env_name}", "set_HF_offline=${set_HF_offline}"]) {
         sh '''#!/bin/bash -x
             echo "Running ---- ${framework}, ${model}----Tuning"
             [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
             export LD_LIBRARY_PATH=${HOME}/miniconda3/envs/${conda_env_name}/lib/:$LD_LIBRARY_PATH
-            export TRANSFORMERS_OFFLINE=1
+            if [[ ${set_HF_offline} != "false" ]]; then
+                export TRANSFORMERS_OFFLINE=1
+            fi
             source activate ${conda_env_name}
             if [[ ${cpu} == *"spr"* ]] || [[ ${cpu} == *"SPR"* ]] || [[ ${cpu} == *"Spr"* ]]; then
                 export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH

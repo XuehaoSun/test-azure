@@ -215,6 +215,12 @@ echo "binary_mode: $binary_mode"
 lpot_url = "https://github.com/intel/neural-compressor.git"
 nightly_cpu_list = ["clx8280-070", "clx8280-071", "clx8280-072", "clx8280-073", "clx8260-136", "clx8260-137", "clx8280-0769"]
 
+set_HF_offline = false
+if (params.set_HF_offline != null) {
+    set_HF_offline=params.set_HF_offline
+}
+echo "HF_offline is ${set_HF_offline}"
+
 workflow = "optimize"
 upstreamBuild = ""
 upstreamJobName = ""
@@ -396,7 +402,8 @@ def runPerfTest(mode, precision) {
              "conda_env_name=${conda_env_name}",
              "multi_instance=${multi_instance}",
              "mode=${mode}",
-             "WORKSPACE=${WORKSPACE}"]) {
+             "WORKSPACE=${WORKSPACE}",
+             "set_HF_offline=${set_HF_offline}"]) {
         sh '''#!/bin/bash -x
             echo "Running ---- ${framework}, ${model},${precision} ---- Benchmarking"
             echo "=======cache clean======="
@@ -405,7 +412,9 @@ def runPerfTest(mode, precision) {
             echo "=======run benchmark======="
             [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
             [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
-            export TRANSFORMERS_OFFLINE=1
+            if [[ ${set_HF_offline} != "false" ]]; then
+                export TRANSFORMERS_OFFLINE=1
+            fi
             source activate ${conda_env_name}
             cd ${working_dir}
             echo "working in ${working_dir}"
@@ -854,12 +863,15 @@ node( sub_node_label ) {
                         "working_dir=${working_dir_fullpath}",
                         "tune_cmd=${tune_cmd}",
                         "conda_env_name=${conda_env_name}",
-                        "WORKSPACE=${WORKSPACE}"]) {
+                        "WORKSPACE=${WORKSPACE}",
+                        "set_HF_offline=${set_HF_offline}"]) {
                     sh '''#!/bin/bash -x
                         echo "Running ---- ${framework}, ${model}----Tuning"
                         [[ -d ${HOME}/anaconda3/bin ]] && export PATH=${HOME}/anaconda3/bin/:$PATH
                         [[ -d ${HOME}/miniconda3/bin ]] && export PATH=${HOME}/miniconda3/bin/:$PATH
-                        export TRANSFORMERS_OFFLINE=1
+                        if [[ ${set_HF_offline} != "false" ]]; then
+                            export TRANSFORMERS_OFFLINE=1
+                        fi
                         source activate ${conda_env_name}
                         cd ${working_dir}
                         echo "Working in ${working_dir}"
@@ -876,6 +888,9 @@ node( sub_node_label ) {
                             pip list
                         else
                             echo "Not found requirements.txt file."
+                        fi
+                        if [[ ${model} == "pegasus_samsum_dynamic" ]]; then
+                            pip install protobuf==3.20
                         fi
                         ${timeout} ${tune_cmd} 2>&1 | tee ${WORKSPACE}/${framework}-${model}-${os}-${cpu}-tune.log
                     '''
