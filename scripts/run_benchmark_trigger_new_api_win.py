@@ -78,7 +78,7 @@ def run_accuracy(input_model, topology):
 
     cmd = get_executable("benchmark")
     if args.framework == "pytorch" and args.model == "distilbert_base_MRPC":
-        cmd = ["python", "-u", "run_glue_tune.py"]
+        cmd = ["python", "-u", "run_glue.py"]
     cmd.extend(parameters)
 
     system = platform.system().lower()
@@ -152,7 +152,7 @@ def run_benchmark(input_model, topology):
 
     cmd = get_executable("benchmark")
     if args.framework == "pytorch" and args.model == "distilbert_base_MRPC":
-        cmd = ["python", "-u", "run_glue_tune.py"]
+        cmd = ["python", "-u", "run_glue.py"]
     if args.framework == "tensorflow" and "oob_models" in args.model_src_dir:
         cmd = ["python", "tf_benchmark.py"]
     cmd.extend(parameters)
@@ -203,27 +203,78 @@ def get_windows_parameters(framework: str, input_model: str, model: str, topolog
             "--mode", f"{mode}",
             "--benchmark",
         ],
-        "onnxrt": [
-            "--model_path", f"{input_model}",
-            "--data_path", f"{dataset_location}",
-            "--mode", f"{mode}",
-            "--benchmark",
-        ],
+        "onnxrt": {
+            "default": [
+                "--model_path", f"{input_model}",
+                "--data_path", f"{dataset_location}",
+                "--mode", f"{mode}",
+                "--benchmark",
+            ],
+            "resnet50_v1_5": [
+                "--model_path", f"{input_model}",
+                "--dataset_location", f"{dataset_location}",
+                "--label_path", f"{dataset_location}/../val.txt",
+                "--mode", f"{mode}",
+                "--benchmark",
+                f"--batch_size {batch_size}"
+            ],
+            "hf_roberta-base_dynamic": [
+                "--model_path", f"{input_model}",
+                "--data_path", f"{dataset_location}",
+                "--mode", f"{mode}",
+                "--benchmark",
+                "--model_name_or_path", "Intel/roberta-base-mrpc",
+                "--task mrpc",
+                "--batch_size=1",
+            ],
+            "bert_base_MRPC_static": [
+                "--model_path", f"{input_model}",
+                "--model_name_or_path", "bert-base-uncased",
+                "--data_path", f"{dataset_location}",
+                "--task", "mrpc",
+                "--batch_size", 8,
+                "--mode", f"{mode}",
+                "--dynamic_length", mode=="performance",
+                "--benchmark"
+            ]
+        },
         "pytorch": {
             "resnet18_fx": [
                 "--pretrained",
                 "--arch", f"{topology}",
                 "--batch-size", f"{batch_size}",
                 "--tuned_checkpoint", "saved_results",
-            ]
+            ],
+            "resnet50": [
+                "--pretrained",
+                "--arch", f"{topology}",
+                "--batch-size", f"{batch_size}",
+                "--tuned_checkpoint", "saved_results",
+            ],
+            "distilbert_base_MRPC": [
+                "--task_name=mrpc",
+                "--do_eval",
+                "--max_seq_length=128",
+                f"--per_device_eval_batch_size={batch_size}",
+                "--no_cuda",
+                "--output_dir=./output_log",
+                "--overwrite_output_dir",
+                f"--model_name_or_path={'saved_results' if precision == 'int8' else 'textattack/distilbert-base-uncased-MRPC'}"
+            ],
         }
     }
+
     if framework == "pytorch":
         parameters = parameters_map.get(framework, {}).get(model, None)
+    elif framework == "onnxrt":
+        parameters = parameters_map.get(framework, {}).get(model, None) or parameters_map.get(
+            "default", None)
     else:
         parameters = parameters_map.get(framework, None)
+
     if parameters is None:
-        raise NotImplementedError
+        raise NotImplementedError(f"invalid {parameters=}, {framework=}, {model=}")
+
     if framework == "pytorch":
         if precision == "int8":
             parameters.append("--int8")
@@ -231,14 +282,11 @@ def get_windows_parameters(framework: str, input_model: str, model: str, topolog
             parameters.append("--accuracy")
         else:
             parameters.append("--performance")
-            if model in ["resnet18_fx", "resnet50"]:
+            if model in ["resnet18_fx", "resnet50", "distilbert_base_MRPC"]:
                 parameters.extend(["--iter", f"{iters}"])
         if model in ["resnet18_fx", "resnet50"]:
             parameters.append(f"{dataset_location}")
-    if framework == "onnxrt" and model == "hf_roberta-base_dynamic":
-        parameters.append("--model_name_or_path Intel/roberta-base-mrpc")
-        parameters.append("--task mrpc")
-        parameters.append("--batch_size=1")
+
     return parameters
 
 

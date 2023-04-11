@@ -83,7 +83,7 @@ def main():
 
     cmd = get_executable("tuning")
     if args.framework == "pytorch" and args.model == "distilbert_base_MRPC":
-        cmd = ["python", "-u", "run_glue_tune.py"]
+        cmd = ["python", "-u", "run_glue.py"]
     if args.framework == "onnxrt" and args.model == "bert_base_MRPC":
         cmd = ["python", "bert_base.py"]
     if args.framework == "tensorflow" and "oob_models" in args.model_src_dir:
@@ -195,8 +195,20 @@ def get_windows_parameters(framework: str, model: str, topology: str, q_model: s
                 "--output-graph", f"{q_model}",
                 "--dataset_location", f"{args.dataset_location}",
                 "--tune",
-             "--batch_size", 1,
-     ]
+                "--batch_size", 1,
+            ],
+            "inception_v3": [
+                "--input-graph", f"{args.input_model}",
+                "--output-graph", f"{q_model}",
+                "--dataset_location", f"{args.dataset_location}",
+                "--tune",
+            ],
+            "mobilenetv1":[
+                "--input-graph", f"{args.input_model}",
+                "--output-graph", f"{q_model}",
+                "--dataset_location", f"{args.dataset_location}",
+                "--tune",
+            ],
         },
         "onnxrt": {
             "duc": [
@@ -213,7 +225,25 @@ def get_windows_parameters(framework: str, model: str, topology: str, q_model: s
                 "--hidden_size", 768,
                 "--task", "mrpc",
                 "--tune"
-            ]
+            ],
+            "bert_base_MRPC_static":[
+                "--model_path", f"{args.input_model}",
+                "--output_model", f"{q_model}",
+                "--model_name_or_path", "bert-base-uncased",
+                "--data_path", f"{args.dataset_location}",
+                "--task", "mrpc",
+                "--batch_size", 8,
+                "--model_type", "bert",
+                "--quant_format", "QOperator",
+                "--tune"
+            ],
+            "resnet50_v1_5":[
+                "--model_path", f"{args.input_model}",
+                "--dataset_location ", f"{args.dataset_location}",
+                "--label_path", f"{args.dataset_location}/../val.txt",
+                "--output_model", f"{q_model}",
+                "--tune"
+            ],
         },
         "pytorch": {
             "resnet18_fx": [
@@ -239,7 +269,27 @@ def get_windows_parameters(framework: str, model: str, topology: str, q_model: s
                 "--tune",
                 "--tuned_checkpoint", f"saved_results",
                 f"{dataset_location}"
-            ]
+            ],
+            "distilbert_base_MRPC": [
+                "--model_name_or_path", f"{args.input_model}",
+                "--task_name", "mrpc",
+                "--do_eval",
+                "--do_train",
+                "--max_seq_length", 128,
+                "--per_device_eval_batch_size", 16,
+                "--no_cuda",
+                "--output_dir", f"saved_results",
+                "--tune",
+                "--overwrite_output_dir",
+            ],
+            "resnet50": [
+                "--pretrained",
+                "--arch", f"{topology}",
+                "--batch-size", "30",
+                "--tune",
+                "--tuned_checkpoint", f"saved_results",
+                f"{dataset_location}"
+            ],
         }
     }
     parameters = parameters_map.get(framework, {}).get(model, None)
