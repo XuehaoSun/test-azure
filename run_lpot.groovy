@@ -994,11 +994,11 @@ node( sub_node_label ) {
                         new_conda_env=false
                         conda_env_name='pytorch-bert-1.6'
                     }
-                    if(label[-1] == 'ipex'){
+                    if(label[-1] == 'ipex' || label[-2] == 'ipex'){
                         conda_env_name="pt-ipex-${pytorch_version}-${python_version}"
                         install_ipex = true
                     }
-                    if(label[-1] == 'qat'&& pytorch_version == '1.5.0+cpu'){
+                    if(label[-1] == 'qat' && pytorch_version == '1.5.0+cpu'){
                         pytorch_version='1.8.0+cpu'
                         conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
@@ -1007,14 +1007,14 @@ node( sub_node_label ) {
                         pytorch_version = '1.8.0+cpu'
                         conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
-                    if(model == "bert_large_ipex"  && pytorch_version != 'nightly'){
+                    if(model == "bert_large_ipex" && pytorch_version != 'nightly'){
                         framework_version_base = pytorch_version.split('\\.')[1]
                         if(framework_version_base.toInteger() < 12){
                             pytorch_version = '1.12.1+cpu'
                             conda_env_name="${framework}-${pytorch_version}-${python_version}"
                         }
                     }
-                    if(model == "bert_large_1_10_ipex" || model == "maskrcnn_fx"){
+                    if(model == "maskrcnn_fx"){
                         framework_version_base = pytorch_version.split('\\.')[1]
                         if(framework_version_base.toInteger() > 11){
                             pytorch_version = '1.11.0+cpu'
