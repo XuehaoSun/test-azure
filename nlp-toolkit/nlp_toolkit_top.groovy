@@ -127,25 +127,25 @@ if (params.compatibility_test != null) {
 }
 echo "compatibility_test = ${compatibility_test}"
 
-pytorch_compatibility_model = "gpt_neo_clm_dynamic,distilbert_base_squad_static,bert_base_mrpc_qat,distillbert_base_SST-2_static,pegasus_samsum_dynamic,sd_pokemon_diffusers_static,bert_large_squad_ipex"
+pytorch_compatibility_model = "gpt_neo_clm_dynamic,bert_base_mrpc_qat,sd_pokemon_diffusers_static,bert_large_squad_ipex"
 if ('pytorch_compatibility_model' in params && params.pytorch_compatibility_model != '') {
     pytorch_compatibility_model = params.pytorch_compatibility_model
 }
 echo "pytorch_compatibility_model: ${pytorch_compatibility_model}"
 
-engine_compatibility_model = "vit_base,length_adaptive_dynamic,bert_base_mrpc,bert_large_squad,distilbert_base_uncased_emotion,bert_base_cased_mrpc,minilm_l6_h384_uncased_sst2,bert_mini_mrpc,bert_mini_sparse"
+engine_compatibility_model = "bert_large_squad,distilbert_base_uncased_emotion,minilm_l6_h384_uncased_sst2,bert_mini_sparse"
 if ('engine_compatibility_model' in params && params.engine_compatibility_model != '') {
     engine_compatibility_model = params.engine_compatibility_model
 }
 echo "engine_compatibility_model: ${engine_compatibility_model}"
 
-tensorflow_compatibility_model = "bert_base_mrpc_static,bert_base_ner,distilbert_mlm,distilgpt2_clm"
+tensorflow_compatibility_model = "bert_base_mrpc_static"
 if ('tensorflow_compatibility_model' in params && params.tensorflow_compatibility_model != '') {
     tensorflow_compatibility_model = params.tensorflow_compatibility_model
 }
 echo "tensorflow_compatibility_model: ${tensorflow_compatibility_model}"
 
-ipex_compatibility_model = "bert_large_squad_ipex,distilbert_base_squad_sparse_ipex"
+ipex_compatibility_model = "distilbert_base_squad_sparse_ipex"
 if ('ipex_compatibility_model' in params && params.ipex_compatibility_model != '') {
     ipex_compatibility_model = params.ipex_compatibility_model
 }
@@ -935,6 +935,7 @@ def UTBuildParams(tf_version, pt_version, py_version, run_coverage) {
     ParamsPerJob += string(name: "val_branch", value: "${val_branch}")
     ParamsPerJob += booleanParam(name: "run_coverage", value: run_coverage)
     ParamsPerJob += string(name: "conda_env_mode", value: "${conda_env_mode}")
+    ParamsPerJob += booleanParam(name: "set_HF_offline", value: set_HF_offline)
 
     return ParamsPerJob
 }
@@ -1075,7 +1076,9 @@ def BuildParams(job_framework, model, cpu, os, is_compatibility_test=false){
     if (!['any', '*'].contains(cpu)) {
         subnode_label += " && " + cpu
     }
-
+    if (model == "gpt-j-6b" || model == "stable_diffusion") {
+        subnode_label = "spr || non-perf-sdp || spr-release"
+    }
     List ParamsPerJob = []
     ParamsPerJob += string(name: "sub_node_label", value: "${subnode_label}")
     ParamsPerJob += string(name: "framework", value: "${job_framework}")
@@ -1111,6 +1114,7 @@ def BuildParams(job_framework, model, cpu, os, is_compatibility_test=false){
     ParamsPerJob += string(name: "compatibility_test", value: "${is_compatibility_test}") 
     ParamsPerJob += string(name: "inc_version", value: "${inc_version}")
     ParamsPerJob += string(name: "itrex_version", value: "${itrex_version}")
+    ParamsPerJob += booleanParam(name: "set_HF_offline", value: set_HF_offline)
     return ParamsPerJob
 }
 

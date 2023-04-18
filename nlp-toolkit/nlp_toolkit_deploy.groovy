@@ -71,14 +71,12 @@ precision = 'int8,fp32'
 if ('precision' in params && params.precision != '') {
     precision = params.precision
 }
-precision_list = parseStrToList(precision)
 echo "Precision: ${precision}"
 
 mode = 'accuracy,throughput'
 if ('mode' in params && params.mode != '') {
     mode = params.mode
 }
-mode_list = parseStrToList(mode)
 echo "Mode: ${mode}"
 
 nlp_url = "https://github.com/intel-innersource/frameworks.ai.nlp-toolkit.intel-nlp-toolkit.git"
@@ -245,7 +243,7 @@ if (params.set_HF_offline != null) {
 echo "HF_offline is ${set_HF_offline}"
 
 sparse_model_list = ["distilbert_base_uncased_squad_sparse", "bert_mini_sparse"]
-not_support_inferencer_list = ["length_adaptive_dynamic", "vit_large", "vit_base"]
+not_support_inferencer_list = ["length_adaptive_dynamic", "vit_large", "vit_base", "gpt-j-6b", "stable_diffusion"]
 mono_socket = params.mono_socket as Boolean
 echo "mono_socket: ${mono_socket}"
 
@@ -419,8 +417,8 @@ def runPerfTest(mode, local_precision, benchmark_cmd, output_path="${WORKSPACE}"
             else
                 echo "Not found requirements.txt file."
             fi
+            cp -r ${data_path} ${working_dir}/data
             if [[ "${model}" == "vit_large"* ]] || [[ "${model}" == "vit_base"* ]]; then
-                cp -r ${data_path} ${working_dir}/data
                 cp -r ${data_path}/* ${HOME}/.cache/nlp_toolkit/vit/
             fi
             echo "working in ${working_dir}"
@@ -1075,6 +1073,22 @@ node( sub_node_label ) {
 
                     launcher_cmd = modelConf."launcher"."cmd"
                     launcher_cmd_params = modelConf."launcher"."params"
+                    if (model == "stable_diffusion") {
+                        precision="fp32,bf16"
+                        mode="accuracy,latency"
+                        println("precision for stable-diffusion is ${precision} and mode is ${mode}")
+                    }
+                    if (model == "gpt-j-6b") {
+                        precision="fp32,int8,bf16"
+                        mode="latency"
+                        println("precision for gpt-j-6b is ${precision} and mode is ${mode}")
+                    }
+                    if (model == "length_adaptive_dynamic") {
+                        precision="fp32,int8"
+                        println("precision for length_adaptive is ${precision} and mode is ${mode}")
+                    }
+                    precision_list = parseStrToList(precision)
+                    mode_list = parseStrToList(mode)
                 } catch(e) {
                     error("Could not genereate cmd for ${framework} ${model}")
                 }
@@ -1210,8 +1224,8 @@ node( sub_node_label ) {
                     }
                     echo "--------START BENCHMARK----------"
                     mode_list.each { mode ->
-                        runPerfTest(mode, "dynamic_int8", benchmark_cmd)
                         if (framework == "engine") {
+                            runPerfTest(mode, "dynamic_int8", benchmark_cmd)
                             if ( mode == "throughput" && launcher_mode != "") {
                                 stage("Launcher Benchmark"){
                                     println("==========run launcher benchmark========")

@@ -905,7 +905,7 @@ function generate_inference {
                 // FP32
                 if($6 == "FP32") {
                     // Performance
-                    if($9 == "Performance") {
+                    if($9 == "Performance" || $9 == "Latency") {
                         fp32_perf_bs = $10;
                         fp32_perf_value = $11;
                         fp32_perf_url = $12;
@@ -927,7 +927,7 @@ function generate_inference {
                 // INT8
                 if($6 == "INT8") {
                     // Performance
-                    if($9 == "Performance") {
+                    if($9 == "Performance" || $9 == "Latency") {
                         int8_perf_bs = $10;
                         int8_perf_value = $11;
                         int8_perf_url = $12;
@@ -947,7 +947,7 @@ function generate_inference {
                 }
                 if($6 == "BF16") {
                     // Performance
-                    if($9 == "Performance") {
+                    if($9 == "Performance" || $9 == "Latency") {
                         bf16_perf_bs = $10;
                         bf16_perf_value = $11;
                         bf16_perf_url = $12;
@@ -967,7 +967,7 @@ function generate_inference {
                 }
                 if($6 == "DYNAMIC_INT8") {
                     // Performance
-                    if($9 == "Performance") {
+                    if($9 == "Performance" || $9 == "Latency") {
                         dint8_perf_bs = $10;
                         dint8_perf_value = $11;
                         dint8_perf_url = $12;
