@@ -374,7 +374,9 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     }else{
         batch_size = default_batch_size
     }
-    def single_instance_model_list = ["bloom-560m_sq", "bloom-176b_sq", "opt-125m_sq", "opt-30b_sq", "opt-6.7b_sq", "3dunet", "centernet_hg104", "GPT2", "dlrm", "dlrm_fx", "dlrm_ipex", "gpt_j_wikitext", "faster_rcnn", "fcn_qdq", "faster_rcnn_qdq", "mask_rcnn", "mask_rcnn_qdq"]
+    def pytorch_single_instance_model_list = ["bloom-560m_sq", "bloom-176b_sq", "opt-125m_sq", "opt-30b_sq", "opt-6.7b_sq", "3dunet", "centernet_hg104", "GPT2", "dlrm", "dlrm_fx", "dlrm_ipex", "gpt_j_wikitext"]
+    def onnx_single_instance_model_list = ["gpt-j-6B", "gpt-j-6B_dynamic", "faster_rcnn", "fcn_qdq", "faster_rcnn_qdq", "mask_rcnn", "mask_rcnn_qdq"]
+    single_instance_model_list=pytorch_single_instance_model_list.plus(onnx_single_instance_model_list)
     multi_instance = (single_instance_model_list.contains(model))? false: multi_instance
 
     if (inc_new_api == true){
@@ -994,11 +996,11 @@ node( sub_node_label ) {
                         new_conda_env=false
                         conda_env_name='pytorch-bert-1.6'
                     }
-                    if(label[-1] == 'ipex'){
+                    if(label[-1] == 'ipex' || label[-2] == 'ipex'){
                         conda_env_name="pt-ipex-${pytorch_version}-${python_version}"
                         install_ipex = true
                     }
-                    if(label[-1] == 'qat'&& pytorch_version == '1.5.0+cpu'){
+                    if(label[-1] == 'qat' && pytorch_version == '1.5.0+cpu'){
                         pytorch_version='1.8.0+cpu'
                         conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
@@ -1007,14 +1009,14 @@ node( sub_node_label ) {
                         pytorch_version = '1.8.0+cpu'
                         conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
-                    if(model == "bert_large_ipex"  && pytorch_version != 'nightly'){
+                    if(model == "bert_large_ipex" && pytorch_version != 'nightly'){
                         framework_version_base = pytorch_version.split('\\.')[1]
                         if(framework_version_base.toInteger() < 12){
                             pytorch_version = '1.12.1+cpu'
                             conda_env_name="${framework}-${pytorch_version}-${python_version}"
                         }
                     }
-                    if(model == "bert_large_1_10_ipex" || model == "maskrcnn_fx"){
+                    if(model == "maskrcnn_fx"){
                         framework_version_base = pytorch_version.split('\\.')[1]
                         if(framework_version_base.toInteger() > 11){
                             pytorch_version = '1.11.0+cpu'

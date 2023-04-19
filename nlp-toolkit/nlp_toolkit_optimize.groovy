@@ -811,7 +811,6 @@ node( sub_node_label ) {
 
                 println("Final conda env name is: $conda_env_name")
             }
-
             stage("Tuning") {
                 echo "Tuning timeout ${timeout}"
                 echo "CPU_NAME is ${CPU_NAME}"
@@ -920,6 +919,14 @@ node( sub_node_label ) {
                     stage("Performance") {
                         println("==========run benchmark========")
                         precision_list.each { precision ->
+                            if (precision == "dynamic_int8") {
+                                println("optimize not support runtime dynamic")
+                                return true
+                            }
+                            if (precision == "bf16") {
+                                println("optimize not support bf16")
+                                return true
+                            }
                             mode_list.each { mode ->
                                 echo "Run $mode with ${precision}"
                                 runPerfTest(mode, precision)

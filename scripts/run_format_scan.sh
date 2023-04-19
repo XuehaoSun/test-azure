@@ -74,8 +74,8 @@ main() {
 run_pylint() {
     pip install pylint==2.12.1
     # tf_utils.util will import some deps installed by tensorflow
-    pip install intel-tensorflow
-    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime ./neural_compressor > ${WORKSPACE}/lpot-pylint.json
+    pip install intel-tensorflow horovod google tf_slim
+    python -m pylint -f json --disable=R,C,W,E1129 --enable=line-too-long --max-line-length=120 --extension-pkg-whitelist=numpy --ignored-classes=TensorProto,NodeProto --ignored-modules=tensorflow,torch,torch.quantization,torch.tensor,torchvision,mxnet,onnx,onnxruntime,intel_extension_for_pytorch ./neural_compressor > ${WORKSPACE}/lpot-pylint.json
     exit_code=$?
     if [ ${exit_code} -ne 0 ] ; then
         echo "PyLint exited with non-zero exit code."; exit 1
