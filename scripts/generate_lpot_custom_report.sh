@@ -50,7 +50,7 @@ function main {
 }
 
 function generate_inference {
-    awk -v framework="${framework}" -v model="${model}" -v os="${os}" -v platform=${platform} -F ';' '
+    awk -v framework="${framework}" -v model="${model}" -v os="${os}" -F ';' '
         BEGINE {
             fp32_perf_bs = "nan";
             fp32_perf_value = "nan";
@@ -66,7 +66,7 @@ function generate_inference {
             int8_acc_value = "nan";
             int8_acc_url = "nan";
         }{
-            if($1 == os && $2 == platform && $3 == framework && $6 == model) {
+            if($1 == os && $3 == framework && $6 == model) {
                 // FP32
                 if($5 == "FP32") {
                     // Performance
@@ -108,19 +108,24 @@ function generate_inference {
 }
 
 function generate_html_core {
+    platform=$(grep "^${os};.*;${framework};.*;${model};" ${tuneLog} |awk -F';' '{print $2}')
+    pb_size=$(grep "^${os};${platform};${framework};.*;${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $10,$11,$12)}')
     fw_version=$(grep "^${os};${platform};${framework};.*;${model};" ${tuneLog} |awk -F';' '{print $4}')
     tuning_strategy=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $6}')
     tuning_time=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $7}')
     tuning_count=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $8}')
     tuning_log=$(grep "^${os};${platform};${framework};${fw_version};${model};" ${tuneLog} |awk -F';' '{print $9}')
-    echo "<tr><td rowspan=3>${platform}</td><td rowspan=3>${os}</td><td rowspan=3>${framework}</td><td>${fw_version}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
+    echo "<tr><td>${platform}</td><td rowspan=3>${os}</td><td rowspan=3>${framework}</td><td>${fw_version}</td><td rowspan=3>${model}</td><td><a href=\"${JENKINS_URL}/job/${new_build[0]}/${new_build[1]}\">${new_build[0]} #${new_build[1]}</a></td><td><a href=${tuning_log}>${tuning_strategy}</a></td>" >> ${WORKSPACE}/report.html
     echo "<td><a href=${tuning_log}>${tuning_time}</a></td><td><a href=${tuning_log}>${tuning_count}</a></td>" >> ${WORKSPACE}/report.html
 
-    ref_fw_ver=$(grep "^${os};${platform};${framework};.*;${model};" ${tuneLogLast} |awk -F';' '{print $4}')
-    tuning_strategy=$(grep "^${os};${platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
-    tuning_time=$(grep "^${os};${platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $7}')
-    tuning_count=$(grep "^${os};${platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
-    tuning_log=$(grep "^${os};${platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $9}')
+    ref_platform=$(grep "^${os};.*;${framework};.*;${model};" ${tuneLogLast} |awk -F';' '{print $2}')
+    last_pb_size=$(grep "^${os};${ref_platform};${framework};.*;${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $10,$11,$12)}')
+    ref_fw_ver=$(grep "^${os};${ref_platform};${framework};.*;${model};" ${tuneLogLast} |awk -F';' '{print $4}')
+    tuning_strategy=$(grep "^${os};${ref_platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $6}')
+    tuning_time=$(grep "^${os};${ref_platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $7}')
+    tuning_count=$(grep "^${os};${ref_platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $8}')
+    tuning_log=$(grep "^${os};${ref_platform};${framework};${ref_fw_ver};${model};" ${tuneLogLast} |awk -F';' '{print $9}')
+
 
     echo |awk -F ';' -v current_values="${current_values}" -v last_values="${last_values}" \
               -v pb_size="${pb_size}" -v last_pb_size="${last_pb_size}" \
@@ -129,6 +134,7 @@ function generate_html_core {
               -v ref_build_name="${ref_build[0]}" -v ref_build_number="${ref_build[1]}" \
               -v new_build_name="${new_build[0]}" -v new_build_number="${new_build[1]}" \
               -v ref_fw_ver="${ref_fw_ver}" \
+              -v ref_platform="${ref_platform}" \
               -v jenkins_url="${JENKINS_URL}" '
 
         function abs(x) { return x < 0 ? -x : x }
@@ -280,7 +286,7 @@ function generate_html_core {
             split(last_values,last_value,";");
 
             // Last
-            printf("</tr>\n<tr><td>%8$s</td><td><a href=\"%1$s/job/%2$s/%3$s\">%2$s #%3$s</a></td><td><a href=%7$s>%4$s</a></td><td><a href=%7$s>%5$s</a></td><td><a href=%7$s>%6$s</a></td>", jenkins_url, ref_build_name, ref_build_number, tuning_strategy, tuning_time, tuning_count, tuning_log, ref_fw_ver);
+            printf("</tr>\n<tr><td>%9$s</td><td>%8$s</td><td><a href=\"%1$s/job/%2$s/%3$s\">%2$s #%3$s</a></td><td><a href=%7$s>%4$s</a></td><td><a href=%7$s>%5$s</a></td><td><a href=%7$s>%6$s</a></td>", jenkins_url, ref_build_name, ref_build_number, tuning_strategy, tuning_time, tuning_count, tuning_log, ref_fw_ver, ref_platform);
             if(last_pb_size_[1] ~/[1-9]/ && last_pb_size_[2] ~/[1-9]/) {
                 printf("<td>%.2fx</td>", last_pb_size_[1]/last_pb_size_[2]);
             }else {
@@ -313,7 +319,7 @@ function generate_html_core {
             printf("</tr>")
 
             // current vs last
-            printf("</tr>\n<tr><td>-</td><td>%s... #%s/%s... #%s</td><td colspan=4>Mem Peak:%s</td>",
+            printf("</tr>\n<tr><td>-</td><td>-</td><td>%s... #%s/%s... #%s</td><td colspan=4>Mem Peak:%s</td>",
                 substr(new_build_name,0,5),
                 substr(new_build_number,0,5),
                 substr(ref_build_name,0,5),
@@ -343,24 +349,16 @@ function generate_results {
 
     for os in ${oses[@]}
     do
-        platforms=$(sed '1d' ${summaryLog} |grep "^${os}" |cut -d';' -f2 | awk '!a[$0]++')
-        for platform in ${platforms[@]}
+        frameworks=$(sed '1d' ${summaryLog} |grep "^${os};" |cut -d';' -f3 | awk '!a[$0]++')
+        for framework in ${frameworks[@]}
         do
-            frameworks=$(sed '1d' ${summaryLog} |grep "^${os};${platform}" |cut -d';' -f3 | awk '!a[$0]++')
-            for framework in ${frameworks[@]}
+            models=$(sed '1d' ${summaryLog} |grep "^${os};.*;${framework}" |cut -d';' -f6 | awk '!a[$0]++')
+            for model in ${models[@]}
             do
-                models=$(sed '1d' ${summaryLog} |grep "^${os};${platform};${framework}" |cut -d';' -f6 | awk '!a[$0]++')
-                for model in ${models[@]}
-                do
-                    current_values=$(generate_inference ${summaryLog})
-                    last_values=$(generate_inference ${summaryLogLast})
+                current_values=$(generate_inference ${summaryLog})
+                last_values=$(generate_inference ${summaryLogLast})
 
-                    # model size
-                    pb_size=$(grep "^${os};${platform};${framework};*;${model};" ${tuneLog} |awk -F ';' '{printf("%s;%s;%s", $10,$11,$12)}')
-                    last_pb_size=$(grep "^${os};${platform};${framework};*;${model};" ${tuneLogLast} |awk -F ';' '{printf("%s;%s;%s", $10,$11,$12)}')
-
-                    generate_html_core
-                done
+                generate_html_core
             done
         done
     done
@@ -413,8 +411,8 @@ function generate_html_footer {
 
     cat >> ${WORKSPACE}/report.html << eof
             <tr>
-                <td colspan="22"><font color="#d6776f">Note: </font>All data tested on INC Dedicated Server.</td>
-                <td colspan="3" class="col-cell col-cell1 col-cellf"></td>
+                <td colspan="20"><font color="#d6776f">Note: </font>All data tested on INC Dedicated Server.</td>
+                <td colspan="2" class="col-cell col-cell1 col-cellf"></td>
             </tr>
         </table>
     </div>
