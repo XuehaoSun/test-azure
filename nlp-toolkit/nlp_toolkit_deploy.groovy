@@ -417,7 +417,9 @@ def runPerfTest(mode, local_precision, benchmark_cmd, output_path="${WORKSPACE}"
             else
                 echo "Not found requirements.txt file."
             fi
-            cp -r ${data_path} ${working_dir}/data
+            if [[ ${data_path} != "" ]] && [[ ${data_path} != "/ " ]] && [[ ${data_path} != "/" ]]; then
+                cp -r ${data_path} ${working_dir}/data
+            fi
             if [[ "${model}" == "vit_large"* ]] || [[ "${model}" == "vit_base"* ]]; then
                 cp -r ${data_path}/* ${HOME}/.cache/nlp_toolkit/vit/
             fi
