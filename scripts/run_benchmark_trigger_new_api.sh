@@ -36,6 +36,8 @@ do
              main_script=`echo $i | sed "s/${PATTERN}//"`;;
         --is_gpu=*)
              is_gpu=`echo $i | sed "s/${PATTERN}//"`;;
+        --hardware_metrics=*)
+             hardware_metrics=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -153,6 +155,11 @@ function run_benchmark {
 
     echo -e "\n[VAL INFO] Pass parameter iters for b_func models benchmark..."
     parameters="${parameters} --iters=${iters}"
+
+    # Record CPU/Memory information
+    if [ "${hardware_metrics}" == "true" ]; then
+        python ${WORKSPACE}/lpot-validation/scripts/utils/py_task_injection.py --task=get_cpu_memory_info --file_name=benchmark.py --params ${framework} ${precision}
+    fi
 
     echo -e "\n[VAL INFO] Run benchmark cmd..."
     echo "bash run_benchmark.sh ${parameters}"

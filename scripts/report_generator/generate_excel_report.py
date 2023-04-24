@@ -1,18 +1,25 @@
 import argparse
 import xlsxwriter
 from result_collector import ResultCollector
+from hardware_metrics_collector import HardwareMetricsResultCollector
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--tuning-log", type=str, required=True)
 parser.add_argument("--summary-log", type=str, required=True)
+parser.add_argument("--hardware_metrics", type=str, default=False, required=False)
 args = parser.parse_args()
 
 result_collector = ResultCollector()
 result_collector.read_tuning(args.tuning_log)
 result_collector.read_perf(args.summary_log)
 
-workbook = xlsxwriter.Workbook('lpot_report.xlsx')
+workbook = xlsxwriter.Workbook('lpot_report.xlsx', {'strings_to_numbers': True})
 worksheet = workbook.add_worksheet()
+
+args.hardware_metrics = args.hardware_metrics if (args.hardware_metrics != "None") else False
+if args.hardware_metrics:
+    hardware_metrics_results = HardwareMetricsResultCollector()
+    hardware_metrics_results = hardware_metrics_results.read(args.hardware_metrics)
 
 
 def main():
@@ -48,6 +55,16 @@ def write_header():
         {"header": "FP32 throughput(fps))"},
         {"header": "Throughput Ratio[INT8/FP32]"},
     ]
+
+    if args.hardware_metrics:
+        worksheet.merge_range("O1:P1", "Average CPU usage", header_format)
+        worksheet.merge_range("Q1:R1", "Average memory usage", header_format)
+        header.extend([
+            {"header": "INT8 CPU usage(%)"},
+            {"header": "FP32 CPU usage(%)"},
+            {"header": "INT8 memory usage(%)"},
+            {"header": "FP32 memory usage(%)"},
+        ])
 
     worksheet.add_table(1, 0, len(result_collector.results) + 1, len(header)-1, {"header_row": True, "columns": header})
 
@@ -91,11 +108,21 @@ def write_row(row, result):
         "throughput_ratio": throughput_ratio
     }
 
+    if args.hardware_metrics:
+        hardware_metrics_result: dict = hardware_metrics_results.get(
+            f"{data['os']}_{data['framework']}_{data['model']}")
+        data.update(hardware_metrics_result)
+
     col = 0
     format_map = {
         "acc_ratio": accuracy_format,
-        "throughput_ratio": throughput_format
+        "throughput_ratio": throughput_format,
+        "int8_avg_cpu_usage": accuracy_format,
+        "fp32_avg_cpu_usage": accuracy_format,
+        "int8_avg_memory_usage": accuracy_format,
+        "fp32_avg_memory_usage": accuracy_format,
     }
+
     for key, value in data.items():
         cell_format = format_map.get(key, default_format)
         worksheet.write(row, col, value, cell_format)

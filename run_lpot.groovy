@@ -268,6 +268,12 @@ if (params.use_tune_acc != null){
 }
 echo "use_tune_acc: ${use_tune_acc}"
 
+hardware_metrics=false
+if (params.hardware_metrics != null){
+    hardware_metrics=params.hardware_metrics
+}
+echo "hardware_metrics: ${hardware_metrics}"
+
 if (lpot_branch == '' && MR_source_branch != ''){
     use_tune_acc = true
 }
@@ -405,6 +411,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
             --log_level=${log_level} \
             --itex_mode=${itex_mode} \
             --is_gpu=${is_gpu} \
+            --hardware_metrics=${hardware_metrics} \
             --main_script=${main_script} 2>&1 | tee ${output_path}/${framework}-${model}-${precision}-${mode}-${os}-${device}.log
         """
 
