@@ -242,7 +242,8 @@ def parse_perf_line(mode: str, line: str) -> dict:
 
     accuracy_patterns = [
         r"Accuracy:\s+(\d+(\.\d+)?)",
-        r"Accuracy is\s+(\d+(\.\d+)?)"
+        r"Accuracy is\s+(\d+(\.\d+)?)",
+        r"Accuracy .* is \s+(\d+(\.\d+)?)"
     ]
     for acc_pattern in accuracy_patterns:
         accuracy = re.search(acc_pattern, line)
