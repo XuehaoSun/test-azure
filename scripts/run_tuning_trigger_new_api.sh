@@ -263,6 +263,7 @@ function install_model_deps {
         git clone https://github.com/MIC-DKFZ/nnUNet.git --recursive
         cd nnUNet/
         git checkout b38c69b345b2f60cd0d053039669e8f988b0c0af
+        sed -i 's/sklearn/scikit-learn/g' setup.py
         python setup.py install
         cd ..
 
