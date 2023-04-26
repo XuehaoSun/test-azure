@@ -504,6 +504,12 @@ if (params.use_tune_acc != null){
 }
 echo "use_tune_acc: ${use_tune_acc}"
 
+hardware_metrics=false
+if (params.hardware_metrics != null){
+    hardware_metrics=params.hardware_metrics
+}
+echo "hardware_metrics = ${hardware_metrics}"
+
 def updateGithubCommitStatus(String state, String description) {
     try {
         supportedStatuses = ["error", "failure", "pending", "success"]
@@ -676,6 +682,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, dev
     ParamsPerJob += string(name: "precision", value: "${precision}")
     ParamsPerJob += string(name: "conda_env_mode", value: "${conda_env_mode}")
     ParamsPerJob += string(name: "log_level", value: "${log_level}")
+    ParamsPerJob += booleanParam(name: "hardware_metrics", value: hardware_metrics)
 
     return ParamsPerJob
 }
@@ -978,6 +985,21 @@ def collectLog() {
                             echo "${system};Unknown;${job_framework};N/A;FP32;${job_model};Inference;Performance;;;${RUN_DISPLAY_URL}" >> ${WORKSPACE}/summary.log
                         fi
                     """
+
+                    if (hardware_metrics) {
+                        ["int8", "fp32"].each{ hardware_metrics_precision ->
+                            sh """#!/bin/bash -x
+                                filename=${WORKSPACE}/${system}/${job_framework}/${job_model}/${job_framework}_${hardware_metrics_precision}_cpu_memory_usage.log
+                                if [[ -f "\$filename" ]]; then
+                                    avg_cpu_usage=\$(grep "avg cpu usage" "\$filename" | awk '{print \$4}')
+                                    avg_memory_usage=\$(grep "avg memory usage" "\$filename" | awk '{print \$4}')
+                                    echo "${system};${job_framework};${hardware_metrics_precision};${job_model};\${avg_cpu_usage};\${avg_memory_usage}" >> "${WORKSPACE}/hardware_metrics.log"
+                                else
+                                    echo "${system};${job_framework};${hardware_metrics_precision};${job_model};N/A;N/A" >> "${WORKSPACE}/hardware_metrics.log"
+                                fi
+                            """
+                        }
+                    }
                 }
             }
         }
@@ -1348,6 +1370,7 @@ def generateExcelReport() {
     withEnv([
         "summaryLog=${SUMMARYTXT}",
         "tuneLog=${TUNETXT}",
+        "hardwareMetricsLog=${HARDWARE_METRICS}"
     ]) {
         sh '''#!/bin/bash
             set -x
@@ -1378,7 +1401,8 @@ def generateExcelReport() {
 
             python ./lpot-validation/scripts/report_generator/generate_excel_report.py \
                 --tuning-log="${tuneLog}" \
-                --summary-log="${summaryLog}"
+                --summary-log="${summaryLog}" \
+                --hardware_metrics="${hardwareMetricsLog}"
         '''
     }
 }
@@ -1552,6 +1576,8 @@ node( node_label ) {
         TUNETXT = "${WORKSPACE}/tuning_info.log"
         writeFile file: TUNETXT, text: "OS;Platform;Framework;Version;Model;Strategy;Tune_time;Trials;Log;Fp32_model_size;Int8_model_size;Mem_percentage;Total_tuning_times;Fallbacked_started_tune;Objective_met_tune;Op_number;Statistics_difference;Fallback_stage_time\n"
         tuneLogLast = "${WORKSPACE}/reference/tuning_info.log"
+
+        HARDWARE_METRICS = hardware_metrics ? "${WORKSPACE}/hardware_metrics.log" : "None"
 
         coverage_summary = "${WORKSPACE}/unittest/coverage_summary.log"
         coverage_summary_base = "${WORKSPACE}/unittest/coverage_summary_base.log"
