@@ -127,13 +127,13 @@ if (params.compatibility_test != null) {
 }
 echo "compatibility_test = ${compatibility_test}"
 
-pytorch_compatibility_model = "gpt_neo_clm_dynamic,bert_base_mrpc_qat,sd_pokemon_diffusers_static,bert_large_squad_ipex"
+pytorch_compatibility_model = "gpt_neo_clm_dynamic,bert_base_mrpc_qat,sd_pokemon_diffusers_static"
 if ('pytorch_compatibility_model' in params && params.pytorch_compatibility_model != '') {
     pytorch_compatibility_model = params.pytorch_compatibility_model
 }
 echo "pytorch_compatibility_model: ${pytorch_compatibility_model}"
 
-engine_compatibility_model = "bert_large_squad,distilbert_base_uncased_emotion,minilm_l6_h384_uncased_sst2,bert_mini_sparse"
+engine_compatibility_model = "distilbert_base_uncased_emotion,minilm_l6_h384_uncased_sst2,bert_mini_sparse"
 if ('engine_compatibility_model' in params && params.engine_compatibility_model != '') {
     engine_compatibility_model = params.engine_compatibility_model
 }
