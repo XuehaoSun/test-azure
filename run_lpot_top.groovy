@@ -167,7 +167,7 @@ if ('RUN_BANDIT' in params && params.RUN_BANDIT){
 }
 echo "RUN_BANDIT = ${RUN_BANDIT}"
 
-RUN_UT=true
+RUN_UT=false
 if (params.RUN_UT != null){
     RUN_UT=params.RUN_UT
 }
@@ -510,6 +510,12 @@ if (params.hardware_metrics != null){
 }
 echo "hardware_metrics = ${hardware_metrics}"
 
+smooth_quant=false
+if (params.smooth_quant != null){
+    smooth_quant=params.smooth_quant
+}
+echo "smooth_quant: ${smooth_quant}"
+
 def updateGithubCommitStatus(String state, String description) {
     try {
         supportedStatuses = ["error", "failure", "pending", "success"]
@@ -683,6 +689,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, dev
     ParamsPerJob += string(name: "conda_env_mode", value: "${conda_env_mode}")
     ParamsPerJob += string(name: "log_level", value: "${log_level}")
     ParamsPerJob += booleanParam(name: "hardware_metrics", value: hardware_metrics)
+    ParamsPerJob += booleanParam(name: "smooth_quant", value: smooth_quant)
 
     return ParamsPerJob
 }
@@ -748,6 +755,7 @@ def getPerfJobs() {
                 echo "${job_models}"
                 echo "llsu-----> ${job_framework}"
                 job_models.each { job_model ->
+                    job_model=job_model.trim()
                     jobs["${job_model}_${job_framework}_${system}_${device}"] = {
 
                         // execute build
@@ -959,6 +967,7 @@ def collectLog() {
                 }
 
                 job_models.each { job_model ->
+                    job_model=job_model.trim()
                     echo "-------- ${device} - ${system} - ${job_framework} - ${job_model} --------"
 
                      // Generate tuning info log

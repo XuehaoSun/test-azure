@@ -44,6 +44,8 @@ do
             is_gpu=`echo $i | sed "s/${PATTERN}//"`;;
         --main_script=*)
             main_script=`echo $i | sed "s/${PATTERN}//"`;;
+        --smooth_quant=*)
+            smooth_quant=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -118,6 +120,10 @@ main() {
 
     if [ "${is_gpu}" == "true" ]; then
         update_conf_params="${update_conf_params} --device=gpu"
+    fi
+
+    if [ "${smooth_quant}" == "true" ] && [[ ${model} != *"_sq" ]]; then
+        update_conf_params="${update_conf_params} --smooth_quant=true"
     fi
 
     if [ "${update_conf_params}" != "" ]; then

@@ -82,6 +82,7 @@ model = 'resnet50'
 if ('model' in params && params.model != '') {
     model = params.model
 }
+model=model.trim()
 echo "Model: ${model}"
 
 precision = 'int8,fp32'
@@ -273,6 +274,12 @@ if (params.hardware_metrics != null){
     hardware_metrics=params.hardware_metrics
 }
 echo "hardware_metrics: ${hardware_metrics}"
+
+smooth_quant=false
+if (params.smooth_quant != null){
+    smooth_quant=params.smooth_quant
+}
+echo "smooth_quant: ${smooth_quant}"
 
 if (lpot_branch == '' && MR_source_branch != ''){
     use_tune_acc = true
@@ -1119,6 +1126,7 @@ node( sub_node_label ) {
                             --dtype=${dtype} \
                             --itex_mode=${itex_mode} \
                             --is_gpu=${is_gpu} \
+                            --smooth_quant=${smooth_quant} \
                             --main_script=${main_script} 2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
                         """
                     }

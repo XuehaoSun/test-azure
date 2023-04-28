@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument("--dtype", type=str, required=False, help="Quantize model precision type.")
     parser.add_argument("--backend", type=str, required=False, help="Framework backend.")
     parser.add_argument("--device", type=str, required=False, help="Device setting.")
+    parser.add_argument("--smooth_quant", type=str, required=False, help="Set smooth_quant option.")
     return parser.parse_args()
 
 
@@ -41,7 +42,7 @@ def parse_line(line: str):
         line = check_config(line, "BenchmarkConfig")
     if args.strategy or args.max_trials:
         line = check_config(line, "TuningCriterion")
-    if args.device or args.backend:
+    if args.device or args.backend or args.smooth_quant:
         line = check_config(line, "PostTrainingQuantConfig")
     return line
 
@@ -79,7 +80,11 @@ CONFIG_DICT = {
         "backend":
             [f"{args.backend}",
              r"backend=\"(\w+)\"",
-             f"backend=\"{args.backend}\""]
+             f"backend=\"{args.backend}\""],
+        "smooth_quant":
+            [f"{args.smooth_quant}",
+             r"recipes={",
+             "recipes={\"smooth_quant\": True, \"smooth_quant_args\": {'alpha': 0.5}, "],
     }
 
 }
@@ -130,6 +135,10 @@ def update_default_config():
                 line = replace_default_config(line, r"device=\"cpu\",", f"device=\"{args.device}\",")
             if args.backend and args.backend != "default":
                 line = replace_default_config(line, r"backend=\"default\",", f"backend=\"{args.backend}\",")
+            if args.smooth_quant:
+                line = replace_default_config(line, r"recipes={},",
+                                              "recipes={\"smooth_quant\": True, "
+                                              "\"smooth_quant_args\": {'alpha': 0.5}},")
             f.write(line)
 
 
@@ -147,5 +156,6 @@ if __name__ == "__main__":
     if args.main_script:
         update_example_config()
     if (args.strategy and args.strategy != "basic") or (args.max_trials and args.max_trials != 100) \
-            or (args.device and args.device != "cpu") or (args.backend and args.backend != "default"):
+            or (args.device and args.device != "cpu") or (args.backend and args.backend != "default") \
+            or args.smooth_quant:
         update_default_config()
