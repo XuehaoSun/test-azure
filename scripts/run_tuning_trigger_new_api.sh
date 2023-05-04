@@ -334,6 +334,10 @@ function install_model_deps {
         fi
     fi
 
+    if [[ -f "install_layoutlmft.sh" ]]; then
+        bash install_layoutlmft.sh
+    fi
+
     # re-install pycocotools resolve the issue with numpy
     echo "re-install pycocotools resolve the issue with numpy..."
     pip uninstall pycocotools -y
