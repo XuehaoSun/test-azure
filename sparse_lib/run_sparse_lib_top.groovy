@@ -39,7 +39,7 @@ sub_node_ut = params.sub_node_ut ?: sub_node_label
 echo "Running on node ${node_label}; sub-job node ${sub_node_label}; ut node ${sub_node_ut}"
 
 // setting windows node_label
-sub_node_windows = "icx-windows"
+sub_node_windows = params.sub_node_windows ?: "icx-windows"
 echo "sub_node_windows is ${sub_node_windows}"
 
 
