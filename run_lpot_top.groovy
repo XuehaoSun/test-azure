@@ -516,6 +516,12 @@ if (params.smooth_quant != null){
 }
 echo "smooth_quant: ${smooth_quant}"
 
+mix_precision=false
+if (params.mix_precision != null){
+    mix_precision=params.mix_precision
+}
+echo "mix_precision: ${mix_precision}"
+
 def updateGithubCommitStatus(String state, String description) {
     try {
         supportedStatuses = ["error", "failure", "pending", "success"]
@@ -690,6 +696,7 @@ def BuildParams(job_framework, job_model, perf_bs, python_version, strategy, dev
     ParamsPerJob += string(name: "log_level", value: "${log_level}")
     ParamsPerJob += booleanParam(name: "hardware_metrics", value: hardware_metrics)
     ParamsPerJob += booleanParam(name: "smooth_quant", value: smooth_quant)
+    ParamsPerJob += booleanParam(name: "mix_precision", value: mix_precision)
 
     return ParamsPerJob
 }

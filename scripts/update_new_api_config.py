@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument("--backend", type=str, required=False, help="Framework backend.")
     parser.add_argument("--device", type=str, required=False, help="Device setting.")
     parser.add_argument("--smooth_quant", type=str, required=False, help="Set smooth_quant option.")
+    parser.add_argument("--mix_precision", type=str, required=False, help="Replace with Mix Precision config.")
     return parser.parse_args()
 
 
@@ -44,6 +45,8 @@ def parse_line(line: str):
         line = check_config(line, "TuningCriterion")
     if args.device or args.backend or args.smooth_quant:
         line = check_config(line, "PostTrainingQuantConfig")
+    if args.mix_precision:
+        line = mix_precision_replace(line)
     return line
 
 
@@ -88,6 +91,31 @@ CONFIG_DICT = {
     }
 
 }
+
+
+def mix_precision_replace(line: str):
+
+    replace_conf_list = {
+        "PostTrainingQuantConfig": "MixedPrecisionConfig",
+        "import quantization": "import mix_precision",
+        "from neural_compressor.quantization import fit": "from neural_compressor.mix_precision import fit",
+        "quantization.fit": "mix_precision.fit"
+    }
+    for key, value in replace_conf_list.items():
+        if re.search(key, line):
+            line = re.sub(key, value, line)
+
+    delete_config_list = [r"domain=.\w+.,?", r"recipes=\w+,?", r"recipes=\{.+\},?", r"approach=.\w+.,?",
+                          r"calibration_sampling_size=\[[\d\s,]+\],?", r"quant_level=.\w+.,?",
+                          r"quant_format=.\w+.\w+.,?",
+                          r"calib_dataloader=Dataloader\(.+\),?", r"calib_dataloader=\w+,?",
+                          r"calib_func=\w+,?"]
+
+    for value in delete_config_list:
+        if re.search(value, line):
+            line = re.sub(value, "", line)
+
+    return line
 
 
 def check_config(line: str, config_name: str):

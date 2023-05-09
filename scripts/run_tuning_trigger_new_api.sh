@@ -46,6 +46,8 @@ do
             main_script=`echo $i | sed "s/${PATTERN}//"`;;
         --smooth_quant=*)
             smooth_quant=`echo $i | sed "s/${PATTERN}//"`;;
+        --mix_precision=*)
+            mix_precision=`echo $i | sed "s/${PATTERN}//"`;;
         *)
             echo "Parameter $i not recognized."; exit 1;;
     esac
@@ -126,10 +128,17 @@ main() {
         update_conf_params="${update_conf_params} --smooth_quant=true"
     fi
 
+    if [ "${mix_precision}" == "true" ]; then
+        update_conf_params="${update_conf_params} --mix_precision=true"
+    fi
+
     if [ "${update_conf_params}" != "" ]; then
         echo "update_conf_params: $update_conf_params"
         python ${WORKSPACE}/lpot-validation/scripts/update_new_api_config.py --main_script=${main_script} ${update_conf_params}
     fi
+
+    echo -e "\n[VAL INFO] Show git diff after config parameters update..."
+    git diff ${main_script}
 
     echo -e "\n[VAL INFO] Run tuning env list..."
     env

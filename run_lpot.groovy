@@ -281,6 +281,12 @@ if (params.smooth_quant != null){
 }
 echo "smooth_quant: ${smooth_quant}"
 
+mix_precision=false
+if (params.mix_precision != null){
+    mix_precision=params.mix_precision
+}
+echo "mix_precision: ${mix_precision}"
+
 if (lpot_branch == '' && MR_source_branch != ''){
     use_tune_acc = true
 }
@@ -1121,6 +1127,7 @@ node( sub_node_label ) {
                             --itex_mode=${itex_mode} \
                             --is_gpu=${is_gpu} \
                             --smooth_quant=${smooth_quant} \
+                            --mix_precision=${mix_precision} \
                             --main_script=${main_script} 2>&1 | tee ${framework}-${model}-${os}-${device}-tune.log
                         """
                     }
