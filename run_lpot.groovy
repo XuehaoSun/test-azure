@@ -1023,13 +1023,7 @@ node( sub_node_label ) {
                         pytorch_version = '1.8.0+cpu'
                         conda_env_name="${framework}-${pytorch_version}-${python_version}"
                     }
-                    if(model == "bert_large_ipex" && pytorch_version != 'nightly'){
-                        framework_version_base = pytorch_version.split('\\.')[1]
-                        if(framework_version_base.toInteger() < 12){
-                            pytorch_version = '1.12.1+cpu'
-                            conda_env_name="${framework}-${pytorch_version}-${python_version}"
-                        }
-                    }
+
                     if(model == "maskrcnn_fx"){
                         framework_version_base = pytorch_version.split('\\.')[1]
                         if(framework_version_base.toInteger() > 11){
