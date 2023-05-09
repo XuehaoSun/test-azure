@@ -387,7 +387,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
     }else{
         batch_size = default_batch_size
     }
-    def pytorch_single_instance_model_list = ["bloom-560m_sq", "bloom-176b_sq", "opt-125m_sq", "opt-30b_sq", "opt-6.7b_sq", "3dunet", "centernet_hg104", "GPT2", "dlrm", "dlrm_fx", "dlrm_ipex", "gpt_j_wikitext"]
+    def pytorch_single_instance_model_list = ["gpt-j-6B_sq", "bloom-560m_sq", "bloom-176b_sq", "opt-125m_sq", "opt-30b_sq", "opt-6.7b_sq", "3dunet", "centernet_hg104", "GPT2", "dlrm", "dlrm_fx", "dlrm_ipex", "gpt_j_wikitext"]
     def onnx_single_instance_model_list = ["gpt-j-6B", "gpt-j-6B_dynamic", "faster_rcnn", "fcn_qdq", "faster_rcnn_qdq", "mask_rcnn", "mask_rcnn_qdq"]
     single_instance_model_list=pytorch_single_instance_model_list.plus(onnx_single_instance_model_list)
     multi_instance = (single_instance_model_list.contains(model))? false: multi_instance
