@@ -132,6 +132,10 @@ function run_benchmark {
     ncores_per_instance=${ncores_per_socket}
     iters=500
 
+    if [ "${is_gpu}" == "true" ]; then
+        multi_instance="false"
+    fi
+
     if [ "${multi_instance}" == "true" ]; then
         ncores_per_instance=4
     fi

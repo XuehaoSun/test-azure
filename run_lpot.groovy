@@ -534,6 +534,7 @@ def runPerfTest(mode, precision, output_path="${WORKSPACE}") {
                     --profiling=${RUN_PROFILING} \
                     --output_path=${output_path} \
                     --log_level=${log_level} \
+                    --is_gpu=${is_gpu} \
                     --itex_mode=${itex_mode}
                 """
         }
