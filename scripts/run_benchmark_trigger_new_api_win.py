@@ -143,7 +143,7 @@ def run_benchmark(input_model, topology):
             args.model,
             topology,
             iters,
-            args.batch_size,
+            1,
             args.precision,
             mode,
             args.dataset_location,
