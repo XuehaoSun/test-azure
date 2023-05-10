@@ -133,7 +133,7 @@ def check_param(line: str, value: list):
     p_search_item = value[1]
     p_replace_item = value[2]
     search_result = re.search(p_search_item, line)
-    if p_status and search_result:
+    if p_status and p_status != "None" and search_result:
         print("previous ", search_result.group(), ", current ", p_replace_item)
         line = re.sub(p_search_item, p_replace_item, line)
         print("Updated line --> ", line)
