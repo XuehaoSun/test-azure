@@ -8,6 +8,7 @@ env:
   REPO_TAG: "py38"
   DOCKER_FILE_NAME: "unitTest"
   CONTAINER_NAME: "utTest"
+  name: lucky
 
 jobs:
   scan:
@@ -18,7 +19,7 @@ jobs:
 
       - name: Docker Build
         run: |
-          docker build -f codeScan.dockerfile -t ${{ env.REPO_NAME }}:${{ env.REPO_TAG }} .
+          docker build --build-arg env=$env -f codeScan.dockerfile -t ${{ env.REPO_NAME }}:${{ env.REPO_TAG }} .
 
       - name: Docker Run
         run: |
@@ -30,5 +31,4 @@ jobs:
         run: |
           docker exec ${{ env.CONTAINER_NAME }} \
           bash -c "bash /test/test.sh"
-        env:
-          name: lucky
+         

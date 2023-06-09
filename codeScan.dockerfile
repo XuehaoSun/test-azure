@@ -19,4 +19,7 @@ FROM ubuntu:${UBUNTU_VER} as devel
 # See http://bugs.python.org/issue19846
 ENV LANG C.UTF-8
 
+ARG env=${env}
+ENV env=${env}
+
 WORKDIR /
