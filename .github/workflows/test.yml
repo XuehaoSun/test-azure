@@ -29,7 +29,7 @@ jobs:
         id: SparseLib-Test
         run: |
           docker exec ${{ env.CONTAINER_NAME }} \
-          -e name=${{env.name}}
+          -e name=${{env.name}} \
           bash -c "bash /test/test.sh"
         env: 
           name: lucky
