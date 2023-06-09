@@ -19,7 +19,7 @@ jobs:
 
       - name: Docker Build
         run: |
-          docker build --build-arg env=$env -f codeScan.dockerfile -t ${{ env.REPO_NAME }}:${{ env.REPO_TAG }} .
+          docker build -f codeScan.dockerfile --build-arg env=${{ env }} -t ${{ env.REPO_NAME }}:${{ env.REPO_TAG }} .
 
       - name: Docker Run
         run: |
