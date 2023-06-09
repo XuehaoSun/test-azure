@@ -6,10 +6,10 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-        - name: Checkout out Repo
-          uses: actions/checkout@v3
-        - name: shell
-          run: |
-            bash test.sh
-          env: 
-            name: lucky
+      - name: Checkout out Repo
+        uses: actions/checkout@v3
+      - name: shell
+        run: |
+          bash test.sh
+        env: 
+          name: lucky
