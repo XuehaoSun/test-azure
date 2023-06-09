@@ -8,7 +8,6 @@ env:
   REPO_TAG: "py38"
   DOCKER_FILE_NAME: "unitTest"
   CONTAINER_NAME: "utTest"
-  name: lucky
 
 jobs:
   scan:
@@ -30,5 +29,8 @@ jobs:
         id: SparseLib-Test
         run: |
           docker exec ${{ env.CONTAINER_NAME }} \
+          -e name=${{env.name}}
           bash -c "bash /test/test.sh"
+        env: 
+          name: lucky
          
