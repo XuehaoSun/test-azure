@@ -20,6 +20,7 @@ jobs:
       - run: echo hello > world.txt
       - uses: actions/upload-artifact@v3
         with:
+          name: artifact1
           path: world.txt
 
       - name: Download Reference Artifact
@@ -27,7 +28,6 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.MY_TOKEN}}
-          workflow: model-test.yml
           run_id: ${{ env.REF_ID }}
           path: last_generated
           name_is_regexp: true
@@ -39,4 +39,5 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
+          name: artifact2
           path: last_generated
