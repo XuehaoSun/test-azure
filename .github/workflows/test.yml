@@ -16,22 +16,26 @@ jobs:
       - name: Checkout out Repo
         uses: actions/checkout@v3
 
-      - name: Docker Build
-        run: |
-          docker build -f codeScan.dockerfile -t ${{ env.REPO_NAME }}:${{ env.REPO_TAG }} .
+      - run: echo hello > world.txt
+      - uses: actions/upload-artifact@v3
+        with:
+          path: world.txt
 
-      - name: Docker Run
-        run: |
-          docker run -dit --disable-content-trust --privileged --name=${{ env.CONTAINER_NAME }} --shm-size="2g" \
-          -e name=${{env.name}} \
-          -v ${{ github.workspace }}:/test ${{ env.REPO_NAME }}:${{ env.REPO_TAG }}
-        env: 
-          name: lucky
+      - name: Download Reference Artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.MY_TOKEN}}
+          workflow: model-test.yml
+          run_id: ${{ env.REF_ID }}
+          path: last_generated
+          name_is_regexp: true
+          repo: ${{ github.repository }}
+          check_artifacts: false
+          search_artifacts: false
+          skip_unpack: false
+          if_no_artifact_found: warn
 
-      - name: SparseLib Test
-        id: SparseLib-Test
-        run: |
-          docker exec ${{ env.CONTAINER_NAME }} \
-          bash -c "bash /test/test.sh"
-
-         
+      - uses: actions/upload-artifact@v3
+        with:
+          path: last_generated
