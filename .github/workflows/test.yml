@@ -17,27 +17,8 @@ jobs:
       - name: Checkout out Repo
         uses: actions/checkout@v3
 
-      - run: echo hello > world.txt
-      - uses: actions/upload-artifact@v3
-        with:
-          name: artifact1
-          path: world.txt
+      - run: bash test.sh
 
-      - name: Download Reference Artifact
-        id: download-artifact
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          github_token: ${{secrets.MY_TOKEN}}
-          run_id: ${{ env.REF_ID }}
-          path: last_generated
-          name_is_regexp: true
-          repo: ${{ github.repository }}
-          check_artifacts: false
-          search_artifacts: false
-          skip_unpack: false
-          if_no_artifact_found: warn
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: artifact2
-          path: last_generated
+      - name: is_perf_reg
+        run: |
+          echo ${{env.is_perf_reg}}
