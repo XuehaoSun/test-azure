@@ -21,7 +21,7 @@ jobs:
 
       - name: is_perf_reg
         run: |
-          if [[ ${{ env.is_perf_reg }} == 'true' ]]; then
+          if [ ${{ env.is_perf_reg }} == 'true' ]; then
             echo "[Performance Regression] Some model performance regression occurred, please check artifacts and reports."
             exit 1
           else
