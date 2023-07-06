@@ -1,0 +1,29 @@
+name: test
+
+on: [push, workflow_dispatch]
+
+env:
+  DOCKER_CONFIG_NAME: "commonDockerConfig"
+  REPO_NAME: "intel-extension-for-transformers"
+  REPO_TAG: "py38"
+  DOCKER_FILE_NAME: "unitTest"
+  CONTAINER_NAME: "utTest"
+  REF_ID: "5264416693"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout out Repo
+        uses: actions/checkout@v3
+
+      - run: bash test.sh
+
+      - name: is_perf_reg
+        run: |
+          if [ ${{ env.is_perf_reg }} == 'true' ]; then
+            echo "[Performance Regression] Some model performance regression occurred, please check artifacts and reports."
+            exit 1
+          else
+            echo "yes"
+          fi
