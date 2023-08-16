@@ -1,0 +1,16 @@
+exclude: |
+  (?x)^(
+      conda_meta/.+|
+      neural_insights/gui.+|
+      neural_insights/test.+|
+      neural_solution/frontend/.+|
+      neural_solution/test/.+|
+      neural_coder/extensions/.+|
+      examples/.+
+  )$
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.280
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix, --no-cache]
