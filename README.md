@@ -13,3 +13,6 @@
 - `priority`(int, optional): The importance of the task, the optional value is `1`, `2`, and `3`, `1` is the highest priority. <!--- Can not represent how many workers to use. -->
 
 ## Design Doc for Optimization as a Service \[WIP\]
+
+[intel® security center]: https://www.intel.com/security
+[vulnerability handling guidelines]: https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html
