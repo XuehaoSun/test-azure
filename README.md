@@ -25,3 +25,6 @@ For more information on how Intel® works to resolve security issues, see
 
 [intel® security center]: https://www.intel.com/security
 [vulnerability handling guidelines]: https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html
+
+
+Model inference: Roughly speaking , two key steps are required to get the model's result. The first one is moving the model from the memory to the cache piece by piece, in which, memory bandwidth $B$ and parameter count $P$ are the key factors, theoretically the time cost is  $P\*4 /B$. The second one is  computation, in which, the device's computation capacity  $C$  measured in FLOPS and the forward FLOPs $F$ play the key roles, theoretically the cost is $F/C$.
