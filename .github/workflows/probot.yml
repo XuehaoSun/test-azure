@@ -21,3 +21,5 @@ jobs:
           job: check-group
           interval: 180 # seconds
           timeout: 60 # minutes
+          maintainers: "XuehaoSun"
+          owner: "XuehaoSun"
