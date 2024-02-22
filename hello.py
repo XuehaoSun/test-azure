@@ -11,3 +11,4 @@ assert len(str1) == len(str2) == len(str3), \
 print("hello!!!")
 print("hello!p!!")
 print("test")
+print("hello")
