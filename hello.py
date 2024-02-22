@@ -8,9 +8,7 @@ assert len(str1) == len(str2) == len(str3), \
      all should be the same.'.format(
         len(str1), len(str2), len(str3)
     )
-
-print("hello!!!")
-print("hello!p!!")
+print("hello")
+print("hello")
 print("test")
-print("222")
-
+print("hellogg")
