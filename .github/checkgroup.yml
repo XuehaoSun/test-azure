@@ -5,4 +5,4 @@ subprojects:
       - ".github/**"
       - "**/*.py"
     checks:
-      - "test / scan"
+      - "scan"
