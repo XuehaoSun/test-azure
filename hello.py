@@ -6,7 +6,7 @@ assert len(str1) == len(str2) == len(str3), \
      all should be the same.'.format(
         len(str1), len(str2), len(str3)
     )
-print("hello")
+print("hello1")
 print("hello")
 print("testi")
 print("hellogg")
