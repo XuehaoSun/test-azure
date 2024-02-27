@@ -7,6 +7,6 @@ assert len(str1) == len(str2) == len(str3), \
         len(str1), len(str2), len(str3)
     )
 print("hello1")
-print("hello")
+print("hello1")
 print("testi")
 print("hellogg")
