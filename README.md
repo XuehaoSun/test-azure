@@ -44,7 +44,7 @@ testtest<br/>testtest
 </details>
 testtest<br/>testtest
 </details>
-
+<table>
             <tbody><tr>
                 <th></th>
                 <th>Base coverage</th>
@@ -64,3 +64,4 @@ testtest<br/>testtest
                 <td style="background-color:#90EE90"> 0.023% </td>
             </tr>
         </tbody>
+</table>
