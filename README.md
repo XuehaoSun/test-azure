@@ -30,7 +30,7 @@ Model inference: Roughly speaking , two key steps are required to get the model'
 Text generation: The most famous application of LLMs is text generation, which predicts the next token/word based on the inputs/context. To generate a sequence of texts, we need to predict them one by one. In this scenario, $F\\approx P$ if some operations like bmm are ignored and past key values have been saved. However, the $C/B$ of the modern device could be to **100X,** that makes the memory bandwidth as the bottleneck in this scenario.
 
 | Tables   |      Are      |                                                                         Cool |
-| -------- | :-----: | ---: |
+| -------- | :-----------: | ---------------------------------------------------------------------------: |
 | col 1 is | left-aligned  |                                                                        $1600 |
 | col 2 is |   centered    |                                                                          $12 |
 | col 3 is | right-aligned | <details><summary><b>failed log</b></summary>testtest<br/>testtest</details> |
