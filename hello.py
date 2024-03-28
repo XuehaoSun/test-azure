@@ -1,5 +1,3 @@
-
-
 str1 = "hello"
 str2 = "world"
 str3 = '!'
@@ -8,7 +6,7 @@ assert len(str1) == len(str2) == len(str3), \
      all should be the same.'.format(
         len(str1), len(str2), len(str3)
     )
-print("hello")
-print("hello")
-print("test")
+print("hello1")
+print("hello1")
+print("testi")
 print("hellogg")
