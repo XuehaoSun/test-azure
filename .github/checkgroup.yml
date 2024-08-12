@@ -1,8 +1,0 @@
-custom_service_name: "CI checker"
-subprojects:
-  - id: "Tests workflow"
-    paths:
-      - ".github/**"
-      - "**/*.py"
-    checks:
-      - "scan"
