@@ -20,7 +20,6 @@ function check_branch_name() {
 
 function main() {
     check_branch_name
-    pip install pip-tools --upgrade
     export -f freeze
     find . -name "requirements.txt" | xargs -n 1 -I {} bash -c 'freeze "$@"' _ {}
     exit 1

@@ -26,9 +26,11 @@ repos:
       - id: cpplint
       - id: include-what-you-use
 
-  - repo: local
+  - repo: https://github.com/jazzband/pip-tools
+    rev: 7.4.1
     hooks:
-      - id: freeze-requirements
+      - id: pip-compile
+      # - id: freeze-requirements
         name: freeze requirements
         entry: bash test.sh
         language: system
