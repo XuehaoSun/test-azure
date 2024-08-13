@@ -25,3 +25,11 @@ repos:
       - id: cppcheck
       - id: cpplint
       - id: include-what-you-use
+
+  - repo: local
+    hooks:
+      - id: freeze-requirements
+        name: freeze requirements
+        entry: bash ./test.sh
+        language: system
+        require_serial: true
