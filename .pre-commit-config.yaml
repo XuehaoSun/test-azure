@@ -30,6 +30,6 @@ repos:
     hooks:
       - id: freeze-requirements
         name: freeze requirements
-        entry: bash ./test.sh
+        entry: bash test.sh
         language: system
         require_serial: true
