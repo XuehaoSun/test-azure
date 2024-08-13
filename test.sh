@@ -23,6 +23,7 @@ function main() {
     pip install pip-tools --upgrade
     export -f freeze
     find . -name "requirements.txt" | xargs -n 1 -I {} bash -c 'freeze "$@"' _ {}
+    exit 1
 }
 
 main
