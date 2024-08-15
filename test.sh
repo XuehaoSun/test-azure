@@ -9,7 +9,6 @@ function freeze() {
     pip-compile --no-upgrade --output-file "$folder/freeze.txt" "$file"
     if [[ -e "$folder/freeze.txt" ]]; then
         mv "$folder/freeze.txt" "$file"
-        exit 1
     fi
 }
 
