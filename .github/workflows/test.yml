@@ -23,7 +23,7 @@ jobs:
         run: |
           git config --global user.name "Sun, Xuehao"
           git config --global user.email "xuehao.sun@intel.com"
-          git remote set-url origin https://NeuralChatBot:"${{ secrets.MY_TOKEN }}"@github.com/opea-project/GenAIComps.git
+          git remote set-url origin https://XuehaoSun:"${{ secrets.MY_TOKEN }}"@github.com/XuehaoSun/test-azure.git
 
       - name: Run script
         run: |
