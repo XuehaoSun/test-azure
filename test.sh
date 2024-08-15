@@ -14,8 +14,12 @@ function freeze() {
 }
 
 function check_branch_name() {
-    branch_name=$(git branch --show-current)
-    echo "$branch_name is release branch"
+    if [[ "$GITHUB_REF_NAME" == *"rc" ]]; then
+        echo "$GITHUB_REF_NAME is release branch"
+    else
+        echo "$GITHUB_REF_NAME is not release branch"
+        # exit 0
+    fi
 }
 
 function main() {
