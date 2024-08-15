@@ -1,5 +1,0 @@
-custom_service_name: "CI checker"
-subprojects:
-  - id: "Tests workflow"
-    checks:
-      - "test / scan"
