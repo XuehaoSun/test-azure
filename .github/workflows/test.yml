@@ -6,31 +6,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  scan:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.ref }}
+      - run: echo "Build" && exit 1
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Set up Git
-        run: |
-          git config --global user.name "Sun, Xuehao"
-          git config --global user.email "xuehao.sun@intel.com"
-          git remote set-url origin https://XuehaoSun:"${{ secrets.MY_TOKEN }}"@github.com/XuehaoSun/test-azure.git
-
-      - name: Run script
-        run: |
-          bash test.sh
-
-      - name: Commit changes
-        run: |
-          git add .
-          git commit -m "Freeze requirements"
-          git push
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: true
+    steps:
+      - run: echo "Test"
