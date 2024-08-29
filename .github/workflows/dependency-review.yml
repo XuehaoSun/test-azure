@@ -8,6 +8,8 @@ name: Weekly update base images and 3rd party images
 
 on:
   workflow_dispatch:
+permissions:
+  pull-requests: write
 
 jobs:
   freeze-images:
@@ -35,7 +37,7 @@ jobs:
         run: |
           git add .
           git commit -s -m "Update third party images tag"
-          git push
+          git push --set-upstream origin update_images_tag
 
       - name: create pull request
         run: gh pr create -B main -H update_images_tag --title 'Update ghcr.io/huggingface/text-generation-inference image tag' --body 'Created by Github action'
