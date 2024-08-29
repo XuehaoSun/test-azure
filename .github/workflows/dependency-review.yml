@@ -9,6 +9,7 @@ name: Weekly update base images and 3rd party images
 on:
   workflow_dispatch:
 permissions:
+  contents: write
   pull-requests: write
 
 jobs:
