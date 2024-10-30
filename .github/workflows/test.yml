@@ -6,14 +6,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  job_id:
     runs-on: ubuntu-latest
-    steps:
-      - run: echo "Build" && exit 1
+    # Add "id-token" with the intended permissions.
+    permissions:
+      contents: "read"
+      id-token: "write"
 
-  test:
-    needs: [build]
-    runs-on: ubuntu-latest
-    if: true
     steps:
-      - run: echo "Test"
+      - uses: "actions/checkout@v4"
+
+      - uses: "google-github-actions/auth@v2"
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
