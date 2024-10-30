@@ -14,9 +14,11 @@ jobs:
       id-token: "write"
 
     steps:
-      - uses: "actions/checkout@v4"
-
       - uses: "google-github-actions/auth@v2"
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          workloadIdentityPools: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - run: |
+          gcloud projects list
+          gcloud compute instances list
