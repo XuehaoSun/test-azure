@@ -24,8 +24,8 @@ jobs:
         with:
           version: ">= 363.0.0"
 
-      - name: "Use gcloud CLI"
-        run: "gcloud info"
+      - name: 'Use gcloud CLI'
+        run: 'gcloud auth list --filter=status:ACTIVE --format="value(account)"'
       - run: |
           gcloud projects list
           gcloud compute instances list
