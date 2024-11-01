@@ -29,5 +29,5 @@ jobs:
       - name: "Use gcloud CLI"
         run: 'gcloud auth list --filter=status:ACTIVE --format="value(account)"'
       - run: |
-          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}" -y
           gcloud compute instances list
