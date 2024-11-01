@@ -24,8 +24,9 @@ jobs:
         with:
           version: ">= 363.0.0"
 
-      - name: 'Use gcloud CLI'
+      - name: "Use gcloud CLI"
         run: 'gcloud auth list --filter=status:ACTIVE --format="value(account)"'
       - run: |
           gcloud projects list
           gcloud compute instances list
+          gcloud projects get-iam-policy ${{ secrets.GCP_PROJECT_ID }}
