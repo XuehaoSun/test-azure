@@ -31,7 +31,7 @@ jobs:
           gcloud compute instances start opea-n4-16c-128g \
             --project=${{ secrets.GCP_PROJECT_ID }} \
             --zone=us-east1-d \
-            --silent
+            --quiet
 
           gcloud compute instances stop opea-n4-16c-128g \
             --project=${{ secrets.GCP_PROJECT_ID }} \
