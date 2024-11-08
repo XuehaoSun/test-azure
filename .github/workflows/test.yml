@@ -7,7 +7,7 @@ on:
 
 jobs:
   job_id:
-    runs-on: master-e2
+    runs-on: Linux
     permissions:
       contents: "read"
       id-token: "write"
