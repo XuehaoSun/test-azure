@@ -27,7 +27,6 @@ jobs:
       #     version: ">= 363.0.0"
 
       - run: |
-          gcloud compute instances list
           gcloud compute instances start opea-n4-16c-128g \
             --project=${{ secrets.GCP_PROJECT_ID }} \
             --zone=us-east1-d > /dev/null 2>&1
