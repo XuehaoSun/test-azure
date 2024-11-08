@@ -30,4 +30,4 @@ jobs:
           gcloud compute instances list
           gcloud compute instances start opea-n4-16c-128g \
             --project=${{ secrets.GCP_PROJECT_ID }} \
-            --zone=global
+            --zone=us-east1-d
