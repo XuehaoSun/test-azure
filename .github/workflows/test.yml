@@ -37,9 +37,6 @@ jobs:
   check-label-queue:
     runs-on: Linux
     steps:
-      - name: Set up jq
-        run: sudo apt-get install -y jq
-
       - name: Get queued jobs with specific label
         env:
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
