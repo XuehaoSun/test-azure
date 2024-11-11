@@ -6,30 +6,58 @@ on:
   workflow_dispatch:
 
 jobs:
-  job_id:
+  # job_id:
+  #   runs-on: Linux
+  #   permissions:
+  #     contents: "read"
+  #     id-token: "write"
+
+  #   steps:
+  #     - uses: "actions/checkout@v4"
+  #     - uses: "google-github-actions/auth@v2"
+  #       id: 'auth'
+  #       with:
+  #         project_id: ${{ secrets.GCP_PROJECT_ID }}
+  #         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+  #         service_account: ${{ secrets.VIEWER_SERVICE_ACCOUNT }}
+
+  #     - name: "Set up Cloud SDK"
+  #       uses: "google-github-actions/setup-gcloud@v2"
+  #       with:
+  #         version: ">= 363.0.0"
+
+  #     - run: |
+  #         gcloud compute instances start opea-n4-16c-128g \
+  #           --project=${{ secrets.GCP_PROJECT_ID }} \
+  #           --zone=us-east1-d > /dev/null 2>&1
+  #         gcloud compute instances stop opea-n4-16c-128g \
+  #           --project=${{ secrets.GCP_PROJECT_ID }} \
+  #           --zone=us-east1-d
+
+  check-label-queue:
     runs-on: Linux
-    permissions:
-      contents: "read"
-      id-token: "write"
-
     steps:
-      # - uses: "actions/checkout@v4"
-      # - uses: "google-github-actions/auth@v2"
-      #   id: 'auth'
-      #   with:
-      #     project_id: ${{ secrets.GCP_PROJECT_ID }}
-      #     workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      #     service_account: ${{ secrets.VIEWER_SERVICE_ACCOUNT }}
+      - name: Set up jq
+        run: sudo apt-get install -y jq
 
-      # - name: "Set up Cloud SDK"
-      #   uses: "google-github-actions/setup-gcloud@v2"
-      #   with:
-      #     version: ">= 363.0.0"
+      - name: Get queued jobs with specific label
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          LABEL: linux
+        run: |
+          # GitHub API to list all workflow runs in the repository
+          QUEUED_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=queued")
 
-      - run: |
-          gcloud compute instances start opea-n4-16c-128g \
-            --project=${{ secrets.GCP_PROJECT_ID }} \
-            --zone=us-east1-d > /dev/null 2>&1
-          gcloud compute instances stop opea-n4-16c-128g \
-            --project=${{ secrets.GCP_PROJECT_ID }} \
-            --zone=us-east1-d
+          # Filter runs that match the specific label
+          LABEL_JOBS=$(echo "$QUEUED_JOBS" | jq -r --arg LABEL "$LABEL" '
+            .workflow_runs[] | select(.labels[]?.name == $LABEL) | .html_url')
+
+          if [ -n "$LABEL_JOBS" ]; then
+            echo "Jobs in queue with label '$LABEL':"
+            echo "$LABEL_JOBS"
+          else
+            echo "No jobs in queue with label '$LABEL'."
+          fi
