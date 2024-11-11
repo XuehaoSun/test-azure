@@ -42,19 +42,27 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
-          LABEL: linux
         run: |
-          # GitHub API to list all workflow runs in the repository
+          WORKFLOW_IDS=("test" "Probot")
           QUEUED_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=queued")
+              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=cancelled" | jq -r '.workflow_runs[] | .name')
+          RUNNING_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=in_progress" | jq -r '.workflow_runs[] | .name')
+          queued_count=0
+          for name in $QUEUED_JOBS; do
+              if printf "%s\n" "${WORKFLOW_IDS[@]}" | grep -qx "$name"; then
+                  queued_count=$((queued_count + 1))
+              fi
+          done
 
-          # Filter runs that match the specific label
-          LABEL_JOBS=$(echo "$QUEUED_JOBS" | jq -r --arg LABEL "$LABEL" '
-            .workflow_runs[] | select(.labels[]?.name == $LABEL) | .html_url')
+          running_count=0
+          for name in $RUNNING_JOBS; do
+              if printf "%s\n" "${WORKFLOW_IDS[@]}" | grep -qx "$name"; then
+                  running_count=$((running_count + 1))
+              fi
+          done
 
-          if [ -n "$LABEL_JOBS" ]; then
-            echo "Jobs in queue with label '$LABEL':"
-            echo "$LABEL_JOBS"
-          else
-            echo "No jobs in queue with label '$LABEL'."
+          echo "There are $queued_count queued jobs and $running_count running jobs."
+          if [[ $queued_count > 0 ]] || [[ $running_count > 1 ]]; then
+              exit 1
           fi
