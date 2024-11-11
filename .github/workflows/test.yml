@@ -49,12 +49,15 @@ jobs:
           RUNNING_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
               "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=in_progress" | jq -r '.workflow_runs[] | .name')
           queued_count=0
+
+          echo "$QUEUED_JOBS"
           for name in $QUEUED_JOBS; do
               if printf "%s\n" "${WORKFLOW_IDS[@]}" | grep -qx "$name"; then
                   queued_count=$((queued_count + 1))
               fi
           done
 
+          echo "$RUNNING_JOBS"
           running_count=0
           for name in $RUNNING_JOBS; do
               if printf "%s\n" "${WORKFLOW_IDS[@]}" | grep -qx "$name"; then
