@@ -45,7 +45,7 @@ jobs:
         run: |
           WORKFLOW_IDS=("test" "Probot")
           QUEUED_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=cancelled" | jq -r '.workflow_runs[] | .name')
+              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=queued" | jq -r '.workflow_runs[] | .name')
           RUNNING_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
               "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=in_progress" | jq -r '.workflow_runs[] | .name')
           queued_count=0
