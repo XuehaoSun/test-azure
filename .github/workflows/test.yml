@@ -14,18 +14,6 @@ jobs:
 
   #   steps:
   #     - uses: "actions/checkout@v4"
-  #     - uses: "google-github-actions/auth@v2"
-  #       id: 'auth'
-  #       with:
-  #         project_id: ${{ secrets.GCP_PROJECT_ID }}
-  #         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-  #         service_account: ${{ secrets.VIEWER_SERVICE_ACCOUNT }}
-
-  #     - name: "Set up Cloud SDK"
-  #       uses: "google-github-actions/setup-gcloud@v2"
-  #       with:
-  #         version: ">= 363.0.0"
-
   #     - run: |
   #         gcloud compute instances start opea-n4-16c-128g \
   #           --project=${{ secrets.GCP_PROJECT_ID }} \
@@ -33,6 +21,10 @@ jobs:
   #         gcloud compute instances stop opea-n4-16c-128g \
   #           --project=${{ secrets.GCP_PROJECT_ID }} \
   #           --zone=us-east1-d
+
+  #         az vm list --query "[].{Name:name}" -o table
+  #         az vm start -g INC -n ICX-16c-128m-node9
+  #         az vm deallocate -g INC -n ICX-16c-128m-node9
 
   check-label-queue:
     runs-on: Linux
