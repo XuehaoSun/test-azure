@@ -1,64 +1,64 @@
-name: test
+# name: test
 
-on:
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+# on:
+#   pull_request:
+#     branches: [main]
+#   workflow_dispatch:
 
-jobs:
-  # job_id:
-  #   runs-on: Linux
-  #   permissions:
-  #     contents: "read"
-  #     id-token: "write"
+# jobs:
+#   job_id:
+#     runs-on: Linux
+#     permissions:
+#       contents: "read"
+#       id-token: "write"
 
-  #   steps:
-  #     - uses: "actions/checkout@v4"
-  #     - run: |
-  #         gcloud compute instances start opea-n4-16c-128g \
-  #           --project=${{ secrets.GCP_PROJECT_ID }} \
-  #           --zone=us-east1-d > /dev/null 2>&1
-  #         gcloud compute instances stop opea-n4-16c-128g \
-  #           --project=${{ secrets.GCP_PROJECT_ID }} \
-  #           --zone=us-east1-d
+#     steps:
+#       - uses: "actions/checkout@v4"
+#       - run: |
+#           gcloud compute instances start opea-n4-16c-128g \
+#             --project=${{ secrets.GCP_PROJECT_ID }} \
+#             --zone=us-east1-d > /dev/null 2>&1
+#           gcloud compute instances stop opea-n4-16c-128g \
+#             --project=${{ secrets.GCP_PROJECT_ID }} \
+#             --zone=us-east1-d
 
-  #         az vm list --query "[].{Name:name}" -o table
-  #         az vm start -g INC -n ICX-16c-128m-node9
-  #         az vm deallocate -g INC -n ICX-16c-128m-node9
+#           az vm list --query "[].{Name:name}" -o table
+#           az vm start -g INC -n ICX-16c-128m-node9
+#           az vm deallocate -g INC -n ICX-16c-128m-node9
 
-  check-label-queue:
-    runs-on: Linux
-    steps:
-      - name: Get queued jobs with specific label
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          REPO_NAME: ${{ github.event.repository.name }}
-        run: |
-          sleep 15s
-          WORKFLOW_IDS=("test" "Probot")
-          QUEUED_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=queued" | jq -r '.workflow_runs[] | .name')
-          RUNNING_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=in_progress" | jq -r '.workflow_runs[] | .name')
-          queued_count=0
+#   check-label-queue:
+#     runs-on: Linux
+#     steps:
+#       - name: Get queued jobs with specific label
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
+#           REPO_OWNER: ${{ github.repository_owner }}
+#           REPO_NAME: ${{ github.event.repository.name }}
+#         run: |
+#           sleep 15s
+#           WORKFLOW_IDS=("test" "Probot")
+#           QUEUED_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+#               "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=queued" | jq -r '.workflow_runs[] | .name')
+#           RUNNING_JOBS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+#               "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?status=in_progress" | jq -r '.workflow_runs[] | .name')
+#           queued_count=0
 
-          echo "$QUEUED_JOBS"
-          for name in $QUEUED_JOBS; do
-              if printf "%s\n" "${WORKFLOW_IDS[@]}" | grep -qx "$name"; then
-                  queued_count=$((queued_count + 1))
-              fi
-          done
+#           echo "$QUEUED_JOBS"
+#           for name in $QUEUED_JOBS; do
+#               if printf "%s\n" "${WORKFLOW_IDS[@]}" | grep -qx "$name"; then
+#                   queued_count=$((queued_count + 1))
+#               fi
+#           done
 
-          echo "$RUNNING_JOBS"
-          running_count=0
-          for name in $RUNNING_JOBS; do
-              if printf "%s\n" "${WORKFLOW_IDS[@]}" | grep -qx "$name"; then
-                  running_count=$((running_count + 1))
-              fi
-          done
+#           echo "$RUNNING_JOBS"
+#           running_count=0
+#           for name in $RUNNING_JOBS; do
+#               if printf "%s\n" "${WORKFLOW_IDS[@]}" | grep -qx "$name"; then
+#                   running_count=$((running_count + 1))
+#               fi
+#           done
 
-          echo "There are $queued_count queued jobs and $running_count running jobs."
-          if [[ $queued_count > 0 ]] || [[ $running_count > 1 ]]; then
-              exit 1
-          fi
+#           echo "There are $queued_count queued jobs and $running_count running jobs."
+#           if [[ $queued_count > 0 ]] || [[ $running_count > 1 ]]; then
+#               exit 1
+#           fi
