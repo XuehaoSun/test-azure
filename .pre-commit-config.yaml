@@ -1,27 +1,13 @@
-exclude: |
-  (?x)^(
-      conda_meta/.+|
-      neural_insights/gui.+|
-      neural_insights/test.+|
-      neural_solution/frontend/.+|
-      neural_solution/test/.+|
-      neural_coder/extensions/.+|
-      examples/.+
-  )$
+
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
     hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix, --no-cache]
-  - repo: https://github.com/pocc/pre-commit-hooks
-    rev: v1.3.5
+      - id: no-commit-to-branch
+        args: [--branch, test6]
+  - repo: https://github.com/psf/black.git
+    rev: 24.4.2
     hooks:
-      - id: clang-format
-        args: [--style=Google]
-      - id: clang-tidy
-      - id: oclint
-      - id: uncrustify
-      - id: cppcheck
-      - id: cpplint
-      - id: include-what-you-use
+      - id: black
+        files: (.*\.py)$
+
