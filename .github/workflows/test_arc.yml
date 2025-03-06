@@ -12,3 +12,6 @@ jobs:
             lscpu
             free -g
             df -h
+            docker pull hello-world:latest
+            docker run hello-world
+
