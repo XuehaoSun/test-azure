@@ -3,14 +3,14 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-echo "::notice::This is a notice message\n"
+echo -e "::notice::This is a notice message\n"
 
-echo "::warning::This is a warning message\n"
+echo -e "::warning::This is a warning message\n"
 
-echo "::error::This is an error message\n"
+echo -e "::error::This is an error message\n"
 
 echo "::add-mask::Mona The Octocat"
-echo "Mask value: Mona The Octocat\n"
+echo -e "Mask value: Mona The Octocat\n"
 
 echo "::group::This is a group message"
 echo "This is the output of the group message"
