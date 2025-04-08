@@ -8,9 +8,9 @@ echo "::notice::This is a notice message"
 echo "::warning::This is a warning message"
 echo "::error::This is an error message"
 echo "::add-mask::Mona The Octocat"
-
+echo "Mask value: Mona The Octocat"
 echo "::group::This is a group message"
-echo "::set-output name=group_output::This is the output of the group message"
+echo "This is the output of the group message"
 echo "::endgroup::This is the end of the group message"
 
 echo "### Hello world! :rocket:" >>$GITHUB_STEP_SUMMARY
