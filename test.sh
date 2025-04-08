@@ -37,7 +37,8 @@ echo "::notice::Running in quiet mode=========================="
 docker pull --quiet hello-world
 echo "::endgroup::"
 
-echo "::group::test wget"
+echo "::group::test tqdm"
+pip install tqdm
 echo "::notice::Running in normal mode========================="
 python hello.py
 echo "::notice::Running in tty mode=========================="
