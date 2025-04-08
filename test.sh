@@ -3,29 +3,19 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-function freeze() {
-    local file=$1
-    local folder=$(dirname "$file")
-    pip-compile --no-upgrade --output-file "$folder/freeze.txt" "$file"
-    if [[ -e "$folder/freeze.txt" ]]; then
-        mv "$folder/freeze.txt" "$file"
-    fi
-}
+echo "::debug::This is a debug message"
+echo "::notice::This is a notice message"
+echo "::warning::This is a warning message"
+echo "::error::This is an error message"
+echo "::add-mask::Mona The Octocat"
 
-function check_branch_name() {
-    if [[ "$GITHUB_REF_NAME" == *"rc" ]]; then
-        echo "$GITHUB_REF_NAME is release branch"
-    else
-        echo "$GITHUB_REF_NAME is not release branch"
-        # exit 0
-    fi
-}
+echo "::group::This is a group message"
+echo "::set-output name=group_output::This is the output of the group message"
+echo "::endgroup::This is the end of the group message"
 
-function main() {
-    check_branch_name
-    echo "::group::pip install pip-tools" && pip install pip-tools --upgrade && echo "::endgroup::"
-    export -f freeze
-    find . -name "requirements.txt" | xargs -n 1 -I {} bash -c 'freeze "$@"' _ {}
-}
-
-main
+echo "### Hello world! :rocket:" >>$GITHUB_STEP_SUMMARY
+echo "This is the lead in sentence for the list" >>$GITHUB_STEP_SUMMARY
+echo "" >>$GITHUB_STEP_SUMMARY # this is a blank line
+echo "- Lets add a bullet point" >>$GITHUB_STEP_SUMMARY
+echo "- Lets add a second bullet point" >>$GITHUB_STEP_SUMMARY
+echo "- How about a third one?" >>$GITHUB_STEP_SUMMARY
