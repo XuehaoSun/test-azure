@@ -24,19 +24,25 @@ echo "- Lets add a second bullet point" >>$GITHUB_STEP_SUMMARY
 echo "- How about a third one?" >>$GITHUB_STEP_SUMMARY
 
 echo "::group::test wget"
+echo "::notice::Running in normal mode========================="
 wget https://github.com/docker/compose/releases/download/v2.33.1/docker-compose-linux-x86_64
+echo "::notice::Running in quiet mode=========================="
 wget --tries=5 --no-verbose https://github.com/docker/compose/releases/download/v2.33.1/docker-compose-linux-x86_64
 echo "::endgroup::"
 
 echo "::group::test docker pull"
+echo "::notice::Running in normal mode========================="
 docker pull hello-world
+echo "::notice::Running in quiet mode=========================="
 docker pull --quiet hello-world
 echo "::endgroup::"
 
 echo "::group::test wget"
-python -c "import tqdm; import time; for i in tqdm.tqdm(range(100), desc='Processing'): time.sleep(0.1)"
+echo "::notice::Running in normal mode========================="
+python hello.py
+echo "::notice::Running in tty mode=========================="
 export TQDM_POSITION=-1    # fix progress bar on tty mode
 export TQDM_MININTERVAL=60 # set refresh every 60s
-python -c "import tqdm; import time; for i in tqdm.tqdm(range(100), desc='Processing'): time.sleep(0.1)"
+python hello.py
 echo "::endgroup::"
 
