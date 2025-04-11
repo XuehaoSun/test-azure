@@ -46,4 +46,3 @@ export TQDM_POSITION=-1    # fix progress bar on tty mode
 export TQDM_MININTERVAL=60 # set refresh every 60s
 python hello.py
 echo "::endgroup::"
-
