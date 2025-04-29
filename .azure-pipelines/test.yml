@@ -3,7 +3,7 @@ trigger: none
 pool:
   vmImage: "ubuntu-latest"
 
-stage:
+stages:
   - stage: Test
     jobs:
       - job: Test
