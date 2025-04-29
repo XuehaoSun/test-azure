@@ -1,0 +1,34 @@
+trigger: none
+
+pool:
+  vmImage: "ubuntu-latest"
+
+stage:
+  - stage: Test
+    jobs:
+      - job: Test
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+          - script: |
+              echo "🎉 This job uses runner scale set runners!"
+              lscpu
+              free -g
+              df -h
+              echo "##[group]Beginning of a group"s
+              echo "##[warning]Warning message"
+              echo "##[error]Error message"
+              echo "##[section]Start of a section"
+              echo "##[debug]Debug text"
+              echo "##[command]Command-line being run"
+              echo "##vso[task.logissue type=error]Something went very wrong."
+              echo "##[endgroup]"
+              echo "Begin a lengthy process..."
+              for i in {0..100..10}
+              do
+                sleep 1
+                echo "##vso[task.setprogress value=$i;]Sample Progress Indicator"
+              done
+              echo "Lengthy process is complete."
+              echo "##vso[task.complete]current operation"
