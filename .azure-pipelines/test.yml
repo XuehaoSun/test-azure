@@ -31,4 +31,4 @@ stages:
                 echo "##vso[task.setprogress value=$i;]Sample Progress Indicator"
               done
               echo "Lengthy process is complete."
-              ##vso[task.complete result=Failed;]current operation
+              echo "##vso[task.complete result=Failed;]current operation"
