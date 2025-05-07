@@ -22,4 +22,12 @@ jobs:
           python-version: 3.11
 
       - name: Test github actions
-        run: bash test.sh
+        run: |
+          latest_vllm_ver=$(curl -s "https://api.github.com/repos/vllm-project/vllm/tags" | jq '.[0].name' -)
+          latest_vllm_fork_ver=$(curl -s "https://api.github.com/repos/HabanaAI/vllm-fork/tags" | jq '.[0].name' -)
+
+          echo "latest_vllm_ver=${latest_vllm_ver}" >> "$GITHUB_ENV"
+          echo "latest_vllm_fork_ver=${latest_vllm_fork_ver}" >> "$GITHUB_ENV"
+      - name: Commit changes
+        run: |
+          echo "Update vllm version to ${latest_vllm_ver} and ${latest_vllm_fork_ver}"
