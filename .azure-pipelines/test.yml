@@ -57,7 +57,7 @@ jobs:
 
       echo ""
       echo "--- Checking Individual Job Statuses ---"
-      
+
       STATUS_PY310_LINUX="$(dependencies.TestMatrix.Linux_Python3_10.result)"
       STATUS_PY311_WIN="$(dependencies.TestMatrix.Windows_Python3_11.result)"
       STATUS_PY312_FAIL="$(dependencies.TestMatrix.Linux_Python3_12_Fails.result)"
