@@ -1,34 +1,80 @@
-trigger: none
+# azure-pipelines.yml
 
-pool:
-  vmImage: "ubuntu-latest"
+trigger:
+- main
 
-stages:
-  - stage: Test
-    jobs:
-      - job: Test
-        pool:
-          vmImage: "ubuntu-latest"
-        steps:
-          - checkout: self
-          - script: |
-              echo "🎉 This job uses runner scale set runners!"
-              lscpu
-              free -g
-              df -h
-              echo "##[group]Beginning of a group"s
-              echo "##[warning]Warning message"
-              echo "##[error]Error message"
-              echo "##[section]Start of a section"
-              echo "##[debug]Debug text"
-              echo "##[command]Command-line being run"
-              echo "##vso[task.logissue type=error]Something went very wrong."
-              echo "##[endgroup]"
-              echo "Begin a lengthy process..."
-              for i in {0..100..10}
-              do
-                sleep 1
-                echo "##vso[task.setprogress value=$i;]Sample Progress Indicator"
-              done
-              echo "Lengthy process is complete."
-              echo "##vso[task.complete result=Failed;]current operation"
+jobs:
+- job: TestMatrix
+  displayName: 'Run Tests on Matrix'
+  strategy:
+    matrix:
+      Linux_Python3.10:
+        vmImage: 'ubuntu-latest'
+        python.version: '3.10'
+      Windows_Python3.11:
+        vmImage: 'windows-latest'
+        python.version: '3.11'
+      Linux_Python3.12_Fails:
+        vmImage: 'ubuntu-latest'
+        python.version: '3.12'
+
+  pool:
+    vmImage: $(vmImage)
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install numpy
+    displayName: 'Install dependencies'
+
+  - script: |
+      if [[ "$(python.version)" == "3.12" ]]; then
+        echo "This job is configured to fail."
+        exit 1
+      fi
+      echo "This job succeeded."
+      python -c "import numpy"
+    displayName: 'Run Import Test'
+
+- job: PublishResults
+  displayName: 'Check Matrix Status & Publish'
+  dependsOn: TestMatrix
+  condition: always()
+
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+  - script: |
+      echo "--- Checking Overall Matrix Status ---"
+      MATRIX_STATUS="$(dependencies.TestMatrix.result)"
+      echo "Overall status of the TestMatrix job is: $MATRIX_STATUS"
+
+      echo ""
+      echo "--- Checking Individual Job Statuses ---"
+      
+      STATUS_PY310_LINUX="$(dependencies.TestMatrix.Linux_Python3_10.result)"
+      STATUS_PY311_WIN="$(dependencies.TestMatrix.Windows_Python3_11.result)"
+      STATUS_PY312_FAIL="$(dependencies.TestMatrix.Linux_Python3_12_Fails.result)"
+
+      echo "Status of Linux_Python3.10: $STATUS_PY310_LINUX"
+      echo "Status of Windows_Python3.11: $STATUS_PY311_WIN"
+      echo "Status of Linux_Python3.12_Fails: $STATUS_PY312_FAIL"
+
+      echo ""
+      echo "--- Making a decision based on status ---"
+      if [[ "$MATRIX_STATUS" == "Failed" ]]; then
+        echo "At least one job in the matrix failed. Aborting publish."
+        echo "##vso[task.complete result=Failed;]One or more matrix tests failed."
+        exit 1
+      elif [[ "$MATRIX_STATUS" == "SucceededWithIssues" ]]; then
+        echo "Some tests passed but there were issues. Proceeding with caution."
+      else
+        echo "All matrix jobs succeeded! Proceeding with release."
+      fi
+    displayName: 'Analyze Matrix Results'
