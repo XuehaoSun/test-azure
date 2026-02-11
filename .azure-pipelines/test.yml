@@ -105,12 +105,12 @@ stages:
                 while [ $count -lt $MAX_RETRIES ]; do
                   # 查询特定名称的 Agent
                   RESPONSE=$(curl -s -u ":$AZP_DEVOPS_PAT" "$ORG_URL/_apis/distributedtask/pools/$POOL_ID/agents?agentName=$AGENT_NAME&api-version=7.0")
-                  
+
                   # 提取状态 (status) 和 启用状态 (enabled)
                   # status 可能是: offline, online
                   CURRENT_STATUS=$(echo $RESPONSE | jq -r '.value[0].status')
                   IS_ENABLED=$(echo $RESPONSE | jq -r '.value[0].enabled')
-                  
+
                   if [ "$CURRENT_STATUS" == "online" ]; then
                     echo "✅ Agent '$AGENT_NAME' is ONLINE and ready!"
                     agent_online=true
