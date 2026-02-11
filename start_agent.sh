@@ -11,7 +11,8 @@ if [ -z "$AZP_TOKEN_FILE" ]; then
     echo 1>&2 "error: missing AZP_TOKEN environment variable"
     exit 1
   fi
-  AZP_TOKEN_FILE=/azp/.token
+  AZP_TOKEN_FILE=/workspace/.token
+  touch "$AZP_TOKEN_FILE"
   echo -n $AZP_TOKEN > "$AZP_TOKEN_FILE"
 fi
 

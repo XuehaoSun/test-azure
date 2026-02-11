@@ -17,7 +17,7 @@ stages:
     jobs:
       - job: Start_Pod_Job
         displayName: "Launch Pod & Run CUDA Tests"
-        timeoutInMinutes: 10
+        timeoutInMinutes: 15
         pool:
           vmImage: "ubuntu-latest"
 
@@ -50,10 +50,16 @@ stages:
                   --gpuCount 1 \
                   --containerDiskSize 50 \
                   --env AZP_URL=$(System.CollectionUri) \
-                  --env AZP_TOKEN=$(AzDevOpsPat) \
+                  --env AZP_TOKEN=$(AZP_DEVOPS_PAT) \
                   --env AZP_POOL=$(POOL_NAME) \
                   --env AZP_AGENT_NAME=$(AGENT_NAME)
 
+          - task: Bash@3
+            displayName: "Wait for Pod to be Ready"
+            name: wait_for_pod
+            inputs:
+              targetType: "inline"
+              script: |
                 MAX_RETRIES=30        # 最大重试 30 次
                 SLEEP_INTERVAL=10     # 每次间隔 10 秒
                 COUNT=0
@@ -82,6 +88,45 @@ stages:
                   sleep $SLEEP_INTERVAL
                 done
                 echo "##vso[task.setvariable variable=RunPodId;isOutput=true]$POD_ID"
+
+
+          - task: Bash@3
+            displayName: "Wait for Agent to be Online"
+            name: wait_for_agent
+            inputs:
+              targetType: "inline"
+              script: |
+                # 循环检查 Agent 状态
+                MAX_RETRIES=60        # 最大重试 60 次
+                SLEEP_INTERVAL=10     # 每次间隔 10 秒
+                count=0
+                agent_online=false
+
+                while [ $count -lt $MAX_RETRIES ]; do
+                  # 查询特定名称的 Agent
+                  RESPONSE=$(curl -s -u ":$AZP_DEVOPS_PAT" "$ORG_URL/_apis/distributedtask/pools/$POOL_ID/agents?agentName=$AGENT_NAME&api-version=7.0")
+                  
+                  # 提取状态 (status) 和 启用状态 (enabled)
+                  # status 可能是: offline, online
+                  CURRENT_STATUS=$(echo $RESPONSE | jq -r '.value[0].status')
+                  IS_ENABLED=$(echo $RESPONSE | jq -r '.value[0].enabled')
+                  
+                  if [ "$CURRENT_STATUS" == "online" ]; then
+                    echo "✅ Agent '$AGENT_NAME' is ONLINE and ready!"
+                    agent_online=true
+                    break
+                  fi
+
+                  count=$((count+1))
+                  echo "⏳ Attempt $count/$MAX_RETRIES: Agent status is '${CURRENT_STATUS:-not found}'. Waiting ${SLEEP_INTERVAL}s..."
+                  sleep $SLEEP_INTERVAL
+                done
+
+                if [ "$agent_online" = false ]; then
+                  echo "❌ Timeout: Agent failed to come online within $((MAX_RETRIES * SLEEP_INTERVAL)) seconds."
+                  echo "Possible reasons: Invalid PAT, Network issues in Pod, or Docker container failed to start."
+                  exit 1
+                fi
 
   - stage: GPU_Test
     dependsOn: Start_Pod
@@ -123,7 +168,7 @@ stages:
                 wget --quiet --show-progress https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
                   && chmod +x runpodctl \
                   && sudo cp runpodctl /usr/bin/runpodctl
-                runpodctl config --apiKey $(RunPodApiKey)
+                runpodctl config --apiKey $(RUNPOD_API_KEY)
           - script: |
               echo "Terminating Pod: $(PodId)"
               if [ -z "$TARGET_ID" ]; then
