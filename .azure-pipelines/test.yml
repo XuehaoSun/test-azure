@@ -1,75 +1,142 @@
-# azure-pipelines.yml
+# CUDA UnitTest CI - RunPod Pod Mode (Cost Optimized)
+trigger: none
 
-trigger:
-- main
+variables:
+  - name: RUNPOD_GPU_TYPE
+    value: "NVIDIA RTX 4000 Ada Generation"
+  - name: RUNPOD_IMAGE
+    value: "ghcr.io/xuehaosun/azure-agent:v0.1" # 轻量级测试镜像，实际测试时替换为包含 CUDA 测试环境的镜像
+  - name: POOL_NAME
+    value: "RunPod-GPU-Pool"
+  - name: AGENT_NAME
+    value: "runpod-agent-$(Build.BuildId)"
 
-jobs:
-- job: TestMatrix
-  displayName: 'Run Tests on Matrix'
-  strategy:
-    matrix:
-      Linux_Python310:
-        vmImage: 'ubuntu-latest'
-        python.version: '3.10'
-      Linux_Python312_Fails:
-        vmImage: 'ubuntu-latest'
-        python.version: '3.12'
+stages:
+  - stage: Start_Pod
+    displayName: "GPU Tests on RunPod"
+    jobs:
+      - job: Start_Pod_Job
+        displayName: "Launch Pod & Run CUDA Tests"
+        timeoutInMinutes: 10
+        pool:
+          vmImage: "ubuntu-latest"
 
-  pool:
-    vmImage: $(vmImage)
+        steps:
+          - checkout: none # 不需要在 agent 上 checkout 代码
 
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
+          - task: Bash@3
+            displayName: "Install RunPod CLI"
+            inputs:
+              targetType: "inline"
+              script: |
+                wget --quiet --show-progress https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
+                  && chmod +x runpodctl \
+                  && sudo cp runpodctl /usr/bin/runpodctl
+                runpodctl config --apiKey $(RUNPOD_API_KEY)
 
-  - script: |
-      python -m pip install --upgrade pip
-      pip install numpy
-    displayName: 'Install dependencies'
+          - task: Bash@3
+            displayName: "Create RunPod & Execute Tests Inside Pod"
+            name: create_and_run
+            inputs:
+              targetType: "inline"
+              script: |
+                set -e
+                echo "Creating Pod..."
+                runpodctl create pod \
+                  --name "ci-$(Build.BuildId)" \
+                  --gpuType "$(RUNPOD_GPU_TYPE)" \
+                  --imageName "$(RUNPOD_IMAGE)" \
+                  --communityCloud \
+                  --gpuCount 1 \
+                  --containerDiskSize 50 \
+                  --env AZP_URL=$(System.CollectionUri) \
+                  --env AZP_TOKEN=$(AzDevOpsPat) \
+                  --env AZP_POOL=$(POOL_NAME) \
+                  --env AZP_AGENT_NAME=$(AGENT_NAME)
 
-  - script: |
-      if [[ "$(python.version)" == "3.12" ]]; then
-        echo "This job is configured to fail."
-        exit 1
-      fi
-      echo "This job succeeded."
-      python -c "import numpy"
-    displayName: 'Run Import Test'
+                MAX_RETRIES=30        # 最大重试 30 次
+                SLEEP_INTERVAL=10     # 每次间隔 10 秒
+                COUNT=0
+                POD_ID=""
 
-- job: PublishResults
-  displayName: 'Check Matrix Status & Publish'
-  dependsOn: TestMatrix
-  condition: always()
+                echo "🔍 Start polling for Pod ID associated with build: ci-$(Build.BuildId)..."
+                while [ -z "$POD_ID" ]; do
+                  # 1. 尝试获取 Pod ID
+                  POD_ID=$(runpodctl get pod | awk -v target="ci-$(Build.BuildId)" '{ for(i=1;i<=NF;i++) if($i==target) {print $1; exit} }')
 
-  pool:
-    vmImage: 'ubuntu-latest'
+                  # 2. 判断是否获取成功
+                  if [ -n "$POD_ID" ]; then
+                    echo "✅ Successfully found Pod ID: $POD_ID"
+                    break
+                  fi
 
-  steps:
-  - script: |
-      echo "--- Checking Overall Matrix Status ---"
-      MATRIX_STATUS="$(dependencies.TestMatrix.result)"
-      echo "Overall status of the TestMatrix job is: $MATRIX_STATUS"
+                  # 3. 检查是否超时
+                  COUNT=$((COUNT+1))
+                  if [ $COUNT -ge $MAX_RETRIES ]; then
+                    echo "❌ Timeout: Failed to find pod after $((MAX_RETRIES * SLEEP_INTERVAL)) seconds."
+                    exit 1
+                  fi
 
-      echo ""
-      echo "--- Checking Individual Job Statuses ---"
+                  # 4. 等待后继续
+                  echo "⏳ Attempt $COUNT/$MAX_RETRIES: Pod not found yet. Sleeping ${SLEEP_INTERVAL}s..."
+                  sleep $SLEEP_INTERVAL
+                done
+                echo "##vso[task.setvariable variable=RunPodId;isOutput=true]$POD_ID"
 
-      STATUS_PY310_LINUX="$(dependencies.TestMatrix.Linux_Python310.result)"
-      STATUS_PY312_FAIL="$(dependencies.TestMatrix.Linux_Python312_Fails.result)"
+  - stage: GPU_Test
+    dependsOn: Start_Pod
+    jobs:
+      - job: GpuTests
+        timeoutInMinutes: 10
+        pool:
+          name: "$(POOL_NAME)"
+          demands: agent.name -equals $(AGENT_NAME) # 确保只在刚才创建的那个特定 Pod 上运行
+        steps:
+          - checkout: self
+            clean: true
+            displayName: "Checkout out Repo"
+          - script: |
+              echo "Running on RunPod GPU!"
+              nvidia-smi
+              cd ${BUILD_SOURCESDIRECTORY}
+              python check_torch.py
+            displayName: "Run GPU Tests"
 
-      echo "Status of Linux_Python310: $STATUS_PY310_LINUX"
-      echo "Status of Linux_Python312_Fails: $STATUS_PY312_FAIL"
+  - stage: Cleanup_Verification
+    displayName: "Verify Pod Cleanup"
+    dependsOn:
+      - Start_Pod
+      - GPU_Test
+    condition: always() # 无论 GPU 测试阶段是否成功，都验证清理
+    jobs:
+      - job: Verify_Cleanup
+        pool:
+          vmImage: "ubuntu-latest"
+        variables:
+          PodId: $[ stageDependencies.Start_Pod.Start_Pod_Job.outputs['create_and_run.RunPodId'] ]
+        steps:
+          - task: Bash@3
+            displayName: "Install RunPod CLI"
+            inputs:
+              targetType: "inline"
+              script: |
+                wget --quiet --show-progress https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
+                  && chmod +x runpodctl \
+                  && sudo cp runpodctl /usr/bin/runpodctl
+                runpodctl config --apiKey $(RunPodApiKey)
+          - script: |
+              echo "Terminating Pod: $(PodId)"
+              if [ -z "$TARGET_ID" ]; then
+                echo "⚠️ No Pod ID found (Creation might have failed). Checking by name fallback..."
+                # 备选方案：如果 ID 变量没传过来，尝试按名字查一次
+                TARGET_ID=$(runpodctl get pod | awk -v target="ci-$(Build.BuildId)" '{ for(i=1;i<=NF;i++) if($i==target) {print $1; exit} }')
+              fi
 
-      echo ""
-      echo "--- Making a decision based on status ---"
-      if [[ "$MATRIX_STATUS" == "Failed" ]]; then
-        echo "At least one job in the matrix failed. Aborting publish."
-        echo "##vso[task.complete result=Failed;]One or more matrix tests failed."
-        exit 1
-      elif [[ "$MATRIX_STATUS" == "SucceededWithIssues" ]]; then
-        echo "Some tests passed but there were issues. Proceeding with caution."
-      else
-        echo "All matrix jobs succeeded! Proceeding with release."
-      fi
-    displayName: 'Analyze Matrix Results'
+              if [ -n "$TARGET_ID" ]; then
+                echo "🛑 Terminating Pod: $TARGET_ID"
+                runpodctl remove pod "$TARGET_ID"
+                runpodctl get pod $(PodId) || echo "Pod successfully terminated."
+              else
+                echo "⚠️ No active pod found to terminate. Skipping."
+              fi
+            displayName: "Terminate RunPod Instance"
