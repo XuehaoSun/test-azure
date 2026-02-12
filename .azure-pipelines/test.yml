@@ -29,7 +29,7 @@ stages:
             inputs:
               targetType: "inline"
               script: |
-                wget --quiet --show-progress https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
+                wget --quiet https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
                   && chmod +x runpodctl \
                   && sudo cp runpodctl /usr/bin/runpodctl
                 runpodctl config --apiKey $(RUNPOD_API_KEY)
@@ -101,17 +101,16 @@ stages:
                 count=0
                 agent_online=false
 
-                echo "CollectionUri=$(System.CollectionUri)"
+                POOL_DETAILS=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools?poolName=$(POOL_NAME)")
+                POOL_ID=$(echo "${POOL_DETAILS}" | jq -r '.value[0].id')
 
                 while [ $count -lt $MAX_RETRIES ]; do
-                  POOL_DETAILS=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools?poolName=$(POOL_NAME)")
-                  POOL_ID=$(echo "${POOL_DETAILS}" | jq -r '.value[0].id')
                   RESPONSE=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools/${POOL_ID}/agents?agentName=$(AGENT_NAME)")
                   CURRENT_STATUS=$(echo ${RESPONSE} | jq -r '.value[0].status') # 提取状态 (status) 和 启用状态 (enabled)
                   IS_ENABLED=$(echo ${RESPONSE} | jq -r '.value[0].enabled') # status 可能是: offline, online
 
                   if [ "$CURRENT_STATUS" == "online" ]; then
-                    echo "✅ Agent '$AGENT_NAME' is ONLINE and ready!"
+                    echo "✅ Agent: $(AGENT_NAME) is ONLINE and ready!"
                     agent_online=true
                     break
                   fi
@@ -134,7 +133,7 @@ stages:
         timeoutInMinutes: 10
         pool:
           name: "$(POOL_NAME)"
-          # demands: Agent.Name -equals runpod-agent-$(Build.BuildId) # 确保只在刚才创建的那个特定 Pod 上运行
+          demands: Agent.Name -equals runpod-agent-$(Build.BuildId) # 确保只在刚才创建的那个特定 Pod 上运行
         steps:
           - checkout: self
             clean: true
@@ -161,15 +160,6 @@ stages:
           PodId: $[ stageDependencies.Start_Pod.Start_Pod_Job.outputs['create_and_run.RunPodId'] ]
         steps:
           - task: Bash@3
-            displayName: "Install RunPod CLI"
-            inputs:
-              targetType: "inline"
-              script: |
-                wget --quiet --show-progress https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
-                  && chmod +x runpodctl \
-                  && sudo cp runpodctl /usr/bin/runpodctl
-                runpodctl config --apiKey $(RUNPOD_API_KEY)
-          - task: Bash@3
             displayName: "Deregister Agent from Pool"
             condition: always()
             inputs:
@@ -181,30 +171,48 @@ stages:
 
                 # 2. 获取 Agent ID
                 # 注意：这里可能返回空，如果 Agent 从未注册成功过
-                AGENT_ID=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools/$POOL_ID/agents?agentName=$(AGENT_NAME)" | jq -r '.value[0].id')
+                AGENT_DETAILS=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools/$POOL_ID/agents?agentName=$(AGENT_NAME)&api-version=7.1")
+                AGENT_ID=$(echo "${AGENT_DETAILS}" | jq -r '.value[0].id')
                 if [ "$AGENT_ID" == "null" ] || [ -z "$AGENT_ID" ]; then
-                  echo "✅ Agent not found in the pool (It might have cleaned itself up or never started). Skipping."
+                  echo "AGENT_ID is $AGENT_ID"
+                  echo "✅ Agent: $(AGENT_NAME) not found in the pool (It might have cleaned itself up or never started). Skipping."
                   exit 0
                 fi
                 echo "found Agent ID: $AGENT_ID"
 
                 # 3. 调用 API 删除 Agent
                 echo "🗑️ Deleting Agent..."
-                DELETE_RESPONSE=$(curl -s -X DELETE -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools/$POOL_ID/agents/$AGENT_ID")
+                curl -s -X DELETE -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools/$POOL_ID/agents/$AGENT_ID?api-version=7.1"
                 echo "✅ Agent successfully removed from Azure DevOps."
-          - script: |
-              echo "Terminating Pod: $(PodId)"
-              if [ -z "$TARGET_ID" ]; then
-                echo "⚠️ No Pod ID found (Creation might have failed). Checking by name fallback..."
-                # 备选方案：如果 ID 变量没传过来，尝试按名字查一次
-                TARGET_ID=$(runpodctl get pod | awk -v target="ci-$(Build.BuildId)" '{ for(i=1;i<=NF;i++) if($i==target) {print $1; exit} }')
-              fi
 
-              if [ -n "$TARGET_ID" ]; then
-                echo "🛑 Terminating Pod: $TARGET_ID"
-                runpodctl remove pod "$TARGET_ID"
-                runpodctl get pod $(PodId) || echo "Pod successfully terminated."
-              else
-                echo "⚠️ No active pod found to terminate. Skipping."
-              fi
+          - task: Bash@3
+            displayName: "Install RunPod CLI"
+            condition: always()
+            inputs:
+              targetType: "inline"
+              script: |
+                wget --quiet https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
+                  && chmod +x runpodctl \
+                  && sudo cp runpodctl /usr/bin/runpodctl
+                runpodctl config --apiKey $(RUNPOD_API_KEY)
+
+          - task: Bash@3
             displayName: "Terminate RunPod Instance"
+            condition: always()
+            inputs:
+              targetType: "inline"
+              script: |
+                echo "Terminating Pod: $(PodId)"
+                if [ -z "$TARGET_ID" ]; then
+                  echo "⚠️ No Pod ID found (Creation might have failed). Checking by name fallback..."
+                  # 备选方案：如果 ID 变量没传过来，尝试按名字查一次
+                  TARGET_ID=$(runpodctl get pod | awk -v target="ci-$(Build.BuildId)" '{ for(i=1;i<=NF;i++) if($i==target) {print $1; exit} }')
+                fi
+
+                if [ -n "$TARGET_ID" ]; then
+                  echo "🛑 Terminating Pod: $TARGET_ID"
+                  runpodctl remove pod "$TARGET_ID"
+                  runpodctl get pod $(PodId) || echo "Pod successfully terminated."
+                else
+                  echo "⚠️ No active pod found to terminate. Skipping."
+                fi
