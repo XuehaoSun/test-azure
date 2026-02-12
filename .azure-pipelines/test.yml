@@ -134,7 +134,7 @@ stages:
         timeoutInMinutes: 10
         pool:
           name: "$(POOL_NAME)"
-          demands: Agent.Name -equals runpod-agent-${{ Build.BuildId }} # 确保只在刚才创建的那个特定 Pod 上运行
+          # demands: Agent.Name -equals runpod-agent-${{ Build.BuildId }} # 确保只在刚才创建的那个特定 Pod 上运行
         steps:
           - checkout: self
             clean: true
