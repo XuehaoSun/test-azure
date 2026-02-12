@@ -134,7 +134,7 @@ stages:
         timeoutInMinutes: 10
         pool:
           name: "$(POOL_NAME)"
-          # demands: Agent.Name -equals runpod-agent-${{ Build.BuildId }} # 确保只在刚才创建的那个特定 Pod 上运行
+          # demands: Agent.Name -equals runpod-agent-$(Build.BuildId) # 确保只在刚才创建的那个特定 Pod 上运行
         steps:
           - checkout: self
             clean: true
@@ -143,6 +143,7 @@ stages:
               echo "Running on RunPod GPU!"
               nvidia-smi
               cd ${BUILD_SOURCESDIRECTORY}
+              uv pip install torch==2.10.0 torchvision
               python check_torch.py
             displayName: "Run GPU Tests"
 
