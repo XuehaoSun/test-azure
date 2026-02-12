@@ -134,7 +134,7 @@ stages:
         timeoutInMinutes: 10
         pool:
           name: "$(POOL_NAME)"
-          demands: agent.name -equals $(AGENT_NAME) # 确保只在刚才创建的那个特定 Pod 上运行
+          demands: Agent.Name -equals $(AGENT_NAME) # 确保只在刚才创建的那个特定 Pod 上运行
         steps:
           - checkout: self
             clean: true
@@ -168,6 +168,29 @@ stages:
                   && chmod +x runpodctl \
                   && sudo cp runpodctl /usr/bin/runpodctl
                 runpodctl config --apiKey $(RUNPOD_API_KEY)
+          - task: Bash@3
+            displayName: "Deregister Agent from Pool"
+            condition: always()
+            inputs:
+              targetType: "inline"
+              script: |               
+                # 1. 获取 Pool ID
+                POOL_DETAILS=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools?poolName=$(POOL_NAME)")
+                POOL_ID=$(echo "${POOL_DETAILS}" | jq -r '.value[0].id')
+                
+                # 2. 获取 Agent ID
+                # 注意：这里可能返回空，如果 Agent 从未注册成功过
+                AGENT_ID=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools/$POOL_ID/agents?agentName=$(AGENT_NAME)" | jq -r '.value[0].id')
+                if [ "$AGENT_ID" == "null" ] || [ -z "$AGENT_ID" ]; then
+                  echo "✅ Agent not found in the pool (It might have cleaned itself up or never started). Skipping."
+                  exit 0
+                fi
+                echo "found Agent ID: $AGENT_ID"
+                
+                # 3. 调用 API 删除 Agent
+                echo "🗑️ Deleting Agent..."
+                DELETE_RESPONSE=$(curl -s -X DELETE -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools/$POOL_ID/agents/$AGENT_ID")
+                echo "✅ Agent successfully removed from Azure DevOps."
           - script: |
               echo "Terminating Pod: $(PodId)"
               if [ -z "$TARGET_ID" ]; then
