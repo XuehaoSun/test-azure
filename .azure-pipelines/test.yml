@@ -101,12 +101,14 @@ stages:
                 count=0
                 agent_online=false
 
+                echo "CollectionUri=$(System.CollectionUri)"
+
                 while [ $count -lt $MAX_RETRIES ]; do
-                  POOL_DETAILS=$(curl -s -u ":$AZP_DEVOPS_PAT" "$(System.CollectionUri)/_apis/distributedtask/pools?poolName=${POOL_NAME}")
+                  POOL_DETAILS=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools?poolName=$(POOL_NAME)")
                   POOL_ID=$(echo "${POOL_DETAILS}" | jq -r '.value[0].id')
-                  RESPONSE=$(curl -s -u ":$AZP_DEVOPS_PAT" "$(System.CollectionUri)/_apis/distributedtask/pools/${POOL_ID}/agents?agentName=${AGENT_NAME}")
-                  CURRENT_STATUS=$(echo $RESPONSE | jq -r '.value[0].status') # 提取状态 (status) 和 启用状态 (enabled)
-                  IS_ENABLED=$(echo $RESPONSE | jq -r '.value[0].enabled') # status 可能是: offline, online
+                  RESPONSE=$(curl -s -u ":$(AZP_DEVOPS_PAT)" "$(System.CollectionUri)/_apis/distributedtask/pools/${POOL_ID}/agents?agentName=$(AGENT_NAME)")
+                  CURRENT_STATUS=$(echo ${RESPONSE} | jq -r '.value[0].status') # 提取状态 (status) 和 启用状态 (enabled)
+                  IS_ENABLED=$(echo ${RESPONSE} | jq -r '.value[0].enabled') # status 可能是: offline, online
 
                   if [ "$CURRENT_STATUS" == "online" ]; then
                     echo "✅ Agent '$AGENT_NAME' is ONLINE and ready!"
