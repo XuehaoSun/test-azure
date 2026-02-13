@@ -3,7 +3,7 @@ trigger: none
 
 variables:
   - name: RUNPOD_GPU_TYPE
-    value: "NVIDIA RTX 4000 Ada Generation"
+    value: "NVIDIA GeForce RTX 4090" # https://docs.runpod.io/references/gpu-types#gpu-types
   - name: RUNPOD_IMAGE
     value: "ghcr.io/xuehaosun/azure-agent:v0.1" # 轻量级测试镜像，实际测试时替换为包含 CUDA 测试环境的镜像
   - name: POOL_NAME
@@ -130,7 +130,7 @@ stages:
     dependsOn: Start_Pod
     jobs:
       - job: GpuTests
-        timeoutInMinutes: 10
+        timeoutInMinutes: 120
         pool:
           name: "$(POOL_NAME)"
           demands: Agent.Name -equals runpod-agent-$(Build.BuildId) # 确保只在刚才创建的那个特定 Pod 上运行
@@ -143,6 +143,11 @@ stages:
               nvidia-smi
               cd ${BUILD_SOURCESDIRECTORY}
               uv pip install torch==2.10.0 torchvision
+              uv pip install auto-round transformers==4.57.6 huggingface_hub[cli]
+              hf download Qwen/Qwen3-8B
+              auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 0 --output_dir test_qwen && rm -rf test_qwen
+              auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 1 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
+              auto-round --model_name Qwen/Qwen3-8B --scheme MXFP4 --bits 4 --iters 0 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
               python check_torch.py
             displayName: "Run GPU Tests"
 
