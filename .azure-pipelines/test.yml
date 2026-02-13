@@ -3,7 +3,7 @@ trigger: none
 
 variables:
   - name: RUNPOD_GPU_TYPE
-    value: "NVIDIA A100-SXM4-80GB" # https://docs.runpod.io/references/gpu-types#gpu-types
+    value: "NVIDIA GeForce RTX 5090" # https://docs.runpod.io/references/gpu-types#gpu-types
   - name: RUNPOD_IMAGE
     value: "ghcr.io/xuehaosun/azure-agent:v0.1" # 轻量级测试镜像，实际测试时替换为包含 CUDA 测试环境的镜像
   - name: POOL_NAME
