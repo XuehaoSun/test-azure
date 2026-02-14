@@ -8,6 +8,7 @@ import base64
 
 API_VERSION = "7.1"
 
+
 def get_auth_header(pat):
     return {"Authorization": "Basic " + base64.b64encode(f":{pat}".encode()).decode()}
 
@@ -76,20 +77,28 @@ def deregister_agent(organization_url, pat, pool_name, agent_name):
     headers = get_auth_header(pat)
 
     try:
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            print(f"Failed to query agent. Status: {response.status_code}")
-            return
+        for i in range(5):
+            response = requests.get(url, headers=headers)
+            if response.status_code != 200:
+                print(f"Failed to query agent. Status: {response.status_code}")
+                return
 
-        data = response.json()
-        if data["count"] == 0:
-            print(f"✅ Agent: {agent_name} not found in the pool (It might have cleaned itself up). Skipping.")
-            return
+            data = response.json()
+            if data["count"] == 0:
+                if i < 4:
+                    print(f"⚠️ Agent: {agent_name} not found in the pool (It might have cleaned itself up). Retrying...")
+                    time.sleep(5)
+                    continue
+                else:
+                    print(f"✅ Agent: {agent_name} not found in the pool (It might have cleaned itself up). Exiting.")
+                    return
 
         agent_id = data["value"][0]["id"]
         print(f"Found Agent ID: {agent_id}")
 
-        delete_url = f"{organization_url}/_apis/distributedtask/pools/{pool_id}/agents/{agent_id}?api-version={API_VERSION}"
+        delete_url = (
+            f"{organization_url}/_apis/distributedtask/pools/{pool_id}/agents/{agent_id}?api-version={API_VERSION}"
+        )
         delete_response = requests.delete(delete_url, headers=headers)
 
         if delete_response.status_code == 204 or delete_response.status_code == 200:
@@ -103,7 +112,7 @@ def deregister_agent(organization_url, pat, pool_name, agent_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage Azure DevOps Agents")
-    parser.add_argument("action", choices=["wait", "deregister"], help="Action to perform")
+    parser.add_argument("--action", required=True, choices=["wait", "deregister"], help="Action to perform")
     parser.add_argument("--url", required=True, help="Azure DevOps Organization URL (System.CollectionUri)")
     parser.add_argument("--pat", required=True, help="Azure DevOps PAT")
     parser.add_argument("--pool", required=True, help="Agent Pool Name")
