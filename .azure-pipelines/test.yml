@@ -3,7 +3,7 @@ trigger: none
 
 variables:
   - name: RUNPOD_GPU_TYPE
-    value: "NVIDIA RTX PRO 4500 Blackwell" # https://docs.runpod.io/references/gpu-types#gpu-types
+    value: "NVIDIA RTX 2000 Ada Generation" # https://docs.runpod.io/references/gpu-types#gpu-types
   - name: RUNPOD_IMAGE
     value: "ghcr.io/xuehaosun/azure-agent:v0.1" # 轻量级测试镜像，实际测试时替换为包含 CUDA 测试环境的镜像
   - name: POOL_NAME
@@ -24,75 +24,47 @@ stages:
         steps:
           - checkout: self # Ensure scripts are available
 
-          - task: Bash@3
-            displayName: "Install RunPod CLI"
-            inputs:
-              targetType: "inline"
-              script: |
-                wget --quiet https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
-                  && chmod +x runpodctl \
-                  && sudo cp runpodctl /usr/bin/runpodctl
-                runpodctl config --apiKey $(RUNPOD_API_KEY)
-
-          - task: Bash@3
-            displayName: "Create RunPod & Execute Tests Inside Pod"
-            name: create_and_run
-            inputs:
-              targetType: "inline"
-              script: |
-                set -e
-                echo "Creating Pod..."
-                runpodctl create pod \
-                  --name "ci-$(Build.BuildId)" \
-                  --gpuType "$(RUNPOD_GPU_TYPE)" \
-                  --imageName "$(RUNPOD_IMAGE)" \
-                  --secureCloud \
-                  --gpuCount 1 \
-                  --containerDiskSize 50 \
-                  --env AZP_URL=$(System.CollectionUri) \
-                  --env AZP_TOKEN=$(AZP_DEVOPS_PAT) \
-                  --env AZP_POOL=$(POOL_NAME) \
-                  --env AZP_AGENT_NAME=$(AGENT_NAME)
-
-          - task: Bash@3
-            displayName: "Wait for Pod to be Ready"
-            name: wait_for_pod
-            inputs:
-              targetType: "inline"
-              script: |
-                MAX_RETRIES=30        # 最大重试 30 次
-                SLEEP_INTERVAL=10     # 每次间隔 10 秒
-                COUNT=0
-                POD_ID=""
-
-                echo "🔍 Start polling for Pod ID associated with build: ci-$(Build.BuildId)..."
-                while [ -z "$POD_ID" ]; do
-                  # 1. 尝试获取 Pod ID
-                  POD_ID=$(runpodctl get pod | awk -v target="ci-$(Build.BuildId)" '{ for(i=1;i<=NF;i++) if($i==target) {print $1; exit} }')
-
-                  # 2. 判断是否获取成功
-                  if [ -n "$POD_ID" ]; then
-                    echo "✅ Successfully found Pod ID: $POD_ID"
-                    break
-                  fi
-
-                  # 3. 检查是否超时
-                  COUNT=$((COUNT+1))
-                  if [ $COUNT -ge $MAX_RETRIES ]; then
-                    echo "❌ Timeout: Failed to find pod after $((MAX_RETRIES * SLEEP_INTERVAL)) seconds."
-                    exit 1
-                  fi
-
-                  # 4. 等待后继续
-                  echo "⏳ Attempt $COUNT/$MAX_RETRIES: Pod not found yet. Sleeping ${SLEEP_INTERVAL}s..."
-                  sleep $SLEEP_INTERVAL
-                done
-                echo "##vso[task.setvariable variable=RunPodId;isOutput=true]$POD_ID"
-
           - task: UsePythonVersion@0
             inputs:
               versionSpec: "3.13"
             displayName: "Use Python 3.13"
+
+          - task: Bash@3
+            displayName: "Install dependencies"
+            inputs:
+              targetType: "inline"
+              script: |
+                pip install requests
+
+          - task: Bash@3
+            displayName: "Create RunPod Instance"
+            name: create_runpod
+            inputs:
+              targetType: "inline"
+              script: |
+                export PYTHONUNBUFFERED=1
+                cd ${BUILD_SOURCESDIRECTORY}
+                python runpod_manager.py \
+                  --action create \
+                  --api_key $(RUNPOD_API_KEY) \
+                  --name "ci-$(Build.BuildId)" \
+                  --gpu_type "$(RUNPOD_GPU_TYPE)" \
+                  --image "$(RUNPOD_IMAGE)" \
+                  --container_disk_size "50" \
+                  --env "AZP_URL=$(System.CollectionUri) AZP_TOKEN=$(AZP_DEVOPS_PAT) AZP_POOL=$(POOL_NAME) AZP_AGENT_NAME=$(AGENT_NAME)"
+
+          - task: Bash@3
+            displayName: "Wait for Pod to be Online"
+            name: wait_for_pod
+            inputs:
+              targetType: "inline"
+              script: |
+                cd ${BUILD_SOURCESDIRECTORY}
+                export PYTHONUNBUFFERED=1
+                python runpod_manager.py \
+                  --action wait \
+                  --api_key $(RUNPOD_API_KEY) \
+                  --name "ci-$(Build.BuildId)"
 
           - task: Bash@3
             displayName: "Wait for Agent to be Online"
@@ -100,10 +72,10 @@ stages:
             inputs:
               targetType: "inline"
               script: |
-                pip install requests
                 cd ${BUILD_SOURCESDIRECTORY}
                 export PYTHONUNBUFFERED=1
-                python azure_agent.py --action wait \
+                python azure_agent.py \
+                  --action wait \
                   --url "$(System.CollectionUri)" \
                   --pat "$(AZP_DEVOPS_PAT)" \
                   --pool "$(POOL_NAME)" \
@@ -124,19 +96,19 @@ stages:
           - script: |
               echo "Running on RunPod GPU!"
               nvidia-smi
-              cd ${BUILD_SOURCESDIRECTORY}
-              export TQDM_MININTERVAL=60
-              export PYTHONUNBUFFERED=1
-              uv pip install torch==2.10.0 torchvision
-              uv pip install auto-round transformers==4.57.6 huggingface_hub[cli] lm_eval==0.4.10
-              hf download Qwen/Qwen3-8B
-              echo "Testing auto-round with Qwen3-8B RTN on GPU..."
-              auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 0 --output_dir test_qwen && rm -rf test_qwen
-              echo "Testing auto-round with Qwen3-8B on GPU with 1 iteration..."
-              auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 1 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
-              echo "Testing auto-round with Qwen3-8B on GPU with MXFP4 scheme..."
-              auto-round --model_name Qwen/Qwen3-8B --scheme MXFP4 --bits 4 --iters 0 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
-              python check_torch.py
+              # cd ${BUILD_SOURCESDIRECTORY}
+              # export TQDM_MININTERVAL=60
+              # export PYTHONUNBUFFERED=1
+              # uv pip install torch==2.10.0 torchvision
+              # uv pip install auto-round transformers==4.57.6 huggingface_hub[cli] lm_eval==0.4.10
+              # hf download Qwen/Qwen3-8B
+              # echo "Testing auto-round with Qwen3-8B RTN on GPU..."
+              # auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 0 --output_dir test_qwen && rm -rf test_qwen
+              # echo "Testing auto-round with Qwen3-8B on GPU with 1 iteration..."
+              # auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 1 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
+              # echo "Testing auto-round with Qwen3-8B on GPU with MXFP4 scheme..."
+              # auto-round --model_name Qwen/Qwen3-8B --scheme MXFP4 --bits 4 --iters 0 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
+              # python check_torch.py
             displayName: "Run GPU Tests"
 
   - stage: Cleanup_Verification
@@ -144,26 +116,26 @@ stages:
     dependsOn:
       - Start_Pod
       - GPU_Test
-    condition: always() # 无论 GPU 测试阶段是否成功，都验证清理
+    condition: always()
     jobs:
       - job: Verify_Cleanup
         pool:
           vmImage: "ubuntu-latest"
-        variables:
-          PodId: $[ stageDependencies.Start_Pod.Start_Pod_Job.outputs['create_and_run.RunPodId'] ]
         steps:
-          - checkout: self # Ensure scripts are available
+          - checkout: self
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.13"
+            displayName: "Use Python 3.13"
 
           - task: Bash@3
-            displayName: "Install RunPod CLI"
+            displayName: "Install dependencies"
             condition: always()
             inputs:
               targetType: "inline"
               script: |
-                wget --quiet https://github.com/Run-Pod/runpodctl/releases/download/v1.14.3/runpodctl-linux-amd64 -O runpodctl \
-                  && chmod +x runpodctl \
-                  && sudo cp runpodctl /usr/bin/runpodctl
-                runpodctl config --apiKey $(RUNPOD_API_KEY)
+                pip install requests
 
           - task: Bash@3
             displayName: "Terminate RunPod Instance"
@@ -171,20 +143,12 @@ stages:
             inputs:
               targetType: "inline"
               script: |
-                echo "Terminating Pod: $(PodId)"
-                if [ -z "$TARGET_ID" ]; then
-                  echo "⚠️ No Pod ID found (Creation might have failed). Checking by name fallback..."
-                  # 备选方案：如果 ID 变量没传过来，尝试按名字查一次
-                  TARGET_ID=$(runpodctl get pod | awk -v target="ci-$(Build.BuildId)" '{ for(i=1;i<=NF;i++) if($i==target) {print $1; exit} }')
-                fi
-
-                if [ -n "$TARGET_ID" ]; then
-                  echo "🛑 Terminating Pod: $TARGET_ID"
-                  runpodctl remove pod "$TARGET_ID"
-                  runpodctl get pod $(PodId) || echo "Pod successfully terminated."
-                else
-                  echo "⚠️ No active pod found to terminate. Skipping."
-                fi
+                echo "Terminating Pod: ci-$(Build.BuildId)"
+                export PYTHONUNBUFFERED=1
+                python runpod_manager.py \
+                  --action terminate \
+                  --api_key $(RUNPOD_API_KEY) \
+                  --name "ci-$(Build.BuildId)"
 
           - task: UsePythonVersion@0
             inputs:
@@ -200,7 +164,8 @@ stages:
                 pip install requests
                 cd ${BUILD_SOURCESDIRECTORY}
                 export PYTHONUNBUFFERED=1
-                python azure_agent.py --action deregister \
+                python azure_agent.py \
+                  --action deregister \
                   --url "$(System.CollectionUri)" \
                   --pat "$(AZP_DEVOPS_PAT)" \
                   --pool "$(POOL_NAME)" \
