@@ -55,7 +55,7 @@ fi
 
 print_header "2. Downloading and extracting Azure Pipelines agent..."
 
-curl -LsS "$AGENT_PACKAGE_URL" | tar -xz & wait $!
+curl -LsS "$AGENT_PACKAGE_URL" | tar -xz --no-same-owner & wait $!
 
 source ./env.sh
 

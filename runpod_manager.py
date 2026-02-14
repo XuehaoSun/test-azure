@@ -6,9 +6,10 @@ import time
 
 
 def run_graphql_query(api_key, payload):
-    url = f"https://api.runpod.io/graphql?api_key={api_key}"
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(url, json={"query": payload}, headers=headers)
+    url = "https://rest.runpod.io/v1/pods"
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    response = requests.post(url, json=payload, headers=headers)
+
     response.raise_for_status()
     if response.status_code != 200:
         print(f"❌ HTTP Error: {response.status_code}")
@@ -24,46 +25,18 @@ def run_graphql_query(api_key, payload):
 
 
 def create_pod(args):
-    env_list = []
     if args.env:
-        for e in args.env:
-            if "=" in e:
-                key, value = e.split("=", 1)
-                env_list.append({"key": key, "value": value})
+        env_dict = { kv.split("=", 1)[0]: kv.split("=", 1)[1] for kv in args.env }
 
     payload = {
-        "name": args.name,
-        "imageName": args.image,
-        "gpuTypeIds": [args.gpu_type],
         "cloudType": "SECURE",
-        "gpuCount": args.gpu_count,
         "containerDiskInGb": args.container_disk_size,
-        "env": env_list,
+        "env": env_dict,
+        "gpuCount": args.gpu_count,
+        "gpuTypeIds": [args.gpu_type],
+        "imageName": args.image,
+        "name": args.name,
     }
-
-    payload = """
-    mutation {{
-      podFindAndDeployOnDemand(input: {{
-        cloudType: SECURE,
-        gpuCount: {gpu_count},
-        volumeInGb: 0,
-        containerDiskInGb: {container_disk_size},
-        gpuTypeId: "{gpu_type}",
-        name: "{name}",
-        imageName: "{image}",
-        dockerArgs: "{docker_args}"
-      }}) {{
-        id
-      }}
-    }}
-    """.format(
-        gpu_type=args.gpu_type,
-        name=args.name,
-        image=args.image,
-        docker_args=args.env,
-        container_disk_size=args.container_disk_size,
-        gpu_count=args.gpu_count,
-    )
 
     print(f"🚀 Creating pod: {args.name}...")
     data = run_graphql_query(args.api_key, payload)
