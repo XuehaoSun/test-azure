@@ -3,7 +3,7 @@ trigger: none
 
 variables:
   - name: RUNPOD_GPU_TYPE
-    value: "NVIDIA RTX 4000 Ada Generation" # https://docs.runpod.io/references/gpu-types#gpu-types
+    value: "NVIDIA RTX PRO 4500 Blackwell" # https://docs.runpod.io/references/gpu-types#gpu-types
   - name: RUNPOD_IMAGE
     value: "ghcr.io/xuehaosun/azure-agent:v0.1" # 轻量级测试镜像，实际测试时替换为包含 CUDA 测试环境的镜像
   - name: POOL_NAME
@@ -101,6 +101,8 @@ stages:
               targetType: "inline"
               script: |
                 pip install requests
+                cd ${BUILD_SOURCESDIRECTORY}
+                export PYTHONUNBUFFERED=1
                 python azure_agent.py --action wait \
                   --url "$(System.CollectionUri)" \
                   --pat "$(AZP_DEVOPS_PAT)" \
@@ -123,16 +125,17 @@ stages:
               echo "Running on RunPod GPU!"
               nvidia-smi
               cd ${BUILD_SOURCESDIRECTORY}
-              # export TQDM_MININTERVAL=60
-              # uv pip install torch==2.10.0 torchvision
-              # uv pip install auto-round transformers==4.57.6 huggingface_hub[cli] lm_eval==0.4.10
-              # hf download Qwen/Qwen3-8B
-              # echo "Testing auto-round with Qwen3-8B RTN on GPU..."
-              # auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 0 --output_dir test_qwen && rm -rf test_qwen
-              # echo "Testing auto-round with Qwen3-8B on GPU with 1 iteration..."
-              # auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 1 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
-              # echo "Testing auto-round with Qwen3-8B on GPU with MXFP4 scheme..."
-              # auto-round --model_name Qwen/Qwen3-8B --scheme MXFP4 --bits 4 --iters 0 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
+              export TQDM_MININTERVAL=60
+              export PYTHONUNBUFFERED=1
+              uv pip install torch==2.10.0 torchvision
+              uv pip install auto-round transformers==4.57.6 huggingface_hub[cli] lm_eval==0.4.10
+              hf download Qwen/Qwen3-8B
+              echo "Testing auto-round with Qwen3-8B RTN on GPU..."
+              auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 0 --output_dir test_qwen && rm -rf test_qwen
+              echo "Testing auto-round with Qwen3-8B on GPU with 1 iteration..."
+              auto-round --model_name Qwen/Qwen3-8B --bits 4 --iters 1 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
+              echo "Testing auto-round with Qwen3-8B on GPU with MXFP4 scheme..."
+              auto-round --model_name Qwen/Qwen3-8B --scheme MXFP4 --bits 4 --iters 0 --tasks lambada_openai --output_dir test_qwen && rm -rf test_qwen
               python check_torch.py
             displayName: "Run GPU Tests"
 
@@ -195,6 +198,8 @@ stages:
               targetType: "inline"
               script: |
                 pip install requests
+                cd ${BUILD_SOURCESDIRECTORY}
+                export PYTHONUNBUFFERED=1
                 python azure_agent.py --action deregister \
                   --url "$(System.CollectionUri)" \
                   --pat "$(AZP_DEVOPS_PAT)" \

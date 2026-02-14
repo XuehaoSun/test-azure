@@ -13,6 +13,7 @@ WORKDIR /workspace
 
 ENV PATH="/workspace/.venv/bin:$PATH" \
     VIRTUAL_ENV="/workspace/.venv" \
+    PYTHONUNBUFFERED=1 \
     UV_NO_PROGRESS=1 \
     UV_LINK_MODE=copy \
     UV_NO_CACHE=1
