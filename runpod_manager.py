@@ -11,7 +11,7 @@ def run_graphql_query(api_key, payload):
     response = requests.post(url, json=payload, headers=headers)
 
     response.raise_for_status()
-    if response.status_code != 200:
+    if response.status_code != 201:
         print(f"❌ HTTP Error: {response.status_code}")
         print(response.text)
         sys.exit(1)
@@ -26,7 +26,7 @@ def run_graphql_query(api_key, payload):
 
 def create_pod(args):
     if args.env:
-        env_dict = { kv.split("=", 1)[0]: kv.split("=", 1)[1] for kv in args.env }
+        env_dict = {kv.split("=", 1)[0]: kv.split("=", 1)[1] for kv in args.env}
 
     payload = {
         "cloudType": "SECURE",
