@@ -8,24 +8,20 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /workspace
-WORKDIR /workspace
+WORKDIR /root
 
-ENV PATH="/workspace/.venv/bin:$PATH" \
-    VIRTUAL_ENV="/workspace/.venv" \
+ENV PATH="/root/.venv/bin:$PATH" \
+    VIRTUAL_ENV="/root/.venv" \
     PYTHONUNBUFFERED=1 \
     UV_NO_PROGRESS=1 \
     UV_LINK_MODE=copy \
     UV_NO_CACHE=1
 
-RUN uv venv --python=3.13 /workspace/.venv
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    find /opt/az -type d -name "__pycache__" -exec rm -rf {} + && \
-    find /opt/az -type d -name "tests" -exec rm -rf {} +
-
-RUN which python && python --version && az --version
+RUN uv venv --python=3.13 /root/.venv
+RUN curl -k -LsS "https://download.agent.dev.azure.com/agent/4.268.0/vsts-agent-linux-x64-4.268.0.tar.gz" -o agent.tar.gz \
+    && tar -xzf agent.tar.gz \
+    && rm agent.tar.gz \
+    && chmod +x config.sh run.sh
 
 COPY start-agent.sh /start-agent.sh
 RUN chmod +x /start-agent.sh
