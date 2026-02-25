@@ -54,6 +54,9 @@ def check_gpu_count(token):
         data = response.json()
         all_gpus = data.get("data", {}).get("gpuTypes", [])
 
+        id_to_gpu = {gpu['id']: gpu for gpu in all_gpus}
+        all_gpus = [id_to_gpu[gpu_id] for gpu_id in TARGET_GPUS if gpu_id in id_to_gpu]
+
         print(f"--- Checking target graphics card inventory ---\n")
 
         for gpu in all_gpus:
