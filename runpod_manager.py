@@ -9,7 +9,7 @@ TARGET_GPUS = [
     "NVIDIA RTX 4000 Ada Generation",
     "NVIDIA GeForce RTX 4090",
     "NVIDIA RTX PRO 4500 Blackwell",
-    "NVIDIA GeForce RTX 5090",
+    "NVIDIA GeForce RTX 5090"
 ]
 REQUIRED_COUNT = 1
 
@@ -17,8 +17,7 @@ REQUIRED_COUNT = 1
 def check_gpu_count(token):
     URL = f"https://api.runpod.io/graphql?api_key={token}"
     ids_string = ", ".join([f'"{gid}"' for gid in TARGET_GPUS])
-    graphql_query = (
-        """
+    graphql_query = """
     query GpuAvailability($input: GpuLowestPriceInput!) {
       gpuTypes(input: {id: "%s"}) {
         id
@@ -36,9 +35,7 @@ def check_gpu_count(token):
         }
       }
     }
-    """
-        % ids_string
-    )
+    """ % ids_string
 
     variables = {"input": {"gpuCount": 1, "secureCloud": True, "minMemoryInGb": 0, "minVcpuCount": 0}}
 
