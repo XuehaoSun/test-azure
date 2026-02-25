@@ -2,8 +2,6 @@
 trigger: none
 
 variables:
-  - name: RUNPOD_GPU_TYPE
-    value: "NVIDIA RTX 4000 Ada Generation" # https://docs.runpod.io/references/gpu-types#gpu-types
   - name: RUNPOD_IMAGE
     value: "ghcr.io/xuehaosun/azure-agent:v0.1" # 轻量级测试镜像，实际测试时替换为包含 CUDA 测试环境的镜像
   - name: POOL_NAME
@@ -17,7 +15,7 @@ stages:
     jobs:
       - job: Start_Pod_Job
         displayName: "Launch Pod & Run CUDA Tests"
-        timeoutInMinutes: 30
+        timeoutInMinutes: 60
         pool:
           vmImage: "ubuntu-latest"
 
@@ -48,7 +46,6 @@ stages:
                   --action create \
                   --api_key $(RUNPOD_API_KEY) \
                   --name "ci-$(Build.BuildId)" \
-                  --gpu_type "$(RUNPOD_GPU_TYPE)" \
                   --image "$(RUNPOD_IMAGE)" \
                   --container_disk_size "50" \
                   --env AZP_URL=$(System.CollectionUri) AZP_TOKEN=$(AZP_DEVOPS_PAT) AZP_POOL=$(POOL_NAME) AZP_AGENT_NAME=$(AGENT_NAME)
