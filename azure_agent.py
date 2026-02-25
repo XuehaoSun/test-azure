@@ -26,7 +26,7 @@ def get_pool_id(organization_url, pat, pool_name):
 
 def wait_for_agent(organization_url, pat, pool_name, agent_name, timeout_seconds=1200):
     start_time = time.time()
-    sleep_interval = 10
+    sleep_interval = 5
 
     print(f"Waiting for agent '{agent_name}' to come online in pool '{pool_name}'...")
 

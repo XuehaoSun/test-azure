@@ -89,13 +89,17 @@ def terminate_pod(args):
         get_pod_id(args)  # Just to check if pod exists and print status
         sys.exit(1)
 
-    url = f"https://api.runpod.io/graphql?api_key={args.api_key}"
-    query = f"""
-    mutation {{
-      podTerminate(input: {{ podId: "{pod_id}" }})
-    }}
-    """
-    response = requests.post(url, json={"query": query}, timeout=10)
+    # url = f"https://api.runpod.io/graphql?api_key={args.api_key}"
+    # query = f"""
+    # mutation {{
+    #   podTerminate(input: {{ podId: "{pod_id}" }})
+    # }}
+    # """
+    # response = requests.post(url, json={"query": query}, timeout=10)
+
+    url = f"https://rest.runpod.io/v1/pods/{pod_id}"
+    headers = {"Authorization": f"Bearer {args.api_key}"}
+    response = requests.delete(url, headers=headers)
     response.raise_for_status()
 
     max_tries = 30
