@@ -15,23 +15,30 @@ REQUIRED_COUNT = 1
 
 
 def check_gpu_count(token):
-    URL = f"https://api.runpod.io/graphql?api_key={token}"
+    url = f"https://api.runpod.io/graphql?api_key={token}"
     ids_string = ", ".join([f'"{gid}"' for gid in TARGET_GPUS])
     graphql_query = """
     query GpuAvailability($input: GpuLowestPriceInput!) {
-      gpuTypes(input: {id: "%s"}) {
+      gpuTypes(input: {ids: [%s]}) {
         id
         displayName
+        memoryInGb
+        secureCloud
+        communityCloud
+        maxGpuCount
         maxGpuCountSecureCloud
-        securePrice
+        maxGpuCountCommunityCloud
+        minPodGpuCount
         lowestPrice(input: $input) {
           gpuName
-          gpuTypeId
           stockStatus
           minimumBidPrice
           uninterruptablePrice
+          maxGpuCount
           maxUnreservedGpuCount
           availableGpuCounts
+          rentedCount
+          totalCount
         }
       }
     }
@@ -41,7 +48,7 @@ def check_gpu_count(token):
 
     try:
         response = requests.post(
-            URL, json={"query": graphql_query, "variables": variables}, headers={"Content-Type": "application/json"}
+            url, json={"query": graphql_query, "variables": variables}, headers={"Content-Type": "application/json"}
         )
         response.raise_for_status()
         data = response.json()
@@ -53,7 +60,7 @@ def check_gpu_count(token):
             gpu_id = gpu.get("id")
 
             if gpu_id in TARGET_GPUS:
-                max_count = gpu.get("maxUnreservedGpuCount", 0)
+                max_count = gpu.get("lowestPrice", {}).get("maxUnreservedGpuCount", 0)
 
                 if REQUIRED_COUNT > max_count:
                     print(
