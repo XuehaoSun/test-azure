@@ -15,9 +15,12 @@ ENV PATH="/root/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     UV_NO_PROGRESS=1 \
     UV_LINK_MODE=copy \
-    UV_NO_CACHE=1
+    UV_NO_CACHE=1 \
+    TZ='Asia/Shanghai' \
+    TQDM_MININTERVAL=120 \
+    PYTHONUNBUFFERED=1
 
-RUN uv venv --python=3.13 /root/.venv
+RUN uv venv --python=3.12 /root/.venv
 RUN curl -k -LsS "https://download.agent.dev.azure.com/agent/4.268.0/vsts-agent-linux-x64-4.268.0.tar.gz" -o agent.tar.gz \
     && tar -xzf agent.tar.gz \
     && rm agent.tar.gz \

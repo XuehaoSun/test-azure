@@ -127,8 +127,10 @@ def create_pod(args):
         "env": env_dict,
         "gpuCount": args.gpu_count,
         "gpuTypeIds": [gpu_type],
-        "imageName": args.image,
+        # "imageName": args.image,
         "name": args.name,
+        "volumeInGb": 0,
+        "templateId": "Azure-Ubuntu2404-AutoRound"
     }
 
     print(f"🚀 Creating pod: {args.name}...")
