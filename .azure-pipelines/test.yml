@@ -47,7 +47,7 @@ stages:
                   --api_key $(RUNPOD_API_KEY) \
                   --name "ci-$(Build.BuildId)" \
                   --image "$(RUNPOD_IMAGE)" \
-                  --container_disk_size "50" \
+                  --container_disk_size "10" \
                   --env AZP_URL=$(System.CollectionUri) AZP_TOKEN=$(AZP_DEVOPS_PAT) AZP_POOL=$(POOL_NAME) AZP_AGENT_NAME=$(AGENT_NAME)
 
           - task: Bash@3

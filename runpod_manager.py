@@ -130,7 +130,7 @@ def create_pod(args):
         # "imageName": args.image,
         "name": args.name,
         "volumeInGb": 0,
-        "templateId": "Azure-Ubuntu2404-AutoRound"
+        "templateId": "qtac2hjxru"
     }
 
     print(f"🚀 Creating pod: {args.name}...")
