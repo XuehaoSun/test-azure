@@ -176,4 +176,3 @@ steps:
       echo "##[endgroup]"
       echo "I really like using Markdown." > README.md
       ##vso[task.uploadsummary]README.md
-      echo "##vso[task.uploadsummary]README.md"
