@@ -173,5 +173,5 @@ steps:
       echo "##[debug]Debug text"
       echo "##[command]Command-line being run"
       echo "##[endgroup]"
-      echo "I really like using Markdown." > .\README.md
-      echo "##vso[task.uploadsummary].\README.md"
+      echo "I really like using Markdown." > $(System.DefaultWorkingDirectory)/report.md
+      echo "##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/report.md"
