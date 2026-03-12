@@ -1,4 +1,5 @@
-FROM ubuntu:24.04
+FROM nvidia/cuda:13.0.2-cudnn-devel-ubuntu24.04
+
 ENV LANG C.UTF-8
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -12,7 +13,6 @@ WORKDIR /root
 
 ENV PATH="/root/.venv/bin:$PATH" \
     VIRTUAL_ENV="/root/.venv" \
-    PYTHONUNBUFFERED=1 \
     UV_NO_PROGRESS=1 \
     UV_LINK_MODE=copy \
     UV_NO_CACHE=1 \
