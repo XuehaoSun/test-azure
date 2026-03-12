@@ -173,7 +173,4 @@ steps:
     echo "##[debug]Debug text"
     echo "##[command]Command-line being run"
     echo "##[endgroup]"
-    echo "##vso[task.uploadsummary]Here is some **important** information for the pipeline summary."
-    echo "##vso[task.uploadsummary]- [Link to Report](https://example.com)"
-    echo "##vso[task.uploadsummary]- Status: **Success**"
     ##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/README.md
