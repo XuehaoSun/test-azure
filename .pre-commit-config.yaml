@@ -1,13 +1,7 @@
-
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: no-commit-to-branch
         args: [--branch, test6]
-  - repo: https://github.com/psf/black.git
-    rev: 24.4.2
-    hooks:
-      - id: black
-        files: (.*\.py)$
-
+      - id: trailing-whitespace

@@ -16,28 +16,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-          ref: "main"
+          python-version: 3.11
 
-      - name: Set up Git
+      - name: Test github actions
         run: |
-          git config --global user.name "Sun, Xuehao"
-          git config --global user.email "xuehao.sun@intel.com"
-          git remote set-url origin https://XuehaoSun:"${{ secrets.ACTION_TOKEN }}"@github.com/XuehaoSun/test-azure.git
-          git checkout -b update_images_tag
+          latest_vllm_ver=$(curl -s "https://api.github.com/repos/vllm-project/vllm/tags" | jq '.[0].name' -)
+          latest_vllm_fork_ver=$(curl -s "https://api.github.com/repos/HabanaAI/vllm-fork/tags" | jq '.[0].name' -)
 
-      - name: Run script
-        run: |
-          echo test >> test.txt
-
+          echo "latest_vllm_ver=${latest_vllm_ver}" >> "$GITHUB_ENV"
+          echo "latest_vllm_fork_ver=${latest_vllm_fork_ver}" >> "$GITHUB_ENV"
       - name: Commit changes
         run: |
-          git add .
-          git commit -s -m "Update third party images tag"
-          git push
-
-      - name: create pull request
-        run: gh pr create -B main -H update_images_tag --title 'Update ghcr.io/huggingface/text-generation-inference image tag' --body 'Created by Github action'
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}
+          echo "Update vllm version to ${latest_vllm_ver} and ${latest_vllm_fork_ver}"
