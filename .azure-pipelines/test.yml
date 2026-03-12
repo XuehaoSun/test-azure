@@ -165,7 +165,6 @@ trigger: none
 
 
 steps:
-  - checkout: self
   - bash: |
       echo "##[group]Beginning of a group"
       echo "##[warning]Warning message"
